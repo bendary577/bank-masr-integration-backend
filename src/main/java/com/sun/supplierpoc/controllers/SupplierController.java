@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 @RestController
@@ -22,10 +22,7 @@ public class SupplierController {
     static String HOST= "localhost";
     static int PORT = 8080;
 
-    @RequestMapping("/getSuppliers")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ArrayList<Supplier> getSuppliers() throws SoapFaultException, ComponentException {
+    public HashMap<String, ArrayList<Supplier>> getSuppliersData() throws SoapFaultException, ComponentException {
 
         boolean useEncryption = false;
 
@@ -45,6 +42,7 @@ public class SupplierController {
         }
         component.authenticate(voucher);
 
+
         // call 'Query' method via SOAP API ...
         String inputPayload =   "<SSC>" +
                 "   <User>" +
@@ -54,15 +52,34 @@ public class SupplierController {
                 "       <BusinessUnit>PK1</BusinessUnit>" +
                 "   </SunSystemsContext>" +
                 "   <Payload>" +
-//                "   <OutputLimit>5</OutputLimit>" +
                     "<Select>" +
                         "<Supplier>" +
+
                             "<AccountCode/>" +
+                            "<SupplierCode/>" +
                             "<SupplierName/>" +
+                            "<Status/>" +
+                            "<EMailAddress/>" +
+                            "<PaymentTermsGroupCode/>" +
+
+                            "<Address_Contact>"+
+                                "<ContactIdentifier/>" +
+                            "</Address_Contact>"+
+
+                            "<SupplierAddress>"+
+                                "<TelephoneNumber/>" +
+                                "<AddressCode/>" +
+                                "<AddressLine1/>" +
+                                "<AddressLine2/>" +
+                                "<AddressLine3/>" +
+                                "<PostalCode/>" +
+                            "</SupplierAddress>"+
+
                         "</Supplier>" +
                     "</Select>" +
                 "   </Payload>" +
                 "</SSC>";
+        System.out.println(inputPayload);
         String strOut = component.execute("Supplier", "Query", inputPayload);
 
         // Convert XML to Object
@@ -77,15 +94,26 @@ public class SupplierController {
 
             System.out.println(query);
 
-            return query.getPayload();
+            HashMap<String, ArrayList<Supplier>> map = new HashMap<>();
+
+            map.put("data", query.getPayload());
+
+            return map;
         }
         catch (JAXBException e)
         {
             e.printStackTrace();
         }
 
-
-//        System.out.println(strOut);
         return null;
+    }
+
+    @RequestMapping("/getSuppliers")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public HashMap<String, ArrayList<Supplier>> getSuppliers() throws SoapFaultException, ComponentException{
+        HashMap<String, ArrayList<Supplier>> suppliers = getSuppliersData();
+
+        return suppliers;
     }
 }

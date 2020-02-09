@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models;
+package com.sun.supplierpoc.soapModels;
 
 import javax.xml.bind.annotation.XmlElement;
 
@@ -7,7 +7,10 @@ public class Address_Contact {
     String ContactIdentifier;
 
     public String getContactIdentifier() {
-        return ContactIdentifier;
+        if(ContactIdentifier != null){
+            return ContactIdentifier;
+        }
+        else return "";
     }
 
     public void setContactIdentifier(String contactIdentifier) {

@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models;
+package com.sun.supplierpoc.soapModels;
 
 import javax.xml.bind.annotation.XmlElement;
 
@@ -16,8 +16,14 @@ public class SupplierAddress {
     @XmlElement
     String PostalCode;
 
+    public SupplierAddress() {
+    }
+
     public String getTelephoneNumber() {
-        return TelephoneNumber;
+        if(TelephoneNumber != null){
+            return TelephoneNumber;
+        }
+        else return "";
     }
 
     public void setTelephoneNumber(String telephoneNumber) {
@@ -25,7 +31,11 @@ public class SupplierAddress {
     }
 
     public String getAddressLine1() {
-        return AddressLine1;
+        if(AddressLine1 != null){
+            return AddressLine1;
+        }
+        else return "";
+
     }
 
     public void setAddressLine1(String addressLine1) {
@@ -33,15 +43,33 @@ public class SupplierAddress {
     }
 
     public String getAddressLine2() {
-        return AddressLine2;
+        if(AddressLine2 != null){
+            return AddressLine2;
+        }
+        else return "";
     }
 
     public void setAddressLine2(String addressLine2) {
         AddressLine2 = addressLine2;
     }
 
+
+    public String getAddressLine3() {
+        if(AddressLine3 != null){
+            return AddressLine3;
+        }
+        else return "";
+    }
+
+    public void setAddressLine3(String addressLine3) {
+        AddressLine3 = addressLine3;
+    }
+
     public String getPostalCode() {
-        return PostalCode;
+        if(PostalCode != null){
+            return PostalCode;
+        }
+        else return "";
     }
 
     public void setPostalCode(String postalCode) {
@@ -49,18 +77,14 @@ public class SupplierAddress {
     }
 
     public String getAddressCode() {
-        return AddressCode;
+        if(AddressCode != null){
+            return AddressCode;
+        }
+        else return "";
     }
 
     public void setAddressCode(String addressCode) {
         AddressCode = addressCode;
     }
 
-    public String getAddressLine3() {
-        return AddressLine3;
-    }
-
-    public void setAddressLine3(String addressLine3) {
-        AddressLine3 = addressLine3;
-    }
 }

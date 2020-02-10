@@ -13,23 +13,22 @@ public class SyncJob implements Serializable {
     private Date creationDate;
     private Date endDate;
     private String userId;
-    private Date accountId;
+    private String accountId;
     private String syncJobTypeId;
     private boolean deleted;
 
     public SyncJob() {
     }
 
-    public SyncJob(String id, String status, Date creationDate, Date endDate, String userId, Date accountId,
-                   String syncJobTypeId, boolean deleted) {
-        this.id = id;
+    public SyncJob(String status, Date creationDate, Date endDate, String userId, String accountId,
+                   String syncJobTypeId) {
         this.status = status;
         this.creationDate = creationDate;
         this.endDate = endDate;
         this.userId = userId;
         this.accountId = accountId;
         this.syncJobTypeId = syncJobTypeId;
-        this.deleted = deleted;
+        this.deleted = false;
     }
 
     public String getId() {
@@ -72,11 +71,11 @@ public class SyncJob implements Serializable {
         this.userId = userId;
     }
 
-    public Date getAccountId() {
+    public String getAccountId() {
         return accountId;
     }
 
-    public void setAccountId(Date accountId) {
+    public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
 

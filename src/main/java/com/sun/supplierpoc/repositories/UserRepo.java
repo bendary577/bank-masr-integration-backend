@@ -6,6 +6,10 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
+import org.springframework.stereotype.Repository;
+
+@Repository
+
 public interface UserRepo extends MongoRepository<User, String>{
 
     User findByName(String Name);

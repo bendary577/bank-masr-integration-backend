@@ -1,7 +1,9 @@
 package com.sun.supplierpoc.controllers;
 import com.google.gson.JsonObject;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -10,10 +12,7 @@ import com.sun.supplierpoc.soapModels.SSC;
 import com.sun.supplierpoc.soapModels.Supplier;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.*;
-import org.openqa.selenium.Alert;
-import org.openqa.selenium.By;
-import org.openqa.selenium.NoAlertPresentException;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,7 @@ public class SupplierController {
     public Constants constant = new Constants();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public ArrayList<Supplier> getSuppliersData() throws SoapFaultException, ComponentException {
 
@@ -87,7 +86,7 @@ public class SupplierController {
                             "<SupplierCode/>" +
                             "<SupplierName/>" +
                             "<Status/>" +
-                            "<EMailAddress/>" +
+//                            "<EMailAddress/>" +
                             "<PaymentTermsGroupCode/>" +
 
                             "<Address_Contact>"+
@@ -138,7 +137,7 @@ public class SupplierController {
         for (int i = 0; i < suppliers.size(); i++) {
             Supplier supplier = suppliers.get(i);
 
-            HashMap<String, Object> data = new HashMap<String, Object>();
+            HashMap<String, Object> data = new HashMap<>();
 
             data.put("supplierId", "");
             data.put("supplier", supplier.getSupplierName());
@@ -147,13 +146,14 @@ public class SupplierController {
             data.put("customerNumber", "");
             data.put("paymentTerms", supplier.getPaymentTermsGroupCode());
             data.put("phoneNumber", supplier.getSupplierAddress().getTelephoneNumber());
-            data.put("email", supplier.getEMailAddress());
+            data.put("email", "");
             data.put("address", supplier.getSupplierAddress().getAddressCode());
             data.put("line1", supplier.getSupplierAddress().getAddressLine1());
             data.put("line2", supplier.getSupplierAddress().getAddressLine2());
             data.put("line3", supplier.getSupplierAddress().getAddressLine3());
             data.put("postalCode", supplier.getSupplierAddress().getPostalCode());
             data.put("faxNumber", "");
+            data.put("contactFirstName", "");
 
 
             SyncJobData syncJobData = new SyncJobData(data, constant.RECEIVED, "", new Date(),
@@ -165,101 +165,151 @@ public class SupplierController {
         return addedSuppliers;
     }
 
-    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers) throws SoapFaultException, ComponentException{
+    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers){
         WebDriver driver = setupEnvironment.setupSeleniumEnv();
-        String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-        driver.get(url);
 
-        driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-        driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-        driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
+        try {
+            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+            driver.get(url);
 
-        String previous_url = driver.getCurrentUrl();
-        driver.findElement(By.name("Login")).click();
+            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
+            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
+            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
 
-        if (driver.getCurrentUrl().equals(previous_url)){
-            String message = "Invalid username and password.";
+            String previous_url = driver.getCurrentUrl();
+            driver.findElement(By.name("Login")).click();
+
+            if (driver.getCurrentUrl().equals(previous_url)){
+                String message = "Invalid username and password.";
+                return false;
+            }
+
+            for(int i = 0; i < suppliers.size(); i++) {
+                SyncJobData supplier = suppliers.get(i);
+
+                String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
+                driver.get(vendorPage);
+                driver.findElement(By.linkText("New")).click();
+
+                driver.findElement(By.id("igtxtLF_NAME")).sendKeys(((HashMap) supplier.getData()).get("supplier").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
+
+                //////////////////////////////////////  Set Hidden Elements  ///////////////////////////////////////////
+
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
+                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
+
+                String taxesValue = "[22,\"New\",\"NEW\"]";
+                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('value'," + taxesValue + ")");
+                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
+                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
+
+                String vendorGroupValue = "[12,\"Dariy\",\"DARIY\"]";
+                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('value'," + vendorGroupValue + ")");
+
+                //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
+
+                driver.findElement(By.id("igtxttb__ctl0_LF_KDNNR")).sendKeys(((HashMap) supplier.getData()).get("customerNumber").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_TEL")).sendKeys(((HashMap) supplier.getData()).get("phoneNumber").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_TELEX")).sendKeys(((HashMap) supplier.getData()).get("email").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_SACHB")).sendKeys(((HashMap) supplier.getData()).get("contactFirstName").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_ZBED")).sendKeys(((HashMap) supplier.getData()).get("paymentTerms").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_PLZ")).sendKeys(((HashMap) supplier.getData()).get("postalCode").toString());
+                driver.findElement(By.id("igtxttb__ctl0_LF_FAX")).sendKeys(((HashMap) supplier.getData()).get("faxNumber").toString());
+
+
+                //////////////////////////////////////  Set Address  ///////////////////////////////////////////////////
+                ArrayList<String> handles = new ArrayList<>(driver.getWindowHandles());
+                String windowBefore = handles.get(0);
+
+                driver.findElement(By.id("tb__ctl0_btnEditAddress")).click();
+
+                while (true) {
+                    if (handles.size() != driver.getWindowHandles().size()) {
+                        break;
+                    }
+                }
+
+                handles = new ArrayList<>(driver.getWindowHandles());
+                String windowAfter = handles.get(1);
+
+                driver.switchTo().window(windowAfter);
+
+                driver.findElement(By.id("igtxttbStreet")).sendKeys(((HashMap) supplier.getData()).get("address").toString());
+                driver.findElement(By.id("igtxttbAddressline1")).sendKeys(((HashMap) supplier.getData()).get("line1").toString());
+                driver.findElement(By.id("igtxttbAddressline2")).sendKeys(((HashMap) supplier.getData()).get("line2").toString());
+
+                driver.findElement(By.id("btnOk")).click();
+
+                while (true) {
+                    if (handles.size() != driver.getWindowHandles().size()) {
+                        break;
+                    }
+                }
+                driver.switchTo().window(windowBefore);
+
+                //////////////////////////////////////  Set Order Settings  ////////////////////////////////////////////
+
+                driver.findElement(By.id("tbtd1")).click();
+                driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL")).click();
+
+                //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
+
+                driver.findElement(By.linkText("Save")).click();
+                try {
+                    new WebDriverWait(driver, 5)
+                            .ignoring(NoAlertPresentException.class)
+                            .until(ExpectedConditions.alertIsPresent());
+
+                    Alert al = driver.switchTo().alert();
+                    al.accept();
+
+                    supplier.setStatus(constant.FAILED);
+                    supplier.setReason("Already Exits");
+                    syncJobDataRepo.save(supplier);
+
+                } catch (Exception e) {
+                    System.out.println(e);
+                    e.printStackTrace();
+                }
+
+                supplier.setStatus(constant.SUCCESS);
+                supplier.setReason("");
+                syncJobDataRepo.save(supplier);
+            }
+
+            driver.quit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
             return false;
         }
-
-        for(int i = 0; i < suppliers.size(); i++) {
-            SyncJobData supplier = suppliers.get(i);
-
-            String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
-            driver.get(vendorPage);
-            driver.findElement(By.linkText("New")).click();
-
-            // supplier name
-            driver.findElement(By.id("igtxtLF_NAME")).sendKeys(((HashMap) supplier.getData()).get("supplier").toString());
-            // supplier number
-            driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
-
-            driver.findElement(By.id("igtxttb__ctl0_LF_KDNNR")).sendKeys(((HashMap) supplier.getData()).get("customerNumber").toString());
-            driver.findElement(By.id("igtxttb__ctl0_LF_TEL")).sendKeys(((HashMap) supplier.getData()).get("phoneNumber").toString());
-            driver.findElement(By.id("igtxttb__ctl0_LF_TELEX")).sendKeys(((HashMap) supplier.getData()).get("email").toString());
-//            driver.findElement(By.id("igtxttb__ctl0_LF_SACHB")).sendKeys(((HashMap) supplier.getData()).get("contactFirstName").toString());
-            driver.findElement(By.id("igtxttb__ctl0_LF_ZBED")).sendKeys(((HashMap) supplier.getData()).get("paymentTerms").toString());
-            driver.findElement(By.id("igtxttb__ctl0_LF_PLZ")).sendKeys(((HashMap) supplier.getData()).get("postalCode").toString());
-//            driver.findElement(By.id("igtxttb__ctl0_LF_FAX")).sendKeys(((HashMap) supplier.getData()).get("faxNumber").toString());
-
-
-            //////////////////////////////////////  Set Address  ///////////////////////////////////////////////////////
-            ArrayList<String> handles = new ArrayList<String>(driver.getWindowHandles());
-            String windowBefore = handles.get(0);
-
-            driver.findElement(By.id("tb__ctl0_btnEditAddress")).click();
-
-            while (handles.size() == driver.getWindowHandles().size()){
-                continue;
-            }
-
-            String windowAfter = handles.get(1);
-
-            driver.switchTo().window(windowAfter);
-
-            driver.findElement(By.id("igtxttbStreet")).sendKeys(((HashMap) supplier.getData()).get("address").toString());
-            driver.findElement(By.id("igtxttbAddressline1")).sendKeys(((HashMap) supplier.getData()).get("line1").toString());
-            driver.findElement(By.id("igtxttbAddressline2")).sendKeys(((HashMap) supplier.getData()).get("line2").toString());
-
-            handles = new ArrayList<>(driver.getWindowHandles());
-
-            driver.findElement(By.id("btnOk")).click();
-
-            while (handles.size() == driver.getWindowHandles().size()){
-                continue;
-            }
-            driver.switchTo().window(windowBefore);
-
-            driver.findElement(By.id("tbtd1")).click();
-            driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL")).click();
-            driver.findElement(By.id("Save")).click();
-            try {
-                new WebDriverWait(driver, 60)
-                        .ignoring(NoAlertPresentException.class)
-                        .until(ExpectedConditions.alertIsPresent());
-
-                Alert al = driver.switchTo().alert();
-                al.accept();
-            } catch (Exception e) {
-                System.out.println(e);
-                e.printStackTrace();
-            }
-
-        }
-
-        driver.quit();
-        return true;
     }
 
     @RequestMapping("/getSuppliers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<Supplier> getSuppliers() throws SoapFaultException, ComponentException{
+    public ArrayList<SyncJobData> getSuppliers() throws SoapFaultException, ComponentException{
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", "1");
+
+        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
+                syncJobType.getId());
+
+        syncJobRepo.save(syncJob);
+
         ArrayList<Supplier> suppliers = getSuppliersData();
         ArrayList<SyncJobData> addedSuppliers = saveSuppliersData(suppliers);
-        sendSuppliersData(addedSuppliers);
+        if (addedSuppliers.size() != 0){
+            sendSuppliersData(addedSuppliers);
+        }
 
-        return suppliers;
+        syncJob.setStatus(constant.SUCCESS);
+        syncJob.setEndDate(new Date());
+        syncJobRepo.save(syncJob);
+
+        return addedSuppliers;
     }
 
 }

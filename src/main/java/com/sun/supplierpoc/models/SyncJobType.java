@@ -13,20 +13,21 @@ public class SyncJobType implements Serializable {
     private String endPoint;
     private Date creationDate;
     private Object configuration;
+    private String accountId;
     private boolean deleted;
 
     public SyncJobType() {
     }
 
-    public SyncJobType(String id, String name, String description, String endPoint, Date creationDate,
-                       Object configuration, boolean deleted) {
-        this.id = id;
+    public SyncJobType(String name, String description, String endPoint, Date creationDate, Object configuration,
+                       String accountId, boolean deleted) {
         this.name = name;
         this.description = description;
         this.endPoint = endPoint;
         this.creationDate = creationDate;
         this.configuration = configuration;
-        this.deleted = deleted;
+        this.accountId = accountId;
+        this.deleted = false;
     }
 
     public String getId() {
@@ -75,6 +76,14 @@ public class SyncJobType implements Serializable {
 
     public void setConfiguration(Object configuration) {
         this.configuration = configuration;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 
     public boolean isDeleted() {

@@ -18,8 +18,6 @@ public class Supplier {
     @XmlElement
     String PaymentTermsGroupCode;
     @XmlElement
-    String EMailAddress;
-    @XmlElement
     SupplierAddress SupplierAddress;
     @XmlElement
     Address_Contact Address_Contact;
@@ -110,14 +108,4 @@ public class Supplier {
         CustomerNumber = customerNumber;
     }
 
-    public String getEMailAddress() {
-        if(EMailAddress != null){
-            return EMailAddress;
-        }
-        else return "";
-    }
-
-    public void setEMailAddress(String EMailAddress) {
-        this.EMailAddress = EMailAddress;
-    }
 }

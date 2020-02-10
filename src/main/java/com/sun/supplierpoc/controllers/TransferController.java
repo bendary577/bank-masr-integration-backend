@@ -9,10 +9,11 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.soapModels.SSC;
-import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.*;
-import org.openqa.selenium.*;
+import com.systemsunion.ssc.client.ComponentException;
+import com.systemsunion.ssc.client.SoapFaultException;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -20,20 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-
-
 @RestController
 
-public class InvoiceController {
+public class TransferController {
     static int PORT = 8080;
     static String HOST= "192.168.133.128";
 
@@ -50,40 +45,33 @@ public class InvoiceController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @RequestMapping("/getApprovedInvoices")
+    @RequestMapping("/getBookedTransfer")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<SyncJobData> getApprovedInvoices() {
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", "1");
+    public ArrayList<SyncJobData> getBookedTransfer() {
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", "1");
 
         SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
-        ArrayList<HashMap<String, Object>> invoices = getInvoicesData(false);
-        ArrayList<SyncJobData> addedInvoices = saveInvoicesData(invoices, syncJob);
-        if (addedInvoices.size() != 0){
-            try {
-                sendInvoicesData(addedInvoices);
-            } catch (SoapFaultException e) {
-                e.printStackTrace();
-            } catch (ComponentException e) {
-                e.printStackTrace();
-            }
-        }
+        ArrayList<HashMap<String, Object>> invoices = getTransferData(syncJobType);
+        ArrayList<SyncJobData> addedTransfers = saveTransferData(invoices, syncJob);
 
         syncJob.setStatus(constant.SUCCESS);
         syncJob.setEndDate(new Date());
         syncJobRepo.save(syncJob);
 
-        return addedInvoices;
+        return addedTransfers;
     }
 
-    public ArrayList<HashMap<String, Object>> getInvoicesData(Boolean typeFlag){
+    public ArrayList<HashMap<String, Object>> getTransferData(SyncJobType syncJobType){
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv();
-        ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
+
+        HashMap<String, Object> costCenters = (HashMap)((HashMap) syncJobType.getConfiguration()).get("costCenters");
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
@@ -98,57 +86,59 @@ public class InvoiceController {
 
             if (driver.getCurrentUrl().equals(previous_url)){
                 String message = "Invalid username and password.";
-                return invoices;
+                return transfers;
             }
 
-            String approvedInvoices = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
-            driver.get(approvedInvoices);
+            String bookedTransfersUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/TransferNew/TrStatus.aspx?Type=Booked";
+            driver.get(bookedTransfersUrl);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText("All");
-
-            if (typeFlag){
-                driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");
-            }
+            select.selectByVisibleText("Last Month");
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
             ArrayList<String> columns = new ArrayList<>();
-            WebElement row = rows.get(39);
+            WebElement row = rows.get(40);
             List<WebElement> cols = row.findElements(By.tagName("th"));
 
             for (int j = 1; j < cols.size(); j++) {
                 columns.add(conversions.transformColName(cols.get(j).getText()));
             }
 
-            for (int i = 40; i < rows.size(); i++) {
-                HashMap<String, Object> invoice = new HashMap<>();
+            for (int i = 41; i < rows.size(); i++) {
+                HashMap<String, Object> transfer = new HashMap<>();
 
                 row = rows.get(i);
                 cols = row.findElements(By.tagName("td"));
-                if (cols.size() < 14){
+                if (cols.size() < 10){
+                    continue;
+                }
+
+                WebElement td = cols.get(2);
+                if (!costCenters.containsKey(td.getText())){
                     continue;
                 }
 
                 for (int j = 1; j < cols.size(); j++) {
-                    invoice.put(columns.get(j - 1), cols.get(j).getText());
+                    transfer.put(columns.get(j - 1), cols.get(j).getText());
                 }
-                invoices.add(invoice);
+                transfers.add(transfer);
             }
 
             driver.quit();
-            return invoices;
+            return transfers;
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
-            return invoices;
+            return transfers;
         }
 
     }
 
-    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob){
+    public ArrayList<SyncJobData> saveTransferData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         for (int i = 0; i < invoices.size(); i++) {
@@ -180,58 +170,5 @@ public class InvoiceController {
 
     }
 
-    public Boolean sendInvoicesData(ArrayList<SyncJobData> addedInvoices) throws SoapFaultException, ComponentException {
-        boolean useEncryption = false;
 
-        String username = "ACt";
-        String password = "P@ssw0rd";
-
-        // obtain a SunSystems Security Voucher via SecurityProvider SOAP API
-        SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
-        IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
-
-        // setup and authenticate a SOAP API component proxy
-        SoapComponent component = null;
-        if (useEncryption) {
-            component = new SecureSoapComponent(HOST, PORT);
-        } else {
-            component = new SoapComponent(HOST, PORT);
-        }
-        component.authenticate(voucher);
-
-        String inputPayload =   "<SSC>" +
-                "   <User>" +
-                "       <Name>" + username + "</Name>" +
-                "   </User>" +
-                "   <SunSystemsContext>" +
-                "       <BusinessUnit>PK1</BusinessUnit>" +
-                "   </SunSystemsContext>" +
-                "   <Payload>" +
-
-                "   </Payload>" +
-                "</SSC>";
-
-        String strOut = component.execute("purchase invoices", "Create", inputPayload);
-
-        // Convert XML to Object
-        JAXBContext jaxbContext;
-        try
-        {
-            jaxbContext = JAXBContext.newInstance(SSC.class);
-
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
-            SSC query = (SSC) jaxbUnmarshaller.unmarshal(new StringReader(strOut));
-
-            System.out.println(query);
-
-            return true;
-        }
-        catch (JAXBException e)
-        {
-            e.printStackTrace();
-        }
-
-        return false;
-        }
 }

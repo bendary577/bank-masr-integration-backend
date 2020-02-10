@@ -106,7 +106,7 @@ public class SupplierController {
                     "</Select>" +
                 "   </Payload>" +
                 "</SSC>";
-        System.out.println(inputPayload);
+
         String strOut = component.execute("Supplier", "Query", inputPayload);
 
         // Convert XML to Object

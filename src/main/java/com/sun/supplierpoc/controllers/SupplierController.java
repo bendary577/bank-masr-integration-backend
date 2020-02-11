@@ -1,17 +1,15 @@
 package com.sun.supplierpoc.controllers;
-import com.google.gson.JsonObject;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
-import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.soapModels.SSC;
+import com.sun.supplierpoc.services.SupplierService;
 import com.sun.supplierpoc.soapModels.Supplier;
-import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.*;
+import com.systemsunion.ssc.client.*;;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -20,153 +18,62 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.List;
 
 
 @RestController
 public class SupplierController {
 
-    static int PORT = 8080;
-    static String HOST= "192.168.133.128";
-
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
-    @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
 
     public Constants constant = new Constants();
+    public Conversions conversions = new Conversions();
+    public SupplierService supplierService = new SupplierService();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public ArrayList<Supplier> getSuppliersData() throws SoapFaultException, ComponentException {
+    @RequestMapping("/getSuppliers")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ArrayList<SyncJobData> getSuppliers() throws SoapFaultException, ComponentException{
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", "1");
 
-        boolean useEncryption = false;
+        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
+                syncJobType.getId());
 
-        String username = "ACt";
-        String password = "P@ssw0rd";
+        syncJobRepo.save(syncJob);
 
-        // obtain a SunSystems Security Voucher via SecurityProvider SOAP API
-        SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
-        IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
-
-        // setup and authenticate a SOAP API component proxy
-        SoapComponent component = null;
-        if (useEncryption) {
-            component = new SecureSoapComponent(HOST, PORT);
-        } else {
-            component = new SoapComponent(HOST, PORT);
-        }
-        component.authenticate(voucher);
-
-
-        // call 'Query' method via SOAP API ...
-        String inputPayload =   "<SSC>" +
-                "   <User>" +
-                "       <Name>" + username + "</Name>" +
-                "   </User>" +
-                "   <SunSystemsContext>" +
-                "       <BusinessUnit>PK1</BusinessUnit>" +
-                "   </SunSystemsContext>" +
-                "   <Payload>" +
-                "<OutputLimit>5</OutputLimit>" +
-                    "<Select>" +
-                        "<Supplier>" +
-
-                            "<AccountCode/>" +
-                            "<SupplierCode/>" +
-                            "<SupplierName/>" +
-                            "<Status/>" +
-//                            "<EMailAddress/>" +
-                            "<PaymentTermsGroupCode/>" +
-
-                            "<Address_Contact>"+
-                                "<ContactIdentifier/>" +
-                            "</Address_Contact>"+
-
-                            "<SupplierAddress>"+
-                                "<TelephoneNumber/>" +
-                                "<AddressCode/>" +
-                                "<AddressLine1/>" +
-                                "<AddressLine2/>" +
-                                "<AddressLine3/>" +
-                                "<PostalCode/>" +
-                            "</SupplierAddress>"+
-
-                        "</Supplier>" +
-                    "</Select>" +
-                "   </Payload>" +
-                "</SSC>";
-
-        String strOut = component.execute("Supplier", "Query", inputPayload);
-
-        // Convert XML to Object
-        JAXBContext jaxbContext;
-        try
-        {
-            jaxbContext = JAXBContext.newInstance(SSC.class);
-
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
-            SSC query = (SSC) jaxbUnmarshaller.unmarshal(new StringReader(strOut));
-
-            System.out.println(query);
-
-            return query.getPayload();
-        }
-        catch (JAXBException e)
-        {
-            e.printStackTrace();
+        ArrayList<Supplier> suppliers = supplierService.getSuppliersData();
+        ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers);
+        if (addedSuppliers.size() != 0){
+            supplierService.sendSuppliersData(addedSuppliers);
         }
 
-        return new ArrayList<> ();
-    }
+        syncJob.setStatus(constant.SUCCESS);
+        syncJob.setEndDate(new Date());
+        syncJobRepo.save(syncJob);
 
-    public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers) {
-        ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
-
-        for (int i = 0; i < suppliers.size(); i++) {
-            Supplier supplier = suppliers.get(i);
-
-            HashMap<String, Object> data = new HashMap<>();
-
-            data.put("supplierId", "");
-            data.put("supplier", supplier.getSupplierName());
-            data.put("supplierNumber", supplier.getSupplierCode());
-            data.put("status", supplier.getStatus());
-            data.put("customerNumber", "");
-            data.put("paymentTerms", supplier.getPaymentTermsGroupCode());
-            data.put("phoneNumber", supplier.getSupplierAddress().getTelephoneNumber());
-            data.put("email", "");
-            data.put("address", supplier.getSupplierAddress().getAddressCode());
-            data.put("line1", supplier.getSupplierAddress().getAddressLine1());
-            data.put("line2", supplier.getSupplierAddress().getAddressLine2());
-            data.put("line3", supplier.getSupplierAddress().getAddressLine3());
-            data.put("postalCode", supplier.getSupplierAddress().getPostalCode());
-            data.put("faxNumber", "");
-            data.put("contactFirstName", "");
-
-
-            SyncJobData syncJobData = new SyncJobData(data, constant.RECEIVED, "", new Date(),
-                    "0");
-            System.out.println(syncJobDataRepo.save(syncJobData));
-            addedSuppliers.add(syncJobData);
-
-        }
         return addedSuppliers;
     }
 
-    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers){
+
+    @RequestMapping("/getSupplierTaxes")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public HashMap<String, Object> getSupplierTaxes(){
+
         WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        HashMap<String, Object> response = new HashMap<>();
+        ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
+
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
@@ -181,135 +88,133 @@ public class SupplierController {
 
             if (driver.getCurrentUrl().equals(previous_url)){
                 String message = "Invalid username and password.";
-                return false;
+                return response;
             }
 
-            for(int i = 0; i < suppliers.size(); i++) {
-                SyncJobData supplier = suppliers.get(i);
+            String taxesUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Taxes/OverviewTax.aspx";
+            driver.get(taxesUrl);
 
-                String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
-                driver.get(vendorPage);
-                driver.findElement(By.linkText("New")).click();
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
-                driver.findElement(By.id("igtxtLF_NAME")).sendKeys(((HashMap) supplier.getData()).get("supplier").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-                //////////////////////////////////////  Set Hidden Elements  ///////////////////////////////////////////
+            ArrayList<String> columns = new ArrayList<>();
+            WebElement row = rows.get(7);
+            List<WebElement> cols = row.findElements(By.tagName("th"));
 
-                JavascriptExecutor js = (JavascriptExecutor) driver;
-                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
-                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
+            for (int j = 1; j < cols.size(); j++) {
+                columns.add(conversions.transformColName(cols.get(j).getText()));
+            }
 
-                String taxesValue = "[22,\"New\",\"NEW\"]";
-                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('value'," + taxesValue + ")");
-                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
-                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
+            for (int i = 8; i < rows.size(); i++) {
+                HashMap<String, Object> tax = new HashMap<>();
 
-                String vendorGroupValue = "[12,\"Dariy\",\"DARIY\"]";
-                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('value'," + vendorGroupValue + ")");
+                row = rows.get(i);
+                cols = row.findElements(By.tagName("td"));
 
-                //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
-
-                driver.findElement(By.id("igtxttb__ctl0_LF_KDNNR")).sendKeys(((HashMap) supplier.getData()).get("customerNumber").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_TEL")).sendKeys(((HashMap) supplier.getData()).get("phoneNumber").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_TELEX")).sendKeys(((HashMap) supplier.getData()).get("email").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_SACHB")).sendKeys(((HashMap) supplier.getData()).get("contactFirstName").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_ZBED")).sendKeys(((HashMap) supplier.getData()).get("paymentTerms").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_PLZ")).sendKeys(((HashMap) supplier.getData()).get("postalCode").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_FAX")).sendKeys(((HashMap) supplier.getData()).get("faxNumber").toString());
-
-
-                //////////////////////////////////////  Set Address  ///////////////////////////////////////////////////
-                ArrayList<String> handles = new ArrayList<>(driver.getWindowHandles());
-                String windowBefore = handles.get(0);
-
-                driver.findElement(By.id("tb__ctl0_btnEditAddress")).click();
-
-                while (true) {
-                    if (handles.size() != driver.getWindowHandles().size()) {
-                        break;
-                    }
+                for (int j = 1; j < cols.size(); j++) {
+                    tax.put(columns.get(j - 1), cols.get(j).getText());
                 }
-
-                handles = new ArrayList<>(driver.getWindowHandles());
-                String windowAfter = handles.get(1);
-
-                driver.switchTo().window(windowAfter);
-
-                driver.findElement(By.id("igtxttbStreet")).sendKeys(((HashMap) supplier.getData()).get("address").toString());
-                driver.findElement(By.id("igtxttbAddressline1")).sendKeys(((HashMap) supplier.getData()).get("line1").toString());
-                driver.findElement(By.id("igtxttbAddressline2")).sendKeys(((HashMap) supplier.getData()).get("line2").toString());
-
-                driver.findElement(By.id("btnOk")).click();
-
-                while (true) {
-                    if (handles.size() != driver.getWindowHandles().size()) {
-                        break;
-                    }
-                }
-                driver.switchTo().window(windowBefore);
-
-                //////////////////////////////////////  Set Order Settings  ////////////////////////////////////////////
-
-                driver.findElement(By.id("tbtd1")).click();
-                driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL")).click();
-
-                //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
-
-                driver.findElement(By.linkText("Save")).click();
-                try {
-                    new WebDriverWait(driver, 5)
-                            .ignoring(NoAlertPresentException.class)
-                            .until(ExpectedConditions.alertIsPresent());
-
-                    Alert al = driver.switchTo().alert();
-                    al.accept();
-
-                    supplier.setStatus(constant.FAILED);
-                    supplier.setReason("Already Exits");
-                    syncJobDataRepo.save(supplier);
-
-                } catch (Exception e) {
-                    System.out.println(e);
-                    e.printStackTrace();
-                }
-
-                supplier.setStatus(constant.SUCCESS);
-                supplier.setReason("");
-                syncJobDataRepo.save(supplier);
+                taxes.add(tax);
             }
 
             driver.quit();
-            return true;
+
+            response.put("cols", columns);
+            response.put("data", taxes);
+            response.put("message", "Get supplier taxes successfully.");
+            response.put("success", true);
+
+            return response;
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
-            return false;
+
+            response.put("data", taxes);
+            response.put("message", "Failed to get supplier taxes.");
+            response.put("success", false);
+
+            return response;
         }
+
     }
 
-    @RequestMapping("/getSuppliers")
+    @RequestMapping("/getSupplierGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<SyncJobData> getSuppliers() throws SoapFaultException, ComponentException{
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", "1");
+    public HashMap<String, Object> getSupplierGroups(){
 
-        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
-                syncJobType.getId());
+        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        HashMap<String, Object> response = new HashMap<>();
+        ArrayList<HashMap<String, Object>> groups = new ArrayList<>();
 
-        syncJobRepo.save(syncJob);
 
-        ArrayList<Supplier> suppliers = getSuppliersData();
-        ArrayList<SyncJobData> addedSuppliers = saveSuppliersData(suppliers);
-        if (addedSuppliers.size() != 0){
-            sendSuppliersData(addedSuppliers);
+        try {
+            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+            driver.get(url);
+
+            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
+            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
+            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
+
+            String previous_url = driver.getCurrentUrl();
+            driver.findElement(By.name("Login")).click();
+
+            if (driver.getCurrentUrl().equals(previous_url)){
+                String message = "Invalid username and password.";
+                response.put("data", groups);
+                response.put("message", message);
+                response.put("success", false);
+
+                return response;
+            }
+
+            String groupsUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/VendorGroups/VendorGroupsOverview.aspx";
+            driver.get(groupsUrl);
+
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = new ArrayList<>();
+            WebElement row = rows.get(7);
+            List<WebElement> cols = row.findElements(By.tagName("th"));
+
+            for (int j = 1; j < cols.size(); j++) {
+                columns.add(conversions.transformColName(cols.get(j).getText()));
+            }
+
+            for (int i = 8; i < rows.size(); i++) {
+                HashMap<String, Object> group = new HashMap<>();
+
+                row = rows.get(i);
+                cols = row.findElements(By.tagName("td"));
+
+                for (int j = 1; j < cols.size(); j++) {
+                    group.put(columns.get(j - 1), cols.get(j).getText());
+                }
+                groups.add(group);
+            }
+
+            driver.quit();
+
+            response.put("cols", columns);
+            response.put("data", groups);
+            response.put("message", "Get supplier groups successfully.");
+            response.put("success", true);
+
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("data", groups);
+            response.put("message", "Failed to get supplier taxes.");
+            response.put("success", false);
+
+            return response;
         }
 
-        syncJob.setStatus(constant.SUCCESS);
-        syncJob.setEndDate(new Date());
-        syncJobRepo.save(syncJob);
-
-        return addedSuppliers;
     }
 
 }

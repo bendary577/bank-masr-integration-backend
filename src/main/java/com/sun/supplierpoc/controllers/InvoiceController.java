@@ -62,7 +62,7 @@ public class InvoiceController {
         syncJobRepo.save(syncJob);
 
         ArrayList<HashMap<String, Object>> invoices = getInvoicesData(false);
-        ArrayList<SyncJobData> addedInvoices = saveInvoicesData(invoices, syncJob);
+        ArrayList<SyncJobData> addedInvoices = saveInvoicesData(invoices, syncJob, false);
         if (addedInvoices.size() != 0){
             try {
                 sendInvoicesData(addedInvoices);
@@ -148,15 +148,20 @@ public class InvoiceController {
 
     }
 
-    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob){
+    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
+                                                   Boolean flag){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         for (int i = 0; i < invoices.size(); i++) {
             HashMap<String, Object> invoice = invoices.get(i);
 
-            if (invoice.get("invoice_no.").toString().substring(0, 3).equals("RTV")){
-                continue;
+            // Invoice Part
+            if (!flag){
+                if (invoice.get("invoice_no.").toString().substring(0, 3).equals("RTV")){
+                    continue;
+                }
             }
+
             HashMap<String, Object> data = new HashMap<>();
 
             data.put("invoiceNo", invoice.get("invoice_no."));
@@ -186,11 +191,9 @@ public class InvoiceController {
         String username = "ACt";
         String password = "P@ssw0rd";
 
-        // obtain a SunSystems Security Voucher via SecurityProvider SOAP API
         SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
         IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
 
-        // setup and authenticate a SOAP API component proxy
         SoapComponent component = null;
         if (useEncryption) {
             component = new SecureSoapComponent(HOST, PORT);

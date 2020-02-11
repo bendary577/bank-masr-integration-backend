@@ -49,43 +49,14 @@ public class CreditNoteController {
 
         syncJobRepo.save(syncJob);
 
-        ArrayList<HashMap<String, Object>> invoices = invoiceController.getInvoicesData(false);
-        ArrayList<SyncJobData> addedInvoices = saveCreditNotesData(invoices, syncJob);
+        ArrayList<HashMap<String, Object>> invoices = invoiceController.getInvoicesData(true);
+        ArrayList<SyncJobData> addedInvoices = invoiceController.saveInvoicesData(invoices, syncJob, true);
 
         syncJob.setStatus(constant.SUCCESS);
         syncJob.setEndDate(new Date());
         syncJobRepo.save(syncJob);
 
         return addedInvoices;
-    }
-
-    public ArrayList<SyncJobData> saveCreditNotesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob){
-        ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
-
-        for (int i = 0; i < invoices.size(); i++) {
-            HashMap<String, Object> invoice = invoices.get(i);
-
-            HashMap<String, Object> data = new HashMap<>();
-
-            data.put("invoiceNo", invoice.get("invoice_no."));
-            data.put("vendor", invoice.get("vendor"));
-            data.put("costCenter", invoice.get("cost_center"));
-            data.put("status", invoice.get("status"));
-            data.put("invoiceDate", invoice.get("'invoice_date'"));
-            data.put("net", invoice.get("net"));
-            data.put("vat", invoice.get("vat"));
-            data.put("gross", invoice.get("gross"));
-            data.put("createdBy", invoice.get("'created_by"));
-            data.put("createdAt", invoice.get("created_at"));
-
-            SyncJobData syncJobData = new SyncJobData(data, constant.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-
-            addedInvoices.add(syncJobData);
-        }
-        return addedInvoices;
-
     }
 
 }

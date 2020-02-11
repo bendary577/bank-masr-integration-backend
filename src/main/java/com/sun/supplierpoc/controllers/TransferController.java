@@ -93,7 +93,7 @@ public class TransferController {
             driver.get(bookedTransfersUrl);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText("Last Month");
+            select.selectByVisibleText("All");
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
@@ -150,15 +150,7 @@ public class TransferController {
             HashMap<String, Object> data = new HashMap<>();
 
             data.put("invoiceNo", invoice.get("invoice_no."));
-            data.put("vendor", invoice.get("vendor"));
-            data.put("costCenter", invoice.get("cost_center"));
-            data.put("status", invoice.get("status"));
-            data.put("invoiceDate", invoice.get("'invoice_date'"));
-            data.put("net", invoice.get("net"));
-            data.put("vat", invoice.get("vat"));
-            data.put("gross", invoice.get("gross"));
-            data.put("createdBy", invoice.get("'created_by"));
-            data.put("createdAt", invoice.get("created_at"));
+
 
             SyncJobData syncJobData = new SyncJobData(data, constant.RECEIVED, "", new Date(),
                     syncJob.getId());

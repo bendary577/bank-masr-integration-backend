@@ -5,7 +5,7 @@ public class Conversions {
     }
 
     public String transformColName(String columnName){
-        return columnName.toLowerCase().replace(' ', '_');
+        return columnName.strip().toLowerCase().replace(' ', '_');
     }
 
 }

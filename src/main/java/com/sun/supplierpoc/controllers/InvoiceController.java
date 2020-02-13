@@ -9,7 +9,7 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.soapModels.SSC;
+import com.sun.supplierpoc.soapModels.PurchaseInvoiceSSC;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.*;
 import org.openqa.selenium.*;
@@ -35,7 +35,7 @@ import java.util.List;
 
 public class InvoiceController {
     static int PORT = 8080;
-    static String HOST= "192.168.133.128";
+    static String HOST= "192.168.1.21";
 
     @Autowired
     private SyncJobRepo syncJobRepo;
@@ -54,6 +54,7 @@ public class InvoiceController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ArrayList<SyncJobData> getApprovedInvoices() {
+
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", "1");
 
         SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
@@ -65,6 +66,7 @@ public class InvoiceController {
         ArrayList<SyncJobData> addedInvoices = saveInvoicesData(invoices, syncJob, false);
         if (addedInvoices.size() != 0){
             try {
+
                 sendInvoicesData(addedInvoices);
             } catch (SoapFaultException e) {
                 e.printStackTrace();
@@ -185,6 +187,7 @@ public class InvoiceController {
 
     }
 
+
     public Boolean sendInvoicesData(ArrayList<SyncJobData> addedInvoices) throws SoapFaultException, ComponentException {
         boolean useEncryption = false;
 
@@ -194,47 +197,63 @@ public class InvoiceController {
         SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
         IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
 
-        SoapComponent component = null;
-        if (useEncryption) {
-            component = new SecureSoapComponent(HOST, PORT);
-        } else {
-            component = new SoapComponent(HOST, PORT);
-        }
-        component.authenticate(voucher);
+        String inputPayload =
+                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
+                "<SSC>" +
+                        "<ErrorContext/>" +
+                        "   <User>" +
+                        "       <Name>" + username + "</Name>" +
+                        "   </User>" +
 
-        String inputPayload =   "<SSC>" +
-                "   <User>" +
-                "       <Name>" + username + "</Name>" +
-                "   </User>" +
-                "   <SunSystemsContext>" +
-                "       <BusinessUnit>PK1</BusinessUnit>" +
-                "   </SunSystemsContext>" +
-                "   <Payload>" +
+                        "<SunSystemsContext>" +
+                        "<BusinessUnit>"  + "PK1" + "</BusinessUnit>" +
+                        "</SunSystemsContext>" +
 
-                "   </Payload>" +
+                        "<Payload>" +
+                        "<PurchaseInvoice>" +
+                            "<PurchaseTransactionType>" + "PI_INVENTORY" + "</PurchaseTransactionType>" +
+                            "<SupplierCode>" + "80020" + "</SupplierCode>" +
+                            "<TransactionDate>" + "10062004" + "</TransactionDate>" +
+                        "</PurchaseInvoice>" +
+                        "</Payload>" +
                 "</SSC>";
 
-        String strOut = component.execute("purchase invoices", "Create", inputPayload);
+        String result = "";
+
+        try {
+
+            SoapComponent ssc = new SoapComponent(HOST,PORT);
+            ssc.authenticate(voucher);
+            result = ssc.execute("PurchaseInvoice", "CreateOrAmend", inputPayload);
+            System.out.println(result);
+        }
+        catch (Exception ex) {
+            System.out.print("An error occurred logging in to SunSystems:\r\n");
+            ex.printStackTrace();
+        }
 
         // Convert XML to Object
         JAXBContext jaxbContext;
         try
         {
-            jaxbContext = JAXBContext.newInstance(SSC.class);
+            jaxbContext = JAXBContext.newInstance(PurchaseInvoiceSSC.class);
 
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-            SSC query = (SSC) jaxbUnmarshaller.unmarshal(new StringReader(strOut));
+            PurchaseInvoiceSSC query = (PurchaseInvoiceSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
 
-            System.out.println(query);
+            System.out.println(query.getPayload());
 
-            return true;
+            if (query.getPayload().get(0).getStatus().equals("success")){
+                return true;
+            }
+            return false;
         }
         catch (JAXBException e)
         {
             e.printStackTrace();
         }
-
         return false;
         }
+
 }

@@ -6,12 +6,14 @@ import java.util.ArrayList;
 
 @XmlRootElement(name="SSC")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class SSC implements Serializable {
+public class JournalSSC implements Serializable {
     private User User;
     private Object SunSystemsContext;
+
     @XmlElementWrapper(name="Payload")
-    @XmlElement(name="Supplier")
-    private ArrayList<Supplier> Payload;
+    @XmlElement(name="Ledger")
+    private ArrayList<Ledger> Payload;
+
 
     public com.sun.supplierpoc.soapModels.User getUser() {
         return User;
@@ -29,12 +31,11 @@ public class SSC implements Serializable {
         SunSystemsContext = sunSystemsContext;
     }
 
-    public ArrayList<Supplier> getPayload() {
+    public ArrayList<Ledger> getPayload() {
         return Payload;
     }
 
-    public void setPayload(ArrayList<Supplier> payload) {
+    public void setPayload(ArrayList<Ledger> payload) {
         Payload = payload;
     }
-
 }

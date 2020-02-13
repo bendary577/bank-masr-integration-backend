@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class JournalController {
     static int PORT = 8080;
-    static String HOST= "192.168.133.128";
+    static String HOST= "192.168.1.21";
 
     @Autowired
     private SyncJobRepo syncJobRepo;

@@ -25,7 +25,7 @@ import java.util.HashMap;
 
 public class SupplierService {
     static int PORT = 8080;
-    static String HOST= "192.168.133.128";
+    static String HOST= "192.168.1.21";
 
     @Autowired
     private SyncJobRepo syncJobRepo;

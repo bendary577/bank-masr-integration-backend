@@ -44,7 +44,7 @@ public class CreditNoteController {
     public ArrayList<SyncJobData> getCreditNotes() {
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Credit Notes", "1");
 
-        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
+        SyncJob syncJob = new SyncJob(constant.RUNNING, "",  new Date(), null, "1", "1",
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);

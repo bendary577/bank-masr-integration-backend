@@ -10,6 +10,7 @@ public class SyncJob implements Serializable {
     @Id
     private String id;
     private String status;
+    private String reason;
     private Date creationDate;
     private Date endDate;
     private String userId;
@@ -20,9 +21,10 @@ public class SyncJob implements Serializable {
     public SyncJob() {
     }
 
-    public SyncJob(String status, Date creationDate, Date endDate, String userId, String accountId,
+    public SyncJob(String status, String reason, Date creationDate, Date endDate, String userId, String accountId,
                    String syncJobTypeId) {
         this.status = status;
+        this.reason = reason;
         this.creationDate = creationDate;
         this.endDate = endDate;
         this.userId = userId;
@@ -45,6 +47,14 @@ public class SyncJob implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public Date getCreationDate() {

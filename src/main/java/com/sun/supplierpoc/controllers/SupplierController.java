@@ -38,11 +38,11 @@ public class SupplierController {
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
+    @Autowired
+    public SupplierService supplierService;
 
     public Constants constant = new Constants();
     public Conversions conversions = new Conversions();
-    @Autowired
-    public SupplierService supplierService;
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,25 +50,79 @@ public class SupplierController {
     @RequestMapping("/getSuppliers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<SyncJobData> getSuppliers() throws SoapFaultException, ComponentException{
+    public HashMap<String, Object> getSuppliers() throws SoapFaultException, ComponentException{
+        Boolean addFlag = false;
+        HashMap<String, Object> response = new HashMap<>();
+
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", "1");
 
-        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, "1", "1",
                 syncJobType.getId());
-
         syncJobRepo.save(syncJob);
 
-        ArrayList<Supplier> suppliers = supplierService.getSuppliersData();
-        ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers);
-        if (addedSuppliers.size() != 0){
-            supplierService.sendSuppliersData(addedSuppliers, syncJob);
+        HashMap<String, Object> data = supplierService.getSuppliersData();
+
+        if (data.get("status").equals(Constants.SUCCESS)) {
+            ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
+
+            if (suppliers.size() > 0){
+                ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob);
+
+                if (addedSuppliers.size() != 0){
+                    addFlag = supplierService.sendSuppliersData(addedSuppliers, syncJob, syncJobType);
+                }
+                else {
+                    syncJob.setStatus(Constants.SUCCESS);
+                    syncJob.setReason("No new suppliers to add.");
+                    syncJobRepo.save(syncJob);
+
+                    response.put("message", "No new suppliers to add.");
+                    response.put("success", true);
+
+                    return response;
+                }
+            }
+            else {
+                syncJob.setStatus(Constants.SUCCESS);
+                syncJob.setReason("There is no suppliers to get from Sun System.");
+                syncJobRepo.save(syncJob);
+
+                response.put("message", "There is no suppliers to get from Sun System.");
+                response.put("success", true);
+
+                return response;
+            }
+
+            syncJob.setEndDate(new Date());
+            if (addFlag){
+                syncJob.setStatus(Constants.SUCCESS);
+                syncJob.setReason("Sync supplier successfully.");
+                syncJobRepo.save(syncJob);
+
+                response.put("message", "Sync supplier successfully.");
+                response.put("success", true);
+
+                return response;
+            }
+            else {
+                syncJob.setStatus("Failed to send supplier to Oracle Hospitality");
+                syncJob.setReason("Failed to sync suppliers.");
+                syncJobRepo.save(syncJob);
+
+                response.put("message", "Failed to sync suppliers.");
+                response.put("success", false);
+                return response;
+            }
         }
+        else {
+            syncJob.setStatus("Failed to get suppliers from Sun System");
+            syncJob.setReason("Failed to sync suppliers.");
+            syncJobRepo.save(syncJob);
 
-        syncJob.setStatus(constant.SUCCESS);
-        syncJob.setEndDate(new Date());
-        syncJobRepo.save(syncJob);
-
-        return addedSuppliers;
+            response.put("message", "Failed to sync suppliers.");
+            response.put("success", false);
+            return response;
+        }
     }
 
 

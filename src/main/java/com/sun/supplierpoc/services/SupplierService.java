@@ -43,18 +43,16 @@ public class SupplierService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public ArrayList<Supplier> getSuppliersData() throws SoapFaultException, ComponentException {
-
+    public HashMap<String, Object> getSuppliersData() throws SoapFaultException, ComponentException {
+        HashMap<String, Object> data = new HashMap<>();
         boolean useEncryption = false;
 
         String username = "ACt";
         String password = "P@ssw0rd";
 
-        // obtain a SunSystems Security Voucher via SecurityProvider SOAP API
         SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
         IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
 
-        // setup and authenticate a SOAP API component proxy
         SoapComponent component = null;
         if (useEncryption) {
             component = new SecureSoapComponent(HOST, PORT);
@@ -63,8 +61,6 @@ public class SupplierService {
         }
         component.authenticate(voucher);
 
-
-        // call 'Query' method via SOAP API ...
         String inputPayload =   "<SSC>" +
                 "   <User>" +
                 "       <Name>" + username + "</Name>" +
@@ -114,24 +110,26 @@ public class SupplierService {
 
             SSC query = (SSC) jaxbUnmarshaller.unmarshal(new StringReader(strOut));
 
-            System.out.println(query);
-
-            return query.getPayload();
+            data.put("status", Constants.SUCCESS);
+            data.put("message", "");
+            data.put("suppliers", query.getPayload());
+            return data;
         }
         catch (JAXBException e)
         {
             e.printStackTrace();
         }
 
-        return new ArrayList<> ();
+        data.put("status", Constants.FAILED);
+        data.put("message", "");
+        data.put("suppliers", new ArrayList<> ());
+        return data;
     }
 
-    public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers) {
+    public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers, SyncJob syncJob) {
         ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
 
-        for (int i = 0; i < suppliers.size(); i++) {
-            Supplier supplier = suppliers.get(i);
-
+        for (Supplier supplier : suppliers) {
             HashMap<String, Object> data = new HashMap<>();
 
             data.put("supplierId", "");
@@ -151,8 +149,8 @@ public class SupplierService {
             data.put("contactFirstName", "");
 
 
-            SyncJobData syncJobData = new SyncJobData(data, constant.RECEIVED, "", new Date(),
-                    "0");
+            SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
             System.out.println(syncJobDataRepo.save(syncJobData));
             addedSuppliers.add(syncJobData);
 
@@ -160,7 +158,7 @@ public class SupplierService {
         return addedSuppliers;
     }
 
-    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob){
+    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob, SyncJobType syncJobType){
         WebDriver driver = setupEnvironment.setupSeleniumEnv();
 
         try {
@@ -179,9 +177,7 @@ public class SupplierService {
                 return false;
             }
 
-            for(int i = 0; i < suppliers.size(); i++) {
-                SyncJobData supplier = suppliers.get(i);
-
+            for (SyncJobData supplier : suppliers) {
                 String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
                 driver.get(vendorPage);
                 driver.findElement(By.linkText("New")).click();
@@ -190,18 +186,28 @@ public class SupplierService {
                 driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
 
                 //////////////////////////////////////  Set Hidden Elements  ///////////////////////////////////////////
-
                 JavascriptExecutor js = (JavascriptExecutor) driver;
                 js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
                 js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
 
-                String taxesValue = "[22,\"New\",\"NEW\"]";
-                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('value'," + taxesValue + ")");
+                String tax = (String) syncJobType.getConfiguration().get("taxes");
+                driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);
+                driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ARROW_DOWN);
+                driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ENTER);
+//                String taxesValue = "[22,\"New\",\"NEW\"]";
+//                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('value'," + taxesValue + ")");
+
+
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
 
-                String vendorGroupValue = "[12,\"Dariy\",\"DARIY\"]";
-                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('value'," + vendorGroupValue + ")");
+                String group = (String) syncJobType.getConfiguration().get("groups");
+                driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(group);
+                driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ARROW_DOWN);
+                driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ENTER);
+
+//                String vendorGroupValue = "[12,\"Dariy\",\"DARIY\"]";
+//                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('value'," + vendorGroupValue + ")");
 
                 //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
 
@@ -260,17 +266,16 @@ public class SupplierService {
                     Alert al = driver.switchTo().alert();
                     al.accept();
 
-                    supplier.setStatus(constant.FAILED);
+                    supplier.setStatus(Constants.FAILED);
                     supplier.setReason("Already Exits");
                     supplier.setSyncJobId(syncJob.getId());
                     syncJobDataRepo.save(supplier);
 
-                } catch (Exception e) {
-                    System.out.println(e);
-                    e.printStackTrace();
+                } catch (NoAlertPresentException Ex) {
+                    System.out.println("No alert");
                 }
 
-                supplier.setStatus(constant.SUCCESS);
+                supplier.setStatus(Constants.SUCCESS);
                 supplier.setReason("");
                 supplier.setSyncJobId(syncJob.getId());
                 syncJobDataRepo.save(supplier);

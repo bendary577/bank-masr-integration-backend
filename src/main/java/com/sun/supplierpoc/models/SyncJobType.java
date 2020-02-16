@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 
 public class SyncJobType implements Serializable {
     @Id
@@ -12,14 +13,14 @@ public class SyncJobType implements Serializable {
     private String description;
     private String endPoint;
     private Date creationDate;
-    private Object configuration;
+    private HashMap<String, Object> configuration;
     private String accountId;
     private boolean deleted;
 
     public SyncJobType() {
     }
 
-    public SyncJobType(String name, String description, String endPoint, Date creationDate, Object configuration,
+    public SyncJobType(String name, String description, String endPoint, Date creationDate, HashMap<String, Object> configuration,
                        String accountId, boolean deleted) {
         this.name = name;
         this.description = description;
@@ -70,11 +71,11 @@ public class SyncJobType implements Serializable {
         this.creationDate = creationDate;
     }
 
-    public Object getConfiguration() {
+    public HashMap<String, Object> getConfiguration() {
         return configuration;
     }
 
-    public void setConfiguration(Object configuration) {
+    public void setConfiguration(HashMap<String, Object> configuration) {
         this.configuration = configuration;
     }
 

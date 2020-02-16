@@ -57,7 +57,7 @@ public class InvoiceController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", "1");
 
-        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
+        SyncJob syncJob = new SyncJob(constant.RUNNING, "", new Date(), null, "1", "1",
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);

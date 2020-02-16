@@ -84,7 +84,7 @@ public class TransferController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", "1");
 
-        SyncJob syncJob = new SyncJob(constant.RUNNING,  new Date(), null, "1", "1",
+        SyncJob syncJob = new SyncJob(constant.RUNNING, "", new Date(), null, "1", "1",
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);

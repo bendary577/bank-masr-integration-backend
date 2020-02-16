@@ -9,6 +9,7 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.soapModels.JournalSSC;
 import com.sun.supplierpoc.soapModels.PurchaseInvoiceSSC;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
@@ -25,15 +26,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.io.StringWriter;
+
+
+
 
 @RestController
 
@@ -60,7 +75,6 @@ public class TransferController {
     public ArrayList<SyncJobData> getBookedTransfer() {
 
         try {
-
             sendTransferData();
         } catch (SoapFaultException e) {
             e.printStackTrace();
@@ -201,85 +215,188 @@ public class TransferController {
         SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
         IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
 
+        String sccXMLStringValue = null;
+        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+        try {
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document doc = docBuilder.newDocument();
+            // Create SSC root element
+            Element SSCRootElement = doc.createElement("SSC");
+            doc.appendChild(SSCRootElement);
 
-        String inputPayload =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-                        "<SSC>" +
-                        "<ErrorContext/>" +
-                        "   <User>" +
-                        "       <Name>" + username + "</Name>" +
-                        "   </User>" +
+            // User
+            Element userElement = doc.createElement("User");
+            SSCRootElement.appendChild(userElement);
 
-                        "<SunSystemsContext>" +
-                        "<BusinessUnit>"  + "PK1" + "</BusinessUnit>" +
-                        "</SunSystemsContext>" +
+            Element nameElement = doc.createElement("Name");
+            nameElement.appendChild(doc.createTextNode(username));
+            userElement.appendChild(nameElement);
 
-                        "<MethodContext>" +
-                        "<LedgerPostingParameters>" +
-                        "<Description>" + "Test import journal 1" + "</Description>" +
-                        "<JournalType>" + "" + "</JournalType>" +
-                        "<PostingType>" + "1" + "</PostingType>" +
-                        "</LedgerPostingParameters>" +
-                        "</MethodContext>" +
-                        "<Payload>" +
-                        "<Ledger>" +
-                        "<Line>" +
-                            "<AccountCode>" + "11000" + "</AccountCode>" +
-                            "<AnalysisCode2>" + "12" + "</AnalysisCode2>" +
-                            "<AnalysisCode6>" + "16" + "</AnalysisCode6>" +
-                            "<Base2ReportingAmount>" + "485" + "</Base2ReportingAmount>" +
-                            "<BaseAmount>" + "485" + "</BaseAmount>" +
-                            "<CurrencyCode>" + "GBP" + "</CurrencyCode>" +
+            // SunSystemsContext
+            Element sunSystemContextElement = doc.createElement("SunSystemsContext");
+            SSCRootElement.appendChild(sunSystemContextElement);
 
-                            "<DebitCredit>" + "C" + "</DebitCredit>" +
-                            "<JournalLineNumber>" + "1" + "</JournalLineNumber>" +
-                            "<JournalSource>" + "PK1" + "</JournalSource>" +
-                            "<JournalType>" + "PACC" + "</JournalType>" +
-                            "<TransactionAmount>" + "485" + "</TransactionAmount>" +
-                            "<CurrencyCode>" + "GBP" + "</CurrencyCode>" +
+            Element businessUnitElement = doc.createElement("BusinessUnit");
+            businessUnitElement.appendChild(doc.createTextNode("PK1"));
+            sunSystemContextElement.appendChild(businessUnitElement);
 
+            // MethodContext
+            Element methodContextElement = doc.createElement("MethodContext");
+            SSCRootElement.appendChild(methodContextElement);
 
-//<JournalType>PACC</JournalType>
-//<TransactionAmount>485</TransactionAmount>
-//<TransactionReference>SI/002017</TransactionReference>
-//<Accounts>
-//<AccountCode>11000</AccountCode>
-//<EnterAnalysis1>3</EnterAnalysis1>
-//<EnterAnalysis10>3</EnterAnalysis10>
-//<EnterAnalysis2>1</EnterAnalysis2>
-//<EnterAnalysis3>3</EnterAnalysis3>
-//<EnterAnalysis4>3</EnterAnalysis4>
-//<EnterAnalysis5>3</EnterAnalysis5>
-//<EnterAnalysis6>1</EnterAnalysis6>
-//<EnterAnalysis7>3</EnterAnalysis7>
-//<EnterAnalysis8>3</EnterAnalysis8>
-//<EnterAnalysis9>3</EnterAnalysis9>
-//<Analysis2>
-//<VAcntCatAnalysis_AcntCode>11000</VAcntCatAnalysis_AcntCode>
-//<VAcntCatAnalysis_AnlCode>44</VAcntCatAnalysis_AnlCode>
-//</Analysis2>
-//<Analysis6>
-//<VAcntCatAnalysis_AcntCode>11000</VAcntCatAnalysis_AcntCode>
-//<VAcntCatAnalysis_AnlCode>V</VAcntCatAnalysis_AnlCode>
-//</Analysis6>
-//</Accounts>
-//</Line>
-//</Ledger>
+            Element LedgerPostingParametersElement = doc.createElement("LedgerPostingParameters");
+            methodContextElement.appendChild(LedgerPostingParametersElement);
+
+            Element DescriptionElement = doc.createElement("Description");
+            DescriptionElement.appendChild(doc.createTextNode("Test import journal"));
+            LedgerPostingParametersElement.appendChild(DescriptionElement);
+
+            Element postingTypeElement = doc.createElement("PostingType");
+            postingTypeElement.appendChild(doc.createTextNode("1"));
+            LedgerPostingParametersElement.appendChild(postingTypeElement);
+
+            // Payload
+            Element payloadElement = doc.createElement("Payload");
+            SSCRootElement.appendChild(payloadElement);
+
+            Element ledgerElement = doc.createElement("Ledger");
+            payloadElement.appendChild(ledgerElement);
+
+            Element lineElement = doc.createElement("Line");
+            ledgerElement.appendChild(lineElement);
 
 
+            Element accountCodeElement = doc.createElement("AccountCode");
+            accountCodeElement.appendChild(doc.createTextNode("11000"));
+            lineElement.appendChild(accountCodeElement);
 
+            Element analysisCode2Element = doc.createElement("AnalysisCode2");
+            analysisCode2Element.appendChild(doc.createTextNode("12"));
+            lineElement.appendChild(analysisCode2Element);
 
-                        "</Payload>" +
-                        "</SSC>";
+            Element analysisCode6Element = doc.createElement("AnalysisCode6");
+            analysisCode6Element.appendChild(doc.createTextNode("16"));
+            lineElement.appendChild(analysisCode6Element);
+
+            Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
+            base2ReportingAmountElement.appendChild(doc.createTextNode("485"));
+            lineElement.appendChild(base2ReportingAmountElement);
+
+            Element baseAmountElement = doc.createElement("BaseAmount");
+            baseAmountElement.appendChild(doc.createTextNode("485"));
+            lineElement.appendChild(baseAmountElement);
+
+            Element currencyCodeElement = doc.createElement("CurrencyCode");
+            currencyCodeElement.appendChild(doc.createTextNode("GBP"));
+            lineElement.appendChild(currencyCodeElement);
+
+            Element debitCreditElement = doc.createElement("DebitCredit");
+            debitCreditElement.appendChild(doc.createTextNode("C"));
+            lineElement.appendChild(debitCreditElement);
+
+            Element journalLineNumberElement = doc.createElement("JournalLineNumber");
+            journalLineNumberElement.appendChild(doc.createTextNode("1"));
+            lineElement.appendChild(journalLineNumberElement);
+
+            Element journalSourceElement = doc.createElement("JournalSource");
+            journalSourceElement.appendChild(doc.createTextNode("PK1"));
+            lineElement.appendChild(journalSourceElement);
+
+            Element journalTypeElement = doc.createElement("JournalType");
+            journalTypeElement.appendChild(doc.createTextNode("PACC"));
+            lineElement.appendChild(journalTypeElement);
+
+            Element transactionAmountElement = doc.createElement("TransactionAmount");
+            transactionAmountElement.appendChild(doc.createTextNode("485"));
+            lineElement.appendChild(transactionAmountElement);
+
+            Element transactionReferenceElement = doc.createElement("TransactionReference");
+            transactionReferenceElement.appendChild(doc.createTextNode("PACC"));
+            lineElement.appendChild(transactionReferenceElement);
+
+            Element accountsElement = doc.createElement("Accounts");
+            lineElement.appendChild(accountsElement);
+
+            lineElement.appendChild(accountCodeElement);
+
+            Element enterAnalysis1Element = doc.createElement("EnterAnalysis1");
+            enterAnalysis1Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis1Element);
+
+            Element enterAnalysis10Element = doc.createElement("EnterAnalysis10");
+            enterAnalysis10Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis10Element);
+
+            Element enterAnalysis2Element = doc.createElement("EnterAnalysis2");
+            enterAnalysis2Element.appendChild(doc.createTextNode("1"));
+            accountsElement.appendChild(enterAnalysis2Element);
+
+            Element enterAnalysis3Element = doc.createElement("EnterAnalysis3");
+            enterAnalysis3Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis3Element);
+
+            Element enterAnalysis4Element = doc.createElement("EnterAnalysis4");
+            enterAnalysis4Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis4Element);
+
+            Element enterAnalysis5Element = doc.createElement("EnterAnalysis5");
+            enterAnalysis5Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis5Element);
+
+            Element enterAnalysis6Element = doc.createElement("EnterAnalysis6");
+            enterAnalysis6Element.appendChild(doc.createTextNode("1"));
+            accountsElement.appendChild(enterAnalysis6Element);
+
+            Element enterAnalysis7Element = doc.createElement("EnterAnalysis7");
+            enterAnalysis7Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis7Element);
+
+            Element enterAnalysis8Element = doc.createElement("EnterAnalysis8");
+            enterAnalysis8Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis8Element);
+
+            Element enterAnalysis9Element = doc.createElement("EnterAnalysis9");
+            enterAnalysis9Element.appendChild(doc.createTextNode("3"));
+            accountsElement.appendChild(enterAnalysis9Element);
+
+            Element analysis2Element = doc.createElement("Analysis2");
+            accountsElement.appendChild(analysis2Element);
+
+            Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
+            vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode("11000"));
+            analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
+
+            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
+            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode("44"));
+            analysis2Element.appendChild(vAcntCatAnalysis_AnlCodeElement);
+
+            Element analysis6Element = doc.createElement("Analysis6");
+            accountsElement.appendChild(analysis6Element);
+
+            Element vAcntCatAnalysis_AcntCodeElement2 = doc.createElement("VAcntCatAnalysis_AcntCode");
+            vAcntCatAnalysis_AcntCodeElement2.appendChild(doc.createTextNode("11000"));
+            analysis6Element.appendChild(vAcntCatAnalysis_AcntCodeElement2);
+
+            Element vAcntCatAnalysis_AnlCodeElement2 = doc.createElement("VAcntCatAnalysis_AnlCode");
+            vAcntCatAnalysis_AnlCodeElement2.appendChild(doc.createTextNode("V"));
+            analysis6Element.appendChild(vAcntCatAnalysis_AnlCodeElement2);
+
+            // Transform Document to XML String
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            sccXMLStringValue = writer.getBuffer().toString();
+        } catch (ParserConfigurationException | TransformerException e) {
+            e.printStackTrace();
+        }
 
         String result = "";
-
         try {
 
             SoapComponent ssc = new SoapComponent(HOST,PORT);
             ssc.authenticate(voucher);
-            result = ssc.execute("PurchaseInvoice", "CreateOrAmend", inputPayload);
-            System.out.println(result);
+            result = ssc.execute("Journal", "Import", sccXMLStringValue);
         }
         catch (Exception ex) {
             System.out.print("An error occurred logging in to SunSystems:\r\n");
@@ -290,19 +407,15 @@ public class TransferController {
         JAXBContext jaxbContext;
         try
         {
-            jaxbContext = JAXBContext.newInstance(PurchaseInvoiceSSC.class);
+            jaxbContext = JAXBContext.newInstance(JournalSSC.class);
 
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-
-            PurchaseInvoiceSSC query = (PurchaseInvoiceSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
+            JournalSSC query = (JournalSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
 
             System.out.println(query.getPayload());
 
-            if (query.getPayload().get(0).getStatus().equals("success")){
-                return true;
-            }
-            return false;
+            return query.getPayload().get(0).getLine().getStatus().equals("success");
         }
         catch (JAXBException e)
         {

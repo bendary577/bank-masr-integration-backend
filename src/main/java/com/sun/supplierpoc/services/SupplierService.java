@@ -1,7 +1,9 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -14,6 +16,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -23,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
+@RestController
 public class SupplierService {
     static int PORT = 8080;
     static String HOST= "192.168.1.21";
@@ -156,7 +160,7 @@ public class SupplierService {
         return addedSuppliers;
     }
 
-    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers){
+    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob){
         WebDriver driver = setupEnvironment.setupSeleniumEnv();
 
         try {
@@ -258,6 +262,7 @@ public class SupplierService {
 
                     supplier.setStatus(constant.FAILED);
                     supplier.setReason("Already Exits");
+                    supplier.setSyncJobId(syncJob.getId());
                     syncJobDataRepo.save(supplier);
 
                 } catch (Exception e) {
@@ -267,6 +272,7 @@ public class SupplierService {
 
                 supplier.setStatus(constant.SUCCESS);
                 supplier.setReason("");
+                supplier.setSyncJobId(syncJob.getId());
                 syncJobDataRepo.save(supplier);
             }
 

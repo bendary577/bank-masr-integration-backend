@@ -8,7 +8,9 @@ import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.SupplierService;
+import com.sun.supplierpoc.soapModels.SSC;
 import com.sun.supplierpoc.soapModels.Supplier;
+import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.*;;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -18,6 +20,11 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,9 +41,9 @@ public class SupplierController {
 
     public Constants constant = new Constants();
     public Conversions conversions = new Conversions();
-    public SupplierService supplierService = new SupplierService();
+    @Autowired
+    public SupplierService supplierService;
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
-
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +61,7 @@ public class SupplierController {
         ArrayList<Supplier> suppliers = supplierService.getSuppliersData();
         ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers);
         if (addedSuppliers.size() != 0){
-            supplierService.sendSuppliersData(addedSuppliers);
+            supplierService.sendSuppliersData(addedSuppliers, syncJob);
         }
 
         syncJob.setStatus(constant.SUCCESS);

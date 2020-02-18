@@ -10,6 +10,7 @@ public class Account implements Serializable {
     private String id;
     private String name;
     private String domain;
+    private String ERD;
     private Object accountCredentials;
     private Date creationDate;
     private boolean deleted;
@@ -17,10 +18,11 @@ public class Account implements Serializable {
     public Account() {
     }
 
-    public Account(String id, String name, String domain, Object accountCredentials, Date creationDate, boolean deleted) {
+    public Account(String id, String name, String domain, String ERD, Object accountCredentials, Date creationDate, boolean deleted) {
         this.id = id;
         this.name = name;
         this.domain = domain;
+        this.ERD = ERD;
         this.accountCredentials = accountCredentials;
         this.creationDate = creationDate;
         this.deleted = deleted;
@@ -48,6 +50,14 @@ public class Account implements Serializable {
 
     public void setDomain(String domain) {
         this.domain = domain;
+    }
+
+    public String getERD() {
+        return ERD;
+    }
+
+    public void setERD(String ERD) {
+        this.ERD = ERD;
     }
 
     public Object getAccountCredentials() {

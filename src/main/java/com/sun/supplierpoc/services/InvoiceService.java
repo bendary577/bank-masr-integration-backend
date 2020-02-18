@@ -38,13 +38,7 @@ public class InvoiceService {
     static String HOST= "192.168.1.21";
 
     @Autowired
-    private SyncJobRepo syncJobRepo;
-    @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
-    @Autowired
     private SyncJobDataRepo syncJobDataRepo;
-
-    public Conversions conversions = new Conversions();
 
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
@@ -58,16 +52,8 @@ public class InvoiceService {
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-            driver.get(url);
 
-            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
-
-            String previous_url = driver.getCurrentUrl();
-            driver.findElement(By.name("Login")).click();
-
-            if (driver.getCurrentUrl().equals(previous_url)){
+            if (!setupEnvironment.loginOHIM(driver, url)){
                 data.put("status", Constants.FAILED);
                 data.put("message", "Invalid username and password.");
                 data.put("invoices", invoices);
@@ -123,21 +109,19 @@ public class InvoiceService {
 
     }
 
-    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
+    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob,
                                                    Boolean flag){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
-        for (int i = 0; i < invoices.size(); i++) {
-            HashMap<String, Object> invoice = invoices.get(i);
-
+        for (HashMap<String, String> invoice : invoices) {
             // Invoice Part
-            if (!flag){
-                if (invoice.get("invoice_no.").toString().substring(0, 3).equals("RTV")){
+            if (!flag) {
+                if (invoice.get("invoice_no.").substring(0, 3).equals("RTV")) {
                     continue;
                 }
             }
 
-            HashMap<String, Object> data = new HashMap<>();
+            HashMap<String, String> data = new HashMap<>();
 
             data.put("invoiceNo", invoice.get("invoice_no."));
             data.put("vendor", invoice.get("vendor"));

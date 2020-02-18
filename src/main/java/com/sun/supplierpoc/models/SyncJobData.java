@@ -4,13 +4,14 @@ import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 
 
 public class SyncJobData implements Serializable {
 
     @Id
     private String id;
-    private Object data;
+    private HashMap<String, String> data;
     private String status;
     private String reason;
     private Date creationDate;
@@ -20,7 +21,7 @@ public class SyncJobData implements Serializable {
     public SyncJobData() {
     }
 
-    public SyncJobData(Object data, String status, String reason, Date creationDate, String syncJobId) {
+    public SyncJobData(HashMap<String, String> data, String status, String reason, Date creationDate, String syncJobId) {
         this.data = data;
         this.status = status;
         this.reason = reason;
@@ -37,11 +38,11 @@ public class SyncJobData implements Serializable {
         this.id = id;
     }
 
-    public Object getData() {
+    public HashMap<String, String> getData() {
         return data;
     }
 
-    public void setData(Object data) {
+    public void setData(HashMap<String, String> data) {
         this.data = data;
     }
 

@@ -130,7 +130,7 @@ public class SupplierService {
         ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
 
         for (Supplier supplier : suppliers) {
-            HashMap<String, Object> data = new HashMap<>();
+            HashMap<String, String> data = new HashMap<>();
 
             data.put("supplierId", "");
             data.put("supplier", supplier.getSupplierName());

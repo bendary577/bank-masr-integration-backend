@@ -11,6 +11,7 @@ import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
+import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.ssc.client.*;
 import org.openqa.selenium.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,8 @@ public class InvoiceController {
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private InvoiceService invoiceService;
+    @Autowired
+    private TransferService transferService;
 
     public Conversions conversions = new Conversions();
 
@@ -58,16 +61,27 @@ public class InvoiceController {
         HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType);
 
         if (data.get("status").equals(Constants.SUCCESS)){
-            ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
+            ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
-                if (addedInvoices.size() != 0){
+                if(addedInvoices.size() != 0){
                     try {
-                        invoiceService.sendInvoicesData(addedInvoices);
-                    } catch (SoapFaultException e) {
-                        e.printStackTrace();
-                    } catch (ComponentException e) {
+                        for (SyncJobData invoice: addedInvoices ) {
+                            boolean addInvoiceFlag = transferService.sendTransferData(invoice, syncJobType);
+
+                            if(addInvoiceFlag){
+                                invoice.setStatus(Constants.SUCCESS);
+                                syncJobDataRepo.save(invoice);
+                            }
+                            else {
+                                invoice.setStatus(Constants.FAILED);
+                                invoice.setReason("");
+                                syncJobDataRepo.save(invoice);
+                            }
+                        }
+
+                    } catch (SoapFaultException | ComponentException e) {
                         e.printStackTrace();
                     }
                 }
@@ -83,8 +97,8 @@ public class InvoiceController {
                 syncJob.setReason("There is no invoices to get from Oracle Hospitality.");
                 syncJobRepo.save(syncJob);
 
-                response.put("message", "Failed to sync suppliers.");
-                response.put("success", false);
+                response.put("message", "There is no invoices to get from Oracle Hospitality.");
+                response.put("success", true);
                 return response;
 
             }
@@ -117,7 +131,6 @@ public class InvoiceController {
         try
         {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-            driver.get(url);
 
             if (!setupEnvironment.loginOHIM(driver, url)){
                 data.put("status", Constants.FAILED);

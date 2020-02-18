@@ -41,7 +41,6 @@ public class SupplierController {
     @Autowired
     public SupplierService supplierService;
 
-    public Constants constant = new Constants();
     public Conversions conversions = new Conversions();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 

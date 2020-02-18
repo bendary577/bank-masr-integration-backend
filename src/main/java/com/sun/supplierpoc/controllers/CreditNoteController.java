@@ -48,9 +48,10 @@ public class CreditNoteController {
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);
-
-        ArrayList<HashMap<String, Object>> invoices = invoiceController.getInvoicesData(true);
-        ArrayList<SyncJobData> addedInvoices = invoiceController.saveInvoicesData(invoices, syncJob, true);
+//
+//        ArrayList<HashMap<String, Object>> invoices = invoiceController.getInvoicesData(true, syncJobType);
+//        ArrayList<SyncJobData> addedInvoices = invoiceController.saveInvoicesData(invoices, syncJob, true);
+        ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         syncJob.setStatus(constant.SUCCESS);
         syncJob.setEndDate(new Date());

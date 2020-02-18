@@ -73,15 +73,6 @@ public class TransferController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ArrayList<SyncJobData> getBookedTransfer() {
-
-        try {
-            sendTransferData();
-        } catch (SoapFaultException e) {
-            e.printStackTrace();
-        } catch (ComponentException e) {
-            e.printStackTrace();
-        }
-
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", "1");
 
         SyncJob syncJob = new SyncJob(constant.RUNNING, "", new Date(), null, "1", "1",
@@ -94,7 +85,7 @@ public class TransferController {
         if (addedTransfers.size() != 0){
             try {
 
-                sendTransferData();
+                sendTransferData(addedTransfers);
             } catch (SoapFaultException e) {
                 e.printStackTrace();
             } catch (ComponentException e) {
@@ -205,8 +196,7 @@ public class TransferController {
 
     }
 
-//    ArrayList<SyncJobData> addedInvoices
-    public Boolean sendTransferData() throws SoapFaultException, ComponentException {
+    public Boolean sendTransferData(ArrayList<SyncJobData> addedInvoices) throws SoapFaultException, ComponentException {
         boolean useEncryption = false;
 
         String username = "ACt";
@@ -224,7 +214,7 @@ public class TransferController {
             Element SSCRootElement = doc.createElement("SSC");
             doc.appendChild(SSCRootElement);
 
-            // User
+            ///////////////////////////////////////////  User //////////////////////////////////////////////////////////
             Element userElement = doc.createElement("User");
             SSCRootElement.appendChild(userElement);
 
@@ -232,7 +222,7 @@ public class TransferController {
             nameElement.appendChild(doc.createTextNode(username));
             userElement.appendChild(nameElement);
 
-            // SunSystemsContext
+            ///////////////////////////////////////////  SunSystemsContext /////////////////////////////////////////////
             Element sunSystemContextElement = doc.createElement("SunSystemsContext");
             SSCRootElement.appendChild(sunSystemContextElement);
 
@@ -240,7 +230,7 @@ public class TransferController {
             businessUnitElement.appendChild(doc.createTextNode("PK1"));
             sunSystemContextElement.appendChild(businessUnitElement);
 
-            // MethodContext
+            ///////////////////////////////////////////  MethodContext /////////////////////////////////////////////////
             Element methodContextElement = doc.createElement("MethodContext");
             SSCRootElement.appendChild(methodContextElement);
 
@@ -255,16 +245,17 @@ public class TransferController {
             postingTypeElement.appendChild(doc.createTextNode("1"));
             LedgerPostingParametersElement.appendChild(postingTypeElement);
 
-            // Payload
+            ///////////////////////////////////////////  Payload ///////////////////////////////////////////////////////
+
             Element payloadElement = doc.createElement("Payload");
             SSCRootElement.appendChild(payloadElement);
 
             Element ledgerElement = doc.createElement("Ledger");
             payloadElement.appendChild(ledgerElement);
 
+            ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
             Element lineElement = doc.createElement("Line");
             ledgerElement.appendChild(lineElement);
-
 
             Element accountCodeElement = doc.createElement("AccountCode");
             accountCodeElement.appendChild(doc.createTextNode("11000"));
@@ -318,6 +309,63 @@ public class TransferController {
             lineElement.appendChild(accountsElement);
 
             lineElement.appendChild(accountCodeElement);
+
+            ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
+            Element lineElement2 = doc.createElement("Line");
+            ledgerElement.appendChild(lineElement2);
+
+            Element accountCodeElement2 = doc.createElement("AccountCode");
+            accountCodeElement2.appendChild(doc.createTextNode("11000"));
+            lineElement2.appendChild(accountCodeElement2);
+
+            Element analysisCode2Element2 = doc.createElement("AnalysisCode2");
+            analysisCode2Element2.appendChild(doc.createTextNode("12"));
+            lineElement2.appendChild(analysisCode2Element2);
+
+            Element analysisCode6Element2 = doc.createElement("AnalysisCode6");
+            analysisCode6Element2.appendChild(doc.createTextNode("16"));
+            lineElement2.appendChild(analysisCode6Element2);
+
+            Element base2ReportingAmountElement2 = doc.createElement("Base2ReportingAmount");
+            base2ReportingAmountElement2.appendChild(doc.createTextNode("-485"));
+            lineElement2.appendChild(base2ReportingAmountElement2);
+
+            Element baseAmountElement2 = doc.createElement("BaseAmount");
+            baseAmountElement2.appendChild(doc.createTextNode("-485"));
+            lineElement2.appendChild(baseAmountElement2);
+
+            Element currencyCodeElement2 = doc.createElement("CurrencyCode");
+            currencyCodeElement2.appendChild(doc.createTextNode("GBP"));
+            lineElement2.appendChild(currencyCodeElement2);
+
+            Element debitCreditElement2 = doc.createElement("DebitCredit");
+            debitCreditElement2.appendChild(doc.createTextNode("D"));
+            lineElement2.appendChild(debitCreditElement2);
+
+            Element journalLineNumberElement2 = doc.createElement("JournalLineNumber");
+            journalLineNumberElement2.appendChild(doc.createTextNode("1"));
+            lineElement2.appendChild(journalLineNumberElement2);
+
+            Element journalSourceElement2 = doc.createElement("JournalSource");
+            journalSourceElement2.appendChild(doc.createTextNode("PK1"));
+            lineElement2.appendChild(journalSourceElement2);
+
+            Element journalTypeElement2 = doc.createElement("JournalType");
+            journalTypeElement2.appendChild(doc.createTextNode("PACC"));
+            lineElement2.appendChild(journalTypeElement2);
+
+            Element transactionAmountElement2 = doc.createElement("TransactionAmount");
+            transactionAmountElement2.appendChild(doc.createTextNode("-485"));
+            lineElement2.appendChild(transactionAmountElement2);
+
+            Element transactionReferenceElement2 = doc.createElement("TransactionReference");
+            transactionReferenceElement2.appendChild(doc.createTextNode("PACC"));
+            lineElement2.appendChild(transactionReferenceElement2);
+
+            Element accountsElement2 = doc.createElement("Accounts");
+            lineElement2.appendChild(accountsElement2);
+
+            lineElement2.appendChild(accountCodeElement2);
 
             Element enterAnalysis1Element = doc.createElement("EnterAnalysis1");
             enterAnalysis1Element.appendChild(doc.createTextNode("3"));
@@ -423,6 +471,5 @@ public class TransferController {
         }
         return false;
     }
-
 
 }

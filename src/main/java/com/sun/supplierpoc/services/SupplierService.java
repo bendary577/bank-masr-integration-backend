@@ -16,6 +16,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.xml.bind.JAXBContext;
@@ -26,7 +27,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-@RestController
+@Service
 public class SupplierService {
     static int PORT = 8080;
     static String HOST= "192.168.1.21";
@@ -38,7 +39,6 @@ public class SupplierService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
 
-    public Constants constant = new Constants();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

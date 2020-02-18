@@ -2,6 +2,7 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.CostCenter;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -9,21 +10,12 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.soapModels.PurchaseInvoiceSSC;
-import com.systemsunion.security.IAuthenticationVoucher;
+import com.sun.supplierpoc.services.InvoiceService;
 import com.systemsunion.ssc.client.*;
 import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.Select;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -34,226 +26,202 @@ import java.util.List;
 @RestController
 
 public class InvoiceController {
-    static int PORT = 8080;
-    static String HOST= "192.168.1.21";
-
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private InvoiceService invoiceService;
 
     public Conversions conversions = new Conversions();
-    public Constants constant = new Constants();
+
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
+
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getApprovedInvoices")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<SyncJobData> getApprovedInvoices() {
+    public HashMap<String, Object> getApprovedInvoices() {
+        HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", "1");
 
-        SyncJob syncJob = new SyncJob(constant.RUNNING, "", new Date(), null, "1", "1",
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, "1", "1",
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
-        ArrayList<HashMap<String, Object>> invoices = getInvoicesData(false);
-        ArrayList<SyncJobData> addedInvoices = saveInvoicesData(invoices, syncJob, false);
-        if (addedInvoices.size() != 0){
-            try {
+        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType);
 
-                sendInvoicesData(addedInvoices);
-            } catch (SoapFaultException e) {
-                e.printStackTrace();
-            } catch (ComponentException e) {
-                e.printStackTrace();
+        if (data.get("status").equals(Constants.SUCCESS)){
+            ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
+
+            if (invoices.size() > 0){
+                ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
+                if (addedInvoices.size() != 0){
+                    try {
+                        invoiceService.sendInvoicesData(addedInvoices);
+                    } catch (SoapFaultException e) {
+                        e.printStackTrace();
+                    } catch (ComponentException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                syncJob.setStatus(Constants.SUCCESS);
+                syncJob.setEndDate(new Date());
+                syncJobRepo.save(syncJob);
+
+                return response;
             }
+            else {
+                syncJob.setStatus(Constants.SUCCESS);
+                syncJob.setReason("There is no invoices to get from Oracle Hospitality.");
+                syncJobRepo.save(syncJob);
+
+                response.put("message", "Failed to sync suppliers.");
+                response.put("success", false);
+                return response;
+
+            }
+
+
         }
+        else {
+            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setReason("Failed to get invoices from Oracle Hospitality.");
+            syncJobRepo.save(syncJob);
 
-        syncJob.setStatus(constant.SUCCESS);
-        syncJob.setEndDate(new Date());
-        syncJobRepo.save(syncJob);
-
-        return addedInvoices;
+            response.put("message", "Failed to sync invoices.");
+            response.put("success", false);
+            return response;
+        }
     }
 
-    public ArrayList<HashMap<String, Object>> getInvoicesData(Boolean typeFlag){
 
+    @RequestMapping("/getCostCenter")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName){
+        HashMap<String, Object> data = new HashMap<>();
         WebDriver driver = setupEnvironment.setupSeleniumEnv();
-        ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
+        ArrayList<CostCenter> costCenters = new ArrayList<>();
 
-        try {
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, "1");
+        ArrayList<CostCenter> oldCostCenters = (ArrayList<CostCenter>) syncJobType.getConfiguration().get("costCenters");
+
+        try
+        {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
             driver.get(url);
 
-            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
-
-            String previous_url = driver.getCurrentUrl();
-            driver.findElement(By.name("Login")).click();
-
-            if (driver.getCurrentUrl().equals(previous_url)){
-                String message = "Invalid username and password.";
-                return invoices;
+            if (!setupEnvironment.loginOHIM(driver, url)){
+                data.put("status", Constants.FAILED);
+                data.put("message", "Invalid username and password.");
+                data.put("costCenters", costCenters);
+                return data;
             }
 
-            String approvedInvoices = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
-            driver.get(approvedInvoices);
-
-            Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText("All");
-
-            if (typeFlag){
-                driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");
-            }
+            String costCentersURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/CostCenters/OverviewCC.aspx";
+            driver.get(costCentersURL);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = new ArrayList<>();
-            WebElement row = rows.get(39);
-            List<WebElement> cols = row.findElements(By.tagName("th"));
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 13);
 
-            for (int j = 1; j < cols.size(); j++) {
-                columns.add(conversions.transformColName(cols.get(j).getText()));
-            }
+            fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);
 
-            for (int i = 40; i < rows.size(); i++) {
-                HashMap<String, Object> invoice = new HashMap<>();
+            driver.findElement(By.id("cbxUseAssignedTo")).click();
+            driver.findElement(By.id("rbStore")).click();
 
-                row = rows.get(i);
-                cols = row.findElements(By.tagName("td"));
-                if (cols.size() < 14){
-                    continue;
-                }
-
-                for (int j = 1; j < cols.size(); j++) {
-                    invoice.put(columns.get(j - 1), cols.get(j).getText());
-                }
-                invoices.add(invoice);
-            }
+            fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);
 
             driver.quit();
-            return invoices;
-        } catch (Exception e) {
+
+            data.put("status", Constants.SUCCESS);
+            data.put("message", "Get cost centers successfully");
+            data.put("costCenters", costCenters);
+            return data;
+
+        }catch (Exception e) {
             e.printStackTrace();
+
             driver.quit();
-            return invoices;
-        }
 
+            data.put("status", Constants.FAILED);
+            data.put("message", e);
+            data.put("costCenters", costCenters);
+            return data;
+        }
     }
 
-    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
-                                                   Boolean flag){
-        ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
-
-        for (int i = 0; i < invoices.size(); i++) {
-            HashMap<String, Object> invoice = invoices.get(i);
-
-            // Invoice Part
-            if (!flag){
-                if (invoice.get("invoice_no.").toString().substring(0, 3).equals("RTV")){
-                    continue;
-                }
+    public HashMap<String, Object> checkExistence(ArrayList<CostCenter> costCenters, String costCenterName){
+        HashMap<String, Object> data = new HashMap<>();
+        for (CostCenter costCenter :
+                costCenters) {
+            if(costCenter.costCenter.equals(costCenterName)){
+                data.put("status", true);
+                data.put("costCenter", costCenter);
+                return data;
             }
-
-            HashMap<String, Object> data = new HashMap<>();
-
-            data.put("invoiceNo", invoice.get("invoice_no."));
-            data.put("vendor", invoice.get("vendor"));
-            data.put("costCenter", invoice.get("cost_center"));
-            data.put("status", invoice.get("status"));
-            data.put("invoiceDate", invoice.get("'invoice_date'"));
-            data.put("net", invoice.get("net"));
-            data.put("vat", invoice.get("vat"));
-            data.put("gross", invoice.get("gross"));
-            data.put("createdBy", invoice.get("'created_by"));
-            data.put("createdAt", invoice.get("created_at"));
-
-            SyncJobData syncJobData = new SyncJobData(data, constant.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-
-            addedInvoices.add(syncJobData);
         }
-        return addedInvoices;
-
+        data.put("status", false);
+        data.put("costCenter", new CostCenter());
+        return data;
     }
 
+    private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
+                                      ArrayList<CostCenter> oldCostCenters, ArrayList<String> columns){
 
-    public Boolean sendInvoicesData(ArrayList<SyncJobData> addedInvoices) throws SoapFaultException, ComponentException {
-        boolean useEncryption = false;
+        for (int i = rowNumber; i < rows.size(); i++) {
+            CostCenter costCenter = new CostCenter();
 
-        String username = "ACt";
-        String password = "P@ssw0rd";
-
-        SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
-        IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
-
-        String inputPayload =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-                "<SSC>" +
-                        "<ErrorContext/>" +
-                        "   <User>" +
-                        "       <Name>" + username + "</Name>" +
-                        "   </User>" +
-
-                        "<SunSystemsContext>" +
-                        "<BusinessUnit>"  + "PK1" + "</BusinessUnit>" +
-                        "</SunSystemsContext>" +
-
-                        "<Payload>" +
-                        "<PurchaseInvoice>" +
-                            "<PurchaseTransactionType>" + "PI_INVENTORY" + "</PurchaseTransactionType>" +
-                            "<SupplierCode>" + "80020" + "</SupplierCode>" +
-                            "<TransactionDate>" + "10062004" + "</TransactionDate>" +
-                        "</PurchaseInvoice>" +
-                        "</Payload>" +
-                "</SSC>";
-
-        String result = "";
-
-        try {
-
-            SoapComponent ssc = new SoapComponent(HOST,PORT);
-            ssc.authenticate(voucher);
-            result = ssc.execute("PurchaseInvoice", "CreateOrAmend", inputPayload);
-            System.out.println(result);
-        }
-        catch (Exception ex) {
-            System.out.print("An error occurred logging in to SunSystems:\r\n");
-            ex.printStackTrace();
-        }
-
-        // Convert XML to Object
-        JAXBContext jaxbContext;
-        try
-        {
-            jaxbContext = JAXBContext.newInstance(PurchaseInvoiceSSC.class);
-
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
-            PurchaseInvoiceSSC query = (PurchaseInvoiceSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
-
-            System.out.println(query.getPayload());
-
-            if (query.getPayload().get(0).getStatus().equals("success")){
-                return true;
+            WebElement row = rows.get(i);
+            List<WebElement> cols = row.findElements(By.tagName("td"));
+            if (cols.size() < columns.size()){
+                continue;
             }
-            return false;
+
+            costCenter.costCenter =  cols.get(1).getText().strip();
+
+            HashMap<String, Object> oldCostCenterData = checkExistence(oldCostCenters, cols.get(1).getText().strip());
+            CostCenter oldCostCenter = (CostCenter) oldCostCenterData.get("costCenter");
+
+            if ((boolean)oldCostCenterData.get("status")){
+                costCenter.checked = true;
+                costCenter.department = oldCostCenter.department;
+                costCenter.project = oldCostCenter.project;
+                costCenter.future2 = oldCostCenter.future2;
+                costCenter.company = oldCostCenter.company;
+                costCenter.businessUnit = oldCostCenter.businessUnit;
+                costCenter.account = oldCostCenter.account;
+                costCenter.product = oldCostCenter.product;
+                costCenter.interCompany = oldCostCenter.interCompany;
+                costCenter.location = oldCostCenter.location;
+                costCenter.currency = oldCostCenter.currency;
+            }
+            else {
+                costCenter.checked = false;
+                costCenter.department = "000";
+                costCenter.project = "000000";
+                costCenter.future2 = "0000";
+                costCenter.company = "517";
+                costCenter.businessUnit = "";
+                costCenter.account = "411101";
+                costCenter.product = "1200";
+                costCenter.interCompany = "000";
+                costCenter.location = "11101";
+                costCenter.currency = "AED";
+            }
+
+            costCenters.add(costCenter);
         }
-        catch (JAXBException e)
-        {
-            e.printStackTrace();
-        }
-        return false;
-        }
+    }
 
 }

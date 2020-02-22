@@ -47,17 +47,20 @@ public class TransferService {
     static int PORT = 8080;
     static String HOST= "192.168.1.21";
 
-    @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
+    private final SyncJobDataRepo syncJobDataRepo;
 
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
+
+    public TransferService(SyncJobDataRepo syncJobDataRepo) {
+        this.syncJobDataRepo = syncJobDataRepo;
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getTransferData(SyncJobType syncJobType){
         HashMap<String, Object> data = new HashMap<>();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
         ArrayList<HashMap<String, String>> transfers = new ArrayList<>();
 
         HashMap<String, Object> costCenters = (HashMap)(syncJobType.getConfiguration()).get("costCenters");

@@ -122,7 +122,7 @@ public class InvoiceController {
     @ResponseBody
     public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName){
         HashMap<String, Object> data = new HashMap<>();
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, "1");

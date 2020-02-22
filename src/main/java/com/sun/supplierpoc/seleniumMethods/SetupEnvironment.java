@@ -57,7 +57,7 @@ public class SetupEnvironment {
         WebElement row = rows.get(rowNumber);
         List<WebElement> cols = row.findElements(By.tagName("th"));
 
-        for (int j = 1; j < cols.size(); j++) columns.add(conversions.transformColName(cols.get(j).getText()));
+        for (int j = 0; j < cols.size(); j++) columns.add(conversions.transformColName(cols.get(j).getText()));
 
         return columns;
     }

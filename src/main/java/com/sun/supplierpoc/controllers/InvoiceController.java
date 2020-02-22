@@ -72,13 +72,12 @@ public class InvoiceController {
 
                             if(addInvoiceFlag){
                                 invoice.setStatus(Constants.SUCCESS);
-                                syncJobDataRepo.save(invoice);
                             }
                             else {
                                 invoice.setStatus(Constants.FAILED);
                                 invoice.setReason("");
-                                syncJobDataRepo.save(invoice);
                             }
+                            syncJobDataRepo.save(invoice);
                         }
 
                     } catch (SoapFaultException | ComponentException e) {
@@ -103,14 +102,13 @@ public class InvoiceController {
 
             }
 
-
         }
         else {
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setReason("Failed to get invoices from Oracle Hospitality.");
             syncJobRepo.save(syncJob);
 
-            response.put("message", "Failed to sync invoices.");
+            response.put("message", data.get("message"));
             response.put("success", false);
             return response;
         }

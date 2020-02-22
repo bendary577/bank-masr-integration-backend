@@ -83,12 +83,12 @@ public class InvoiceService {
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
-                if (cols.size() < 14){
+                if (cols.size() !=  columns.size()){
                     continue;
                 }
 
                 for (int j = 1; j < cols.size(); j++) {
-                    invoice.put(columns.get(j - 1), cols.get(j).getText());
+                    invoice.put(columns.get(j), cols.get(j).getText());
                 }
                 invoices.add(invoice);
             }

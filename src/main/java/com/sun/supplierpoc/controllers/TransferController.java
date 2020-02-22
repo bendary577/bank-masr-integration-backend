@@ -54,9 +54,6 @@ import java.io.StringWriter;
 @RestController
 
 public class TransferController {
-    static int PORT = 8080;
-    static String HOST= "192.168.1.21";
-
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
@@ -66,42 +63,81 @@ public class TransferController {
     @Autowired
     private TransferService transferService;
 
-    public Conversions conversions = new Conversions();
-    public Constants constant = new Constants();
-    public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getBookedTransfer")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<SyncJobData> getBookedTransfer() {
+    public HashMap<String, Object> getBookedTransfer() {
+        HashMap<String, Object> response = new HashMap<>();
+
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", "1");
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId("Journals", "1");
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, "1", "1",
                 syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> invoicesData = transferService.getTransferData(syncJobType);
+        try {
+            HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal);
 
-        ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) invoicesData.get("transfers");
+            if (data.get("status").equals(Constants.SUCCESS)){
+                ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
+                if (transfers.size() > 0){
+                    ArrayList<SyncJobData> addedTransfers = transferService.saveTransferData(transfers, syncJob);
+                    if(addedTransfers.size() != 0){
+                        try {
+                            for (SyncJobData invoice: addedTransfers ) {
+                                boolean addTransferFlag = transferService.sendTransferData(invoice, syncJobType);
 
-        ArrayList<SyncJobData> addedTransfers = transferService.saveTransferData(transfers, syncJob);
-        if (addedTransfers.size() != 0){
-//            try {
-//                transferService.sendTransferData(syncJobType);
-//            } catch (SoapFaultException | ComponentException e) {
-//                e.printStackTrace();
-//            }
-            System.out.println("WIP");
+                                if(addTransferFlag){
+                                    invoice.setStatus(Constants.SUCCESS);
+                                }
+                                else {
+                                    invoice.setStatus(Constants.FAILED);
+                                    invoice.setReason("");
+                                }
+                                syncJobDataRepo.save(invoice);
+                            }
+
+                        } catch (SoapFaultException | ComponentException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    syncJob.setStatus(Constants.SUCCESS);
+                    syncJob.setEndDate(new Date());
+                    syncJobRepo.save(syncJob);
+
+                }
+                else {
+                    syncJob.setStatus(Constants.SUCCESS);
+                    syncJob.setReason("There is no transfers to get from Oracle Hospitality.");
+                    syncJobRepo.save(syncJob);
+
+                    response.put("message", "There is no transfers to get from Oracle Hospitality.");
+                    response.put("success", true);
+
+                }
+            }
+            else {
+                syncJob.setStatus(Constants.FAILED);
+                syncJob.setReason("Failed to get transfers from Oracle Hospitality.");
+                syncJobRepo.save(syncJob);
+
+                response.put("message", data.get("message"));
+                response.put("success", false);
+            }
+            return response;
+
         }
-
-        syncJob.setStatus(Constants.SUCCESS);
-        syncJob.setEndDate(new Date());
-        syncJobRepo.save(syncJob);
-
-        return addedTransfers;
+        catch (Exception e){
+            response.put("message", e);
+            response.put("success", false);
+            return response;
+        }
     }
 
 }

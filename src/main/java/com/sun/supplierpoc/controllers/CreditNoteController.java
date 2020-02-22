@@ -23,10 +23,6 @@ import java.util.Date;
 import java.util.HashMap;
 
 public class CreditNoteController {
-
-    static int PORT = 8080;
-    static String HOST= "192.168.1.21";
-
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
@@ -37,10 +33,6 @@ public class CreditNoteController {
     private InvoiceService invoiceService;
     @Autowired
     private TransferService transferService;
-
-    public Conversions conversions = new Conversions();
-    public Constants constant = new Constants();
-    public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -101,7 +93,7 @@ public class CreditNoteController {
             }
         }
         else {
-            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setStatus(Constants.FAILED);
             syncJob.setReason("Failed to get credit note from Oracle Hospitality.");
             syncJobRepo.save(syncJob);
 

@@ -62,7 +62,6 @@ public class InvoiceController {
 
         if (data.get("status").equals(Constants.SUCCESS)){
             ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
-
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
                 if(addedInvoices.size() != 0){
@@ -89,7 +88,6 @@ public class InvoiceController {
                 syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
 
-                return response;
             }
             else {
                 syncJob.setStatus(Constants.SUCCESS);
@@ -98,20 +96,18 @@ public class InvoiceController {
 
                 response.put("message", "There is no invoices to get from Oracle Hospitality.");
                 response.put("success", true);
-                return response;
 
             }
-
         }
         else {
-            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setStatus(Constants.FAILED);
             syncJob.setReason("Failed to get invoices from Oracle Hospitality.");
             syncJobRepo.save(syncJob);
 
             response.put("message", data.get("message"));
             response.put("success", false);
-            return response;
         }
+        return response;
     }
 
 
@@ -120,11 +116,11 @@ public class InvoiceController {
     @ResponseBody
     public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName){
         HashMap<String, Object> data = new HashMap<>();
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, "1");
-        ArrayList<CostCenter> oldCostCenters = (ArrayList<CostCenter>) syncJobType.getConfiguration().get("costCenters");
+        ArrayList<HashMap<String, String>> oldCostCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
 
         try
         {
@@ -146,13 +142,16 @@ public class InvoiceController {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 13);
 
-            fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);
-
-            driver.findElement(By.id("cbxUseAssignedTo")).click();
-            driver.findElement(By.id("rbStore")).click();
-
-            fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);
-
+            while (true){
+                fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);
+                if (driver.findElements(By.linkText("Next")).size() != 0){
+                    driver.findElement(By.linkText("Next")).click();
+                    rows = driver.findElements(By.tagName("tr"));
+                }
+                else {
+                    break;
+                }
+            }
             driver.quit();
 
             data.put("status", Constants.SUCCESS);
@@ -172,50 +171,49 @@ public class InvoiceController {
         }
     }
 
-    public HashMap<String, Object> checkExistence(ArrayList<CostCenter> costCenters, String costCenterName){
+    public HashMap<String, Object> checkExistence(ArrayList<HashMap<String, String>> costCenters, String costCenterName){
         HashMap<String, Object> data = new HashMap<>();
-        for (CostCenter costCenter :
-                costCenters) {
-            if(costCenter.costCenter.equals(costCenterName)){
+        for (HashMap<String, String> costCenter : costCenters) {
+            if (costCenter.get("costCenter").equals(costCenterName)) {
                 data.put("status", true);
                 data.put("costCenter", costCenter);
                 return data;
             }
         }
         data.put("status", false);
-        data.put("costCenter", new CostCenter());
+        data.put("costCenter", new HashMap<String, String>());
         return data;
     }
 
-    private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
-                                      ArrayList<CostCenter> oldCostCenters, ArrayList<String> columns){
+    public void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
+                                      ArrayList<HashMap<String, String>> oldCostCenters, ArrayList<String> columns){
 
         for (int i = rowNumber; i < rows.size(); i++) {
             CostCenter costCenter = new CostCenter();
 
             WebElement row = rows.get(i);
             List<WebElement> cols = row.findElements(By.tagName("td"));
-            if (cols.size() < columns.size()){
+            if (cols.size() != columns.size()){
                 continue;
             }
 
             costCenter.costCenter =  cols.get(1).getText().strip();
 
             HashMap<String, Object> oldCostCenterData = checkExistence(oldCostCenters, cols.get(1).getText().strip());
-            CostCenter oldCostCenter = (CostCenter) oldCostCenterData.get("costCenter");
+            HashMap<String, String> oldCostCenter = (HashMap<String, String>) oldCostCenterData.get("costCenter");
 
             if ((boolean)oldCostCenterData.get("status")){
                 costCenter.checked = true;
-                costCenter.department = oldCostCenter.department;
-                costCenter.project = oldCostCenter.project;
-                costCenter.future2 = oldCostCenter.future2;
-                costCenter.company = oldCostCenter.company;
-                costCenter.businessUnit = oldCostCenter.businessUnit;
-                costCenter.account = oldCostCenter.account;
-                costCenter.product = oldCostCenter.product;
-                costCenter.interCompany = oldCostCenter.interCompany;
-                costCenter.location = oldCostCenter.location;
-                costCenter.currency = oldCostCenter.currency;
+                costCenter.department = oldCostCenter.get("department");
+                costCenter.project = oldCostCenter.get("project");
+                costCenter.future2 = oldCostCenter.get("future2");
+                costCenter.company = oldCostCenter.get("company");
+                costCenter.businessUnit = oldCostCenter.get("company");
+                costCenter.account = oldCostCenter.get("company");
+                costCenter.product = oldCostCenter.get("product");
+                costCenter.interCompany = oldCostCenter.get("product");
+                costCenter.location = oldCostCenter.get("location");
+                costCenter.currency = oldCostCenter.get("location");
             }
             else {
                 costCenter.checked = false;

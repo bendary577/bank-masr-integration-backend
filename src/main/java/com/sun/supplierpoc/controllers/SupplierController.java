@@ -130,7 +130,7 @@ public class SupplierController {
     @ResponseBody
     public HashMap<String, Object> getSupplierTaxes(){
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
@@ -204,7 +204,7 @@ public class SupplierController {
     @ResponseBody
     public HashMap<String, Object> getSupplierGroups(){
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> groups = new ArrayList<>();
 

@@ -159,7 +159,7 @@ public class SupplierService {
     }
 
     public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob, SyncJobType syncJobType){
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";

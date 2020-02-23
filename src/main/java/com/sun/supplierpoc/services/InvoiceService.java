@@ -47,13 +47,15 @@ public class InvoiceService {
     public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType){
         HashMap<String, Object> data = new HashMap<>();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
             if (!setupEnvironment.loginOHIM(driver, url)){
+                driver.quit();
+
                 data.put("status", Constants.FAILED);
                 data.put("message", "Invalid username and password.");
                 data.put("invoices", invoices);
@@ -81,12 +83,12 @@ public class InvoiceService {
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
-                if (cols.size() < 14){
+                if (cols.size() !=  columns.size()){
                     continue;
                 }
 
                 for (int j = 1; j < cols.size(); j++) {
-                    invoice.put(columns.get(j - 1), cols.get(j).getText());
+                    invoice.put(columns.get(j), cols.get(j).getText());
                 }
                 invoices.add(invoice);
             }

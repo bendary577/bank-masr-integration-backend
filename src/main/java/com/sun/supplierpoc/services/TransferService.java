@@ -2,6 +2,8 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.models.CostCenter;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -48,7 +50,9 @@ public class TransferService {
     static String HOST= "192.168.1.21";
 
     @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
+    SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    InvoiceController invoiceController;
 
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
@@ -57,15 +61,17 @@ public class TransferService {
     public HashMap<String, Object> getTransferData(SyncJobType syncJobType){
         HashMap<String, Object> data = new HashMap<>();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv();
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, String>> transfers = new ArrayList<>();
 
-        HashMap<String, Object> costCenters = (HashMap)(syncJobType.getConfiguration()).get("costCenters");
+        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
             if (!setupEnvironment.loginOHIM(driver, url)){
+                driver.quit();
+
                 data.put("status", Constants.FAILED);
                 data.put("message", "Invalid username and password.");
                 data.put("transfers", transfers);
@@ -85,24 +91,35 @@ public class TransferService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 40);
 
-            for (int i = 41; i < rows.size(); i++) {
-                HashMap<String, String> transfer = new HashMap<>();
+            while (true){
+                for (int i = 41; i < rows.size(); i++) {
+                    HashMap<String, String> transfer = new HashMap<>();
 
-                WebElement row = rows.get(i);
-                List<WebElement> cols = row.findElements(By.tagName("td"));
-                if (cols.size() < 10){
-                    continue;
-                }
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+                    if (cols.size() != 16) {
+                        continue;
+                    }
 
-                WebElement td = cols.get(2);
-                if (!costCenters.containsKey(td.getText())){
-                    continue;
-                }
+                    WebElement td = cols.get(columns.indexOf("from_cost_center"));
+                    HashMap<String, Object> oldCostCenterData = invoiceController.checkExistence(costCenters, td.getText().strip());
 
-                for (int j = 1; j < cols.size(); j++) {
-                    transfer.put(columns.get(j - 1), cols.get(j).getText());
+                    if (!(boolean)oldCostCenterData.get("status")){
+                        continue;
+                    }
+                    for (int j = 1; j < cols.size(); j++) {
+                        transfer.put(columns.get(j), cols.get(j).getText());
+                    }
+                    transfers.add(transfer);
                 }
-                transfers.add(transfer);
+                // if there is more transfers continue
+                if (driver.findElements(By.linkText("Next")).size() != 0){
+                    driver.findElement(By.linkText("Next")).click();
+                    rows = driver.findElements(By.tagName("tr"));
+                }
+                else {
+                    break;
+                }
             }
 
             driver.quit();
@@ -115,6 +132,7 @@ public class TransferService {
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
+
             data.put("status", Constants.FAILED);
             data.put("message", e);
             data.put("transfers", transfers);
@@ -128,7 +146,7 @@ public class TransferService {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         for (HashMap<String, String> invoice : invoices) {
-            if (invoice.get("invoice_no.").toString().substring(0, 3).equals("RTV")) {
+            if (invoice.get("invoice_no.").substring(0, 3).equals("RTV")) {
                 continue;
             }
             HashMap<String, String> data = new HashMap<>();

@@ -26,8 +26,7 @@ public class SyncJobTypeController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public List<SyncJobType> getSyncJobTypes()  {
-        List<SyncJobType> syncJobType = syncJobTypeRepo.findByAccountId("1");
-        return syncJobType;
+        return syncJobTypeRepo.findByAccountId("1");
     }
 
     @PutMapping("/updateSyncJobTypesConfiguration")

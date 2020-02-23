@@ -195,6 +195,7 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ENTER);
 //                String taxesValue = "[22,\"New\",\"NEW\"]";
+//                driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys("New");
 //                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('value'," + taxesValue + ")");
 
 
@@ -206,7 +207,9 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ENTER);
 
+
 //                String vendorGroupValue = "[12,\"Dariy\",\"DARIY\"]";
+//                driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys("Dariy");
 //                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('value'," + vendorGroupValue + ")");
 
                 //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
@@ -270,7 +273,7 @@ public class SupplierService {
                     supplier.setReason("Already Exits");
                     supplier.setSyncJobId(syncJob.getId());
                     syncJobDataRepo.save(supplier);
-
+                    continue;
                 } catch (NoAlertPresentException Ex) {
                     System.out.println("No alert");
                 }

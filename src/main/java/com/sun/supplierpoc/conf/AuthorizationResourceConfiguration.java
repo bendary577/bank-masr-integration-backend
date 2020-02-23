@@ -38,11 +38,12 @@ public class AuthorizationResourceConfiguration  extends
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
-        http.
+        http.authorizeRequests().antMatchers("/**").permitAll();
+      /*  http.
                 anonymous().disable()
                 .authorizeRequests()
                 .antMatchers("/**").authenticated()
-                .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
+                .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());*/
     }
  /*   @Override
     public void configure(HttpSecurity http) throws Exception {

@@ -30,9 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException(String.format("Username %s not found", username));
         }
 
-        String[] roles = new String[user.getRoles().size()];
-
-        return new User(user.getUsername(), user.getPassword(),
-                AuthorityUtils.createAuthorityList(user.getRoles().toArray(roles)));
+       // String[] roles = new String[user.getAuthorities().size()];
+        return new MongoUser(user.getId(),user.getUsername(),user.getPassword(),user.getAuthorities(),user.isEnabled(),user.isAccountNonExpired(),user.isAccountNonLocked(),user.isCredentialsNonExpired());
     }
 }

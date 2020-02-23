@@ -5,6 +5,7 @@ import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -25,7 +26,8 @@ public class SyncJobTypeController {
     @GetMapping("/getSyncJobTypes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public List<SyncJobType> getSyncJobTypes()  {
+    public List<SyncJobType> getSyncJobTypes(Principal principal)  {
+
         return syncJobTypeRepo.findByAccountId("1");
     }
 

@@ -45,50 +45,12 @@ public class AccountController {
     @Value("${oauth.id.secret}")
     private String encodedIdSecret;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    @Autowired
-    CustomClientDetailsService customClientDetailsService;
-    @Autowired
-    UserDetailsService userDetailsService;
-    @Autowired
-    MongoTemplate mongoTemplate;
 
     @RequestMapping("/getAccount")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public Optional<Account> getAccount() {
-
+    public Optional<Account> getAccount(){
         // get accountID from user 5e4bd1a7b334d338f81d9b9a
         return accountRepo.findById("5e4bd1a7b334d338f81d9b9a");
     }
-
-    @RequestMapping(value = "/clientDetails")
-    @ResponseBody
-    public ResponseEntity<RefreshTokenResult> clientDetails(Authentication authentication) {
-        MongoClientDetails clientDetails = new MongoClientDetails();
-        clientDetails.setClientId("web-client");
-        clientDetails.setClientSecret("web-client-secret");
-        clientDetails.setSecretRequired(true);
-        clientDetails.setResourceIds(Sets.newHashSet("project-man"));
-        clientDetails.setScope(Sets.newHashSet("call-services"));
-        clientDetails.setAuthorizedGrantTypes(Sets.newHashSet("authorization_code", "refresh_token"));
-        clientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localhost:8080"));
-        clientDetails.setAuthorities(AuthorityUtils.createAuthorityList("ROLE_USER"));
-        clientDetails.setAccessTokenValiditySeconds(60);
-        clientDetails.setRefreshTokenValiditySeconds(14400);
-        clientDetails.setAutoApprove(false);
-        customClientDetailsService.addClientDetails(clientDetails);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    @RequestMapping(value = "/user")
-    @ResponseBody
-    public ResponseEntity<RefreshTokenResult> adduser() {
-        MongoUser mongoUser = new MongoUser();
-        mongoUser.setUsername("user");
-        mongoUser.setPassword(new BCryptPasswordEncoder(12).encode("user"));
-        mongoUser.setRoles(Sets.newHashSet("ROLE_USER"));
-        mongoTemplate.save(mongoUser);
-        return new ResponseEntity<>(HttpStatus.OK);
-    }
-
 }

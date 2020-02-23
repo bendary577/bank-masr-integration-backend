@@ -53,6 +53,19 @@ public class SetupEnvironment {
         return !driver.getCurrentUrl().equals(previous_url);
     }
 
+    public boolean loginOHRA(WebDriver driver, String url){
+        driver.get(url);
+
+        driver.findElement(By.id("usr")).sendKeys("Fusion");
+        driver.findElement(By.id("pwd")).sendKeys("Gcs@3000");
+        driver.findElement(By.id("cpny")).sendKeys("gcs");
+
+        String previous_url = driver.getCurrentUrl();
+        driver.findElement(By.id("Login")).click();
+
+        return !driver.getCurrentUrl().equals(previous_url);
+    }
+
     public ArrayList<String> getTableColumns(List<WebElement> rows, int rowNumber){
         ArrayList<String> columns = new ArrayList<>();
         WebElement row = rows.get(rowNumber);

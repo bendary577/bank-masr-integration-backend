@@ -20,7 +20,9 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -43,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class TransferService {
@@ -86,13 +89,14 @@ public class TransferService {
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
+            WebElement table = driver.findElement(By.id("dg_main"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 0);
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 40);
-
+            int pageCounter = 2;
             while (true){
-                for (int i = 41; i < rows.size(); i++) {
+                for (int i = 1; i < rows.size(); i++) {
                     HashMap<String, String> transfer = new HashMap<>();
 
                     WebElement row = rows.get(i);
@@ -104,7 +108,7 @@ public class TransferService {
                     WebElement td = cols.get(columns.indexOf("from_cost_center"));
                     HashMap<String, Object> oldCostCenterData = invoiceController.checkExistence(costCenters, td.getText().strip());
 
-                    if (!(boolean)oldCostCenterData.get("status")){
+                    if (!(boolean) oldCostCenterData.get("status")) {
                         continue;
                     }
                     for (int j = 1; j < cols.size(); j++) {
@@ -112,14 +116,22 @@ public class TransferService {
                     }
                     transfers.add(transfer);
                 }
-                // if there is more transfers continue
-                if (driver.findElements(By.linkText("Next")).size() != 0){
-                    driver.findElement(By.linkText("Next")).click();
-                    rows = driver.findElements(By.tagName("tr"));
-                }
-                else {
+
+                try{
+                    Select selectPage = new Select(driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td/select")));
+                    selectPage.selectByVisibleText(Integer.toString(pageCounter));
+                    System.out.println(pageCounter);
+                    pageCounter++;
+
+                    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+
+                    table = driver.findElement(By.id("dg_main"));
+                    rows = table.findElements(By.tagName("tr"));
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
                     break;
                 }
+
             }
 
             driver.quit();
@@ -137,18 +149,13 @@ public class TransferService {
             data.put("message", e);
             data.put("transfers", transfers);
             return data;
-
         }
-
     }
 
     public ArrayList<SyncJobData> saveTransferData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         for (HashMap<String, String> invoice : invoices) {
-            if (invoice.get("invoice_no.").substring(0, 3).equals("RTV")) {
-                continue;
-            }
             HashMap<String, String> data = new HashMap<>();
 
             data.put("invoiceNo", invoice.get("invoice_no."));

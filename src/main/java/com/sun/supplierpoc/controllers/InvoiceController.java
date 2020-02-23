@@ -185,7 +185,7 @@ public class InvoiceController {
         return data;
     }
 
-    public void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
+    private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
                                       ArrayList<HashMap<String, String>> oldCostCenters, ArrayList<String> columns){
 
         for (int i = rowNumber; i < rows.size(); i++) {

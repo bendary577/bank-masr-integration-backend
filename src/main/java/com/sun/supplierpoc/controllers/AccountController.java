@@ -14,7 +14,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
@@ -24,7 +26,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.servlet.http.HttpServletRequest;
+import java.security.Principal;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
+
 @EnableResourceServer
 @RestController
 public class AccountController {
@@ -68,12 +74,12 @@ public class AccountController {
         clientDetails.setClientId("web-client");
         clientDetails.setClientSecret("web-client-secret");
         clientDetails.setSecretRequired(true);
-        clientDetails.setResourceIds(Sets.newHashSet("project-man"));
-        clientDetails.setScope(Sets.newHashSet("call-services"));
-        clientDetails.setAuthorizedGrantTypes(Sets.newHashSet("authorization_code", "refresh_token"));
+        clientDetails.setResourceIds(Sets.newHashSet("@ENTREPREWARE"));
+        clientDetails.setScope(Sets.newHashSet("all"));
+        clientDetails.setAuthorizedGrantTypes(Sets.newHashSet("authorization_code", "refresh_token","password"));
         clientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localhost:8080"));
         clientDetails.setAuthorities(AuthorityUtils.createAuthorityList("ROLE_USER"));
-        clientDetails.setAccessTokenValiditySeconds(60);
+        clientDetails.setAccessTokenValiditySeconds(14400);
         clientDetails.setRefreshTokenValiditySeconds(14400);
         clientDetails.setAutoApprove(false);
         customClientDetailsService.addClientDetails(clientDetails);
@@ -82,11 +88,13 @@ public class AccountController {
 
     @RequestMapping(value = "/user")
     @ResponseBody
-    public ResponseEntity<RefreshTokenResult> adduser() {
-        MongoUser mongoUser = new MongoUser();
-        mongoUser.setUsername("user");
+    public ResponseEntity<RefreshTokenResult> adduser(Principal principal) {
+        Set<GrantedAuthority> roles=new LinkedHashSet<>();
+        roles.add(new SimpleGrantedAuthority("ROLE_USER"));
+        MongoUser mongoUser = new MongoUser(null,"user","user",roles,true,true,true,true);
+       /* mongoUser.setUsername("user");
         mongoUser.setPassword(new BCryptPasswordEncoder(12).encode("user"));
-        mongoUser.setRoles(Sets.newHashSet("ROLE_USER"));
+        mongoUser.setRoles();*/
         mongoTemplate.save(mongoUser);
         return new ResponseEntity<>(HttpStatus.OK);
     }

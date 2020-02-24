@@ -140,7 +140,7 @@ public class InvoiceController {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 13);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
 
             while (true){
                 fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);

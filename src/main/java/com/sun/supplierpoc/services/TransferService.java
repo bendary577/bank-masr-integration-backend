@@ -92,7 +92,7 @@ public class TransferService {
             WebElement table = driver.findElement(By.id("dg_main"));
             List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 0);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
 
             int pageCounter = 2;
             while (true){

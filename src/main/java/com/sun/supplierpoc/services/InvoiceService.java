@@ -76,7 +76,7 @@ public class InvoiceService {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 39);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 39);
 
             for (int i = 40; i < rows.size(); i++) {
                 HashMap<String, Object> invoice = new HashMap<>();

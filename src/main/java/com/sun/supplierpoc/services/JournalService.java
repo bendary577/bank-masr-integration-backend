@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.models.Journal;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -79,14 +80,13 @@ public class JournalService {
             String journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
             driver.get(journalUrl);
 
-            WebElement table = driver.findElement(By.id("tableContainer"));
-            List<WebElement> rows = table.findElements(By.tagName("tr"));
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, 0);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
             ArrayList<HashMap<String, String>> selectedCostCenters = new ArrayList<>();
 
-            for (int i = 1; i < rows.size(); i++) {
+            for (int i = 6; i < rows.size(); i++) {
                 HashMap<String, String> journal = new HashMap<>();
 
                 WebElement row = rows.get(i);
@@ -95,7 +95,7 @@ public class JournalService {
                     continue;
                 }
 
-                WebElement td = cols.get(columns.indexOf("Cost Center"));
+                WebElement td = cols.get(columns.indexOf("cost_center"));
                 HashMap<String, Object> oldCostCenterData = invoiceController.checkExistence(costCenters, td.getText().strip());
 
                 if (!(boolean) oldCostCenterData.get("status")) {
@@ -110,16 +110,21 @@ public class JournalService {
 
             String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
 
-            for (HashMap<String, String> costCenter : costCenters) {
+            for (HashMap<String, String> costCenter : selectedCostCenters) {
                 try {
                     driver.get(baseURL + costCenter.get("extensions"));
 
-                    table = driver.findElement(By.id("tableContainer"));
-                    rows = table.findElements(By.tagName("tr"));
+                    rows = driver.findElements(By.tagName("tr"));
+
+                    columns = setupEnvironment.getTableColumns(rows, true, 5);
+
+                    for (int i = 6; i < rows.size(); i++) {
+                        Journal journal = new Journal();
+                        // check if the item belone to selected items
+                        // lw belong agyb al over group bt3ha
 
 
-
-
+                    }
 
                 } catch (Exception e) {
                     e.printStackTrace();

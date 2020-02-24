@@ -137,17 +137,13 @@ public class SupplierController {
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-            driver.get(url);
 
-            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
+            if (!setupEnvironment.loginOHIM(driver, url)){
+                driver.quit();
 
-            String previous_url = driver.getCurrentUrl();
-            driver.findElement(By.name("Login")).click();
-
-            if (driver.getCurrentUrl().equals(previous_url)){
-                String message = "Invalid username and password.";
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("journals", taxes);
                 return response;
             }
 
@@ -158,22 +154,16 @@ public class SupplierController {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = new ArrayList<>();
-            WebElement row = rows.get(7);
-            List<WebElement> cols = row.findElements(By.tagName("th"));
-
-            for (int j = 1; j < cols.size(); j++) {
-                columns.add(conversions.transformColName(cols.get(j).getText()));
-            }
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 7);
 
             for (int i = 8; i < rows.size(); i++) {
                 HashMap<String, Object> tax = new HashMap<>();
 
-                row = rows.get(i);
-                cols = row.findElements(By.tagName("td"));
+                WebElement row = rows.get(i);
+                List<WebElement>  cols = row.findElements(By.tagName("td"));
 
-                for (int j = 1; j < cols.size(); j++) {
-                    tax.put(columns.get(j - 1), cols.get(j).getText());
+                for (int j = 0; j < cols.size(); j++) {
+                    tax.put(columns.get(j), cols.get(j).getText());
                 }
                 taxes.add(tax);
             }
@@ -211,21 +201,13 @@ public class SupplierController {
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-            driver.get(url);
 
-            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
+            if (!setupEnvironment.loginOHIM(driver, url)){
+                driver.quit();
 
-            String previous_url = driver.getCurrentUrl();
-            driver.findElement(By.name("Login")).click();
-
-            if (driver.getCurrentUrl().equals(previous_url)){
-                String message = "Invalid username and password.";
-                response.put("data", groups);
-                response.put("message", message);
-                response.put("success", false);
-
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("journals", groups);
                 return response;
             }
 
@@ -236,22 +218,16 @@ public class SupplierController {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = new ArrayList<>();
-            WebElement row = rows.get(7);
-            List<WebElement> cols = row.findElements(By.tagName("th"));
-
-            for (int j = 1; j < cols.size(); j++) {
-                columns.add(conversions.transformColName(cols.get(j).getText()));
-            }
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 7);
 
             for (int i = 8; i < rows.size(); i++) {
                 HashMap<String, Object> group = new HashMap<>();
 
-                row = rows.get(i);
-                cols = row.findElements(By.tagName("td"));
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
 
-                for (int j = 1; j < cols.size(); j++) {
-                    group.put(columns.get(j - 1), cols.get(j).getText());
+                for (int j = 0; j < cols.size(); j++) {
+                    group.put(columns.get(j), cols.get(j).getText());
                 }
                 groups.add(group);
             }

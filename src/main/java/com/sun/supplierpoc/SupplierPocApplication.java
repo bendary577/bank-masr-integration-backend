@@ -16,14 +16,14 @@ public class SupplierPocApplication {
 
 
             // init the users
-            MongoUser mongoUser = new MongoUser();
+            User mongoUser = new User();
             mongoUser.setUsername("user");
             mongoUser.setPassword("user");
             mongoUser.setRoles(Sets.newHashSet("ROLE_USER"));
             mongoTemplate.save(mongoUser);
 
             // init the client details
-            MongoClientDetails clientDetails = new MongoClientDetails();
+            ClientDetails clientDetails = new ClientDetails();
             clientDetails.setClientId("web-client");
             clientDetails.setClientSecret("web-client-secret");
             clientDetails.setSecretRequired(true);

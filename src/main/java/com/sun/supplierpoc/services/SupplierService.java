@@ -61,9 +61,9 @@ public class SupplierService {
         component.authenticate(voucher);
 
         String inputPayload =   "<SSC>" +
-                "   <User>" +
+                "   <UserOld>" +
                 "       <Name>" + username + "</Name>" +
-                "   </User>" +
+                "   </UserOld>" +
                 "   <SunSystemsContext>" +
                 "       <BusinessUnit>PK1</BusinessUnit>" +
                 "   </SunSystemsContext>" +

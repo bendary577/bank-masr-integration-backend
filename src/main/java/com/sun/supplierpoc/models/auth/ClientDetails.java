@@ -13,7 +13,7 @@ import java.util.Set;
  * Created by jeebb on 11/9/14.
  */
 @Document(collection = "oauthClientDetails")
-public class MongoClientDetails implements ClientDetails {
+public class ClientDetails implements org.springframework.security.oauth2.provider.ClientDetails {
 
     public static final String CLIENT_ID = "clientId";
     public static final String CLIENT_SECRET = "clientSecret";
@@ -26,15 +26,15 @@ public class MongoClientDetails implements ClientDetails {
     public static final String REFRESH_TOKEN_VALIDITY_SECONDS = "refreshTokenValiditySeconds";
     public static final String ADDITIONAL_INFORMATION = "additionalInformation";
 
-    public MongoClientDetails() {
+    public ClientDetails() {
 
     }
 
-    public MongoClientDetails(String clientId, Set<String> resourceIds, boolean secretRequired, String clientSecret,
-                              boolean scoped, Set<String> scope, Set<String> authorizedGrantTypes,
-                              Set<String> registeredRedirectUri, Collection<GrantedAuthority> authorities,
-                              Integer accessTokenValiditySeconds, Integer refreshTokenValiditySeconds,
-                              boolean autoApprove, Map<String, Object> additionalInformation) {
+    public ClientDetails(String clientId, Set<String> resourceIds, boolean secretRequired, String clientSecret,
+                         boolean scoped, Set<String> scope, Set<String> authorizedGrantTypes,
+                         Set<String> registeredRedirectUri, Collection<GrantedAuthority> authorities,
+                         Integer accessTokenValiditySeconds, Integer refreshTokenValiditySeconds,
+                         boolean autoApprove, Map<String, Object> additionalInformation) {
         this.clientId = clientId;
         this.resourceIds = resourceIds;
         this.secretRequired = secretRequired;

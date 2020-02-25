@@ -8,7 +8,7 @@ import org.springframework.security.oauth2.provider.approval.Approval;
  * Created by jeebb on 12/11/2014.
  */
 @Document(collection = "oauthApprovals")
-public class MongoApproval {
+public class Approval {
 
     public static final String EXPIRE_AT = "expireAt";
     public static final String STATUS = "status";
@@ -21,7 +21,7 @@ public class MongoApproval {
     private String id;
 
     private Long expireAt;
-    private Approval.ApprovalStatus status;
+    private org.springframework.security.oauth2.provider.approval.Approval.ApprovalStatus status;
     private Long lastModifiedAt;
     private String userId;
     private String clientId;
@@ -43,11 +43,11 @@ public class MongoApproval {
         this.expireAt = expireAt;
     }
 
-    public Approval.ApprovalStatus getStatus() {
+    public org.springframework.security.oauth2.provider.approval.Approval.ApprovalStatus getStatus() {
         return status;
     }
 
-    public void setStatus(Approval.ApprovalStatus status) {
+    public void setStatus(org.springframework.security.oauth2.provider.approval.Approval.ApprovalStatus status) {
         this.status = status;
     }
 

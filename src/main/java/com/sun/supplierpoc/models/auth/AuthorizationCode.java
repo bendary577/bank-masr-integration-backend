@@ -3,22 +3,18 @@ package com.sun.supplierpoc.models.auth;
 import com.sun.supplierpoc.Converters.SerializableObjectConverter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.security.oauth2.common.OAuth2RefreshToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
-/**
- * Created by jeebb on 11/11/2014.
- */
-@Document(collection = "oauthRefreshTokens")
-public class MongoRefreshToken {
 
-    public static final String TOKEN_ID = "tokenId";
+@Document(collection = "oauthAuthorizationCodes")
+public class AuthorizationCode {
+
+    public static final String CODE = "code";
 
     @Id
     private String id;
 
-    private String tokenId;
-    private OAuth2RefreshToken token;
+    private String code;
     private String authentication;
 
     public String getId() {
@@ -29,20 +25,12 @@ public class MongoRefreshToken {
         this.id = id;
     }
 
-    public String getTokenId() {
-        return tokenId;
+    public String getCode() {
+        return code;
     }
 
-    public void setTokenId(String tokenId) {
-        this.tokenId = tokenId;
-    }
-
-    public OAuth2RefreshToken getToken() {
-        return token;
-    }
-
-    public void setToken(OAuth2RefreshToken token) {
-        this.token = token;
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public OAuth2Authentication getAuthentication() {
@@ -50,6 +38,6 @@ public class MongoRefreshToken {
     }
 
     public void setAuthentication(OAuth2Authentication authentication) {
-        this.authentication = SerializableObjectConverter.serialize(authentication);
+        this.authentication = SerializableObjectConverter.serialize(authentication);;
     }
 }

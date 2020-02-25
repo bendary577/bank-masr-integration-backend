@@ -1,7 +1,7 @@
 package com.sun.supplierpoc.services.security;
 
 
-import com.sun.supplierpoc.models.auth.MongoUser;
+import com.sun.supplierpoc.models.auth.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -22,13 +22,13 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Query query = new Query();
         query.addCriteria(Criteria.where("username").is(username));
-        MongoUser user =
-                mongoTemplate.findOne(query, MongoUser.class);
+        User user =
+                mongoTemplate.findOne(query, User.class);
         if (user == null) {
             throw new UsernameNotFoundException(String.format("Username %s not found", username));
         }
 
        // String[] roles = new String[user.getAuthorities().size()];
-        return new MongoUser(user.getId(),user.getUsername(),user.getPassword(),user.getAuthorities(),user.isEnabled(),user.isAccountNonExpired(),user.isAccountNonLocked(),user.isCredentialsNonExpired());
+        return new User(user.getId(),user.getUsername(),user.getPassword(),user.getAuthorities(),user.isEnabled(),user.isAccountNonExpired(),user.isAccountNonLocked(),user.isCredentialsNonExpired());
     }
 }

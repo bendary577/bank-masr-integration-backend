@@ -161,8 +161,8 @@ public class TransferService {
             Element SSCRootElement = doc.createElement("SSC");
             doc.appendChild(SSCRootElement);
 
-            ///////////////////////////////////////////  User //////////////////////////////////////////////////////////
-            Element userElement = doc.createElement("User");
+            ///////////////////////////////////////////  UserOld //////////////////////////////////////////////////////////
+            Element userElement = doc.createElement("UserOld");
             SSCRootElement.appendChild(userElement);
 
             Element nameElement = doc.createElement("Name");

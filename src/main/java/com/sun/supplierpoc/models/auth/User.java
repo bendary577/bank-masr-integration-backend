@@ -11,7 +11,7 @@ import java.util.Collection;
  * Created by jeebb on 11/8/14.
  */
 @Document(collection = "users")
-public class MongoUser implements UserDetails  {
+public class User implements UserDetails  {
     private static final long serialVersionUID = 1L;
     @Id
     private String id;
@@ -30,10 +30,10 @@ public class MongoUser implements UserDetails  {
     private boolean credentialsNonExpired;
 
 
-    public MongoUser() {
+    public User() {
     }
 
-    public MongoUser(String username, String password, Collection<? extends GrantedAuthority> authorities, Boolean enabled, Boolean accountNonExpired, Boolean accountNonLocked, boolean credentialsNonExpired) {
+    public User(String username, String password, Collection<? extends GrantedAuthority> authorities, Boolean enabled, Boolean accountNonExpired, Boolean accountNonLocked, boolean credentialsNonExpired) {
         this.username = username;
         this.password = password;
         this.authorities = authorities;
@@ -43,7 +43,7 @@ public class MongoUser implements UserDetails  {
         this.credentialsNonExpired = credentialsNonExpired;
     }
 
-    public MongoUser(String id, String username, String password, Collection<? extends GrantedAuthority> authorities, Boolean enabled, Boolean accountNonExpired, Boolean accountNonLocked, boolean credentialsNonExpired) {
+    public User(String id, String username, String password, Collection<? extends GrantedAuthority> authorities, Boolean enabled, Boolean accountNonExpired, Boolean accountNonLocked, boolean credentialsNonExpired) {
         this.id = id;
         this.username = username;
         this.password = password;

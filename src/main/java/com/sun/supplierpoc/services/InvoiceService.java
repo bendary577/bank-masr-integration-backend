@@ -155,9 +155,9 @@ public class InvoiceService {
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
                         "<SSC>" +
                         "<ErrorContext/>" +
-                        "   <User>" +
+                        "   <UserOld>" +
                         "       <Name>" + username + "</Name>" +
-                        "   </User>" +
+                        "   </UserOld>" +
 
                         "<SunSystemsContext>" +
                         "<BusinessUnit>"  + "PK1" + "</BusinessUnit>" +

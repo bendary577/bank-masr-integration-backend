@@ -1,10 +1,7 @@
 package com.sun.supplierpoc.conf;
 
 
-import com.sun.supplierpoc.services.security.CustomApprovalStore;
-import com.sun.supplierpoc.services.security.CustomAuthorizationCodeServices;
-import com.sun.supplierpoc.services.security.CustomTokenStore;
-import com.sun.supplierpoc.services.security.CustomUserDetailsService;
+import com.sun.supplierpoc.services.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

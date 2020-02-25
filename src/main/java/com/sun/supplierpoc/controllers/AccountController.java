@@ -1,11 +1,11 @@
 package com.sun.supplierpoc.controllers;
 
 import com.google.common.collect.Sets;
-import com.sun.supplierpoc.conf.CustomClientDetailsService;
+import com.sun.supplierpoc.services.security.CustomClientDetailsService;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.RefreshTokenResult;
-import com.sun.supplierpoc.models.auth.MongoClientDetails;
-import com.sun.supplierpoc.models.auth.MongoUser;
+import com.sun.supplierpoc.models.auth.ClientDetails;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,7 +68,7 @@ public class AccountController {
     @RequestMapping(value = "/clientDetails")
     @ResponseBody
     public ResponseEntity<RefreshTokenResult> clientDetails(Authentication authentication) {
-        MongoClientDetails clientDetails = new MongoClientDetails();
+        ClientDetails clientDetails = new ClientDetails();
         clientDetails.setClientId("web-client");
         clientDetails.setClientSecret("web-client-secret");
         clientDetails.setSecretRequired(true);
@@ -89,11 +89,11 @@ public class AccountController {
     public ResponseEntity<RefreshTokenResult> adduser(Principal principal) {
         Set<GrantedAuthority> roles=new LinkedHashSet<>();
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
-        MongoUser mongoUser = new MongoUser(null,"user","user",roles,true,true,true,true);
-       /* mongoUser.setUsername("user");
-        mongoUser.setPassword(new BCryptPasswordEncoder(12).encode("user"));
-        mongoUser.setRoles();*/
-        mongoTemplate.save(mongoUser);
+        User user = new User(null,"user","user",roles,true,true,true,true);
+       /* user.setUsername("user");
+        user.setPassword(new BCryptPasswordEncoder(12).encode("user"));
+        user.setRoles();*/
+        mongoTemplate.save(user);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

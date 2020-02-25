@@ -11,7 +11,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
  * Created by jeebb on 11/11/2014.
  */
 @Document(collection = "oauthAccessTokens")
-public class MongoAccessToken {
+public class AccessToken {
 
     public static final String TOKEN_ID = "tokenId";
     public static final String REFRESH_TOKEN = "refreshToken";

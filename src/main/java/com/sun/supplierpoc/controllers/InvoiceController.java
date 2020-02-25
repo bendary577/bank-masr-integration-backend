@@ -85,6 +85,7 @@ public class InvoiceController {
                 }
 
                 syncJob.setStatus(Constants.SUCCESS);
+                syncJob.setReason("");
                 syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
 
@@ -92,6 +93,7 @@ public class InvoiceController {
             else {
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setReason("There is no invoices to get from Oracle Hospitality.");
+                syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "There is no invoices to get from Oracle Hospitality.");
@@ -102,6 +104,7 @@ public class InvoiceController {
         else {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason("Failed to get invoices from Oracle Hospitality.");
+            syncJob.setEndDate(new Date());
             syncJobRepo.save(syncJob);
 
             response.put("message", data.get("message"));

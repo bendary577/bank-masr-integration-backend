@@ -68,11 +68,34 @@ public class SupplierController {
                 ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob);
 
                 if (addedSuppliers.size() != 0){
-                    addFlag = supplierService.sendSuppliersData(addedSuppliers, syncJob, syncJobType);
+                    data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, syncJobType);
+                    if (data.get("status").equals(Constants.SUCCESS)){
+                        syncJob.setStatus(Constants.SUCCESS);
+                        syncJob.setReason("");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
+
+                        response.put("message", data.get("message"));
+                        response.put("success", true);
+
+                        return response;
+                    }
+                    else {
+                        syncJob.setStatus(Constants.FAILED);
+                        syncJob.setReason((String) data.get("message"));
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
+
+                        response.put("message", data.get("message"));
+                        response.put("success", false);
+
+                        return response;
+                    }
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("No new suppliers to add.");
+                    syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "No new suppliers to add.");
@@ -84,6 +107,7 @@ public class SupplierController {
             else {
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setReason("There is no suppliers to get from Sun System.");
+                syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "There is no suppliers to get from Sun System.");
@@ -92,30 +116,11 @@ public class SupplierController {
                 return response;
             }
 
-            syncJob.setEndDate(new Date());
-            if (addFlag){
-                syncJob.setStatus(Constants.SUCCESS);
-                syncJob.setReason("Sync supplier successfully.");
-                syncJobRepo.save(syncJob);
-
-                response.put("message", "Sync supplier successfully.");
-                response.put("success", true);
-
-                return response;
-            }
-            else {
-                syncJob.setStatus("Failed to send supplier to Oracle Hospitality");
-                syncJob.setReason("Failed to sync suppliers.");
-                syncJobRepo.save(syncJob);
-
-                response.put("message", "Failed to sync suppliers.");
-                response.put("success", false);
-                return response;
-            }
         }
         else {
             syncJob.setStatus("Failed to get suppliers from Sun System");
             syncJob.setReason("Failed to sync suppliers.");
+            syncJob.setEndDate(new Date());
             syncJobRepo.save(syncJob);
 
             response.put("message", "Failed to sync suppliers.");

@@ -1,16 +1,10 @@
 package com.sun.supplierpoc;
 
-import com.google.common.collect.Sets;
-import com.sun.supplierpoc.conf.CustomClientDetailsService;
-import com.sun.supplierpoc.models.auth.MongoClientDetails;
-import com.sun.supplierpoc.models.auth.MongoUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
 
 @SpringBootApplication
 public class SupplierPocApplication {

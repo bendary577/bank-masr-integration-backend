@@ -45,9 +45,6 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 public class JournalService {
-    static int PORT = 8080;
-    static String HOST= "192.168.1.21";
-
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
     @Autowired

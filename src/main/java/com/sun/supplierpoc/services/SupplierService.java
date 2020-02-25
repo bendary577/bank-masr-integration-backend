@@ -158,23 +158,21 @@ public class SupplierService {
         return addedSuppliers;
     }
 
-    public Boolean sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob, SyncJobType syncJobType){
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
+    public HashMap<String, Object> sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob, SyncJobType syncJobType){
+        HashMap<String, Object> data = new HashMap<>();
+
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
             driver.get(url);
 
-            driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-            driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-            driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
+            if (!setupEnvironment.loginOHIM(driver, url)){
+                driver.quit();
 
-            String previous_url = driver.getCurrentUrl();
-            driver.findElement(By.name("Login")).click();
-
-            if (driver.getCurrentUrl().equals(previous_url)){
-                String message = "Invalid username and password.";
-                return false;
+                data.put("status", Constants.FAILED);
+                data.put("message", "Invalid username and password.");
+                return data;
             }
 
             for (SyncJobData supplier : suppliers) {
@@ -285,11 +283,17 @@ public class SupplierService {
             }
 
             driver.quit();
-            return true;
+
+            data.put("status", Constants.SUCCESS);
+            data.put("message", "Save Suppliers Successfully.");
+            return data;
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
-            return false;
+
+            data.put("status", Constants.FAILED);
+            data.put("message", e.getMessage());
+            return data;
         }
     }
 }

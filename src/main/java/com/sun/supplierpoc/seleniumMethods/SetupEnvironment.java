@@ -27,7 +27,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -43,11 +43,8 @@ public class SetupEnvironment {
 
     public boolean loginOHIM(WebDriver driver, String url){
         driver.get(url);
-        try {
-            new WebDriverWait(driver, 5)
-                    .ignoring(NoAlertPresentException.class)
-                    .until(ExpectedConditions.alertIsPresent());
 
+        try {
             Alert al = driver.switchTo().alert();
             al.accept();
         } catch (NoAlertPresentException Ex) {
@@ -65,12 +62,7 @@ public class SetupEnvironment {
 
     public boolean loginOHRA(WebDriver driver, String url){
         driver.get(url);
-        // check if there is anu pop up message
         try {
-            new WebDriverWait(driver, 5)
-                    .ignoring(NoAlertPresentException.class)
-                    .until(ExpectedConditions.alertIsPresent());
-
             Alert al = driver.switchTo().alert();
             al.accept();
         } catch (NoAlertPresentException Ex) {
@@ -96,7 +88,10 @@ public class SetupEnvironment {
         else {
             cols = row.findElements(By.tagName("td"));
         }
-        for (WebElement col : cols) columns.add(conversions.transformColName(col.getText()));
+
+        for (WebElement col : cols){
+            columns.add(conversions.transformColName(col.getText()));
+        }
 
         return columns;
     }

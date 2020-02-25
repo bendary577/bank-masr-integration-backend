@@ -74,11 +74,15 @@ public class InvoiceService {
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+            WebElement bodyTable = driver.findElement(By.id("G_dg"));
+            WebElement headerTable = driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[1]/td/div/table"));
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 39);
+            List<WebElement> headerRows = headerTable.findElements(By.tagName("tr"));
+            List<WebElement> rows = bodyTable.findElements(By.tagName("tr"));
 
-            for (int i = 40; i < rows.size(); i++) {
+            ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
                 HashMap<String, Object> invoice = new HashMap<>();
 
                 WebElement row = rows.get(i);
@@ -87,7 +91,7 @@ public class InvoiceService {
                     continue;
                 }
 
-                for (int j = 1; j < cols.size(); j++) {
+                for (int j = 0; j < cols.size(); j++) {
                     invoice.put(columns.get(j), cols.get(j).getText());
                 }
                 invoices.add(invoice);
@@ -104,7 +108,7 @@ public class InvoiceService {
             driver.quit();
 
             data.put("status", Constants.FAILED);
-            data.put("message", e);
+            data.put("message", e.getMessage());
             data.put("invoices", invoices);
             return data;
         }

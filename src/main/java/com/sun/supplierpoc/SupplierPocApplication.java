@@ -1,10 +1,8 @@
 package com.sun.supplierpoc;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-
 
 @SpringBootApplication
 public class SupplierPocApplication {
@@ -18,14 +16,14 @@ public class SupplierPocApplication {
 
 
             // init the users
-            MongoUser mongoUser = new MongoUser();
+            User mongoUser = new User();
             mongoUser.setUsername("user");
             mongoUser.setPassword("user");
             mongoUser.setRoles(Sets.newHashSet("ROLE_USER"));
             mongoTemplate.save(mongoUser);
 
             // init the client details
-            MongoClientDetails clientDetails = new MongoClientDetails();
+            OauthClientDetails clientDetails = new OauthClientDetails();
             clientDetails.setClientId("web-client");
             clientDetails.setClientSecret("web-client-secret");
             clientDetails.setSecretRequired(true);

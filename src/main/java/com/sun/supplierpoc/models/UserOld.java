@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 import java.util.Date;
 
-public class User implements Serializable {
+public class UserOld implements Serializable {
     @Id
     public String id;
     public String name;
@@ -15,11 +15,11 @@ public class User implements Serializable {
     public Date creationDate;
     public boolean deleted;
 
-    public User() {
+    public UserOld() {
     }
 
-    public User(String id, String name, String accountId, String username, String password, Date creationDate,
-                boolean deleted) {
+    public UserOld(String id, String name, String accountId, String username, String password, Date creationDate,
+                   boolean deleted) {
         this.id = id;
         this.name = name;
         this.accountId = accountId;

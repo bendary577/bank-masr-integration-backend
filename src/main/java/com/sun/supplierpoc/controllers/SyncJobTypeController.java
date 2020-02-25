@@ -1,8 +1,11 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -18,17 +21,17 @@ public class SyncJobTypeController {
     @GetMapping("/getAccSyncJobTypesByName")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public SyncJobType getSyncJobType(@RequestParam(name = "typeName") String syncJobTypeName)  {
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncJobTypeName, "1");
-        return syncJobType;
+    public SyncJobType getSyncJobType(@RequestParam(name = "typeName") String syncJobTypeName, Principal principal)  {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        return  syncJobTypeRepo.findByNameAndAccountId(syncJobTypeName, user.getAccountId());
     }
 
     @GetMapping("/getSyncJobTypes")
     @CrossOrigin(origins = "*")
     @ResponseBody
     public List<SyncJobType> getSyncJobTypes(Principal principal)  {
-
-        return syncJobTypeRepo.findByAccountId("1");
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        return syncJobTypeRepo.findByAccountId(user.getAccountId());
     }
 
     @PutMapping("/updateSyncJobTypesConfiguration")

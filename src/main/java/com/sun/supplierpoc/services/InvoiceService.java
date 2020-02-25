@@ -1,13 +1,10 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.PurchaseInvoiceSSC;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -164,9 +161,9 @@ public class InvoiceService {
                 "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
                         "<SSC>" +
                         "<ErrorContext/>" +
-                        "   <User>" +
+                        "   <UserOld>" +
                         "       <Name>" + username + "</Name>" +
-                        "   </User>" +
+                        "   </UserOld>" +
 
                         "<SunSystemsContext>" +
                         "<BusinessUnit>"  + "PK1" + "</BusinessUnit>" +

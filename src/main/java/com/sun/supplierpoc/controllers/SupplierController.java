@@ -1,34 +1,35 @@
 package com.sun.supplierpoc.controllers;
+
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.SupplierService;
-import com.sun.supplierpoc.soapModels.SSC;
 import com.sun.supplierpoc.soapModels.Supplier;
-import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.*;;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import com.systemsunion.ssc.client.ComponentException;
+import com.systemsunion.ssc.client.SoapFaultException;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.StringReader;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+
+;
 
 
 @RestController
@@ -134,8 +135,7 @@ public class SupplierController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getSupplierTaxes(){
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
@@ -167,6 +167,9 @@ public class SupplierController {
                 WebElement row = rows.get(i);
                 List<WebElement>  cols = row.findElements(By.tagName("td"));
 
+                if (cols.size() != columns.size()){
+                    continue;
+                }
                 for (int j = 0; j < cols.size(); j++) {
                     tax.put(columns.get(j), cols.get(j).getText());
                 }
@@ -199,7 +202,7 @@ public class SupplierController {
     @ResponseBody
     public HashMap<String, Object> getSupplierGroups(){
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(true);
+        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> groups = new ArrayList<>();
 
@@ -230,6 +233,10 @@ public class SupplierController {
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()){
+                    continue;
+                }
 
                 for (int j = 0; j < cols.size(); j++) {
                     group.put(columns.get(j), cols.get(j).getText());

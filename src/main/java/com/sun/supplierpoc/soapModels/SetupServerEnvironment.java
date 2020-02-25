@@ -1,11 +1,5 @@
 package com.sun.supplierpoc.soapModels;
 
-import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.SecureSoapComponent;
-import com.systemsunion.ssc.client.SecurityProvider;
-import com.systemsunion.ssc.client.SoapComponent;
-
-
 public class SetupServerEnvironment {
     static int PORT = 8080;
     static String HOST= "192.168.1.21";

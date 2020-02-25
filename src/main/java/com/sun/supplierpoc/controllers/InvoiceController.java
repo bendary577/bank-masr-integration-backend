@@ -12,8 +12,11 @@ import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
 import com.sun.supplierpoc.services.TransferService;
-import com.systemsunion.ssc.client.*;
-import org.openqa.selenium.*;
+import com.systemsunion.ssc.client.ComponentException;
+import com.systemsunion.ssc.client.SoapFaultException;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

@@ -5,6 +5,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -14,10 +15,12 @@ import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -39,13 +42,14 @@ public class CreditNoteController {
     @RequestMapping("/getCreditNotes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getCreditNotes() {
+    public HashMap<String, Object> getCreditNotes(Principal principal) {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Credit Notes", "1");
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Credit Notes", user.getAccountId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, "1", "1",
-                syncJobType.getId());
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, user.getId(),
+                user.getAccountId(), syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 

@@ -6,6 +6,7 @@ import com.sun.supplierpoc.models.CostCenter;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -18,8 +19,10 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,13 +54,15 @@ public class InvoiceController {
     @RequestMapping("/getApprovedInvoices")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getApprovedInvoices() {
+    public HashMap<String, Object> getApprovedInvoices(Principal principal) {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", "1");
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", user.getAccountId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, "1", "1",
-                syncJobType.getId());
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
+                user.getAccountId(), syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
@@ -69,18 +74,7 @@ public class InvoiceController {
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
                 if(addedInvoices.size() != 0){
                     try {
-                        for (SyncJobData invoice: addedInvoices ) {
-                            boolean addInvoiceFlag = transferService.sendTransferData(invoice, syncJobType);
-
-                            if(addInvoiceFlag){
-                                invoice.setStatus(Constants.SUCCESS);
-                            }
-                            else {
-                                invoice.setStatus(Constants.FAILED);
-                                invoice.setReason("");
-                            }
-                            syncJobDataRepo.save(invoice);
-                        }
+                        JournalController.sendJournalData(syncJobType, addedInvoices, transferService, syncJobDataRepo);
 
                     } catch (SoapFaultException | ComponentException e) {
                         e.printStackTrace();
@@ -120,12 +114,15 @@ public class InvoiceController {
     @RequestMapping("/getCostCenter")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName){
+    public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName,
+                                                 Principal principal){
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, "1");
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
         ArrayList<HashMap<String, String>> oldCostCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
 
         try

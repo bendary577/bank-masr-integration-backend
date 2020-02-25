@@ -50,14 +50,15 @@ public class SupplierController {
     @RequestMapping("/getSuppliers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getSuppliers() throws SoapFaultException, ComponentException{
-        Boolean addFlag = false;
+    public HashMap<String, Object> getSuppliers(Principal principal) throws SoapFaultException, ComponentException{
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", "1");
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", user.getAccountId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, "1", "1",
-                syncJobType.getId());
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, user.getId(),
+                user.getAccountId(), syncJobType.getId());
         syncJobRepo.save(syncJob);
 
         HashMap<String, Object> data = supplierService.getSuppliersData();

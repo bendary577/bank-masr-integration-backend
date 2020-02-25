@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.services.security;
 
 
-import com.mongodb.WriteResult;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.sun.supplierpoc.models.auth.MongoApproval;

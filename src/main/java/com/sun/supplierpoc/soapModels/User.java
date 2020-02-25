@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.soapModels;
 
 import javax.xml.bind.annotation.XmlElement;
-import java.io.Serializable;
 
 public class User {
     @XmlElement

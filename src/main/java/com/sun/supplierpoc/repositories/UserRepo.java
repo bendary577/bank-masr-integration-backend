@@ -1,12 +1,10 @@
 package com.sun.supplierpoc.repositories;
 
 import com.sun.supplierpoc.models.User;
-
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
-import org.springframework.stereotype.Repository;
 
 @Repository
 

@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.seleniumMethods;
 
-import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;

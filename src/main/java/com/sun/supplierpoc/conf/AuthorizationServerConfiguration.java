@@ -14,7 +14,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,11 +24,6 @@ import org.springframework.web.client.RestTemplate;
 @EnableAuthorizationServer
 
 public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
-/*    private AuthenticationManager authenticationManagerBean;
-    @Autowired
-    public void setAuthenticationManagerBean(AuthenticationManager authenticationManagerBean) {
-        this.authenticationManagerBean = authenticationManagerBean;
-    }*/
 
     @Bean
     public CustomClientDetailsService clientDetailsService() {
@@ -70,23 +64,6 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Autowired
     private AuthenticationManager authenticationManager;
 
-/*    @Override
-    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints.authenticationManager(authenticationManager);
-    }
-
-/*    @Override
-    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.inMemory()
-                .withClient("web-client")
-                .secret("web-client-secret")
-                .authorizedGrantTypes("client_credentials", "password", "refresh_token")
-                .scopes("all")
-                .resourceIds("oauth2-resource")
-                .accessTokenValiditySeconds(1200)
-                .refreshTokenValiditySeconds(50000);
-
-    }*/
         @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.approvalStore(approvalStore())

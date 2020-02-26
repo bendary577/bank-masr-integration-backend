@@ -14,6 +14,7 @@ import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -179,6 +180,10 @@ public class SupplierService {
                 driver.get(vendorPage);
                 driver.findElement(By.linkText("New")).click();
 
+                // wait to make sure elements exits
+                WebDriverWait wait = new WebDriverWait(driver, 10);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxtLF_NAME")));
+
                 driver.findElement(By.id("igtxtLF_NAME")).sendKeys(((HashMap) supplier.getData()).get("supplier").toString());
                 driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
 
@@ -191,10 +196,6 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ENTER);
-//                String taxesValue = "[22,\"New\",\"NEW\"]";
-//                driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys("New");
-//                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('value'," + taxesValue + ")");
-
 
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
@@ -203,11 +204,6 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(group);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ENTER);
-
-
-//                String vendorGroupValue = "[12,\"Dariy\",\"DARIY\"]";
-//                driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys("Dariy");
-//                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('value'," + vendorGroupValue + ")");
 
                 //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
 

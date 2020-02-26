@@ -1,56 +1,50 @@
 package com.sun.supplierpoc.services;
 
-        import com.sun.supplierpoc.Constants;
-        import com.sun.supplierpoc.Conversions;
-        import com.sun.supplierpoc.controllers.InvoiceController;
-        import com.sun.supplierpoc.models.CostCenter;
-        import com.sun.supplierpoc.models.SyncJob;
-        import com.sun.supplierpoc.models.SyncJobData;
-        import com.sun.supplierpoc.models.SyncJobType;
-        import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-        import com.sun.supplierpoc.repositories.SyncJobRepo;
-        import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-        import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-        import com.sun.supplierpoc.soapModels.JournalSSC;
-        import com.systemsunion.security.IAuthenticationVoucher;
-        import com.systemsunion.ssc.client.ComponentException;
-        import com.systemsunion.ssc.client.SecurityProvider;
-        import com.systemsunion.ssc.client.SoapComponent;
-        import com.systemsunion.ssc.client.SoapFaultException;
-        import org.openqa.selenium.By;
-        import org.openqa.selenium.WebDriver;
-        import org.openqa.selenium.WebElement;
-        import org.openqa.selenium.support.ui.ExpectedConditions;
-        import org.openqa.selenium.support.ui.Select;
-        import org.openqa.selenium.support.ui.WebDriverWait;
-        import org.springframework.beans.factory.annotation.Autowired;
-        import org.springframework.stereotype.Service;
-        import org.w3c.dom.Document;
-        import org.w3c.dom.Element;
+import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.models.SyncJob;
+import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.soapModels.JournalSSC;
+import com.systemsunion.security.IAuthenticationVoucher;
+import com.systemsunion.ssc.client.ComponentException;
+import com.systemsunion.ssc.client.SecurityProvider;
+import com.systemsunion.ssc.client.SoapComponent;
+import com.systemsunion.ssc.client.SoapFaultException;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.Select;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-        import javax.xml.bind.JAXBContext;
-        import javax.xml.bind.JAXBException;
-        import javax.xml.bind.Unmarshaller;
-        import javax.xml.parsers.DocumentBuilder;
-        import javax.xml.parsers.DocumentBuilderFactory;
-        import javax.xml.parsers.ParserConfigurationException;
-        import javax.xml.transform.Transformer;
-        import javax.xml.transform.TransformerException;
-        import javax.xml.transform.TransformerFactory;
-        import javax.xml.transform.dom.DOMSource;
-        import javax.xml.transform.stream.StreamResult;
-        import java.io.StringReader;
-        import java.io.StringWriter;
-        import java.util.ArrayList;
-        import java.util.Date;
-        import java.util.HashMap;
-        import java.util.List;
-        import java.util.concurrent.TimeUnit;
 
 @Service
 public class TransferService {
     static int PORT = 8080;
-    static String HOST= "192.168.1.21";
+    static String HOST = "192.168.1.21";
 
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
@@ -61,18 +55,22 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobType){
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobType) {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        ArrayList<HashMap<String, String>> transfers = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
         ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
+        ArrayList<HashMap<String, String>> items = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("items");
+        ArrayList<HashMap<String, String>> overGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
+
+        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)){
+            if (!setupEnvironment.loginOHIM(driver, url)) {
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
@@ -95,9 +93,9 @@ public class TransferService {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
 
             int pageCounter = 2;
-            while (true){
+            while (true) {
                 for (int i = 1; i < rows.size(); i++) {
-                    HashMap<String, String> transfer = new HashMap<>();
+                    HashMap<String, Object> transfer = new HashMap<>();
 
                     WebElement row = rows.get(i);
                     List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -106,18 +104,27 @@ public class TransferService {
                     }
 
                     WebElement td = cols.get(columns.indexOf("from_cost_center"));
-                    HashMap<String, Object> oldCostCenterData = invoiceController.checkExistence(costCenters, td.getText().strip());
+                    HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip());
 
                     if (!(boolean) oldCostCenterData.get("status")) {
                         continue;
                     }
+                    transfer.put("cost_center", oldCostCenterData.get("costCenter"));
+
+
+                    td = cols.get(columns.indexOf("document"));
+                    transfer.put(columns.get(0), td.getText());
+                    String detailsLink = td.getAttribute("href");
+                    String detailsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/TransferNew/" + detailsLink;
+                    transfer.put("details_url", detailsURL);
+
                     for (int j = 1; j < cols.size(); j++) {
                         transfer.put(columns.get(j), cols.get(j).getText());
                     }
                     transfers.add(transfer);
                 }
 
-                try{
+                try {
                     Select selectPage = new Select(driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td/select")));
                     selectPage.selectByVisibleText(Integer.toString(pageCounter));
                     System.out.println(pageCounter);
@@ -131,7 +138,9 @@ public class TransferService {
                     System.out.println(e.getMessage());
                     break;
                 }
-
+            }
+            for (HashMap<String, Object> transfer: transfers) {
+                getBookedTransferDetails(items, overGroups, transfer, driver, syncJobType, journalEntries);
             }
 
             driver.quit();
@@ -152,7 +161,16 @@ public class TransferService {
         }
     }
 
-    public ArrayList<SyncJobData> saveTransferData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob){
+    private void getBookedTransferDetails(
+            ArrayList<HashMap<String, String>> items, ArrayList<HashMap<String, String>> overGroups,
+            HashMap<String, Object> transfer, WebDriver driver, SyncJobType syncJobType,
+            ArrayList<HashMap<String, String>> journalEntries){
+
+
+
+    }
+
+    public ArrayList<SyncJobData> saveTransferData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob) {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         for (HashMap<String, String> invoice : invoices) {
@@ -247,19 +265,17 @@ public class TransferService {
         String result = "";
         try {
 
-            SoapComponent ssc = new SoapComponent(HOST,PORT);
+            SoapComponent ssc = new SoapComponent(HOST, PORT);
             ssc.authenticate(voucher);
             result = ssc.execute("Journal", "Import", sccXMLStringValue);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             System.out.print("An error occurred logging in to SunSystems:\r\n");
             ex.printStackTrace();
         }
 
         ///////////////////////////////////////////  Convert XML to Object /////////////////////////////////////////////
         JAXBContext jaxbContext;
-        try
-        {
+        try {
             jaxbContext = JAXBContext.newInstance(JournalSSC.class);
 
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -269,16 +285,16 @@ public class TransferService {
             System.out.println(query.getPayload());
 
             return query.getPayload().get(0).getLine().getStatus().equals("success");
-        }
-        catch (JAXBException e)
-        {
+        } catch (JAXBException e) {
             e.printStackTrace();
         }
         return false;
     }
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
-                                   SyncJobData addedJournalEntry){
+                                   SyncJobData addedJournalEntry) {
+
+        ArrayList<HashMap<String, Object>> analysis = (ArrayList<HashMap<String, Object>>) syncJobType.getConfiguration().get("analysis");
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);
@@ -286,14 +302,6 @@ public class TransferService {
         Element accountCodeElement = doc.createElement("AccountCode");
         accountCodeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("accountCode")));
         lineElement.appendChild(accountCodeElement);
-
-        Element analysisCode2Element = doc.createElement("AnalysisCode2");
-        analysisCode2Element.appendChild(doc.createTextNode("12"));
-        lineElement.appendChild(analysisCode2Element);
-
-        Element analysisCode6Element = doc.createElement("AnalysisCode6");
-        analysisCode6Element.appendChild(doc.createTextNode("16"));
-        lineElement.appendChild(analysisCode6Element);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
         if (creditDebitFlag)
@@ -351,67 +359,34 @@ public class TransferService {
 
         lineElement.appendChild(accountCodeElement);
 
-        Element enterAnalysis1Element = doc.createElement("EnterAnalysis1");
-        enterAnalysis1Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis1Element);
+        for (HashMap<String, Object> analysisObject: analysis) {
+            if ((Boolean) analysisObject.get("checked")){
 
-        Element enterAnalysis10Element = doc.createElement("EnterAnalysis10");
-        enterAnalysis10Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis10Element);
+                Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.get("number"));
+                analysisCode2Element.appendChild(doc.createTextNode("1"+ analysisObject.get("number")));
+                lineElement.appendChild(analysisCode2Element);
 
-        Element enterAnalysis2Element = doc.createElement("EnterAnalysis2");
-        enterAnalysis2Element.appendChild(doc.createTextNode("1"));
-        accountsElement.appendChild(enterAnalysis2Element);
+                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.get("number"));
+                enterAnalysis1Element.appendChild(doc.createTextNode("1"));
+                accountsElement.appendChild(enterAnalysis1Element);
 
-        Element enterAnalysis3Element = doc.createElement("EnterAnalysis3");
-        enterAnalysis3Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis3Element);
+                Element analysis2Element = doc.createElement("Analysis" + analysisObject.get("number"));
+                accountsElement.appendChild(analysis2Element);
 
-        Element enterAnalysis4Element = doc.createElement("EnterAnalysis4");
-        enterAnalysis4Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis4Element);
+                Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
+                vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("accountCode")));
+                analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
 
-        Element enterAnalysis5Element = doc.createElement("EnterAnalysis5");
-        enterAnalysis5Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis5Element);
+                Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
+                vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode((String) analysisObject.get("codeElement")));
+                analysis2Element.appendChild(vAcntCatAnalysis_AnlCodeElement);
 
-        Element enterAnalysis6Element = doc.createElement("EnterAnalysis6");
-        enterAnalysis6Element.appendChild(doc.createTextNode("1"));
-        accountsElement.appendChild(enterAnalysis6Element);
-
-        Element enterAnalysis7Element = doc.createElement("EnterAnalysis7");
-        enterAnalysis7Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis7Element);
-
-        Element enterAnalysis8Element = doc.createElement("EnterAnalysis8");
-        enterAnalysis8Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis8Element);
-
-        Element enterAnalysis9Element = doc.createElement("EnterAnalysis9");
-        enterAnalysis9Element.appendChild(doc.createTextNode("3"));
-        accountsElement.appendChild(enterAnalysis9Element);
-
-        Element analysis2Element = doc.createElement("Analysis2");
-        accountsElement.appendChild(analysis2Element);
-
-        Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
-        vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("accountCode")));
-        analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
-
-        Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-        vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode("44"));
-        analysis2Element.appendChild(vAcntCatAnalysis_AnlCodeElement);
-
-        Element analysis6Element = doc.createElement("Analysis6");
-        accountsElement.appendChild(analysis6Element);
-
-        Element vAcntCatAnalysis_AcntCodeElement2 = doc.createElement("VAcntCatAnalysis_AcntCode");
-        vAcntCatAnalysis_AcntCodeElement2.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("accountCode")));
-        analysis6Element.appendChild(vAcntCatAnalysis_AcntCodeElement2);
-
-        Element vAcntCatAnalysis_AnlCodeElement2 = doc.createElement("VAcntCatAnalysis_AnlCode");
-        vAcntCatAnalysis_AnlCodeElement2.appendChild(doc.createTextNode("V"));
-        analysis6Element.appendChild(vAcntCatAnalysis_AnlCodeElement2);
+            }
+            else{
+                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.get("number"));
+                enterAnalysis1Element.appendChild(doc.createTextNode("3"));
+                accountsElement.appendChild(enterAnalysis1Element);
+            }
+        }
     }
-
 }

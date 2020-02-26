@@ -149,7 +149,7 @@ public class SupplierController {
 
                 response.put("status", Constants.FAILED);
                 response.put("message", "Invalid username and password.");
-                response.put("journals", taxes);
+                response.put("data", taxes);
                 return response;
             }
 

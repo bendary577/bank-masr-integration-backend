@@ -15,7 +15,9 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -71,6 +73,11 @@ public class InvoiceService {
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
+            // wait until loading finished "tableLoadingBar"
+            WebDriverWait wait = new WebDriverWait(driver, 10);
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
+
+
             WebElement bodyTable = driver.findElement(By.id("G_dg"));
             WebElement headerTable = driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[1]/td/div/table"));
 
@@ -79,19 +86,38 @@ public class InvoiceService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
 
-            for (int i = 1; i < rows.size(); i++) {
-                HashMap<String, Object> invoice = new HashMap<>();
+            while (true){
+                for (int i = 1; i < rows.size(); i++) {
+                    HashMap<String, Object> invoice = new HashMap<>();
 
-                WebElement row = rows.get(i);
-                List<WebElement> cols = row.findElements(By.tagName("td"));
-                if (cols.size() !=  columns.size()){
-                    continue;
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+                    if (cols.size() !=  columns.size()){
+                        continue;
+                    }
+
+                    for (int j = 0; j < cols.size(); j++) {
+                        invoice.put(columns.get(j), cols.get(j).getText());
+                    }
+                    invoices.add(invoice);
                 }
 
-                for (int j = 0; j < cols.size(); j++) {
-                    invoice.put(columns.get(j), cols.get(j).getText());
+                if (driver.findElements(By.linkText("Next")).size() != 0){
+                    driver.findElement(By.linkText("Next")).click();
+                    // wait until table change
+//                    wait.until(ExpectedConditions.elementSelectionStateToBe(
+//                            driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td/select")),
+//                            true));
+
+//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("G_dg")));
+
+                    bodyTable = driver.findElement(By.id("G_dg"));
+                    rows = bodyTable.findElements(By.tagName("tr"));
                 }
-                invoices.add(invoice);
+                else {
+                    break;
+                }
+
             }
 
             driver.quit();
@@ -126,16 +152,16 @@ public class InvoiceService {
 
             HashMap<String, String> data = new HashMap<>();
 
-            data.put("invoiceNo", invoice.get("invoice_no."));
-            data.put("vendor", invoice.get("vendor"));
-            data.put("costCenter", invoice.get("cost_center"));
-            data.put("status", invoice.get("status"));
-            data.put("invoiceDate", invoice.get("'invoice_date'"));
-            data.put("net", invoice.get("net"));
-            data.put("vat", invoice.get("vat"));
-            data.put("gross", invoice.get("gross"));
-            data.put("createdBy", invoice.get("'created_by"));
-            data.put("createdAt", invoice.get("created_at"));
+            data.put("invoiceNo", invoice.get("invoice_no.") == null? "0":invoice.get("invoice_no."));
+            data.put("vendor", invoice.get("vendor") == null? "0":invoice.get("vendor"));
+            data.put("costCenter", invoice.get("cost_center") == null? "0":invoice.get("cost_center"));
+            data.put("status", invoice.get("status") == null? "0":invoice.get("status"));
+            data.put("invoiceDate", invoice.get("invoice_date") == null? "0":invoice.get("invoice_date"));
+            data.put("net", invoice.get("net") == null? "0":invoice.get("net"));
+            data.put("vat", invoice.get("vat") == null? "0":invoice.get("vat"));
+            data.put("gross", invoice.get("gross") == null? "0":invoice.get("gross"));
+            data.put("createdBy", invoice.get("created_by") == null? "0":invoice.get("created_by"));
+            data.put("createdAt", invoice.get("created_at") == null? "0":invoice.get("created_at"));
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

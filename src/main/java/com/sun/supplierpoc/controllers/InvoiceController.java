@@ -174,7 +174,7 @@ public class InvoiceController {
         }
     }
 
-    public HashMap<String, Object> checkExistence(ArrayList<HashMap<String, String>> costCenters, String costCenterName){
+    public HashMap<String, Object> checkCostCenterExistence(ArrayList<HashMap<String, String>> costCenters, String costCenterName){
         HashMap<String, Object> data = new HashMap<>();
         for (HashMap<String, String> costCenter : costCenters) {
             if (costCenter.get("costCenter").equals(costCenterName)) {
@@ -202,7 +202,7 @@ public class InvoiceController {
 
             costCenter.costCenter =  cols.get(1).getText().strip();
 
-            HashMap<String, Object> oldCostCenterData = checkExistence(oldCostCenters, cols.get(1).getText().strip());
+            HashMap<String, Object> oldCostCenterData = checkCostCenterExistence(oldCostCenters, cols.get(1).getText().strip());
             HashMap<String, String> oldCostCenter = (HashMap<String, String>) oldCostCenterData.get("costCenter");
 
             if ((boolean)oldCostCenterData.get("status")){

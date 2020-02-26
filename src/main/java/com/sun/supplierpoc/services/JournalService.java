@@ -9,39 +9,16 @@ import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.soapModels.JournalSSC;
-import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.ComponentException;
-import com.systemsunion.ssc.client.SecurityProvider;
-import com.systemsunion.ssc.client.SoapComponent;
-import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class JournalService {
@@ -93,7 +70,7 @@ public class JournalService {
                 }
 
                 WebElement td = cols.get(columns.indexOf("cost_center"));
-                HashMap<String, Object> oldCostCenterData = invoiceController.checkExistence(costCenters, td.getText().strip());
+                HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip());
 
                 if (!(boolean) oldCostCenterData.get("status")) {
                     continue;

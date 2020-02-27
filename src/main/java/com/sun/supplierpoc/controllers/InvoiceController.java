@@ -73,11 +73,13 @@ public class InvoiceController {
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
                 if(addedInvoices.size() != 0){
-                    try {
-                        JournalController.sendJournalData(syncJobType, addedInvoices, transferService, syncJobDataRepo);
+                    for (SyncJobData addedInvoice : addedInvoices) {
+                        try {
+                            transferService.sendTransferData(addedInvoice, syncJobType);
 
-                    } catch (SoapFaultException | ComponentException e) {
-                        e.printStackTrace();
+                        } catch (SoapFaultException | ComponentException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
 

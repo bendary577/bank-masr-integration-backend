@@ -2,6 +2,7 @@ package com.sun.supplierpoc.services;
 
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.Journal;
 import com.sun.supplierpoc.models.SyncJob;
@@ -27,7 +28,8 @@ public class JournalService {
     @Autowired
     InvoiceController invoiceController;
 
-    public SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private Conversions conversions = new Conversions();
+    private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,9 +37,11 @@ public class JournalService {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        ArrayList<HashMap<String, String>> journals = new ArrayList<>();
+        ArrayList<Journal> journals = new ArrayList<>();
 
         ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
+        ArrayList<HashMap<String, String>> itemGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("itemGroups");
+
 
         try {
             String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
@@ -76,7 +80,11 @@ public class JournalService {
                     continue;
                 }
 
-                journal.put("extensions", cols.get(0).getAttribute("onclick"));
+                String extensions = cols.get(0).findElement(By.tagName("div")).getAttribute("onclick").substring(7);
+                int index = extensions.indexOf('\'');
+                extensions = extensions.substring(0, index);
+
+                journal.put("extensions", extensions);
                 journal.put(columns.get(0), cols.get(0).getText());
 
                 selectedCostCenters.add(journal);
@@ -90,13 +98,41 @@ public class JournalService {
 
                     rows = driver.findElements(By.tagName("tr"));
 
-                    columns = setupEnvironment.getTableColumns(rows, true, 5);
+                    columns = setupEnvironment.getTableColumns(rows, false, 4);
 
                     for (int i = 6; i < rows.size(); i++) {
-                        Journal journal = new Journal();
-                        // check if the item belone to selected items
-                        // lw belong agyb al over group bt3ha
+                        HashMap<String, Object> transferDetails = new HashMap<>();
+                        WebElement row = rows.get(i);
+                        List<WebElement> cols = row.findElements(By.tagName("td"));
 
+                        if (cols.size() != columns.size()) {
+                            continue;
+                        }
+
+                        // check if this item group belong to selected item groups
+                        WebElement td = cols.get(columns.indexOf("item_group"));
+
+                        HashMap<String, Object> oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+
+                        if (!(boolean) oldItemData.get("status")) {
+                            continue;
+                        }
+
+                        HashMap<String, String> oldItemGroup = (HashMap<String, String>) oldItemData.get("itemGroup");
+                        String overGroup = oldItemGroup.get("over_group");
+
+                        transferDetails.put("item_group", td.getText());
+
+                        td = cols.get(columns.indexOf("total"));
+                        transferDetails.put("total", td.getText());
+
+                        Journal journal = new Journal();
+                        float waste = conversions.convertStringToFloat((String) transferDetails.get("waste"));
+                        float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
+                        float variance = conversions.convertStringToFloat((String) transferDetails.get("variance"));
+                        float transfer = conversions.convertStringToFloat((String) transferDetails.get("net_transfers"));
+
+                        journals = journal.checkExistence(journals, overGroup, waste,cost, variance, transfer);
 
                     }
 

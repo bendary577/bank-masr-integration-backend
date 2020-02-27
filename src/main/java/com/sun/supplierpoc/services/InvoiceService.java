@@ -153,13 +153,13 @@ public class InvoiceService {
             HashMap<String, String> data = new HashMap<>();
 
             data.put("invoiceNo", invoice.get("invoice_no.") == null? "0":invoice.get("invoice_no."));
-            data.put("vendor", invoice.get("vendor") == null? "0":invoice.get("vendor"));
-            data.put("costCenter", invoice.get("cost_center") == null? "0":invoice.get("cost_center"));
+            data.put("from", invoice.get("vendor") == null? "0":invoice.get("vendor"));
+            data.put("to", invoice.get("cost_center") == null? "0":invoice.get("cost_center"));
             data.put("status", invoice.get("status") == null? "0":invoice.get("status"));
             data.put("invoiceDate", invoice.get("invoice_date") == null? "0":invoice.get("invoice_date"));
             data.put("net", invoice.get("net") == null? "0":invoice.get("net"));
             data.put("vat", invoice.get("vat") == null? "0":invoice.get("vat"));
-            data.put("gross", invoice.get("gross") == null? "0":invoice.get("gross"));
+            data.put("total", invoice.get("gross") == null? "0":invoice.get("gross"));
             data.put("createdBy", invoice.get("created_by") == null? "0":invoice.get("created_by"));
             data.put("createdAt", invoice.get("created_at") == null? "0":invoice.get("created_at"));
 

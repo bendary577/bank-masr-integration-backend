@@ -89,6 +89,8 @@ public class CreditNoteController {
             else {
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setReason("There is no credit note to get from Oracle Hospitality.");
+                syncJob.setEndDate(new Date());
+
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "There is no credit note to get from Oracle Hospitality.");
@@ -99,6 +101,8 @@ public class CreditNoteController {
         else {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason("Failed to get credit note from Oracle Hospitality.");
+            syncJob.setEndDate(new Date());
+
             syncJobRepo.save(syncJob);
 
             response.put("message", "Failed to sync credit note.");

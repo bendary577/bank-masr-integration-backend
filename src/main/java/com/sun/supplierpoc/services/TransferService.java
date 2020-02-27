@@ -1,7 +1,9 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.models.Journal;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -51,7 +53,8 @@ public class TransferService {
     @Autowired
     InvoiceController invoiceController;
 
-    public SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private Conversions conversions = new Conversions();
+    private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -63,9 +66,8 @@ public class TransferService {
 
         ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
         ArrayList<HashMap<String, String>> items = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("items");
-        ArrayList<HashMap<String, String>> overGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
 
-        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
@@ -99,7 +101,7 @@ public class TransferService {
 
                     WebElement row = rows.get(i);
                     List<WebElement> cols = row.findElements(By.tagName("td"));
-                    if (cols.size() != 16) {
+                    if (cols.size() != columns.size()) {
                         continue;
                     }
 
@@ -114,9 +116,8 @@ public class TransferService {
 
                     td = cols.get(columns.indexOf("document"));
                     transfer.put(columns.get(0), td.getText());
-                    String detailsLink = td.getAttribute("href");
-                    String detailsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/TransferNew/" + detailsLink;
-                    transfer.put("details_url", detailsURL);
+                    String detailsLink = td.findElement(By.tagName("a")).getAttribute("href");
+                    transfer.put("details_url", detailsLink);
 
                     for (int j = 1; j < cols.size(); j++) {
                         transfer.put(columns.get(j), cols.get(j).getText());
@@ -140,14 +141,14 @@ public class TransferService {
                 }
             }
             for (HashMap<String, Object> transfer: transfers) {
-                getBookedTransferDetails(items, overGroups, transfer, driver, syncJobType, journalEntries);
+                getBookedTransferDetails(items, transfer, driver, journalEntries);
             }
 
             driver.quit();
 
             data.put("status", Constants.SUCCESS);
             data.put("message", "");
-            data.put("transfers", transfers);
+            data.put("transfers", journalEntries);
             return data;
 
         } catch (Exception e) {
@@ -162,30 +163,83 @@ public class TransferService {
     }
 
     private void getBookedTransferDetails(
-            ArrayList<HashMap<String, String>> items, ArrayList<HashMap<String, String>> overGroups,
-            HashMap<String, Object> transfer, WebDriver driver, SyncJobType syncJobType,
-            ArrayList<HashMap<String, String>> journalEntries){
+            ArrayList<HashMap<String, String>> items, HashMap<String, Object> transfer, WebDriver driver,
+            ArrayList<HashMap<String, Object>> journalEntries){
+        ArrayList<Journal> journals = new ArrayList<>();
 
+        try {
+            driver.get((String) transfer.get("details_url"));
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 22);
 
+            for (int i = 23; i < rows.size(); i++) {
+                HashMap<String, Object> transferDetails = new HashMap<>();
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                // check if this item belong to selected items
+                WebElement td = cols.get(columns.indexOf("item"));
+
+                HashMap<String, Object> oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+
+                if (!(boolean) oldItemData.get("status")) {
+                    continue;
+                }
+
+                HashMap<String, String> oldItem = (HashMap<String, String>) oldItemData.get("item");
+                String overGroup = oldItem.get("over_group");
+
+                transferDetails.put("item", td.getText());
+
+                td = cols.get(columns.indexOf("total"));
+                transferDetails.put("total", td.getText());
+
+                Journal journal = new Journal();
+                journals = journal.checkExistence(journals, overGroup, 0,0, 0,
+                        conversions.convertStringToFloat((String) transferDetails.get("total")));
+
+            }
+
+            for (Journal journal : journals) {
+                HashMap<String, Object> journalEntry = new HashMap<>();
+
+                journalEntry.put("total", journal.getTotalTransfer());
+                journalEntry.put("from", transfer.get("from_cost_center"));
+                journalEntry.put("to", transfer.get("to_cost_center"));
+                journalEntry.put("description", "Transfer From " + transfer.get("from_cost_center") + " to "+
+                        transfer.get("to_cost_center") + " - " + journal.getOverGroup());
+
+                journalEntries.add(journalEntry);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
     }
 
-    public ArrayList<SyncJobData> saveTransferData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob) {
-        ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
+    public ArrayList<SyncJobData> saveTransferSunData(ArrayList<HashMap<String, String>> transfers, SyncJob syncJob) {
+        ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
-        for (HashMap<String, String> invoice : invoices) {
+        for (HashMap<String, String> transfer : transfers) {
             HashMap<String, String> data = new HashMap<>();
 
-            data.put("invoiceNo", invoice.get("invoice_no."));
-
+            data.put("total", transfer.get("total") == null? "0":transfer.get("total"));
+            data.put("from_cost_center",transfer.get("from") == null? "":transfer.get("from"));
+            data.put("to_cost_center", transfer.get("to") == null? "":transfer.get("to"));
+            data.put("description", transfer.get("description") == null? "":transfer.get("description"));
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
 
-            addedInvoices.add(syncJobData);
+            addedTransfers.add(syncJobData);
         }
-        return addedInvoices;
+        return addedTransfers;
 
     }
 
@@ -305,16 +359,16 @@ public class TransferService {
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
         if (creditDebitFlag)
-            base2ReportingAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("gross")));
+            base2ReportingAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("total")));
         else
-            base2ReportingAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("gross")));
+            base2ReportingAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
         lineElement.appendChild(base2ReportingAmountElement);
 
         Element baseAmountElement = doc.createElement("BaseAmount");
         if (creditDebitFlag)
-            baseAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("gross")));
+            baseAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("total")));
         else
-            baseAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("gross")));
+            baseAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
         lineElement.appendChild(baseAmountElement);
 
         Element currencyCodeElement = doc.createElement("CurrencyCode");
@@ -345,9 +399,9 @@ public class TransferService {
 
         Element transactionAmountElement = doc.createElement("TransactionAmount");
         if (creditDebitFlag)
-            transactionAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("gross")));
+            transactionAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("total")));
         else
-            transactionAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("gross")));
+            transactionAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
         lineElement.appendChild(transactionAmountElement);
 
         Element transactionReferenceElement = doc.createElement("TransactionReference");
@@ -389,4 +443,5 @@ public class TransferService {
             }
         }
     }
+
 }

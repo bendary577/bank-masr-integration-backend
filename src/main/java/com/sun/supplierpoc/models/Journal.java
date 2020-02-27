@@ -5,16 +5,16 @@ import java.util.HashMap;
 
 public class Journal {
 
-    public String overGroup;
-    public float totalWaste;
-    public float totalCost;
-    public float totalVariance;
-    public float totalTransfer;
+    private String overGroup;
+    private float totalWaste;
+    private float totalCost;
+    private float totalVariance;
+    private float totalTransfer;
 
     public Journal() {
     }
 
-    public Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer) {
+    private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer) {
         this.overGroup = overGroup;
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
@@ -38,5 +38,45 @@ public class Journal {
         journals.add(new Journal(overGroup, waste, cost, variance, transfer));
         return journals;
 
+    }
+
+    public String getOverGroup() {
+        return overGroup;
+    }
+
+    public void setOverGroup(String overGroup) {
+        this.overGroup = overGroup;
+    }
+
+    public float getTotalWaste() {
+        return totalWaste;
+    }
+
+    public void setTotalWaste(float totalWaste) {
+        this.totalWaste = totalWaste;
+    }
+
+    public float getTotalCost() {
+        return totalCost;
+    }
+
+    public void setTotalCost(float totalCost) {
+        this.totalCost = totalCost;
+    }
+
+    public float getTotalVariance() {
+        return totalVariance;
+    }
+
+    public void setTotalVariance(float totalVariance) {
+        this.totalVariance = totalVariance;
+    }
+
+    public float getTotalTransfer() {
+        return totalTransfer;
+    }
+
+    public void setTotalTransfer(float totalTransfer) {
+        this.totalTransfer = totalTransfer;
     }
 }

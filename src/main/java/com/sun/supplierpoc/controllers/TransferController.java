@@ -46,6 +46,7 @@ public class TransferController {
     @Autowired
     private TransferService transferService;
 
+    private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
 
@@ -55,30 +56,33 @@ public class TransferController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getBookedTransfer(Principal principal) {
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", user.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getId());
-
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
-                user.getAccountId(), syncJobType.getId());
-
-        syncJobRepo.save(syncJob);
-
         try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", user.getAccountId());
+            SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
+
+            SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
+                    user.getAccountId(), syncJobType.getId());
+
+            syncJobRepo.save(syncJob);
+
             HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
-                    ArrayList<SyncJobData> addedTransfers = transferService.saveTransferData(transfers, syncJob);
+                    ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
                     if (addedTransfers.size() != 0) {
-                        try {
-                            JournalController.sendJournalData(syncJobType, addedTransfers, transferService, syncJobDataRepo);
+                        for (SyncJobData addedTransfer : addedTransfers) {
+                            try {
+                                transferService.sendTransferData(addedTransfer, syncJobType);
 
-                        } catch (SoapFaultException | ComponentException e) {
-                            e.printStackTrace();
+                            } catch (SoapFaultException | ComponentException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
 
@@ -89,6 +93,7 @@ public class TransferController {
                 } else {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no transfers to get from Oracle Hospitality.");
+                    syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no transfers to get from Oracle Hospitality.");
@@ -98,6 +103,7 @@ public class TransferController {
             } else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason("Failed to get transfers from Oracle Hospitality.");
+                syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", data.get("message"));
@@ -159,7 +165,7 @@ public class TransferController {
                 }
                 // check existence of over group
                 WebElement td = cols.get(columns.indexOf("over_group"));
-                HashMap<String, Object> oldOverGroupData = checkOverGroupExistence(oldOverGroups, td.getText().strip());
+                HashMap<String, Object> oldOverGroupData = conversions.checkOverGroupExistence(oldOverGroups, td.getText().strip());
 
                 if ((boolean) oldOverGroupData.get("status")) {
                     overGroup.put("checked", true);
@@ -236,7 +242,7 @@ public class TransferController {
                 }
 
                 // check if this major group belong to chosen over group
-                HashMap<String, Object> overGroupData = checkOverGroupExistence(oldOverGroups, majorGroup.get("over_group"));
+                HashMap<String, Object> overGroupData = conversions.checkOverGroupExistence(oldOverGroups, majorGroup.get("over_group"));
                 if ((Boolean) overGroupData.get("status")) {
                     majorGroups.add(majorGroup);
                 }
@@ -268,7 +274,7 @@ public class TransferController {
                 HashMap<String, String> itemGroup = getTableData(rows, columns, i);
                 if (itemGroup == null) continue;
                 // check if this item group belong to chosen major group
-                HashMap<String, Object> majorGroupData = checkMajorGroupExistence(majorGroups,itemGroup.get("major_group"));
+                HashMap<String, Object> majorGroupData = conversions.checkMajorGroupExistence(majorGroups,itemGroup.get("major_group"));
                 if ((Boolean) majorGroupData.get("status")) {
                     itemGroup.put("over_group", (String) ((HashMap<String, Object>)majorGroupData.get("majorGroup")).get("over_group"));
                     itemGroups.add(itemGroup);
@@ -315,7 +321,7 @@ public class TransferController {
                 for (int i = 11; i < rows.size(); i++) {
                     HashMap<String, String> item = getTableData(rows, columns, i);
                     if (item == null) continue;
-                    HashMap<String, Object> itemGroupData = checkItemGroupExistence(itemGroups,itemGroup.get("item_group"));
+                    HashMap<String, Object> itemGroupData = conversions.checkItemGroupExistence(itemGroups,itemGroup.get("item_group"));
                     // check if this item group belong to chosen major group
                     if ((Boolean) itemGroupData.get("status")) {
                         item.put("over_group", (String) ((HashMap<String, Object>)itemGroupData.get("itemGroup")).get("over_group"));
@@ -376,59 +382,5 @@ public class TransferController {
         return itemGroup;
     }
 
-    private HashMap<String, Object> checkOverGroupExistence(ArrayList<HashMap<String, String>> overGroups, String overGroupName) {
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> overGroup : overGroups) {
-            if (overGroup.get("over_group").equals(overGroupName)) {
-                data.put("status", true);
-                data.put("overGroup", overGroup);
-                return data;
-            }
-        }
-        data.put("status", false);
-        data.put("overGroup", new HashMap<String, String>());
-        return data;
-    }
 
-    private HashMap<String, Object> checkMajorGroupExistence(ArrayList<HashMap<String, String>> majorGroups, String majorGroupName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> majorGroup : majorGroups) {
-            if (majorGroup.get("major_group").equals(majorGroupName)) {
-                data.put("status", true);
-                data.put("majorGroup", majorGroup);
-                return data;
-            }
-        }
-        data.put("status", false);
-        data.put("majorGroup", new HashMap<String, String>());
-        return data;
-    }
-
-    private HashMap<String, Object> checkItemGroupExistence(ArrayList<HashMap<String, String>> itemGroups, String itemGroupName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> itemGroup : itemGroups) {
-            if (itemGroup.get("item_group").equals(itemGroupName)) {
-                data.put("status", true);
-                data.put("itemGroup", itemGroup);
-                return data;
-            }
-        }
-        data.put("status", false);
-        data.put("itemGroup", new HashMap<String, String>());
-        return data;
-    }
-
-    private HashMap<String, Object> checkItemExistence(ArrayList<HashMap<String, String>> items, String itemName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> item : items) {
-            if (item.get("item").equals(itemName)) {
-                data.put("status", true);
-                data.put("item", item);
-                return data;
-            }
-        }
-        data.put("status", false);
-        data.put("item", new HashMap<String, String>());
-        return data;
-    }
 }

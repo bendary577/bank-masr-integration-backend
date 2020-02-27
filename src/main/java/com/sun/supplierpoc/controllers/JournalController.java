@@ -34,8 +34,6 @@ public class JournalController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
-    @Autowired
     private JournalService journalService;
     @Autowired
     private TransferService transferService;
@@ -45,55 +43,61 @@ public class JournalController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getJournals(Principal principal) {
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
-
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
-                user.getAccountId(), syncJobType.getId());
-
-        syncJobRepo.save(syncJob);
-
         try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
+
+            SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
+                    user.getAccountId(), syncJobType.getId());
+
+            syncJobRepo.save(syncJob);
+
             HashMap<String, Object> data = journalService.getJournalData(syncJobType);
 
-            if (data.get("status").equals(Constants.SUCCESS)){
+            if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> journals = (ArrayList<HashMap<String, String>>) data.get("journals");
-                if (journals.size() > 0){
+                if (journals.size() > 0) {
                     ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob);
-                    if(addedJournals.size() != 0){
-                        try {
-                            sendJournalData(syncJobType, addedJournals, transferService, syncJobDataRepo);
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setEndDate(new Date());
-                            syncJobRepo.save(syncJob);
+                    if (addedJournals.size() != 0) {
+                        for (SyncJobData addedJournal : addedJournals) {
+                            try {
+                                transferService.sendTransferData(addedJournal, syncJobType);
 
-                        } catch (SoapFaultException | ComponentException e) {
-                            e.printStackTrace();
+                            } catch (SoapFaultException | ComponentException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                     else {
                         syncJob.setStatus(Constants.FAILED);
-                        syncJob.setReason("Failed to add journals in middle ware.");
+                        syncJob.setReason("Failed to add journals in middleware");
                         syncJob.setEndDate(new Date());
                         syncJobRepo.save(syncJob);
                     }
+
+                    syncJob.setStatus(Constants.SUCCESS);
+                    syncJob.setEndDate(new Date());
+                    syncJobRepo.save(syncJob);
 
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no journals to get from Oracle Hospitality.");
+                    syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no journals to get from Oracle Hospitality.");
                     response.put("success", true);
 
                 }
-            }
-            else {
+            } else {
                 syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason("Failed to get journals from Oracle Hospitality.");
+                syncJob.setReason((String) data.get("message"));
+                syncJob.setEndDate(new Date());
+
                 syncJobRepo.save(syncJob);
 
                 response.put("message", data.get("message"));
@@ -101,28 +105,13 @@ public class JournalController {
             }
             return response;
 
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             response.put("message", e);
             response.put("success", false);
             return response;
         }
+
     }
 
-    static void sendJournalData(SyncJobType syncJobType, ArrayList<SyncJobData> addedJournals, TransferService transferService, SyncJobDataRepo syncJobDataRepo) throws SoapFaultException, ComponentException {
-        for (SyncJobData invoice: addedJournals) {
-            boolean addTransferFlag = transferService.sendTransferData(invoice, syncJobType);
-
-            if(addTransferFlag){
-                invoice.setStatus(Constants.SUCCESS);
-                invoice.setReason("");
-            }
-            else {
-                invoice.setStatus(Constants.FAILED);
-                invoice.setReason("");
-            }
-            syncJobDataRepo.save(invoice);
-        }
-    }
 
 }

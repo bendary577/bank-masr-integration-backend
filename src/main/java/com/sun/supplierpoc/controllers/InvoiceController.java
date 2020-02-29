@@ -2,11 +2,9 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.CostCenter;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -18,16 +16,14 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
+import java.util.*;
 
 
 @RestController
@@ -39,6 +35,9 @@ public class InvoiceController {
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private AccountRepo accountRepo;
+
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
@@ -119,6 +118,8 @@ public class InvoiceController {
     public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName,
                                                  Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
 
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
@@ -132,6 +133,8 @@ public class InvoiceController {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
             if (!setupEnvironment.loginOHIM(driver, url)){
+                driver.quit();
+
                 data.put("status", Constants.FAILED);
                 data.put("message", "Invalid username and password.");
                 data.put("costCenters", costCenters);
@@ -148,13 +151,35 @@ public class InvoiceController {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
 
             while (true){
-                fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns);
-                if (driver.findElements(By.linkText("Next")).size() != 0){
-                    driver.findElement(By.linkText("Next")).click();
-                    rows = driver.findElements(By.tagName("tr"));
+                fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns, account.getERD());
+
+                // check if there is other pages
+                if (driver.findElements(By.linkText("Next")).size() == 0){
+                    break;
                 }
                 else {
-                    break;
+                    String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
+                    driver.findElement(By.linkText("Next")).click();
+                    String element_txt = "";
+
+                    WebDriverWait wait = new WebDriverWait(driver, 20);
+                    WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+                    try {
+                        element_txt = element.getText();
+                    } catch (Exception e) {
+                        element_txt = "";
+                    }
+
+                    while (element_txt.equals(first_element_text)){
+                        wait = new WebDriverWait(driver, 20);
+                        element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+                        try {
+                            element_txt = element.getText();
+                        } catch (Exception e) {
+                            element_txt = "";
+                        }
+                    }
+                    rows = driver.findElements(By.tagName("tr"));
                 }
             }
             driver.quit();
@@ -176,10 +201,15 @@ public class InvoiceController {
         }
     }
 
-    public HashMap<String, Object> checkCostCenterExistence(ArrayList<HashMap<String, String>> costCenters, String costCenterName){
+    public HashMap<String, Object> checkCostCenterExistence(ArrayList<HashMap<String, String>> costCenters, String costCenterName,
+                                                            boolean getOrUseFlag){
         HashMap<String, Object> data = new HashMap<>();
         for (HashMap<String, String> costCenter : costCenters) {
-            if (costCenter.get("costCenter").equals(costCenterName)) {
+            String savedCostCenterName = costCenter.get("costCenter");
+            if (!getOrUseFlag){ // True in case of getting and False in case od use
+                savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
+            }
+            if (savedCostCenterName.equals(costCenterName)) {
                 data.put("status", true);
                 data.put("costCenter", costCenter);
                 return data;
@@ -191,7 +221,8 @@ public class InvoiceController {
     }
 
     private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
-                                      ArrayList<HashMap<String, String>> oldCostCenters, ArrayList<String> columns){
+                                      ArrayList<HashMap<String, String>> oldCostCenters, ArrayList<String> columns,
+                                      String accountERD){
 
         for (int i = rowNumber; i < rows.size(); i++) {
             CostCenter costCenter = new CostCenter();
@@ -204,34 +235,48 @@ public class InvoiceController {
 
             costCenter.costCenter =  cols.get(1).getText().strip();
 
-            HashMap<String, Object> oldCostCenterData = checkCostCenterExistence(oldCostCenters, cols.get(1).getText().strip());
+            HashMap<String, Object> oldCostCenterData = checkCostCenterExistence(oldCostCenters, cols.get(1).getText().strip(), true);
             HashMap<String, String> oldCostCenter = (HashMap<String, String>) oldCostCenterData.get("costCenter");
 
             if ((boolean)oldCostCenterData.get("status")){
                 costCenter.checked = true;
-                costCenter.department = oldCostCenter.get("department");
-                costCenter.project = oldCostCenter.get("project");
-                costCenter.future2 = oldCostCenter.get("future2");
-                costCenter.company = oldCostCenter.get("company");
-                costCenter.businessUnit = oldCostCenter.get("company");
-                costCenter.account = oldCostCenter.get("company");
-                costCenter.product = oldCostCenter.get("product");
-                costCenter.interCompany = oldCostCenter.get("product");
-                costCenter.location = oldCostCenter.get("location");
-                costCenter.currency = oldCostCenter.get("location");
+                // Fusion Data
+                if (accountERD.equals("FUSION")){
+                    costCenter.department = oldCostCenter.get("department");
+                    costCenter.project = oldCostCenter.get("project");
+                    costCenter.future2 = oldCostCenter.get("future2");
+                    costCenter.company = oldCostCenter.get("company");
+                    costCenter.businessUnit = oldCostCenter.get("businessUnit");
+                    costCenter.account = oldCostCenter.get("account");
+                    costCenter.product = oldCostCenter.get("product");
+                    costCenter.interCompany = oldCostCenter.get("product");
+                    costCenter.location = oldCostCenter.get("location");
+                    costCenter.currency = oldCostCenter.get("location");
+                }
+                // Sun Data
+                else if (accountERD.equals("SUN")){
+                    costCenter.accountCode = oldCostCenter.get("accountCode");
+                }
             }
             else {
                 costCenter.checked = false;
-                costCenter.department = "000";
-                costCenter.project = "000000";
-                costCenter.future2 = "0000";
-                costCenter.company = "517";
-                costCenter.businessUnit = "";
-                costCenter.account = "411101";
-                costCenter.product = "1200";
-                costCenter.interCompany = "000";
-                costCenter.location = "11101";
-                costCenter.currency = "AED";
+                // Fusion Data
+                if (accountERD.equals("FUSION")){
+                    costCenter.department = "000";
+                    costCenter.project = "000000";
+                    costCenter.future2 = "0000";
+                    costCenter.company = "517";
+                    costCenter.businessUnit = "";
+                    costCenter.account = "411101";
+                    costCenter.product = "1200";
+                    costCenter.interCompany = "000";
+                    costCenter.location = "11101";
+                    costCenter.currency = "AED";
+                }
+                // Sun Data
+                else if(accountERD.equals("SUN")){
+                    costCenter.accountCode = oldCostCenter.get("accountCode");
+                }
             }
 
             costCenters.add(costCenter);

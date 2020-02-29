@@ -102,22 +102,36 @@ public class InvoiceService {
                     invoices.add(invoice);
                 }
 
-                if (driver.findElements(By.linkText("Next")).size() != 0){
+                // check if there is other pages
+                if (driver.findElements(By.linkText("Next")).size() == 0){
+                    break;
+                }
+                else {
+                    String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
                     driver.findElement(By.linkText("Next")).click();
-                    // wait until table change
-//                    wait.until(ExpectedConditions.elementSelectionStateToBe(
-//                            driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td/select")),
-//                            true));
+                    String element_txt = "";
 
-//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("G_dg")));
+                    wait = new WebDriverWait(driver, 20);
+                    WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+                    try {
+                        element_txt = element.getText();
+                    } catch (Exception e) {
+                        element_txt = "";
+                    }
+
+                    while (element_txt.equals(first_element_text)){
+                        wait = new WebDriverWait(driver, 20);
+                        element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+                        try {
+                            element_txt = element.getText();
+                        } catch (Exception e) {
+                            element_txt = "";
+                        }
+                    }
 
                     bodyTable = driver.findElement(By.id("G_dg"));
                     rows = bodyTable.findElements(By.tagName("tr"));
                 }
-                else {
-                    break;
-                }
-
             }
 
             driver.quit();

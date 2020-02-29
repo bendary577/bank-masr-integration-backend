@@ -34,6 +34,8 @@ public class JournalController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
+    private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
     private JournalService journalService;
     @Autowired
     private TransferService transferService;
@@ -44,18 +46,18 @@ public class JournalController {
     @ResponseBody
     public HashMap<String, Object> getJournals(Principal principal) {
         HashMap<String, Object> response = new HashMap<>();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, user.getAccountId());
+        SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
+
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
+                user.getAccountId(), syncJobType.getId());
+
+        syncJobRepo.save(syncJob);
 
         try {
-            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
-
-            SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
-                    user.getAccountId(), syncJobType.getId());
-
-            syncJobRepo.save(syncJob);
-
-            HashMap<String, Object> data = journalService.getJournalData(syncJobType);
+            HashMap<String, Object> data = journalService.getJournalData(syncJobType, syncJobTypeApprovedInvoice);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> journals = (ArrayList<HashMap<String, String>>) data.get("journals");
@@ -64,7 +66,17 @@ public class JournalController {
                     if (addedJournals.size() != 0) {
                         for (SyncJobData addedJournal : addedJournals) {
                             try {
-                                transferService.sendTransferData(addedJournal, syncJobType);
+                                boolean sendFlag = transferService.sendTransferData(addedJournal, syncJobType);
+                                if (sendFlag){
+                                    addedJournal.setStatus(Constants.SUCCESS);
+                                    addedJournal.setReason("");
+                                    syncJobDataRepo.save(addedJournal);
+                                }
+                                else {
+                                    addedJournal.setStatus(Constants.FAILED);
+                                    addedJournal.setReason("Failed to send journal to sun system.");
+                                    syncJobDataRepo.save(addedJournal);
+                                }
 
                             } catch (SoapFaultException | ComponentException e) {
                                 e.printStackTrace();
@@ -106,6 +118,11 @@ public class JournalController {
             return response;
 
         } catch (Exception e) {
+            syncJob.setStatus(Constants.FAILED);
+            syncJob.setReason(e.getMessage());
+            syncJob.setEndDate(new Date());
+
+            syncJobRepo.save(syncJob);
             response.put("message", e);
             response.put("success", false);
             return response;

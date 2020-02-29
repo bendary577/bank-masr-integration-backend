@@ -14,12 +14,14 @@ public class CostCenter {
     public String location;
     public String currency;
 
+    public String accountCode;
+
     public CostCenter() {
     }
 
     public CostCenter(boolean checked, String costCenter, String department, String project, String future2,
                       String company, String businessUnit, String account, String product, String interCompany,
-                      String location, String currency) {
+                      String location, String currency, String accountCode) {
         this.checked = checked;
         this.costCenter = costCenter;
         this.department = department;
@@ -32,5 +34,7 @@ public class CostCenter {
         this.interCompany = interCompany;
         this.location = location;
         this.currency = currency;
+
+        this.accountCode = accountCode;
     }
 }

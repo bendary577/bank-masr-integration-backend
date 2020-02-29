@@ -18,7 +18,9 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -41,6 +43,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 
 @Service
@@ -94,7 +97,6 @@ public class TransferService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
 
-            int pageCounter = 2;
             while (true) {
                 for (int i = 1; i < rows.size(); i++) {
                     HashMap<String, Object> transfer = new HashMap<>();
@@ -106,7 +108,7 @@ public class TransferService {
                     }
 
                     WebElement td = cols.get(columns.indexOf("from_cost_center"));
-                    HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip());
+                    HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
                     if (!(boolean) oldCostCenterData.get("status")) {
                         continue;
@@ -125,19 +127,35 @@ public class TransferService {
                     transfers.add(transfer);
                 }
 
-                try {
-                    Select selectPage = new Select(driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[3]/td/select")));
-                    selectPage.selectByVisibleText(Integer.toString(pageCounter));
-                    System.out.println(pageCounter);
-                    pageCounter++;
+                // check if there is other pages
+                if (driver.findElements(By.linkText("Next")).size() == 0){
+                    break;
+                }
+                else {
+                    String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
+                    driver.findElement(By.linkText("Next")).click();
+                    String element_txt = "";
 
-                    driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+                    WebDriverWait wait = new WebDriverWait(driver, 20);
+                    WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+                    try {
+                        element_txt = element.getText();
+                    } catch (Exception e) {
+                        element_txt = "";
+                    }
 
+                    while (element_txt.equals(first_element_text)){
+                        wait = new WebDriverWait(driver, 20);
+                        element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+                        try {
+                            element_txt = element.getText();
+                        } catch (Exception e) {
+                            element_txt = "";
+                        }
+                    }
                     table = driver.findElement(By.id("dg_main"));
                     rows = table.findElements(By.tagName("tr"));
-                } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                    break;
+
                 }
             }
             for (HashMap<String, Object> transfer: transfers) {
@@ -325,6 +343,8 @@ public class TransferService {
         } catch (Exception ex) {
             System.out.print("An error occurred logging in to SunSystems:\r\n");
             ex.printStackTrace();
+
+            return false;
         }
 
         ///////////////////////////////////////////  Convert XML to Object /////////////////////////////////////////////

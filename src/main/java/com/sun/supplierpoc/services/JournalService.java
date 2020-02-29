@@ -33,13 +33,13 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType syncJobType){
+    public HashMap<String, Object> getJournalData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice){
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<Journal> journals = new ArrayList<>();
 
-        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
+        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobTypeApprovedInvoice.getConfiguration().get("costCenters");
         ArrayList<HashMap<String, String>> itemGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("itemGroups");
 
 
@@ -74,7 +74,7 @@ public class JournalService {
                 }
 
                 WebElement td = cols.get(columns.indexOf("cost_center"));
-                HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip());
+                HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
                 if (!(boolean) oldCostCenterData.get("status")) {
                     continue;

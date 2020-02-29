@@ -19,6 +19,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -60,10 +61,9 @@ public class AccountController {
     @RequestMapping("/getAccount")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public Optional<Account> getAccount() {
-
-        // get accountID from user 5e4bd1a7b334d338f81d9b9a
-        return accountRepo.findById("5e4bd1a7b334d338f81d9b9a");
+    public Optional<Account> getAccount(Principal principal){
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        return accountRepo.findById(user.getAccountId());
     }
 
     @RequestMapping(value = "/clientDetails")

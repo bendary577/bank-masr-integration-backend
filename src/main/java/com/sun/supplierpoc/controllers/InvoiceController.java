@@ -55,6 +55,8 @@ public class InvoiceController {
     @ResponseBody
     public HashMap<String, Object> getApprovedInvoices(Principal principal) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
 
         HashMap<String, Object> response = new HashMap<>();
 
@@ -65,10 +67,10 @@ public class InvoiceController {
 
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType);
+        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType, account);
 
         if (data.get("status").equals(Constants.SUCCESS)){
-            ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
+            ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
                 if(addedInvoices.size() != 0){
@@ -132,7 +134,7 @@ public class InvoiceController {
         {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)){
+            if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
                 data.put("status", Constants.FAILED);

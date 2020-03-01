@@ -2,10 +2,12 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -25,6 +27,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Optional;
 
 @RestController
 
@@ -35,6 +38,8 @@ public class JournalController {
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private AccountRepo accountRepo;
     @Autowired
     private JournalService journalService;
     @Autowired
@@ -47,6 +52,8 @@ public class JournalController {
     public HashMap<String, Object> getJournals(Principal principal) {
         HashMap<String, Object> response = new HashMap<>();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, user.getAccountId());
         SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
@@ -57,7 +64,7 @@ public class JournalController {
         syncJobRepo.save(syncJob);
 
         try {
-            HashMap<String, Object> data = journalService.getJournalData(syncJobType, syncJobTypeApprovedInvoice);
+            HashMap<String, Object> data = journalService.getJournalData(syncJobType, syncJobTypeApprovedInvoice, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");

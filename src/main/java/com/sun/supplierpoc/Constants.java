@@ -17,5 +17,11 @@ public class Constants {
     public static String JOURNALS = "Journals";
     public static String SALES = "Running";
 
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static int PORT = 8080;
+    public static String HOST = "192.168.1.3";
+
     public Constants() {}
 }

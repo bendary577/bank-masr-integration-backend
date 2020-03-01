@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.seleniumMethods;
 
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.Account;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -13,6 +14,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SetupEnvironment {
@@ -46,7 +48,12 @@ public class SetupEnvironment {
         }
     }
 
-    public boolean loginOHIM(WebDriver driver, String url){
+
+    public boolean loginOHIM(WebDriver driver, String url, Account account){
+
+        HashMap<String, HashMap<String, String>> accountCredentials = account.getAccountCredentials();
+        HashMap<String, String> hospitalityOHIMCredentials = accountCredentials.get("HospitalityOHIM");
+
         driver.get(url);
 
         try {
@@ -55,9 +62,9 @@ public class SetupEnvironment {
         } catch (NoAlertPresentException Ex) {
             System.out.println("No alert exits");
         }
-        driver.findElement(By.id("igtxtdfUsername")).sendKeys("Fusion");
-        driver.findElement(By.id("igtxtdfPassword")).sendKeys("Gcs@3000");
-        driver.findElement(By.id("igtxtdfCompany")).sendKeys("gcs");
+        driver.findElement(By.id("igtxtdfUsername")).sendKeys(hospitalityOHIMCredentials.get("username"));
+        driver.findElement(By.id("igtxtdfPassword")).sendKeys(hospitalityOHIMCredentials.get("password"));
+        driver.findElement(By.id("igtxtdfCompany")).sendKeys(hospitalityOHIMCredentials.get("company"));
 
         String previous_url = driver.getCurrentUrl();
         driver.findElement(By.name("Login")).click();
@@ -65,7 +72,10 @@ public class SetupEnvironment {
         return !driver.getCurrentUrl().equals(previous_url);
     }
 
-    public boolean loginOHRA(WebDriver driver, String url){
+    public boolean loginOHRA(WebDriver driver, String url, Account account){
+        HashMap<String, HashMap<String, String>> accountCredentials = account.getAccountCredentials();
+        HashMap<String, String> hospitalityOHRACredentials = accountCredentials.get("HospitalityOHRA");
+
         driver.get(url);
         try {
             Alert al = driver.switchTo().alert();
@@ -73,9 +83,9 @@ public class SetupEnvironment {
         } catch (NoAlertPresentException Ex) {
             System.out.println("No alert exits");
         }
-        driver.findElement(By.id("usr")).sendKeys("Fusion");
-        driver.findElement(By.id("pwd")).sendKeys("Gcs@3000");
-        driver.findElement(By.id("cpny")).sendKeys("gcs");
+        driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.get("username"));
+        driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.get("username"));
+        driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.get("username"));
 
         String previous_url = driver.getCurrentUrl();
         driver.findElement(By.id("Login")).click();

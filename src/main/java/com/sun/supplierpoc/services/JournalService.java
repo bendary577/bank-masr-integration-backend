@@ -4,10 +4,7 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
-import com.sun.supplierpoc.models.Journal;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
@@ -33,7 +30,8 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice){
+    public HashMap<String, Object> getJournalData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice,
+                                                  Account account){
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
@@ -47,7 +45,7 @@ public class JournalService {
         try {
             String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
 
-            if (!setupEnvironment.loginOHRA(driver, url)){
+            if (!setupEnvironment.loginOHRA(driver, url, account)){
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
@@ -98,7 +96,6 @@ public class JournalService {
                 extensions = extensions.substring(0, index);
 
                 journal.put("extensions", extensions);
-//                journal.put(columns.get(0), cols.get(0).getText());
                 journal.put("cost_center", oldCostCenterData.get("costCenter"));
 
                 selectedCostCenters.add(journal);

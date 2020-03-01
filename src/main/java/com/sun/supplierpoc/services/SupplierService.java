@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -18,24 +19,28 @@ import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
 @Service
 public class SupplierService {
-    static int PORT = 8080;
-    static String HOST= "192.168.1.21";
-
-    @Autowired
-    private SyncJobRepo syncJobRepo;
-    @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
 
@@ -43,62 +48,131 @@ public class SupplierService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getSuppliersData() throws SoapFaultException, ComponentException {
+    public HashMap<String, Object> getSuppliersData(SyncJobType syncJobType) throws SoapFaultException, ComponentException {
         HashMap<String, Object> data = new HashMap<>();
         boolean useEncryption = false;
 
         String username = "ACt";
         String password = "P@ssw0rd";
+        IAuthenticationVoucher voucher;
+        String sccXMLStringValue = "";
 
-        SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
-        IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
+        try {
+            SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
+            voucher = securityProvider.Authenticate(username, password);
+        } catch (ComponentException | SoapFaultException e) {
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to connect to sun system.");
+            data.put("suppliers", new ArrayList<> ());
+            return data;
+        }
 
         SoapComponent component = null;
         if (useEncryption) {
-            component = new SecureSoapComponent(HOST, PORT);
+            component = new SecureSoapComponent(Constants.HOST, Constants.PORT);
         } else {
-            component = new SoapComponent(HOST, PORT);
+            component = new SoapComponent(Constants.HOST, Constants.PORT);
         }
         component.authenticate(voucher);
 
-        String inputPayload =   "<SSC>" +
-                "   <UserOld>" +
-                "       <Name>" + username + "</Name>" +
-                "   </UserOld>" +
-                "   <SunSystemsContext>" +
-                "       <BusinessUnit>PK1</BusinessUnit>" +
-                "   </SunSystemsContext>" +
-                "   <Payload>" +
-                "<OutputLimit>5</OutputLimit>" +
-                "<Select>" +
-                "<Supplier>" +
+        try {
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
-                "<AccountCode/>" +
-                "<SupplierCode/>" +
-                "<SupplierName/>" +
-                "<Status/>" +
-//                            "<EMailAddress/>" +
-                "<PaymentTermsGroupCode/>" +
+            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+            Document doc = docBuilder.newDocument();
+            ///////////////////////////////////////////  Create SSC root element ///////////////////////////////////////
+            Element SSCRootElement = doc.createElement("SSC");
+            doc.appendChild(SSCRootElement);
 
-                "<Address_Contact>"+
-                "<ContactIdentifier/>" +
-                "</Address_Contact>"+
+            ///////////////////////////////////////////  User //////////////////////////////////////////////////////////
+            Element userElement = doc.createElement("User");
+            SSCRootElement.appendChild(userElement);
 
-                "<SupplierAddress>"+
-                "<TelephoneNumber/>" +
-                "<AddressCode/>" +
-                "<AddressLine1/>" +
-                "<AddressLine2/>" +
-                "<AddressLine3/>" +
-                "<PostalCode/>" +
-                "</SupplierAddress>"+
+            Element nameElement = doc.createElement("Name");
+            nameElement.appendChild(doc.createTextNode(username));
+            userElement.appendChild(nameElement);
 
-                "</Supplier>" +
-                "</Select>" +
-                "   </Payload>" +
-                "</SSC>";
+            ///////////////////////////////////////////  SunSystemsContext /////////////////////////////////////////////
+            Element sunSystemContextElement = doc.createElement("SunSystemsContext");
+            SSCRootElement.appendChild(sunSystemContextElement);
 
-        String strOut = component.execute("Supplier", "Query", inputPayload);
+            Element businessUnitElement = doc.createElement("BusinessUnit");
+            businessUnitElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("businessUnit")));
+            sunSystemContextElement.appendChild(businessUnitElement);
+
+            ///////////////////////////////////////////  Payload ///////////////////////////////////////////////////////
+            Element payloadElement = doc.createElement("Payload");
+            SSCRootElement.appendChild(payloadElement);
+
+            ///////////////////////////////////////////  Select ////////////////////////////////////////////////////////
+            Element selectElement = doc.createElement("Select");
+            payloadElement.appendChild(selectElement);
+
+            ///////////////////////////////////////////  Supplier //////////////////////////////////////////////////////
+
+            Element supplierElement = doc.createElement("Supplier");
+            selectElement.appendChild(supplierElement);
+
+            Element accountCodeElement = doc.createElement("AccountCode");
+            supplierElement.appendChild(accountCodeElement);
+
+            Element supplierCodeElement = doc.createElement("SupplierCode");
+            supplierElement.appendChild(supplierCodeElement);
+
+            Element supplierNameElement = doc.createElement("SupplierName");
+            supplierElement.appendChild(supplierNameElement);
+
+            Element statusElement = doc.createElement("Status");
+            supplierElement.appendChild(statusElement);
+
+            Element eMailAddressElement = doc.createElement("EMailAddress");
+            supplierElement.appendChild(eMailAddressElement);
+
+            Element paymentTermsGroupCodeElement = doc.createElement("PaymentTermsGroupCode");
+            supplierElement.appendChild(paymentTermsGroupCodeElement);
+
+            ///////////////////////////////////////////  Address Contact //////////////////////////////////////////////
+
+            Element addressContactElement = doc.createElement("Address_Contact");
+            supplierElement.appendChild(addressContactElement);
+
+            Element contactIdentifierElement = doc.createElement("ContactIdentifier");
+            addressContactElement.appendChild(contactIdentifierElement);
+
+            ///////////////////////////////////////////  Supplier Address //////////////////////////////////////////////
+
+            Element supplierAddressElement = doc.createElement("SupplierAddress");
+            supplierElement.appendChild(supplierAddressElement);
+
+            Element telephoneNumberElement = doc.createElement("TelephoneNumber");
+            supplierAddressElement.appendChild(telephoneNumberElement);
+
+            Element addressCodeElement = doc.createElement("AddressCode");
+            supplierAddressElement.appendChild(addressCodeElement);
+
+            Element addressLine1Element = doc.createElement("AddressLine1");
+            supplierAddressElement.appendChild(addressLine1Element);
+
+            Element addressLine2Element = doc.createElement("AddressLine2");
+            supplierAddressElement.appendChild(addressLine2Element);
+
+            Element addressLine3Element = doc.createElement("AddressLine3");
+            supplierAddressElement.appendChild(addressLine3Element);
+
+            Element postalCodeElement = doc.createElement("PostalCode");
+            supplierAddressElement.appendChild(postalCodeElement);
+
+            ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            StringWriter writer = new StringWriter();
+            transformer.transform(new DOMSource(doc), new StreamResult(writer));
+            sccXMLStringValue = writer.getBuffer().toString();
+        } catch (ParserConfigurationException | TransformerException e) {
+            e.printStackTrace();
+        }
+
+        String strOut = component.execute("Supplier", "Query", sccXMLStringValue);
 
         // Convert XML to Object
         JAXBContext jaxbContext;
@@ -135,6 +209,7 @@ public class SupplierService {
             data.put("supplierId", "");
             data.put("supplier", supplier.getSupplierName());
             data.put("supplierNumber", supplier.getSupplierCode());
+            data.put("accountCode", supplier.getAccountCode());
             data.put("status", supplier.getStatus());
             data.put("customerNumber", "");
             data.put("paymentTerms", supplier.getPaymentTermsGroupCode());
@@ -158,7 +233,8 @@ public class SupplierService {
         return addedSuppliers;
     }
 
-    public HashMap<String, Object> sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob, SyncJobType syncJobType){
+    public HashMap<String, Object> sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob,
+                                                     SyncJobType syncJobType, Account account){
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
@@ -167,7 +243,7 @@ public class SupplierService {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
             driver.get(url);
 
-            if (!setupEnvironment.loginOHIM(driver, url)){
+            if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
@@ -194,16 +270,34 @@ public class SupplierService {
 
                 String tax = (String) syncJobType.getConfiguration().get("taxes");
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);
+                Thread.sleep(1000);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ENTER);
+
+                try {
+                    wait = new WebDriverWait(driver, 10);
+                    WebElement taxValue = driver.findElement(By.id("tb__ctl0_cfTaxes_Value"));
+                    wait.until(ExpectedConditions.textToBePresentInElementValue(taxValue, tax));
+                } catch (Exception e) {
+                    System.out.println("Time out our while setting supplier tax");
+                }
 
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
 
                 String group = (String) syncJobType.getConfiguration().get("groups");
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(group);
+                Thread.sleep(1000);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ENTER);
+
+                try {
+                    wait = new WebDriverWait(driver, 10);
+                    WebElement groupValue = driver.findElement(By.id("tb__ctl0_cfVendorGroup_Value"));
+                    wait.until(ExpectedConditions.textToBePresentInElementValue(groupValue, group));
+                } catch (Exception e) {
+                    System.out.println("Time out our while setting supplier group");
+                }
 
                 //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
 
@@ -233,6 +327,9 @@ public class SupplierService {
 
                 driver.switchTo().window(windowAfter);
 
+                wait = new WebDriverWait(driver, 20);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxttbStreet")));
+
                 driver.findElement(By.id("igtxttbStreet")).sendKeys(((HashMap) supplier.getData()).get("address").toString());
                 driver.findElement(By.id("igtxttbAddressline1")).sendKeys(((HashMap) supplier.getData()).get("line1").toString());
                 driver.findElement(By.id("igtxttbAddressline2")).sendKeys(((HashMap) supplier.getData()).get("line2").toString());
@@ -253,23 +350,23 @@ public class SupplierService {
 
                 //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
 
-                driver.findElement(By.linkText("Save")).click();
-                try {
-                    new WebDriverWait(driver, 5)
-                            .ignoring(NoAlertPresentException.class)
-                            .until(ExpectedConditions.alertIsPresent());
-
-                    Alert al = driver.switchTo().alert();
-                    al.accept();
-
-                    supplier.setStatus(Constants.FAILED);
-                    supplier.setReason("Already Exits");
-                    supplier.setSyncJobId(syncJob.getId());
-                    syncJobDataRepo.save(supplier);
-                    continue;
-                } catch (NoAlertPresentException Ex) {
-                    System.out.println("No alert");
-                }
+//                driver.findElement(By.linkText("Save")).click();
+//                try {
+//                    new WebDriverWait(driver, 5)
+//                            .ignoring(NoAlertPresentException.class)
+//                            .until(ExpectedConditions.alertIsPresent());
+//
+//                    Alert al = driver.switchTo().alert();
+//                    al.accept();
+//
+//                    supplier.setStatus(Constants.FAILED);
+//                    supplier.setReason("Already Exits");
+//                    supplier.setSyncJobId(syncJob.getId());
+//                    syncJobDataRepo.save(supplier);
+//                    continue;
+//                } catch (NoAlertPresentException Ex) {
+//                    System.out.println("No alert");
+//                }
 
                 supplier.setStatus(Constants.SUCCESS);
                 supplier.setReason("");

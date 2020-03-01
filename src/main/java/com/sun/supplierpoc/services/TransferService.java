@@ -3,10 +3,7 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
-import com.sun.supplierpoc.models.Journal;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.JournalSSC;
@@ -48,8 +45,6 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 public class TransferService {
-    static int PORT = 8080;
-    static String HOST = "192.168.1.21";
 
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
@@ -61,7 +56,8 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice) {
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice,
+                                                   Account account) {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
@@ -75,7 +71,7 @@ public class TransferService {
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)) {
+            if (!setupEnvironment.loginOHIM(driver, url, account)) {
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
@@ -246,8 +242,8 @@ public class TransferService {
                 journalEntry.put("to_cost_center", toCostCenter.get("costCenter"));
                 journalEntry.put("to_account_code", fromCostCenter.get("accountCode"));
 
-                journalEntry.put("description", "Transfer From " + transfer.get("from_cost_center") + " to "+
-                        transfer.get("to_cost_center") + " - " + journal.getOverGroup());
+                journalEntry.put("description", "Transfer From " + fromCostCenter.get("costCenter") + " to "+
+                        toCostCenter.get("costCenter") + " - " + journal.getOverGroup());
 
                 journalEntries.add(journalEntry);
             }
@@ -262,14 +258,6 @@ public class TransferService {
         ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
         for (HashMap<String, String> transfer : transfers) {
-//            HashMap<String, String> data = new HashMap<>();
-
-//            data.put("total", transfer.get("total") == null? "0":transfer.get("total"));
-//            data.put("from_cost_center", transfer.get("from_cost_center"));
-//            data.put("from_account_code", transfer.get("from_account_code"));
-//            data.put("to_cost_center", transfer.get("to_cost_center"));
-//            data.put("to_account_code", transfer.get("to_account_code"));
-//            data.put("description", transfer.get("description"));
 
             SyncJobData syncJobData = new SyncJobData(transfer, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
@@ -290,8 +278,7 @@ public class TransferService {
         String sccXMLStringValue = "";
 
         try {
-            SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
-            securityProvider.setTimeout(5);
+            SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
             voucher = securityProvider.Authenticate(username, password);
         } catch (ComponentException | SoapFaultException e) {
             e.printStackTrace();
@@ -332,7 +319,7 @@ public class TransferService {
             methodContextElement.appendChild(LedgerPostingParametersElement);
 
             Element DescriptionElement = doc.createElement("Description");
-            DescriptionElement.appendChild(doc.createTextNode("Test import journal"));
+            DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
             LedgerPostingParametersElement.appendChild(DescriptionElement);
 
             Element postingTypeElement = doc.createElement("PostingType");
@@ -366,7 +353,7 @@ public class TransferService {
         String result = "";
         try {
 
-            SoapComponent ssc = new SoapComponent(HOST, PORT);
+            SoapComponent ssc = new SoapComponent(Constants.HOST, Constants.PORT);
             ssc.authenticate(voucher);
             result = ssc.execute("Journal", "Import", sccXMLStringValue);
         } catch (Exception ex) {
@@ -403,21 +390,25 @@ public class TransferService {
         ledgerElement.appendChild(lineElement);
 
         Element accountCodeElement = doc.createElement("AccountCode");
-        accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("accountCode")));
+        if (creditDebitFlag)
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+        else
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
         if (creditDebitFlag)
-            base2ReportingAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("total")));
+            base2ReportingAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("total"))));
         else
-            base2ReportingAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
+            base2ReportingAmountElement.appendChild(doc.createTextNode("-" + String.valueOf(addedJournalEntry.getData().get("total"))));
+        lineElement.appendChild(base2ReportingAmountElement);
         lineElement.appendChild(base2ReportingAmountElement);
 
         Element baseAmountElement = doc.createElement("BaseAmount");
         if (creditDebitFlag)
-            baseAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("total")));
+            baseAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("total"))));
         else
-            baseAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
+            baseAmountElement.appendChild(doc.createTextNode("-" + String.valueOf(addedJournalEntry.getData().get("total"))));
         lineElement.appendChild(baseAmountElement);
 
         Element currencyCodeElement = doc.createElement("CurrencyCode");
@@ -448,9 +439,9 @@ public class TransferService {
 
         Element transactionAmountElement = doc.createElement("TransactionAmount");
         if (creditDebitFlag)
-            transactionAmountElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("total")));
+            transactionAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("total"))));
         else
-            transactionAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
+            transactionAmountElement.appendChild(doc.createTextNode("-" + String.valueOf(addedJournalEntry.getData().get("total"))));
         lineElement.appendChild(transactionAmountElement);
 
         Element transactionReferenceElement = doc.createElement("TransactionReference");
@@ -477,7 +468,10 @@ public class TransferService {
                 accountsElement.appendChild(analysis2Element);
 
                 Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
-                vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("accountCode")));
+                if (creditDebitFlag)
+                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+                else
+                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
                 analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
 
                 Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");

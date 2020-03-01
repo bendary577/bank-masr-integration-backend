@@ -1,5 +1,7 @@
 package com.sun.supplierpoc;
 
+import com.sun.supplierpoc.models.SyncJobData;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -63,6 +65,20 @@ public class Conversions {
         }
         data.put("status", false);
         data.put("item", new HashMap<String, String>());
+        return data;
+    }
+
+    public HashMap<String, Object> checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
+        HashMap<String, Object> data = new HashMap<>();
+        for (SyncJobData supplier : suppliers) {
+            if (supplier.getData().get("supplier").equals(vendorName)) {
+                data.put("status", true);
+                data.put("supplier", supplier);
+                return data;
+            }
+        }
+        data.put("status", false);
+        data.put("supplier", new SyncJobData());
         return data;
     }
 

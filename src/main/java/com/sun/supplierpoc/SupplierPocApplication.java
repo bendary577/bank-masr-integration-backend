@@ -30,7 +30,7 @@ public class SupplierPocApplication {
             clientDetails.setResourceIds(Sets.newHashSet("project-man"));
             clientDetails.setScope(Sets.newHashSet("call-services"));
             clientDetails.setAuthorizedGrantTypes(Sets.newHashSet("authorization_code", "refresh_token"));
-            clientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localhost:8080"));
+            clientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localConstants.HOST:8080"));
             clientDetails.setAuthorities(AuthorityUtils.createAuthorityList("ROLE_USER"));
             clientDetails.setAccessTokenValiditySeconds(60);
             clientDetails.setRefreshTokenValiditySeconds(14400);

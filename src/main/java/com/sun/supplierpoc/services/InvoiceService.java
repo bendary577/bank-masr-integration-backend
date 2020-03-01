@@ -1,6 +1,10 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.controllers.SyncJobDataController;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -33,26 +37,30 @@ import java.util.List;
 @Service
 public class InvoiceService {
 
-    static int PORT = 8080;
-    static String HOST= "192.168.1.21";
-
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataController syncJobDataController;
 
-    public SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private Conversions conversions = new Conversions();
+    private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType){
+    public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType, Account account){
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
+        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
+
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)){
+            if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
@@ -74,7 +82,7 @@ public class InvoiceService {
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
             // wait until loading finished "tableLoadingBar"
-            WebDriverWait wait = new WebDriverWait(driver, 10);
+            WebDriverWait wait = new WebDriverWait(driver, 20);
             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
 
 
@@ -96,7 +104,29 @@ public class InvoiceService {
                         continue;
                     }
 
+                    // check if cost center choosen
+                    WebElement td = cols.get(columns.indexOf("cost_center"));
+                    HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                    if (!(boolean) oldCostCenterData.get("status")) {
+                        continue;
+                    }
+
+                    invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData.get("costCenter"));
+
+                    // check if vendor exits in middleware
+                    td = cols.get(columns.indexOf("vendor"));
+                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
+                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+
+                    if (!(boolean) oldSupplierData.get("status")) {
+                        continue;
+                    }
+                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
+
                     for (int j = 0; j < cols.size(); j++) {
+                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
+                            continue;
                         invoice.put(columns.get(j), cols.get(j).getText());
                     }
                     invoices.add(invoice);
@@ -131,30 +161,43 @@ public class InvoiceService {
 
     }
 
-    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob,
+    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
                                                    Boolean flag){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
-        for (HashMap<String, String> invoice : invoices) {
+        for (HashMap<String, Object> invoice : invoices) {
+            HashMap<String, String> costCenter = (HashMap<String, String>) invoice.get("cost_center");
+            HashMap<String, String> supplier = (HashMap<String, String>) invoice.get("vendor");
+
             // Invoice Part
             if (!flag) {
-                if (invoice.get("invoice_no.").substring(0, 3).equals("RTV")) {
+                if (((String)invoice.get("invoice_no.")).substring(0, 3).equals("RTV")) {
                     continue;
                 }
             }
 
             HashMap<String, String> data = new HashMap<>();
 
-            data.put("invoiceNo", invoice.get("invoice_no.") == null? "0":invoice.get("invoice_no."));
-            data.put("from", invoice.get("vendor") == null? "0":invoice.get("vendor"));
-            data.put("to", invoice.get("cost_center") == null? "0":invoice.get("cost_center"));
-            data.put("status", invoice.get("status") == null? "0":invoice.get("status"));
-            data.put("invoiceDate", invoice.get("invoice_date") == null? "0":invoice.get("invoice_date"));
-            data.put("net", invoice.get("net") == null? "0":invoice.get("net"));
-            data.put("vat", invoice.get("vat") == null? "0":invoice.get("vat"));
-            data.put("total", invoice.get("gross") == null? "0":invoice.get("gross"));
-            data.put("createdBy", invoice.get("created_by") == null? "0":invoice.get("created_by"));
-            data.put("createdAt", invoice.get("created_at") == null? "0":invoice.get("created_at"));
+            data.put("invoiceNo", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
+
+            data.put("from_cost_center", supplier.get("supplier") == null? "0":supplier.get("supplier"));
+            data.put("from_account_code", supplier.get("accountCode") == null? "0":(String)invoice.get("accountCode"));
+
+            data.put("to_cost_center", costCenter.get("costCenter") == null? "0":costCenter.get("costCenter"));
+            data.put("to_account_code", costCenter.get("costCenter") == null? "0":costCenter.get("accountCode"));
+
+            data.put("status", invoice.get("status") == null? "0":(String)invoice.get("status"));
+            data.put("invoiceDate", invoice.get("invoice_date") == null? "0":(String)invoice.get("invoice_date"));
+            data.put("net", invoice.get("net") == null? "0":(String)invoice.get("net"));
+            data.put("vat", invoice.get("vat") == null? "0":(String)invoice.get("vat"));
+            data.put("total", invoice.get("gross") == null? "0":(String)invoice.get("gross"));
+            data.put("createdBy", invoice.get("created_by") == null? "0":(String)invoice.get("created_by"));
+            data.put("createdAt", invoice.get("created_at") == null? "0":(String)invoice.get("created_at"));
+
+            if (!flag)
+                data.put("description", "");
+            else
+                data.put("description", "");
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
@@ -173,7 +216,7 @@ public class InvoiceService {
         String username = "ACt";
         String password = "P@ssw0rd";
 
-        SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
+        SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
         IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
 
         String inputPayload =
@@ -201,7 +244,7 @@ public class InvoiceService {
 
         try {
 
-            SoapComponent ssc = new SoapComponent(HOST,PORT);
+            SoapComponent ssc = new SoapComponent(Constants.HOST,Constants.PORT);
             ssc.authenticate(voucher);
             result = ssc.execute("PurchaseInvoice", "CreateOrAmend", inputPayload);
             System.out.println(result);

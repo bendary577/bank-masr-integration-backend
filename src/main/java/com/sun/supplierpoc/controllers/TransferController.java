@@ -2,10 +2,12 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -28,10 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Key;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 @RestController
@@ -43,6 +42,8 @@ public class TransferController {
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private AccountRepo accountRepo;
     @Autowired
     private TransferService transferService;
 
@@ -57,20 +58,22 @@ public class TransferController {
     @ResponseBody
     public HashMap<String, Object> getBookedTransfer(Principal principal) {
         HashMap<String, Object> response = new HashMap<>();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, user.getAccountId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, user.getAccountId());
+        SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
+
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
+                user.getAccountId(), syncJobType.getId());
+
+        syncJobRepo.save(syncJob);
 
         try {
-            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, user.getAccountId());
-            SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, user.getAccountId());
-            SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
-
-            SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
-                    user.getAccountId(), syncJobType.getId());
-
-            syncJobRepo.save(syncJob);
-
-            HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal, syncJobTypeApprovedInvoice);
+            HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal,
+                    syncJobTypeApprovedInvoice, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
@@ -79,7 +82,17 @@ public class TransferController {
                     if (addedTransfers.size() != 0) {
                         for (SyncJobData addedTransfer : addedTransfers) {
                             try {
-                                transferService.sendTransferData(addedTransfer, syncJobType);
+                                boolean addTransferFlag = transferService.sendTransferData(addedTransfer, syncJobType);
+                                if (addTransferFlag){
+                                    addedTransfer.setStatus(Constants.SUCCESS);
+                                    addedTransfer.setReason("");
+                                    syncJobDataRepo.save(addedTransfer);
+                                }
+                                else {
+                                    addedTransfer.setStatus(Constants.FAILED);
+                                    addedTransfer.setReason("Failed to send journal to sun system.");
+                                    syncJobDataRepo.save(addedTransfer);
+                                }
 
                             } catch (SoapFaultException | ComponentException e) {
                                 e.printStackTrace();
@@ -113,6 +126,11 @@ public class TransferController {
             return response;
 
         } catch (Exception e) {
+            syncJob.setStatus(Constants.FAILED);
+            syncJob.setReason(e.getMessage());
+            syncJob.setEndDate(new Date());
+            syncJobRepo.save(syncJob);
+
             response.put("message", e);
             response.put("success", false);
             return response;
@@ -124,6 +142,9 @@ public class TransferController {
     @ResponseBody
     public HashMap<String, Object> getOverGroups(Principal principal) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
 
         ArrayList<HashMap<String, String>> oldOverGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
@@ -137,7 +158,7 @@ public class TransferController {
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)) {
+            if (!setupEnvironment.loginOHIM(driver, url, account)) {
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -205,6 +226,9 @@ public class TransferController {
     @ResponseBody
     public HashMap<String, Object> mapItems(Principal principal) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
 
         ArrayList<HashMap<String, String>> oldOverGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
@@ -218,7 +242,7 @@ public class TransferController {
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (checkLogin(items, driver, response, url)) return response;
+            if (checkLogin(items, driver, response, url, account)) return response;
 
             String majorGroupsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/MajorGroups/OverviewMajorGroup.aspx";
             driver.get(majorGroupsURL);
@@ -355,8 +379,9 @@ public class TransferController {
         }
     }
 
-    private boolean checkLogin(ArrayList<HashMap<String, String>> items, WebDriver driver, HashMap<String, Object> response, String url) {
-        if (!setupEnvironment.loginOHIM(driver, url)) {
+    private boolean checkLogin(ArrayList<HashMap<String, String>> items, WebDriver driver, HashMap<String, Object> response,
+                               String url, Account account) {
+        if (!setupEnvironment.loginOHIM(driver, url, account)) {
             driver.quit();
 
             response.put("status", Constants.FAILED);

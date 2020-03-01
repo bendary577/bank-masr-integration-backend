@@ -2,10 +2,12 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
@@ -24,12 +26,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-
-;
+import java.util.*;
 
 
 @RestController
@@ -40,10 +37,11 @@ public class SupplierController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
-    public SupplierService supplierService;
+    private AccountRepo accountRepo;
+    @Autowired
+    private SupplierService supplierService;
 
-    public Conversions conversions = new Conversions();
-    public SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -53,6 +51,9 @@ public class SupplierController {
     public HashMap<String, Object> getSuppliers(Principal principal) throws SoapFaultException, ComponentException{
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", user.getAccountId());
@@ -61,7 +62,7 @@ public class SupplierController {
                 user.getAccountId(), syncJobType.getId());
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = supplierService.getSuppliersData();
+        HashMap<String, Object> data = supplierService.getSuppliersData(syncJobType);
 
         if (data.get("status").equals(Constants.SUCCESS)) {
             ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
@@ -70,7 +71,7 @@ public class SupplierController {
                 ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob);
 
                 if (addedSuppliers.size() != 0){
-                    data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, syncJobType);
+                    data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, syncJobType, account);
                     if (data.get("status").equals(Constants.SUCCESS)){
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("");
@@ -135,7 +136,12 @@ public class SupplierController {
     @RequestMapping("/getSupplierTaxes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getSupplierTaxes(){
+    public HashMap<String, Object> getSupplierTaxes(Principal principal){
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
@@ -144,7 +150,7 @@ public class SupplierController {
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)){
+            if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -201,7 +207,11 @@ public class SupplierController {
     @RequestMapping("/getSupplierGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getSupplierGroups(){
+    public HashMap<String, Object> getSupplierGroups(Principal principal){
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
@@ -211,7 +221,7 @@ public class SupplierController {
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
 
-            if (!setupEnvironment.loginOHIM(driver, url)){
+            if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);

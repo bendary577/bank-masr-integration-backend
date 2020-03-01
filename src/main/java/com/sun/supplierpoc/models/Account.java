@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashMap;
 
 public class Account implements Serializable {
     @Id
@@ -11,14 +12,14 @@ public class Account implements Serializable {
     private String name;
     private String domain;
     private String ERD;
-    private Object accountCredentials;
+    private HashMap<String, HashMap<String, String>> accountCredentials;
     private Date creationDate;
     private boolean deleted;
 
     public Account() {
     }
 
-    public Account(String id, String name, String domain, String ERD, Object accountCredentials, Date creationDate, boolean deleted) {
+    public Account(String id, String name, String domain, String ERD, HashMap<String, HashMap<String, String>> accountCredentials, Date creationDate, boolean deleted) {
         this.id = id;
         this.name = name;
         this.domain = domain;
@@ -60,11 +61,11 @@ public class Account implements Serializable {
         this.ERD = ERD;
     }
 
-    public Object getAccountCredentials() {
+    public HashMap<String, HashMap<String, String>> getAccountCredentials() {
         return accountCredentials;
     }
 
-    public void setAccountCredentials(Object accountCredentials) {
+    public void setAccountCredentials(HashMap<String, HashMap<String, String>> accountCredentials) {
         this.accountCredentials = accountCredentials;
     }
 

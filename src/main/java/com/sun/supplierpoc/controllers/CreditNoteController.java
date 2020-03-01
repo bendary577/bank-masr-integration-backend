@@ -2,10 +2,12 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -24,6 +26,7 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Optional;
 
 public class CreditNoteController {
     @Autowired
@@ -32,6 +35,8 @@ public class CreditNoteController {
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private AccountRepo accountRepo;
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
@@ -44,6 +49,9 @@ public class CreditNoteController {
     @ResponseBody
     public HashMap<String, Object> getCreditNotes(Principal principal) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Credit Notes", user.getAccountId());
@@ -53,10 +61,10 @@ public class CreditNoteController {
 
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType);
+        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType, account);
 
         if (data.get("status").equals(Constants.SUCCESS)){
-            ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
+            ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, true);

@@ -61,15 +61,16 @@ public class TransferController {
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Booked Transfers", user.getAccountId());
-            SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, user.getAccountId());
+            SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, user.getAccountId());
+            SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
 
             SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
                     user.getAccountId(), syncJobType.getId());
 
             syncJobRepo.save(syncJob);
 
-            HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal);
+            HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal, syncJobTypeApprovedInvoice);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");

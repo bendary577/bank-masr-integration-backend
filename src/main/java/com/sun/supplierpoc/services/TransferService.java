@@ -61,13 +61,13 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobType) {
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice) {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
-        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
+        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobTypeApprovedInvoice.getConfiguration().get("costCenters");
         ArrayList<HashMap<String, String>> items = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("items");
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
@@ -88,7 +88,7 @@ public class TransferService {
             driver.get(bookedTransfersUrl);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText("All");
+            select.selectByVisibleText("Last Month");
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
@@ -113,15 +113,23 @@ public class TransferService {
                     if (!(boolean) oldCostCenterData.get("status")) {
                         continue;
                     }
-                    transfer.put("cost_center", oldCostCenterData.get("costCenter"));
+                    transfer.put("from_cost_center", oldCostCenterData.get("costCenter"));
 
+
+                    td = cols.get(columns.indexOf("to_cost_center"));
+                    oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                    if (!(boolean) oldCostCenterData.get("status")) {
+                        continue;
+                    }
+                    transfer.put("to_cost_center", oldCostCenterData.get("costCenter"));
 
                     td = cols.get(columns.indexOf("document"));
-                    transfer.put(columns.get(0), td.getText());
+                    transfer.put(columns.get(columns.indexOf("document")), td.getText());
                     String detailsLink = td.findElement(By.tagName("a")).getAttribute("href");
                     transfer.put("details_url", detailsLink);
 
-                    for (int j = 1; j < cols.size(); j++) {
+                    for (int j = columns.indexOf("delivery_date"); j < cols.size(); j++) {
                         transfer.put(columns.get(j), cols.get(j).getText());
                     }
                     transfers.add(transfer);
@@ -132,27 +140,7 @@ public class TransferService {
                     break;
                 }
                 else {
-                    String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
-                    driver.findElement(By.linkText("Next")).click();
-                    String element_txt = "";
-
-                    WebDriverWait wait = new WebDriverWait(driver, 20);
-                    WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
-                    try {
-                        element_txt = element.getText();
-                    } catch (Exception e) {
-                        element_txt = "";
-                    }
-
-                    while (element_txt.equals(first_element_text)){
-                        wait = new WebDriverWait(driver, 20);
-                        element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
-                        try {
-                            element_txt = element.getText();
-                        } catch (Exception e) {
-                            element_txt = "";
-                        }
-                    }
+                    checkPagination(driver);
                     table = driver.findElement(By.id("dg_main"));
                     rows = table.findElements(By.tagName("tr"));
 
@@ -177,6 +165,30 @@ public class TransferService {
             data.put("message", e);
             data.put("transfers", transfers);
             return data;
+        }
+    }
+
+    public static void checkPagination(WebDriver driver) {
+        String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
+        driver.findElement(By.linkText("Next")).click();
+        String element_txt = "";
+
+        WebDriverWait wait = new WebDriverWait(driver, 20);
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+        try {
+            element_txt = element.getText();
+        } catch (Exception e) {
+            element_txt = "";
+        }
+
+        while (element_txt.equals(first_element_text)){
+            wait = new WebDriverWait(driver, 20);
+            element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+            try {
+                element_txt = element.getText();
+            } catch (Exception e) {
+                element_txt = "";
+            }
         }
     }
 
@@ -224,10 +236,16 @@ public class TransferService {
 
             for (Journal journal : journals) {
                 HashMap<String, Object> journalEntry = new HashMap<>();
+                HashMap<String, String> fromCostCenter = (HashMap<String, String>) transfer.get("from_cost_center");
+                HashMap<String, String> toCostCenter = (HashMap<String, String>) transfer.get("to_cost_center");
 
                 journalEntry.put("total", journal.getTotalTransfer());
-                journalEntry.put("from", transfer.get("from_cost_center"));
-                journalEntry.put("to", transfer.get("to_cost_center"));
+                journalEntry.put("from_cost_center", fromCostCenter.get("costCenter"));
+                journalEntry.put("from_account_code", fromCostCenter.get("accountCode"));
+
+                journalEntry.put("to_cost_center", toCostCenter.get("costCenter"));
+                journalEntry.put("to_account_code", fromCostCenter.get("accountCode"));
+
                 journalEntry.put("description", "Transfer From " + transfer.get("from_cost_center") + " to "+
                         transfer.get("to_cost_center") + " - " + journal.getOverGroup());
 
@@ -244,14 +262,16 @@ public class TransferService {
         ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
         for (HashMap<String, String> transfer : transfers) {
-            HashMap<String, String> data = new HashMap<>();
+//            HashMap<String, String> data = new HashMap<>();
 
-            data.put("total", transfer.get("total") == null? "0":transfer.get("total"));
-            data.put("from_cost_center",transfer.get("from") == null? "":transfer.get("from"));
-            data.put("to_cost_center", transfer.get("to") == null? "":transfer.get("to"));
-            data.put("description", transfer.get("description") == null? "":transfer.get("description"));
+//            data.put("total", transfer.get("total") == null? "0":transfer.get("total"));
+//            data.put("from_cost_center", transfer.get("from_cost_center"));
+//            data.put("from_account_code", transfer.get("from_account_code"));
+//            data.put("to_cost_center", transfer.get("to_cost_center"));
+//            data.put("to_account_code", transfer.get("to_account_code"));
+//            data.put("description", transfer.get("description"));
 
-            SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
+            SyncJobData syncJobData = new SyncJobData(transfer, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
 
@@ -266,13 +286,22 @@ public class TransferService {
 
         String username = "ACt";
         String password = "P@ssw0rd";
-
-        SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
-        IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
-
+        IAuthenticationVoucher voucher;
         String sccXMLStringValue = "";
-        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+
         try {
+            SecurityProvider securityProvider = new SecurityProvider(HOST, useEncryption);
+            securityProvider.setTimeout(5);
+            voucher = securityProvider.Authenticate(username, password);
+        } catch (ComponentException | SoapFaultException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        try {
+
+            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
             Document doc = docBuilder.newDocument();
             ///////////////////////////////////////////  Create SSC root element ///////////////////////////////////////
@@ -374,7 +403,7 @@ public class TransferService {
         ledgerElement.appendChild(lineElement);
 
         Element accountCodeElement = doc.createElement("AccountCode");
-        accountCodeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("accountCode")));
+        accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("accountCode")));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
@@ -448,7 +477,7 @@ public class TransferService {
                 accountsElement.appendChild(analysis2Element);
 
                 Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
-                vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("accountCode")));
+                vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("accountCode")));
                 analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
 
                 Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");

@@ -60,7 +60,7 @@ public class JournalController {
             HashMap<String, Object> data = journalService.getJournalData(syncJobType, syncJobTypeApprovedInvoice);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
-                ArrayList<HashMap<String, String>> journals = (ArrayList<HashMap<String, String>>) data.get("journals");
+                ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
                     ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob);
                     if (addedJournals.size() != 0) {

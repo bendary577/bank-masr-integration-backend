@@ -158,27 +158,7 @@ public class InvoiceController {
                     break;
                 }
                 else {
-                    String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
-                    driver.findElement(By.linkText("Next")).click();
-                    String element_txt = "";
-
-                    WebDriverWait wait = new WebDriverWait(driver, 20);
-                    WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
-                    try {
-                        element_txt = element.getText();
-                    } catch (Exception e) {
-                        element_txt = "";
-                    }
-
-                    while (element_txt.equals(first_element_text)){
-                        wait = new WebDriverWait(driver, 20);
-                        element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
-                        try {
-                            element_txt = element.getText();
-                        } catch (Exception e) {
-                            element_txt = "";
-                        }
-                    }
+                    TransferService.checkPagination(driver);
                     rows = driver.findElements(By.tagName("tr"));
                 }
             }
@@ -207,7 +187,9 @@ public class InvoiceController {
         for (HashMap<String, String> costCenter : costCenters) {
             String savedCostCenterName = costCenter.get("costCenter");
             if (!getOrUseFlag){ // True in case of getting and False in case od use
-                savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
+                if (savedCostCenterName.indexOf('(') != -1){
+                    savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
+                }
             }
             if (savedCostCenterName.equals(costCenterName)) {
                 data.put("status", true);

@@ -107,28 +107,7 @@ public class InvoiceService {
                     break;
                 }
                 else {
-                    String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
-                    driver.findElement(By.linkText("Next")).click();
-                    String element_txt = "";
-
-                    wait = new WebDriverWait(driver, 20);
-                    WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
-                    try {
-                        element_txt = element.getText();
-                    } catch (Exception e) {
-                        element_txt = "";
-                    }
-
-                    while (element_txt.equals(first_element_text)){
-                        wait = new WebDriverWait(driver, 20);
-                        element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
-                        try {
-                            element_txt = element.getText();
-                        } catch (Exception e) {
-                            element_txt = "";
-                        }
-                    }
-
+                    TransferService.checkPagination(driver);
                     bodyTable = driver.findElement(By.id("G_dg"));
                     rows = bodyTable.findElements(By.tagName("tr"));
                 }

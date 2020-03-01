@@ -5,6 +5,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -33,9 +34,14 @@ public class SetupEnvironment {
             return new ChromeDriver(options);
         }
         else {
+            FirefoxBinary firefoxBinary = new FirefoxBinary();
+//            firefoxBinary.addCommandLineOptions("--headless");
+
             System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
-            firefoxOptions.setCapability("marionette", true);
+
+            firefoxOptions.setBinary(firefoxBinary);
+//            firefoxOptions.setCapability("marionette", true);
             return new FirefoxDriver(firefoxOptions);
         }
     }

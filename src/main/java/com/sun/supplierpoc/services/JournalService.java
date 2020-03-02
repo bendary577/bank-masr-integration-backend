@@ -55,15 +55,11 @@ public class JournalService {
             }
             // just wait to make sure credentials of user saved to be able to move to another pages.
             try {
-                new WebDriverWait(driver, 3)
-                        .ignoring(NoAlertPresentException.class)
-                        .until(ExpectedConditions.alertIsPresent());
-
-                Alert al = driver.switchTo().alert();
-                al.accept();
-
-            } catch (TimeoutException Ex) {
-                System.out.println("No alert");
+                WebDriverWait wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            }
+            catch (Exception e) {
+                System.out.println("Waiting");
             }
 
             String journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
@@ -173,7 +169,7 @@ public class JournalService {
             driver.quit();
 
             data.put("status", Constants.FAILED);
-            data.put("message", e);
+            data.put("message", e.getMessage());
             data.put("journals", journalsEntries);
             return data;
         }

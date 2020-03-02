@@ -82,9 +82,18 @@ public class InvoiceService {
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
             // wait until loading finished "tableLoadingBar"
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
+            try{
+                WebDriverWait wait = new WebDriverWait(driver, 40);
+                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
 
+            } catch (Exception e) {
+                driver.quit();
+
+                data.put("status", Constants.FAILED);
+                data.put("message", "Oracle Hospitality takes long time to load, Please try agin after few minutes.");
+                data.put("invoices", invoices);
+                return data;
+            }
 
             WebElement bodyTable = driver.findElement(By.id("G_dg"));
             WebElement headerTable = driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[1]/td/div/table"));
@@ -115,14 +124,23 @@ public class InvoiceService {
                     invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData.get("costCenter"));
 
                     // check if vendor exits in middleware
-                    td = cols.get(columns.indexOf("vendor"));
-                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
-                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+//                    td = cols.get(columns.indexOf("vendor"));
+//                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
+//                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+//
+//                    if (!(boolean) oldSupplierData.get("status")) {
+//                        continue;
+//                    }
+//                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
 
-                    if (!(boolean) oldSupplierData.get("status")) {
-                        continue;
-                    }
-                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
+                    // Mock supplier of nw
+                    HashMap<String, String> supplierData = new HashMap<>();
+                    supplierData.put("accountCode", "64101");
+                    supplierData.put("supplier", "PKP France S.A.");
+
+                    SyncJobData supplier = new SyncJobData(supplierData, Constants.RECEIVED, "", new Date(), "");
+
+                    invoice.put(columns.get(columns.indexOf("vendor")), supplier);
 
                     for (int j = 0; j < cols.size(); j++) {
                         if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
@@ -167,7 +185,7 @@ public class InvoiceService {
 
         for (HashMap<String, Object> invoice : invoices) {
             HashMap<String, String> costCenter = (HashMap<String, String>) invoice.get("cost_center");
-            HashMap<String, String> supplier = (HashMap<String, String>) invoice.get("vendor");
+            SyncJobData supplier = (SyncJobData) invoice.get("vendor");
 
             // Invoice Part
             if (!flag) {
@@ -180,8 +198,8 @@ public class InvoiceService {
 
             data.put("invoiceNo", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
 
-            data.put("from_cost_center", supplier.get("supplier") == null? "0":supplier.get("supplier"));
-            data.put("from_account_code", supplier.get("accountCode") == null? "0":(String)invoice.get("accountCode"));
+            data.put("from_cost_center", supplier.getData().get("supplier") == null? "0":supplier.getData().get("supplier"));
+            data.put("from_account_code", supplier.getData().get("accountCode") == null? "0":supplier.getData().get("accountCode"));
 
             data.put("to_cost_center", costCenter.get("costCenter") == null? "0":costCenter.get("costCenter"));
             data.put("to_account_code", costCenter.get("costCenter") == null? "0":costCenter.get("accountCode"));
@@ -190,14 +208,14 @@ public class InvoiceService {
             data.put("invoiceDate", invoice.get("invoice_date") == null? "0":(String)invoice.get("invoice_date"));
             data.put("net", invoice.get("net") == null? "0":(String)invoice.get("net"));
             data.put("vat", invoice.get("vat") == null? "0":(String)invoice.get("vat"));
-            data.put("total", invoice.get("gross") == null? "0":(String)invoice.get("gross"));
+            data.put("total", invoice.get("gross") == null? "0": String.valueOf(conversions.convertStringToFloat((String)invoice.get("gross"))));
             data.put("createdBy", invoice.get("created_by") == null? "0":(String)invoice.get("created_by"));
             data.put("createdAt", invoice.get("created_at") == null? "0":(String)invoice.get("created_at"));
 
             if (!flag)
-                data.put("description", "");
+                data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.get("costCenter"));
             else
-                data.put("description", "");
+                data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.get("costCenter"));
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

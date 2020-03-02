@@ -73,21 +73,13 @@ public class InvoiceController {
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
-                if(addedInvoices.size() != 0){
-                    for (SyncJobData addedInvoice : addedInvoices) {
-                        try {
-                            transferService.sendTransferData(addedInvoice, syncJobType);
-
-                        } catch (SoapFaultException | ComponentException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
-                syncJob.setStatus(Constants.SUCCESS);
+                handleSendTransfer(syncJobType, syncJob, addedInvoices, transferService, syncJobDataRepo);
                 syncJob.setReason("");
                 syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
+
+                response.put("message", "Sync Invoices Successfully.");
+                response.put("success", true);
 
             }
             else {
@@ -103,14 +95,40 @@ public class InvoiceController {
         }
         else {
             syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason("Failed to get invoices from Oracle Hospitality.");
+            syncJob.setReason((String) data.get("message"));
             syncJob.setEndDate(new Date());
             syncJobRepo.save(syncJob);
 
-            response.put("message", data.get("message"));
+            response.put("message", "Failed to sync Invoices.");
             response.put("success", false);
         }
         return response;
+    }
+
+    static void handleSendTransfer(SyncJobType syncJobType, SyncJob syncJob, ArrayList<SyncJobData> addedInvoices, TransferService transferService, SyncJobDataRepo syncJobDataRepo) {
+        HashMap<String, Object> data;
+        if(addedInvoices.size() != 0){
+            for (SyncJobData addedInvoice : addedInvoices) {
+                try {
+                    data  = transferService.sendTransferData(addedInvoice, syncJobType);
+                    if ((Boolean) data.get("status")){
+                        addedInvoice.setStatus(Constants.SUCCESS);
+                        addedInvoice.setReason("");
+                        syncJobDataRepo.save(addedInvoice);
+                    }
+                    else {
+                        addedInvoice.setStatus(Constants.FAILED);
+                        addedInvoice.setReason((String) data.get("message"));
+                        syncJobDataRepo.save(addedInvoice);
+                    }
+
+                } catch (SoapFaultException | ComponentException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        syncJob.setStatus(Constants.SUCCESS);
     }
 
 

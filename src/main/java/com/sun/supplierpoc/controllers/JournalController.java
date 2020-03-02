@@ -73,15 +73,15 @@ public class JournalController {
                     if (addedJournals.size() != 0) {
                         for (SyncJobData addedJournal : addedJournals) {
                             try {
-                                boolean sendFlag = transferService.sendTransferData(addedJournal, syncJobType);
-                                if (sendFlag){
+                                data  = transferService.sendTransferData(addedJournal, syncJobType);
+                                if ((Boolean) data.get("status")){
                                     addedJournal.setStatus(Constants.SUCCESS);
                                     addedJournal.setReason("");
                                     syncJobDataRepo.save(addedJournal);
                                 }
                                 else {
                                     addedJournal.setStatus(Constants.FAILED);
-                                    addedJournal.setReason("Failed to send journal to sun system.");
+                                    addedJournal.setReason((String) data.get("message"));
                                     syncJobDataRepo.save(addedJournal);
                                 }
 
@@ -89,18 +89,17 @@ public class JournalController {
                                 e.printStackTrace();
                             }
                         }
-                    }
-                    else {
-                        syncJob.setStatus(Constants.FAILED);
-                        syncJob.setReason("Failed to add journals in middleware");
+
+                        syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setEndDate(new Date());
                         syncJobRepo.save(syncJob);
                     }
-
-                    syncJob.setStatus(Constants.SUCCESS);
-                    syncJob.setEndDate(new Date());
-                    syncJobRepo.save(syncJob);
-
+                    else {
+                        syncJob.setStatus(Constants.SUCCESS);
+                        syncJob.setReason("There is no journals to save from Oracle Hospitality.");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
+                    }
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);

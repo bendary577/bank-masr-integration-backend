@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -21,6 +20,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
 import java.util.ArrayList;
@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Optional;
 
+@RestController
 public class CreditNoteController {
     @Autowired
     private SyncJobRepo syncJobRepo;
@@ -54,14 +55,15 @@ public class CreditNoteController {
 
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Credit Notes", user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, user.getAccountId());
+        SyncJobType syncJobTypeApprovedInvoices = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, user.getId(),
                 user.getAccountId(), syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType, account);
+        HashMap<String, Object> data = invoiceService.getInvoicesData(true, syncJobTypeApprovedInvoices, account);
 
         if (data.get("status").equals(Constants.SUCCESS)){
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
@@ -71,15 +73,15 @@ public class CreditNoteController {
                 if(addedInvoices.size() != 0){
                     try {
                         for (SyncJobData invoice: addedInvoices ) {
-                            boolean addInvoiceFlag = transferService.sendTransferData(invoice, syncJobType);
-
-                            if(addInvoiceFlag){
+                            data  = transferService.sendTransferData(invoice, syncJobType);
+                            if ((Boolean) data.get("status")){
                                 invoice.setStatus(Constants.SUCCESS);
+                                invoice.setReason("");
                                 syncJobDataRepo.save(invoice);
                             }
                             else {
                                 invoice.setStatus(Constants.FAILED);
-                                invoice.setReason("");
+                                invoice.setReason((String) data.get("message"));
                                 syncJobDataRepo.save(invoice);
                             }
                         }

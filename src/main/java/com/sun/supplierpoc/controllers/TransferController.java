@@ -79,28 +79,7 @@ public class TransferController {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
-                    if (addedTransfers.size() != 0) {
-                        for (SyncJobData addedTransfer : addedTransfers) {
-                            try {
-                                boolean addTransferFlag = transferService.sendTransferData(addedTransfer, syncJobType);
-                                if (addTransferFlag){
-                                    addedTransfer.setStatus(Constants.SUCCESS);
-                                    addedTransfer.setReason("");
-                                    syncJobDataRepo.save(addedTransfer);
-                                }
-                                else {
-                                    addedTransfer.setStatus(Constants.FAILED);
-                                    addedTransfer.setReason("Failed to send journal to sun system.");
-                                    syncJobDataRepo.save(addedTransfer);
-                                }
-
-                            } catch (SoapFaultException | ComponentException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-
-                    syncJob.setStatus(Constants.SUCCESS);
+                    InvoiceController.handleSendTransfer(syncJobType, syncJob, addedTransfers, transferService, syncJobDataRepo);
                     syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 

@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.JournalSSC;
+import com.sun.supplierpoc.soapModels.Message;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SecurityProvider;
@@ -269,7 +270,9 @@ public class TransferService {
 
     }
 
-    public Boolean sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType) throws SoapFaultException, ComponentException {
+    public HashMap<String, Object> sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType) throws SoapFaultException, ComponentException {
+        HashMap<String, Object> data = new HashMap<>();
+
         boolean useEncryption = false;
 
         String username = "ACt";
@@ -282,7 +285,10 @@ public class TransferService {
             voucher = securityProvider.Authenticate(username, password);
         } catch (ComponentException | SoapFaultException e) {
             e.printStackTrace();
-            return false;
+
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to connect to sun system.");
+            return data;
         }
 
         try {
@@ -360,7 +366,9 @@ public class TransferService {
             System.out.print("An error occurred logging in to SunSystems:\r\n");
             ex.printStackTrace();
 
-            return false;
+            data.put("status", Constants.FAILED);
+            data.put("message", "An error occurred logging in to Sun System.");
+            return data;
         }
 
         ///////////////////////////////////////////  Convert XML to Object /////////////////////////////////////////////
@@ -374,11 +382,26 @@ public class TransferService {
 
             System.out.println(query.getPayload());
 
-            return query.getPayload().get(0).getLine().getStatus().equals("success");
+            boolean status = query.getPayload().get(0).getLine().getStatus().equals("success");
+            ArrayList<Message> messages = query.getPayload().get(0).getLine().getMessages().getMessage();
+            String message = "";
+            for (Message msg : messages) {
+                if (msg.getLevel().equals("error")){
+                    message += " - ";
+                    message  +=  msg.getUserText();
+                }
+            }
+
+            data.put("status", status);
+            data.put("message", message);
+            return data;
+
         } catch (JAXBException e) {
             e.printStackTrace();
         }
-        return false;
+        data.put("status", Constants.FAILED);
+        data.put("message", "");
+        return data;
     }
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
@@ -388,6 +411,10 @@ public class TransferService {
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);
+
+        Element DescriptionElement = doc.createElement("Description");
+        DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
+        lineElement.appendChild(DescriptionElement);
 
         Element accountCodeElement = doc.createElement("AccountCode");
         if (creditDebitFlag)

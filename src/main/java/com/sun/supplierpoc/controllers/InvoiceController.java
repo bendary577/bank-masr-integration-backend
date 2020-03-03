@@ -53,17 +53,25 @@ public class InvoiceController {
     @RequestMapping("/getApprovedInvoices")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getApprovedInvoices(Principal principal) {
+    public HashMap<String, Object> getApprovedInvoicesRequest(Principal principal) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
+        HashMap<String, Object> response = getApprovedInvoices(user.getId(), account);
+
+        return response;
+
+    }
+
+    public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
+
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", account.getId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
-                user.getAccountId(), syncJobType.getId());
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
+                account.getId(), syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 

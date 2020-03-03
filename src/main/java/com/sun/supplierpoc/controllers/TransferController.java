@@ -56,18 +56,25 @@ public class TransferController {
     @RequestMapping("/getBookedTransfer")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getBookedTransfer(Principal principal) {
-        HashMap<String, Object> response = new HashMap<>();
+    public HashMap<String, Object> getBookedTransferRequest(Principal principal) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, user.getAccountId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, user.getAccountId());
-        SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
+        HashMap<String, Object> response = getBookedTransfer(user.getId(), account);
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, user.getId(),
-                user.getAccountId(), syncJobType.getId());
+        return response;
+    }
+
+    public HashMap<String, Object> getBookedTransfer(String userId, Account account) {
+        HashMap<String, Object> response = new HashMap<>();
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, userId);
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
+        SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
+                account.getId(), syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 

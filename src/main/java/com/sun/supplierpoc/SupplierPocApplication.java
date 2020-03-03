@@ -3,8 +3,11 @@ package com.sun.supplierpoc;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
+
 public class SupplierPocApplication {
 
     public static void main(String[] args) {

@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -88,7 +89,7 @@ public class AccountController {
 
     @RequestMapping(value = "/user")
     @ResponseBody
-    public ResponseEntity<RefreshTokenResult> adduser(Principal principal) {
+    public ResponseEntity<RefreshTokenResult> addUser() {
         Set<GrantedAuthority> roles=new LinkedHashSet<>();
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
         User user = new User("user", "", null,"user","user",roles,true,
@@ -98,6 +99,10 @@ public class AccountController {
         user.setRoles();*/
         mongoTemplate.save(user);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public ArrayList<Account> getAccounts() {
+        return (ArrayList<Account>) accountRepo.findAll();
     }
 
 }

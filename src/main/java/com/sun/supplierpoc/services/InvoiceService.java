@@ -83,7 +83,7 @@ public class InvoiceService {
 
             // wait until loading finished "tableLoadingBar"
             try{
-                WebDriverWait wait = new WebDriverWait(driver, 40);
+                WebDriverWait wait = new WebDriverWait(driver, 60);
                 wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
 
             } catch (Exception e) {

@@ -270,7 +270,7 @@ public class SupplierService {
 
                 String tax = (String) syncJobType.getConfiguration().get("taxes");
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);
-                Thread.sleep(1000);
+                Thread.sleep(2000);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ENTER);
 
@@ -287,7 +287,7 @@ public class SupplierService {
 
                 String group = (String) syncJobType.getConfiguration().get("groups");
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(group);
-                Thread.sleep(1000);
+                Thread.sleep(2000);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ENTER);
 
@@ -349,7 +349,7 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL")).click();
 
                 //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
-
+//
 //                driver.findElement(By.linkText("Save")).click();
 //                try {
 //                    new WebDriverWait(driver, 5)

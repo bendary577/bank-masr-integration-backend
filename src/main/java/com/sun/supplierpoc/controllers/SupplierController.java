@@ -48,18 +48,25 @@ public class SupplierController {
     @RequestMapping("/getSuppliers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getSuppliers(Principal principal) throws SoapFaultException, ComponentException{
+    public HashMap<String, Object> getSuppliersRequest(Principal principal) throws SoapFaultException, ComponentException{
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
+        HashMap<String, Object> response = getSuppliers(user.getId(), account);
+
+        return response;
+    }
+
+    public HashMap<String, Object> getSuppliers(String userId, Account account) throws SoapFaultException, ComponentException{
+
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", account.getId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, user.getId(),
-                user.getAccountId(), syncJobType.getId());
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
+                account.getId(), syncJobType.getId());
         syncJobRepo.save(syncJob);
 
         HashMap<String, Object> data = supplierService.getSuppliersData(syncJobType);

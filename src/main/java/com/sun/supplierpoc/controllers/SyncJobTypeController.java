@@ -10,6 +10,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -30,10 +31,16 @@ public class SyncJobTypeController {
     @GetMapping("/getSyncJobTypes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public List<SyncJobType> getSyncJobTypes(Principal principal)  {
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        return syncJobTypeRepo.findByAccountId(user.getAccountId());
+    public ArrayList<SyncJobType> getSyncJobTypesRequest(Principal principal)  {
+        return getSyncJobTypes(principal);
     }
+
+
+    public ArrayList<SyncJobType> getSyncJobTypes(Principal principal)  {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        return (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountId(user.getAccountId());
+    }
+
 
     @PutMapping("/updateSyncJobTypesConfiguration")
     @CrossOrigin(origins = "*")

@@ -10,7 +10,6 @@ import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.ssc.client.ComponentException;
@@ -48,18 +47,24 @@ public class CreditNoteController {
     @RequestMapping("/getCreditNotes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getCreditNotes(Principal principal) {
+    public HashMap<String, Object> getCreditNotesRequest(Principal principal) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
+        HashMap<String, Object> response = getCreditNotes(user.getId(), account);
+
+        return response;
+    }
+
+    public HashMap<String, Object> getCreditNotes(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, user.getAccountId());
-        SyncJobType syncJobTypeApprovedInvoices = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, account.getId());
+        SyncJobType syncJobTypeApprovedInvoices = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, user.getId(),
-                user.getAccountId(), syncJobType.getId());
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
+                account.getId(), syncJobType.getId());
 
         syncJobRepo.save(syncJob);
 

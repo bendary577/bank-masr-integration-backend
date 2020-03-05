@@ -61,6 +61,7 @@ public class CreditNoteController {
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, account.getId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
         SyncJobType syncJobTypeApprovedInvoices = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
@@ -78,7 +79,7 @@ public class CreditNoteController {
                 if(addedInvoices.size() != 0){
                     try {
                         for (SyncJobData invoice: addedInvoices ) {
-                            data  = transferService.sendTransferData(invoice, syncJobType);
+                            data  = transferService.sendTransferData(invoice, syncJobTypeApprovedInvoices, syncJobTypeJournal);
                             if ((Boolean) data.get("status")){
                                 invoice.setStatus(Constants.SUCCESS);
                                 invoice.setReason("");

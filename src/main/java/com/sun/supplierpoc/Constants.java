@@ -26,7 +26,7 @@ public class Constants {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static int PORT = 8080;
-    public static String HOST = "192.168.1.3";
+    public static String HOST = "192.168.1.15";
 
     public Constants() {}
 }

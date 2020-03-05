@@ -68,7 +68,8 @@ public class InvoiceController {
 
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Approved Invoices", account.getId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                 account.getId(), syncJobType.getId());
@@ -81,7 +82,7 @@ public class InvoiceController {
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
-                handleSendTransfer(syncJobType, syncJob, addedInvoices, transferService, syncJobDataRepo);
+                handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedInvoices, transferService, syncJobDataRepo);
                 syncJob.setReason("");
                 syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
@@ -113,12 +114,12 @@ public class InvoiceController {
         return response;
     }
 
-    static void handleSendTransfer(SyncJobType syncJobType, SyncJob syncJob, ArrayList<SyncJobData> addedInvoices, TransferService transferService, SyncJobDataRepo syncJobDataRepo) {
+    static void handleSendTransfer(SyncJobType syncJobType, SyncJobType syncJobTypeJournal, SyncJob syncJob, ArrayList<SyncJobData> addedInvoices, TransferService transferService, SyncJobDataRepo syncJobDataRepo) {
         HashMap<String, Object> data;
         if(addedInvoices.size() != 0){
             for (SyncJobData addedInvoice : addedInvoices) {
                 try {
-                    data  = transferService.sendTransferData(addedInvoice, syncJobType);
+                    data  = transferService.sendTransferData(addedInvoice, syncJobType, syncJobTypeJournal);
                     if ((Boolean) data.get("status")){
                         addedInvoice.setStatus(Constants.SUCCESS);
                         addedInvoice.setReason("");
@@ -132,6 +133,7 @@ public class InvoiceController {
 
                 } catch (SoapFaultException | ComponentException e) {
                     e.printStackTrace();
+                    continue;
                 }
             }
         }

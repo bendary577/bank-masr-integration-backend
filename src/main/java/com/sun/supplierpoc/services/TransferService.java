@@ -140,7 +140,6 @@ public class TransferService {
                     checkPagination(driver);
                     table = driver.findElement(By.id("dg_main"));
                     rows = table.findElements(By.tagName("tr"));
-
                 }
             }
             for (HashMap<String, Object> transfer: transfers) {
@@ -247,6 +246,8 @@ public class TransferService {
                         toCostCenter.get("costCenter") + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
+                journalEntry.put("overGroup", journal.getOverGroup());
+
 
                 journalEntries.add(journalEntry);
             }
@@ -272,7 +273,7 @@ public class TransferService {
 
     }
 
-    public HashMap<String, Object> sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType) throws SoapFaultException, ComponentException {
+    public HashMap<String, Object> sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType,  SyncJobType syncJobTypeJournal) throws SoapFaultException, ComponentException {
         HashMap<String, Object> data = new HashMap<>();
 
         boolean useEncryption = false;
@@ -294,7 +295,6 @@ public class TransferService {
         }
 
         try {
-
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
 
             DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -343,10 +343,10 @@ public class TransferService {
             payloadElement.appendChild(ledgerElement);
 
             ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
+            createJournalLine(true, doc, ledgerElement, syncJobType, syncJobTypeJournal, addedJournalEntry);
 
             ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-            createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
+            createJournalLine(false, doc, ledgerElement, syncJobType, syncJobTypeJournal, addedJournalEntry);
 
             ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
             TransformerFactory tf = TransformerFactory.newInstance();
@@ -407,7 +407,10 @@ public class TransferService {
     }
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
-                                   SyncJobData addedJournalEntry) {
+                                   SyncJobType syncJobTypeJournal, SyncJobData addedJournalEntry) {
+        ArrayList<HashMap<String, String>> overGroups = (ArrayList<HashMap<String, String>>)syncJobTypeJournal.getConfiguration().get("overGroups");
+        HashMap<String, Object> oldOverGroupData = conversions.checkOverGroupExistence(overGroups, addedJournalEntry.getData().get("overGroup"));
+        HashMap<String, String> oldOverGroup = (HashMap<String, String>)oldOverGroupData.get("overGroup");
 
         ArrayList<HashMap<String, Object>> analysis = (ArrayList<HashMap<String, Object>>) syncJobType.getConfiguration().get("analysis");
 
@@ -419,10 +422,10 @@ public class TransferService {
         lineElement.appendChild(DescriptionElement);
 
         Element accountCodeElement = doc.createElement("AccountCode");
-        if (creditDebitFlag)
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-        else
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+        if (creditDebitFlag) // Credit
+            accountCodeElement.appendChild(doc.createTextNode(oldOverGroup.get("inventoryAccount")));
+        else // Debit
+            accountCodeElement.appendChild(doc.createTextNode(oldOverGroup.get("expensesAccount")));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
@@ -470,7 +473,7 @@ public class TransferService {
         if (creditDebitFlag)
             transactionAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("total"))));
         else
-            transactionAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
+            transactionAmountElement.appendChild(doc.createTextNode("-" + String.valueOf(addedJournalEntry.getData().get("total"))));
         lineElement.appendChild(transactionAmountElement);
 
         Element transactionReferenceElement = doc.createElement("TransactionReference");
@@ -481,6 +484,29 @@ public class TransferService {
         lineElement.appendChild(accountsElement);
 
         lineElement.appendChild(accountCodeElement);
+
+        // T3
+        Element analysisCode2ElementT3 = doc.createElement("AnalysisCode3");
+        analysisCode2ElementT3.appendChild(doc.createTextNode("13"));
+        lineElement.appendChild(analysisCode2ElementT3);
+
+        Element enterAnalysis1ElementT3 = doc.createElement("EnterAnalysis3");
+        enterAnalysis1ElementT3.appendChild(doc.createTextNode("1"));
+        accountsElement.appendChild(enterAnalysis1ElementT3);
+
+        Element analysis2ElementT3 = doc.createElement("Analysis3");
+        accountsElement.appendChild(analysis2ElementT3);
+
+        if (creditDebitFlag){
+            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
+            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
+            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
+        }
+        else{
+            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
+            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
+        }
 
         for (HashMap<String, Object> analysisObject: analysis) {
             if ((Boolean) analysisObject.get("checked")){
@@ -496,12 +522,12 @@ public class TransferService {
                 Element analysis2Element = doc.createElement("Analysis" + analysisObject.get("number"));
                 accountsElement.appendChild(analysis2Element);
 
-                Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
-                if (creditDebitFlag)
-                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-                else
-                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-                analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
+//                Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
+//                if (creditDebitFlag)
+//                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
+//                else
+//                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+//                analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
 
                 Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
                 vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode((String) analysisObject.get("codeElement")));

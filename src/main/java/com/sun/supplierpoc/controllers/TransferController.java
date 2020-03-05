@@ -66,7 +66,7 @@ public class TransferController {
     public HashMap<String, Object> getBookedTransfer(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, userId);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, account.getId());
         SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
         SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
@@ -83,7 +83,7 @@ public class TransferController {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
-                    InvoiceController.handleSendTransfer(syncJobType, syncJob, addedTransfers, transferService, syncJobDataRepo);
+                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedTransfers, transferService, syncJobDataRepo);
                     syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 

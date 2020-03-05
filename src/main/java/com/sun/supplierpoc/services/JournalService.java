@@ -194,6 +194,8 @@ public class JournalService {
                 wasteData.put("to_account_code", costCenter.get("accountCode"));
                 wasteData.put("description", "Wastage Entry For " + costCenter.get("costCenter") + " " + journalData.getOverGroup());
 
+                wasteData.put("transactionReference", "");
+
                 SyncJobData syncJobData = new SyncJobData(wasteData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
                 syncJobDataRepo.save(syncJobData);
@@ -213,6 +215,8 @@ public class JournalService {
                 varianceData.put("to_account_code", costCenter.get("accountCode"));
                 varianceData.put("description", "Staff Meal Cost For " + costCenter.get("costCenter") + " " + journalData.getOverGroup());
 
+                varianceData.put("transactionReference", "");
+
                 SyncJobData syncJobData = new SyncJobData(varianceData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
                 syncJobDataRepo.save(syncJobData);
@@ -230,6 +234,8 @@ public class JournalService {
                 costData.put("to_cost_center", costCenter.get("costCenter"));
                 costData.put("to_account_code", costCenter.get("accountCode"));
                 costData.put("description", "Cost Of Sales For " + costCenter.get("costCenter") + " " + journalData.getOverGroup());
+
+                costData.put("transactionReference", "");
 
                 SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());

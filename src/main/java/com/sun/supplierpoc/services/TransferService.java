@@ -246,6 +246,8 @@ public class TransferService {
                 journalEntry.put("description", "Transfer From " + fromCostCenter.get("costCenter") + " to "+
                         toCostCenter.get("costCenter") + " - " + journal.getOverGroup());
 
+                journalEntry.put("transactionReference", "");
+
                 journalEntries.add(journalEntry);
             }
 
@@ -418,9 +420,9 @@ public class TransferService {
 
         Element accountCodeElement = doc.createElement("AccountCode");
         if (creditDebitFlag)
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-        else
             accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
+        else
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
@@ -468,11 +470,11 @@ public class TransferService {
         if (creditDebitFlag)
             transactionAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("total"))));
         else
-            transactionAmountElement.appendChild(doc.createTextNode("-" + String.valueOf(addedJournalEntry.getData().get("total"))));
+            transactionAmountElement.appendChild(doc.createTextNode("-" + addedJournalEntry.getData().get("total")));
         lineElement.appendChild(transactionAmountElement);
 
         Element transactionReferenceElement = doc.createElement("TransactionReference");
-        transactionReferenceElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("transactionReference")));
+        transactionReferenceElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("transactionReference")));
         lineElement.appendChild(transactionReferenceElement);
 
         Element accountsElement = doc.createElement("Accounts");
@@ -496,9 +498,9 @@ public class TransferService {
 
                 Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
                 if (creditDebitFlag)
-                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-                else
                     vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
+                else
+                    vAcntCatAnalysis_AcntCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
                 analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
 
                 Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");

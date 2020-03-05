@@ -23,10 +23,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Key;
 import java.security.Principal;
@@ -126,12 +123,12 @@ public class TransferController {
     @RequestMapping("/getOverGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getOverGroups(Principal principal) {
+    public HashMap<String, Object> getOverGroups(@RequestParam(name = "syncJobType") String syncTypeName, Principal principal) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
 
         ArrayList<HashMap<String, String>> oldOverGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
 

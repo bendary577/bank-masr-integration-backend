@@ -41,8 +41,6 @@ public class InvoiceService {
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private InvoiceController invoiceController;
-    @Autowired
-    private SyncJobDataController syncJobDataController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -217,6 +215,9 @@ public class InvoiceService {
             else
                 data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.get("costCenter"));
 
+            data.put("transactionReference", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
+
+
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
@@ -227,72 +228,4 @@ public class InvoiceService {
 
     }
 
-    // NOT USED
-    public Boolean sendInvoicesData(ArrayList<SyncJobData> addedInvoices) throws SoapFaultException, ComponentException {
-        boolean useEncryption = false;
-
-        String username = "ACt";
-        String password = "P@ssw0rd";
-
-        SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
-        IAuthenticationVoucher voucher = securityProvider.Authenticate(username, password);
-
-        String inputPayload =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" +
-                        "<SSC>" +
-                        "<ErrorContext/>" +
-                        "   <UserOld>" +
-                        "       <Name>" + username + "</Name>" +
-                        "   </UserOld>" +
-
-                        "<SunSystemsContext>" +
-                        "<BusinessUnit>"  + "PK1" + "</BusinessUnit>" +
-                        "</SunSystemsContext>" +
-
-                        "<Payload>" +
-                        "<PurchaseInvoice>" +
-                        "<PurchaseTransactionType>" + "PI_INVENTORY" + "</PurchaseTransactionType>" +
-                        "<SupplierCode>" + "80020" + "</SupplierCode>" +
-                        "<TransactionDate>" + "10062004" + "</TransactionDate>" +
-                        "</PurchaseInvoice>" +
-                        "</Payload>" +
-                        "</SSC>";
-
-        String result = "";
-
-        try {
-
-            SoapComponent ssc = new SoapComponent(Constants.HOST,Constants.PORT);
-            ssc.authenticate(voucher);
-            result = ssc.execute("PurchaseInvoice", "CreateOrAmend", inputPayload);
-            System.out.println(result);
-        }
-        catch (Exception ex) {
-            System.out.print("An error occurred logging in to SunSystems:\r\n");
-            ex.printStackTrace();
-        }
-
-        // Convert XML to Object
-        JAXBContext jaxbContext;
-        try
-        {
-            jaxbContext = JAXBContext.newInstance(PurchaseInvoiceSSC.class);
-
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
-            PurchaseInvoiceSSC query = (PurchaseInvoiceSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
-
-            System.out.println(query.getPayload());
-
-            if (query.getPayload().get(0).getStatus().equals("success")){
-                return true;
-            }
-            return false;
-        }
-        catch (JAXBException e)
-        {
-            e.printStackTrace();
-        }
-        return false;
-    }
 }

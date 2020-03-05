@@ -45,7 +45,7 @@ public class ScheduledTasks {
     }
 
     // run every 60 min
-    @Scheduled(cron="0 0/60 * * * SUN-THU")
+//    @Scheduled(cron="0 0/60 * * * SUN-THU")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());

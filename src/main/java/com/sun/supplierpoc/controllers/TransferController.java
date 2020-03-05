@@ -171,9 +171,25 @@ public class TransferController {
                 // check existence of over group
                 WebElement td = cols.get(columns.indexOf("over_group"));
                 HashMap<String, Object> oldOverGroupData = conversions.checkOverGroupExistence(oldOverGroups, td.getText().strip());
+                HashMap<String, String> oldOverGroup = (HashMap<String, String>)oldOverGroupData.get("overGroup");
 
                 if ((boolean) oldOverGroupData.get("status")) {
                     overGroup.put("checked", true);
+
+                    if (oldOverGroup.containsKey("product")) overGroup.put("product", oldOverGroup.get("product"));
+                    else overGroup.put("product", "1100");
+
+                    if (oldOverGroup.containsKey("expensesAccount")) overGroup.put("expensesAccount", oldOverGroup.get("expensesAccount"));
+                    else overGroup.put("expensesAccount", "511101");
+
+                    if (oldOverGroup.containsKey("inventoryAccount")) overGroup.put("inventoryAccount", oldOverGroup.get("inventoryAccount"));
+                    else overGroup.put("inventoryAccount", "114101");
+
+                    if (oldOverGroup.containsKey("wasteAccountCredit")) overGroup.put("wasteAccountCredit", oldOverGroup.get("wasteAccountCredit"));
+                    else overGroup.put("wasteAccountCredit", "511101");
+
+                    if (oldOverGroup.containsKey("wasteAccountDebit")) overGroup.put("wasteAccountDebit", oldOverGroup.get("wasteAccountDebit"));
+                    else overGroup.put("wasteAccountDebit", "114101");
                 } else {
                     overGroup.put("checked", false);
                 }

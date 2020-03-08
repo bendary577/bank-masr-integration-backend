@@ -15,7 +15,8 @@ public class Constants {
     public static String CREDIT_NOTES = "Credit Notes";
     public static String TRANSFERS = "Booked Transfers";
     public static String JOURNALS = "Journals";
-    public static String SALES = "Running";
+    public static String SALES = "POS Sales";
+    public static String WASTAGE = "Wastage";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";

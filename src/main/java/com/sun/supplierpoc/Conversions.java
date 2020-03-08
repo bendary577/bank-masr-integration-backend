@@ -12,6 +12,7 @@ public class Conversions {
     public String transformColName(String columnName){
         return columnName.strip().toLowerCase().replace(' ', '_');
     }
+
     public HashMap<String, Object> checkOverGroupExistence(ArrayList<HashMap<String, String>> overGroups, String overGroupName) {
         HashMap<String, Object> data = new HashMap<>();
         for (HashMap<String, String> overGroup : overGroups) {
@@ -65,6 +66,20 @@ public class Conversions {
         }
         data.put("status", false);
         data.put("item", new HashMap<String, String>());
+        return data;
+    }
+
+    public HashMap<String, Object> checkWasteTypeExistence(ArrayList<HashMap<String, String>> wasteTypes, String wasteTypeName){
+        HashMap<String, Object> data = new HashMap<>();
+        for (HashMap<String, String> wasteType : wasteTypes) {
+            if (wasteType.get("waste_group").equals(wasteTypeName)) {
+                data.put("status", true);
+                data.put("wasteType", wasteType);
+                return data;
+            }
+        }
+        data.put("status", false);
+        data.put("wasteType", new HashMap<String, String>());
         return data;
     }
 

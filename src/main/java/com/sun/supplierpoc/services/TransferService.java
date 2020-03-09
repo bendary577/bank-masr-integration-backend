@@ -64,8 +64,8 @@ public class TransferService {
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
-        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobTypeApprovedInvoice.getConfiguration().get("costCenters");
-        ArrayList<HashMap<String, String>> items = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("items");
+        ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();;
+        ArrayList<Item> items =  syncJobType.getConfiguration().getItems();
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
@@ -105,21 +105,21 @@ public class TransferService {
                     }
 
                     WebElement td = cols.get(columns.indexOf("from_cost_center"));
-                    HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
-                    if (!(boolean) oldCostCenterData.get("status")) {
+                    if (! oldCostCenterData.checked) {
                         continue;
                     }
-                    transfer.put("from_cost_center", oldCostCenterData.get("costCenter"));
+                    transfer.put("from_cost_center", oldCostCenterData);
 
 
                     td = cols.get(columns.indexOf("to_cost_center"));
-                    oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                    oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
-                    if (!(boolean) oldCostCenterData.get("status")) {
+                    if (! oldCostCenterData.checked) {
                         continue;
                     }
-                    transfer.put("to_cost_center", oldCostCenterData.get("costCenter"));
+                    transfer.put("to_cost_center", oldCostCenterData);
 
                     td = cols.get(columns.indexOf("document"));
                     transfer.put(columns.get(columns.indexOf("document")), td.getText());
@@ -189,7 +189,7 @@ public class TransferService {
     }
 
     private void getBookedTransferDetails(
-            ArrayList<HashMap<String, String>> items, HashMap<String, Object> transfer, WebDriver driver,
+            ArrayList<Item> items, HashMap<String, Object> transfer, WebDriver driver,
             ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
@@ -207,19 +207,18 @@ public class TransferService {
                     continue;
                 }
 
-                // check if this item belong to selected items
-                WebElement td = cols.get(columns.indexOf("item"));
+                // check if this Item belong to selected items
+                WebElement td = cols.get(columns.indexOf("Item"));
 
-                HashMap<String, Object> oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+                Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
 
-                if (!(boolean) oldItemData.get("status")) {
+                if (!oldItemData.isChecked()) {
                     continue;
                 }
 
-                HashMap<String, String> oldItem = (HashMap<String, String>) oldItemData.get("item");
-                String overGroup = oldItem.get("over_group");
+                String overGroup = oldItemData.getOverGroup();
 
-                transferDetails.put("item", td.getText());
+                transferDetails.put("Item", td.getText());
 
                 td = cols.get(columns.indexOf("total"));
                 transferDetails.put("total", td.getText());
@@ -316,7 +315,7 @@ public class TransferService {
             SSCRootElement.appendChild(sunSystemContextElement);
 
             Element businessUnitElement = doc.createElement("BusinessUnit");
-            businessUnitElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("businessUnit")));
+            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getBusinessUnit()));
             sunSystemContextElement.appendChild(businessUnitElement);
 
             ///////////////////////////////////////////  MethodContext /////////////////////////////////////////////////
@@ -331,7 +330,7 @@ public class TransferService {
             LedgerPostingParametersElement.appendChild(DescriptionElement);
 
             Element postingTypeElement = doc.createElement("PostingType");
-            postingTypeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("postingType")));
+            postingTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getPostingType()));
             LedgerPostingParametersElement.appendChild(postingTypeElement);
 
             ///////////////////////////////////////////  Payload ///////////////////////////////////////////////////////
@@ -408,11 +407,10 @@ public class TransferService {
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
                                    SyncJobType syncJobTypeJournal, SyncJobData addedJournalEntry) {
-        ArrayList<HashMap<String, String>> overGroups = (ArrayList<HashMap<String, String>>)syncJobTypeJournal.getConfiguration().get("overGroups");
-        HashMap<String, Object> oldOverGroupData = conversions.checkOverGroupExistence(overGroups, addedJournalEntry.getData().get("overGroup"));
-        HashMap<String, String> oldOverGroup = (HashMap<String, String>)oldOverGroupData.get("overGroup");
+        ArrayList<OverGroup> overGroups = syncJobTypeJournal.getConfiguration().getOverGroups();
+        ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
+        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, addedJournalEntry.getData().get("overGroup"));
 
-        ArrayList<HashMap<String, Object>> analysis = (ArrayList<HashMap<String, Object>>) syncJobType.getConfiguration().get("analysis");
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);
@@ -423,9 +421,9 @@ public class TransferService {
 
         Element accountCodeElement = doc.createElement("AccountCode");
         if (creditDebitFlag) // Credit
-            accountCodeElement.appendChild(doc.createTextNode(oldOverGroup.get("inventoryAccount")));
+            accountCodeElement.appendChild(doc.createTextNode(oldOverGroupData.getInventoryAccount()));
         else // Debit
-            accountCodeElement.appendChild(doc.createTextNode(oldOverGroup.get("expensesAccount")));
+            accountCodeElement.appendChild(doc.createTextNode(oldOverGroupData.getExpensesAccount()));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
@@ -444,7 +442,7 @@ public class TransferService {
         lineElement.appendChild(baseAmountElement);
 
         Element currencyCodeElement = doc.createElement("CurrencyCode");
-        currencyCodeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("currencyCode")));
+        currencyCodeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getCurrencyCode()));
         lineElement.appendChild(currencyCodeElement);
 
         Element debitCreditElement = doc.createElement("DebitCredit");
@@ -462,11 +460,11 @@ public class TransferService {
         lineElement.appendChild(journalLineNumberElement);
 
         Element journalSourceElement = doc.createElement("JournalSource");
-        journalSourceElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("journalSource")));
+        journalSourceElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalSource()));
         lineElement.appendChild(journalSourceElement);
 
         Element journalTypeElement = doc.createElement("JournalType");
-        journalTypeElement.appendChild(doc.createTextNode((String) syncJobType.getConfiguration().get("journalType")));
+        journalTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalType()));
         lineElement.appendChild(journalTypeElement);
 
         Element transactionAmountElement = doc.createElement("TransactionAmount");
@@ -508,18 +506,18 @@ public class TransferService {
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
         }
 
-        for (HashMap<String, Object> analysisObject: analysis) {
-            if ((Boolean) analysisObject.get("checked")){
+        for (Analysis analysisObject: analysis) {
+            if (analysisObject.getChecked()){
 
-                Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.get("number"));
-                analysisCode2Element.appendChild(doc.createTextNode("1"+ analysisObject.get("number")));
+                Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.getNumber());
+                analysisCode2Element.appendChild(doc.createTextNode("1"+ analysisObject.getNumber()));
                 lineElement.appendChild(analysisCode2Element);
 
-                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.get("number"));
+                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.getNumber());
                 enterAnalysis1Element.appendChild(doc.createTextNode("1"));
                 accountsElement.appendChild(enterAnalysis1Element);
 
-                Element analysis2Element = doc.createElement("Analysis" + analysisObject.get("number"));
+                Element analysis2Element = doc.createElement("Analysis" + analysisObject.getNumber());
                 accountsElement.appendChild(analysis2Element);
 
 //                Element vAcntCatAnalysis_AcntCodeElement = doc.createElement("VAcntCatAnalysis_AcntCode");
@@ -530,12 +528,12 @@ public class TransferService {
 //                analysis2Element.appendChild(vAcntCatAnalysis_AcntCodeElement);
 
                 Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-                vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode((String) analysisObject.get("codeElement")));
+                vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode((String) analysisObject.getCodeElement()));
                 analysis2Element.appendChild(vAcntCatAnalysis_AnlCodeElement);
 
             }
             else{
-                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.get("number"));
+                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.getNumber());
                 enterAnalysis1Element.appendChild(doc.createTextNode("3"));
                 accountsElement.appendChild(enterAnalysis1Element);
             }

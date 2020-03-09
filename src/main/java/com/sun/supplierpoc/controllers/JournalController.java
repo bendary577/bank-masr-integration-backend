@@ -1,36 +1,35 @@
 package com.sun.supplierpoc.controllers;
 
-        import com.sun.supplierpoc.Constants;
-        import com.sun.supplierpoc.Conversions;
-        import com.sun.supplierpoc.models.Account;
-        import com.sun.supplierpoc.models.SyncJob;
-        import com.sun.supplierpoc.models.SyncJobData;
-        import com.sun.supplierpoc.models.SyncJobType;
-        import com.sun.supplierpoc.models.auth.User;
-        import com.sun.supplierpoc.repositories.AccountRepo;
-        import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-        import com.sun.supplierpoc.repositories.SyncJobRepo;
-        import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-        import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-        import com.sun.supplierpoc.services.JournalService;
-        import com.sun.supplierpoc.services.TransferService;
-        import com.systemsunion.ssc.client.ComponentException;
-        import com.systemsunion.ssc.client.SoapFaultException;
-        import org.springframework.beans.factory.annotation.Autowired;
-        import org.springframework.security.oauth2.provider.OAuth2Authentication;
-        import org.springframework.web.bind.annotation.CrossOrigin;
-        import org.springframework.web.bind.annotation.RequestMapping;
-        import org.springframework.web.bind.annotation.ResponseBody;
-        import org.springframework.web.bind.annotation.RestController;
+import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.SyncJob;
+import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.repositories.SyncJobRepo;
+import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.services.JournalService;
+import com.sun.supplierpoc.services.TransferService;
+import com.systemsunion.ssc.client.ComponentException;
+import com.systemsunion.ssc.client.SoapFaultException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-        import java.security.Principal;
-        import java.util.ArrayList;
-        import java.util.Date;
-        import java.util.HashMap;
-        import java.util.Optional;
+import java.security.Principal;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Optional;
 
 @RestController
-
+@RequestMapping("/server")
 public class JournalController {
     @Autowired
     private SyncJobRepo syncJobRepo;

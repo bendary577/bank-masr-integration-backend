@@ -4,10 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.controllers.SyncJobDataController;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.PurchaseInvoiceSSC;
@@ -52,8 +49,7 @@ public class InvoiceService {
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
-        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
-
+        ArrayList<CostCenter> costCenters = syncJobType.getConfiguration().getCostCenters();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
@@ -71,7 +67,7 @@ public class InvoiceService {
             driver.get(approvedInvoices);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText((String) syncJobType.getConfiguration().get("timePeriod"));
+            select.selectByVisibleText(syncJobType.getConfiguration().getTimePeriod());
 
             if (typeFlag){
                 driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");
@@ -113,13 +109,13 @@ public class InvoiceService {
 
                     // check if cost center choosen
                     WebElement td = cols.get(columns.indexOf("cost_center"));
-                    HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
-                    if (!(boolean) oldCostCenterData.get("status")) {
+                    if (!oldCostCenterData.checked) {
                         continue;
                     }
 
-                    invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData.get("costCenter"));
+                    invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
 
                     // check if vendor exits in middleware
 //                    td = cols.get(columns.indexOf("vendor"));

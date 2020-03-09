@@ -25,6 +25,7 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController
+@RequestMapping("/server")
 
 public class WastageController {
     @Autowired
@@ -64,32 +65,22 @@ public class WastageController {
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, account.getId());
         SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
 
-        if (!syncJobTypeJournal.getConfiguration().containsKey("costCenters") ||
-                ((ArrayList<CostCenter>)syncJobTypeJournal.getConfiguration().get("costCenters")).size() == 0){
+        if (syncJobTypeJournal.getConfiguration().getCostCenters().size() == 0){
             String message = "Configure cost center before sync journals.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (!syncJobTypeJournal.getConfiguration().containsKey("items") ||
-                ((ArrayList<HashMap<String, String>>)syncJobTypeJournal.getConfiguration().get("items")).size() == 0){
+        if (syncJobTypeJournal.getConfiguration().getItems().size() == 0){
             String message = "Map items before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (!syncJobTypeJournal.getConfiguration().containsKey("'costCenterLocationMapping'") ||
-                ((ArrayList<HashMap<String, String>>)syncJobTypeJournal.getConfiguration().get("'costCenterLocationMapping'")).size() == 0){
+        if (syncJobTypeJournal.getConfiguration().getCostCenterLocationMapping().size() == 0){
             String message = "Map cost centers to location before sync wastage.";
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
-
-        if (!((HashMap<String, String>)syncJobType.getConfiguration().get("accountSettings")).containsKey("wastageGroupIdStarting")){
-            String message = "Configure group id starting before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
@@ -157,17 +148,10 @@ public class WastageController {
         Account account = accountOptional.get();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, user.getAccountId());
-        ArrayList<HashMap<String, String>> oldWasteTypes = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
-
-        if (!syncJobType.getConfiguration().containsKey("wasteGroups")){
-            String message = "Error in getting old waste groups, please contact support team.";
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
+        ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().getWasteGroups();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        ArrayList<HashMap<String, Object>> wasteTypes = new ArrayList<>();
+        ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
@@ -191,7 +175,7 @@ public class WastageController {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
 
             for (int i = 14; i < rows.size(); i++) {
-                HashMap<String, Object> wasteType = new HashMap<>();
+                WasteGroup wasteType = new WasteGroup();
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -200,19 +184,18 @@ public class WastageController {
                     continue;
                 }
 
-                for (int j = 0; j < cols.size(); j++) {
-                    wasteType.put(columns.get(j), cols.get(j).getText());
-                }
-
                 // check existence of over group
                 WebElement td = cols.get(columns.indexOf("waste_group"));
-                HashMap<String, Object> oldWasteTypesData = conversions.checkWasteTypeExistence(oldWasteTypes, td.getText().strip());
-                HashMap<String, String> oldWasteType = (HashMap<String, String>)oldWasteTypesData.get("wasteType");
+                WasteGroup oldWasteTypesData = conversions.checkWasteTypeExistence(oldWasteTypes, td.getText().strip());
 
-                if ((boolean) oldWasteTypesData.get("status"))
-                    wasteType.put("checked", true);
-                else
-                    wasteType.put("checked", false);
+                if (oldWasteTypesData.getChecked()){
+                    wasteType= oldWasteTypesData;
+                }
+
+                else{
+                    wasteType.setChecked(false);
+                    wasteType.setWasteGroup(td.getText().strip());
+                }
 
                 wasteTypes.add(wasteType);
             }

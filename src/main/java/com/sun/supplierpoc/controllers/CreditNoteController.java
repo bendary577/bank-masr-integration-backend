@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/server")
 public class CreditNoteController {
     @Autowired
     private SyncJobRepo syncJobRepo;

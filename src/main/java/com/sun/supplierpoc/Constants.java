@@ -14,7 +14,7 @@ public class Constants {
     public static String APPROVED_INVOICES = "Approved Invoices";
     public static String CREDIT_NOTES = "Credit Notes";
     public static String TRANSFERS = "Booked Transfers";
-    public static String JOURNALS = "Journals";
+    public static String JOURNALS = "Consumptions";
     public static String SALES = "POS Sales";
     public static String WASTAGE = "Wastage";
 

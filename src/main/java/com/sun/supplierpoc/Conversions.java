@@ -1,6 +1,6 @@
 package com.sun.supplierpoc;
 
-import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,74 +13,66 @@ public class Conversions {
         return columnName.strip().toLowerCase().replace(' ', '_');
     }
 
-    public HashMap<String, Object> checkOverGroupExistence(ArrayList<HashMap<String, String>> overGroups, String overGroupName) {
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> overGroup : overGroups) {
-            if (overGroup.get("over_group").equals(overGroupName)) {
-                data.put("status", true);
-                data.put("overGroup", overGroup);
-                return data;
+    public OverGroup checkOverGroupExistence(ArrayList<OverGroup> overGroups, String overGroupName) {
+        for (OverGroup overGroup : overGroups) {
+            if (overGroup.getOverGroup().equals(overGroupName)) {
+                return overGroup;
             }
         }
-        data.put("status", false);
-        data.put("overGroup", new HashMap<String, String>());
-        return data;
+        return new OverGroup();
     }
 
-    public HashMap<String, Object> checkMajorGroupExistence(ArrayList<HashMap<String, String>> majorGroups, String majorGroupName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> majorGroup : majorGroups) {
-            if (majorGroup.get("major_group").equals(majorGroupName)) {
-                data.put("status", true);
-                data.put("majorGroup", majorGroup);
-                return data;
+    public MajorGroup checkMajorGroupExistence(ArrayList<MajorGroup> majorGroups, String majorGroupName){
+        for (MajorGroup majorGroup : majorGroups) {
+            if (majorGroup.getMajorGroup().equals(majorGroupName)) {
+                return majorGroup;
             }
         }
-        data.put("status", false);
-        data.put("majorGroup", new HashMap<String, String>());
-        return data;
+
+        return new MajorGroup();
     }
 
-    public HashMap<String, Object> checkItemGroupExistence(ArrayList<HashMap<String, String>> itemGroups, String itemGroupName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> itemGroup : itemGroups) {
-            if (itemGroup.get("item_group").equals(itemGroupName)) {
-                data.put("status", true);
-                data.put("itemGroup", itemGroup);
-                return data;
+    public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
+        for (ItemGroup itemGroup : itemGroups) {
+            if (itemGroup.getItemGroup().equals(itemGroupName)) {
+                return itemGroup;
             }
         }
-        data.put("status", false);
-        data.put("itemGroup", new HashMap<String, String>());
-        return data;
+        return new ItemGroup();
     }
 
-    public HashMap<String, Object> checkItemExistence(ArrayList<HashMap<String, String>> items, String itemName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> item : items) {
-            if (item.get("item").equals(itemName)) {
-                data.put("status", true);
-                data.put("item", item);
-                return data;
+    public Item checkItemExistence(ArrayList<Item> items, String itemName){
+        for (Item item : items) {
+            if (item.getItem().equals(itemName)) {
+                return item;
             }
         }
-        data.put("status", false);
-        data.put("item", new HashMap<String, String>());
-        return data;
+        return new Item();
     }
 
-    public HashMap<String, Object> checkWasteTypeExistence(ArrayList<HashMap<String, String>> wasteTypes, String wasteTypeName){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> wasteType : wasteTypes) {
-            if (wasteType.get("waste_group").equals(wasteTypeName)) {
-                data.put("status", true);
-                data.put("wasteType", wasteType);
-                return data;
+    public WasteGroup checkWasteTypeExistence(ArrayList<WasteGroup> wasteTypes, String wasteTypeName){
+        for (WasteGroup wasteType : wasteTypes) {
+            if (wasteType.getWasteGroup().equals(wasteTypeName)) {
+                return wasteType;
             }
         }
-        data.put("status", false);
-        data.put("wasteType", new HashMap<String, String>());
-        return data;
+        return new WasteGroup();
+    }
+
+    public CostCenter checkCostCenterExistence(ArrayList<CostCenter> costCenters, String costCenterName,
+                                                            boolean getOrUseFlag){
+        for (CostCenter costCenter : costCenters) {
+            String savedCostCenterName = costCenter.costCenter;
+            if (!getOrUseFlag){ // True in case of getting and False in case od use
+                if (savedCostCenterName.indexOf('(') != -1){
+                    savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
+                }
+            }
+            if (savedCostCenterName.equals(costCenterName)) {
+                return costCenter;
+            }
+        }
+        return new CostCenter();
     }
 
     public HashMap<String, Object> checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){

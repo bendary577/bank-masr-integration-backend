@@ -27,7 +27,7 @@ import java.util.*;
 
 
 @RestController
-
+@RequestMapping("/server")
 public class InvoiceController {
     @Autowired
     private SyncJobRepo syncJobRepo;
@@ -156,7 +156,7 @@ public class InvoiceController {
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
-        ArrayList<HashMap<String, String>> oldCostCenters = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("costCenters");
+        ArrayList<CostCenter> oldCostCenters = syncJobType.getConfiguration().getCostCenters();
 
         try
         {
@@ -211,29 +211,8 @@ public class InvoiceController {
         }
     }
 
-    public HashMap<String, Object> checkCostCenterExistence(ArrayList<HashMap<String, String>> costCenters, String costCenterName,
-                                                            boolean getOrUseFlag){
-        HashMap<String, Object> data = new HashMap<>();
-        for (HashMap<String, String> costCenter : costCenters) {
-            String savedCostCenterName = costCenter.get("costCenter");
-            if (!getOrUseFlag){ // True in case of getting and False in case od use
-                if (savedCostCenterName.indexOf('(') != -1){
-                    savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
-                }
-            }
-            if (savedCostCenterName.equals(costCenterName)) {
-                data.put("status", true);
-                data.put("costCenter", costCenter);
-                return data;
-            }
-        }
-        data.put("status", false);
-        data.put("costCenter", new HashMap<String, String>());
-        return data;
-    }
-
     private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
-                                      ArrayList<HashMap<String, String>> oldCostCenters, ArrayList<String> columns,
+                                      ArrayList<CostCenter> oldCostCenters, ArrayList<String> columns,
                                       String accountERD){
 
         for (int i = rowNumber; i < rows.size(); i++) {
@@ -247,27 +226,17 @@ public class InvoiceController {
 
             costCenter.costCenter =  cols.get(1).getText().strip();
 
-            HashMap<String, Object> oldCostCenterData = checkCostCenterExistence(oldCostCenters, cols.get(1).getText().strip(), true);
-            HashMap<String, String> oldCostCenter = (HashMap<String, String>) oldCostCenterData.get("costCenter");
+            CostCenter oldCostCenterData = conversions.checkCostCenterExistence(oldCostCenters, cols.get(1).getText().strip(), true);
 
-            if ((boolean)oldCostCenterData.get("status")){
+            if (oldCostCenterData.checked){
                 costCenter.checked = true;
                 // Fusion Data
                 if (accountERD.equals("FUSION")){
-                    costCenter.department = oldCostCenter.get("department");
-                    costCenter.project = oldCostCenter.get("project");
-                    costCenter.future2 = oldCostCenter.get("future2");
-                    costCenter.company = oldCostCenter.get("company");
-                    costCenter.businessUnit = oldCostCenter.get("businessUnit");
-                    costCenter.account = oldCostCenter.get("account");
-                    costCenter.product = oldCostCenter.get("product");
-                    costCenter.interCompany = oldCostCenter.get("product");
-                    costCenter.location = oldCostCenter.get("location");
-                    costCenter.currency = oldCostCenter.get("location");
+                    costCenter = oldCostCenterData;
                 }
                 // Sun Data
                 else if (accountERD.equals("SUN")){
-                    costCenter.accountCode = oldCostCenter.get("accountCode");
+                    costCenter.accountCode = oldCostCenterData.accountCode;
                 }
             }
             else {
@@ -287,7 +256,7 @@ public class InvoiceController {
                 }
                 // Sun Data
                 else if(accountERD.equals("SUN")){
-                    costCenter.accountCode = oldCostCenter.get("accountCode");
+                    costCenter.accountCode = oldCostCenterData.accountCode;
                 }
             }
 

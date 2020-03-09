@@ -1,7 +1,7 @@
 package com.sun.supplierpoc.models.auth;
 
 
-import com.sun.supplierpoc.Converters.SerializableObjectConverter;
+import com.sun.supplierpoc.converters.SerializableObjectConverter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;

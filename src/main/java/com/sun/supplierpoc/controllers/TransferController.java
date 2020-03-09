@@ -2,10 +2,7 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
@@ -31,6 +28,7 @@ import java.util.*;
 
 
 @RestController
+@RequestMapping("/server")
 
 public class TransferController {
     @Autowired
@@ -130,12 +128,12 @@ public class TransferController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
 
-        ArrayList<HashMap<String, String>> oldOverGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
+        ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
 
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
-        ArrayList<HashMap<String, Object>> overGroups = new ArrayList<>();
+        ArrayList<OverGroup> overGroups = new ArrayList<>();
 
 
         try {
@@ -160,7 +158,7 @@ public class TransferController {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
 
             for (int i = 14; i < rows.size(); i++) {
-                HashMap<String, Object> overGroup = new HashMap<>();
+                OverGroup overGroup = new OverGroup();
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -170,33 +168,21 @@ public class TransferController {
                 }
                 // check existence of over group
                 WebElement td = cols.get(columns.indexOf("over_group"));
-                HashMap<String, Object> oldOverGroupData = conversions.checkOverGroupExistence(oldOverGroups, td.getText().strip());
-                HashMap<String, String> oldOverGroup = (HashMap<String, String>)oldOverGroupData.get("overGroup");
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(oldOverGroups, td.getText().strip());
 
-                if ((boolean) oldOverGroupData.get("status")) {
-                    overGroup.put("checked", true);
-
-                    if (oldOverGroup.containsKey("product")) overGroup.put("product", oldOverGroup.get("product"));
-                    else overGroup.put("product", "1100");
-
-                    if (oldOverGroup.containsKey("expensesAccount")) overGroup.put("expensesAccount", oldOverGroup.get("expensesAccount"));
-                    else overGroup.put("expensesAccount", "511101");
-
-                    if (oldOverGroup.containsKey("inventoryAccount")) overGroup.put("inventoryAccount", oldOverGroup.get("inventoryAccount"));
-                    else overGroup.put("inventoryAccount", "114101");
-
-                    if (oldOverGroup.containsKey("wasteAccountCredit")) overGroup.put("wasteAccountCredit", oldOverGroup.get("wasteAccountCredit"));
-                    else overGroup.put("wasteAccountCredit", "511101");
-
-                    if (oldOverGroup.containsKey("wasteAccountDebit")) overGroup.put("wasteAccountDebit", oldOverGroup.get("wasteAccountDebit"));
-                    else overGroup.put("wasteAccountDebit", "114101");
-                } else {
-                    overGroup.put("checked", false);
+                if (oldOverGroupData.getChecked()) {
+                    overGroup = oldOverGroupData;
+                }
+                else {
+                    overGroup.setChecked(false);
+                    overGroup.setOverGroup(td.getText());
+                    overGroup.setProduct("1100");
+                    overGroup.setExpensesAccount("511101");
+                    overGroup.setInventoryAccount("114101");
+                    overGroup.setWasteAccountCredit("511101");
+                    overGroup.setWasteAccountDebit("114101");
                 }
 
-                for (int j = 0; j < cols.size(); j++) {
-                    overGroup.put(columns.get(j), cols.get(j).getText());
-                }
                 overGroups.add(overGroup);
             }
 
@@ -230,10 +216,10 @@ public class TransferController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
 
-        ArrayList<HashMap<String, String>> oldOverGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
-        ArrayList<HashMap<String, String>> majorGroups = new ArrayList<>();
-        ArrayList<HashMap<String, String>> itemGroups = new ArrayList<>();
-        ArrayList<HashMap<String, String>> items = new ArrayList<>();
+        ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
+        ArrayList<MajorGroup> majorGroups = new ArrayList<>();
+        ArrayList<ItemGroup> itemGroups = new ArrayList<>();
+        ArrayList<Item> items = new ArrayList<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
@@ -252,7 +238,7 @@ public class TransferController {
             // Getting MajorGroups
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
             for (int i = 14; i < rows.size(); i++) {
-                HashMap<String, String> majorGroup = new HashMap<>();
+                MajorGroup majorGroup = new MajorGroup();
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -261,13 +247,12 @@ public class TransferController {
                     continue;
                 }
 
-                for (int j = 0; j < columns.indexOf("over_group")+1; j++) {
-                    majorGroup.put(columns.get(j), cols.get(j).getText());
-                }
+                majorGroup.setOverGroup(cols.get(columns.indexOf("over_group")).getText());
+                majorGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText());
 
                 // check if this major group belong to chosen over group
-                HashMap<String, Object> overGroupData = conversions.checkOverGroupExistence(oldOverGroups, majorGroup.get("over_group"));
-                if ((Boolean) overGroupData.get("status")) {
+                OverGroup overGroupData = conversions.checkOverGroupExistence(oldOverGroups, majorGroup.getOverGroup());
+                if (overGroupData.getChecked()) {
                     majorGroups.add(majorGroup);
                 }
             }
@@ -282,7 +267,7 @@ public class TransferController {
                 return response;
             }
             // save new major groups
-            syncJobType.getConfiguration().put("majorGroups", majorGroups);
+            syncJobType.getConfiguration().setMajorGroups(majorGroups);
 
             // Get Items Group
             String mainMenuURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Common/Menu/MainMenu.aspx";
@@ -295,12 +280,22 @@ public class TransferController {
 
             columns = setupEnvironment.getTableColumns(rows, true, 10);
             for (int i = 11; i < rows.size(); i++) {
-                HashMap<String, String> itemGroup = getTableData(rows, columns, i);
-                if (itemGroup == null) continue;
-                // check if this item group belong to chosen major group
-                HashMap<String, Object> majorGroupData = conversions.checkMajorGroupExistence(majorGroups,itemGroup.get("major_group"));
-                if ((Boolean) majorGroupData.get("status")) {
-                    itemGroup.put("over_group", (String) ((HashMap<String, Object>)majorGroupData.get("majorGroup")).get("over_group"));
+                ItemGroup itemGroup = new ItemGroup();
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    return null;
+                }
+                itemGroup.setItemGroup(cols.get(columns.indexOf("item_group")).getText());
+                itemGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText());
+
+                // check if this Item group belong to chosen major group
+                MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups,itemGroup.getMajorGroup());
+
+                if (majorGroupData.getChecked()) {
+                    itemGroup.setOverGroup(majorGroupData.getOverGroup());
                     itemGroups.add(itemGroup);
                 }
             }
@@ -309,30 +304,30 @@ public class TransferController {
                 driver.quit();
 
                 response.put("data", items);
-                response.put("message", "There is no item groups in over group selected.");
+                response.put("message", "There is no Item groups in over group selected.");
                 response.put("success", true);
 
                 return response;
             }
-            // save new item groups
-            syncJobType.getConfiguration().put("itemGroups", itemGroups);
+            // save new Item groups
+            syncJobType.getConfiguration().setItemGroups(itemGroups);
 
             // Get Items Group
             driver.get(mainMenuURL);
             String itemsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Items/OverviewItem.aspx";
             driver.get(itemsURL);
 
-            // search by item group
-            for (HashMap<String, String> itemGroup : itemGroups) {
+            // search by Item group
+            for (ItemGroup itemGroup : itemGroups) {
                 driver.findElement(By.id("cfItemGroup_Text")).clear();
-                driver.findElement(By.id("cfItemGroup_Text")).sendKeys(itemGroup.get("item_group"));
+                driver.findElement(By.id("cfItemGroup_Text")).sendKeys(itemGroup.getItemGroup());
                 driver.findElement(By.id("cfItemGroup_Text")).sendKeys(Keys.ARROW_DOWN);
                 driver.findElement(By.id("cfItemGroup_Text")).sendKeys(Keys.ENTER);
 
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 10);
                     WebElement itemGroupValue = driver.findElement(By.id("cfItemGroup_Value"));
-                    wait.until(ExpectedConditions.textToBePresentInElementValue(itemGroupValue, itemGroup.get("item_group")));
+                    wait.until(ExpectedConditions.textToBePresentInElementValue(itemGroupValue, itemGroup.getItemGroup()));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -343,19 +338,26 @@ public class TransferController {
                 columns = setupEnvironment.getTableColumns(rows, true, 17);
 
                 for (int i = 11; i < rows.size(); i++) {
-                    HashMap<String, String> item = getTableData(rows, columns, i);
-                    if (item == null) continue;
-                    HashMap<String, Object> itemGroupData = conversions.checkItemGroupExistence(itemGroups,itemGroup.get("item_group"));
-                    // check if this item group belong to chosen major group
-                    if ((Boolean) itemGroupData.get("status")) {
-                        item.put("over_group", (String) ((HashMap<String, Object>)itemGroupData.get("itemGroup")).get("over_group"));
-                        item.put("major_group", (String) ((HashMap<String, Object>)itemGroupData.get("itemGroup")).get("major_group"));
-                        items.add(item);
+                    Item item = new Item();
+
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                    if (cols.size() != columns.size()) {
+                        return null;
                     }
+
+                    item.setItem(cols.get(columns.indexOf("item")).getText());
+                    item.setItemGroup(cols.get(columns.indexOf("item_group")).getText());
+                    item.setMajorGroup(itemGroup.getMajorGroup());
+                    item.setOverGroup(itemGroup.getOverGroup());
+
+                    items.add(item);
+
                 }
             }
             // save new items
-            syncJobType.getConfiguration().put("items", items);
+            syncJobType.getConfiguration().setItems(items);
             syncJobTypeRepo.save(syncJobType);
 
             driver.quit();
@@ -378,7 +380,7 @@ public class TransferController {
         }
     }
 
-    private boolean checkLogin(ArrayList<HashMap<String, String>> items, WebDriver driver, HashMap<String, Object> response,
+    private boolean checkLogin(ArrayList<Item> items, WebDriver driver, HashMap<String, Object> response,
                                String url, Account account) {
         if (!setupEnvironment.loginOHIM(driver, url, account)) {
             driver.quit();
@@ -391,21 +393,6 @@ public class TransferController {
         return false;
     }
 
-    private HashMap<String, String> getTableData(List<WebElement> rows, ArrayList<String> columns, int i) {
-        HashMap<String, String> itemGroup = new HashMap<>();
-
-        WebElement row = rows.get(i);
-        List<WebElement> cols = row.findElements(By.tagName("td"));
-
-        if (cols.size() != columns.size()) {
-            return null;
-        }
-
-        for (int j = 0; j < cols.size(); j++) {
-            itemGroup.put(columns.get(j), cols.get(j).getText());
-        }
-        return itemGroup;
-    }
 
 
 }

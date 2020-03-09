@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.Converters;
+package com.sun.supplierpoc.converters;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;

@@ -37,13 +37,11 @@ public class WastageService {
                                                    Account account) {
 
         HashMap<String, Object> data = new HashMap<>();
-
-        ArrayList<HashMap<String,String>> items = (ArrayList<HashMap<String, String>>) syncJobTypeJournal.getConfiguration().get("items");
-        ArrayList<HashMap<String,String>> costCenters = (ArrayList<HashMap<String,String>>) syncJobTypeJournal.getConfiguration().get("costCenters");
-        ArrayList<HashMap<String,String>> costCenterLocationMapping = (ArrayList<HashMap<String,String>>) syncJobTypeJournal.getConfiguration().get("costCenterLocationMapping");
-        ArrayList<HashMap<String,String>> overGroups = (ArrayList<HashMap<String, String>>) syncJobTypeJournal.getConfiguration().get("overGroups");
-
-        ArrayList<HashMap<String,String>> wasteGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("wasteGroups");
+        ArrayList<Item> items = syncJobTypeJournal.getConfiguration().getItems();
+        ArrayList<CostCenter> costCenters = syncJobTypeJournal.getConfiguration().getCostCenters();
+        ArrayList<CostCenter> costCenterLocationMapping = syncJobTypeJournal.getConfiguration().getCostCenterLocationMapping();
+        ArrayList<OverGroup> overGroups = syncJobTypeJournal.getConfiguration().getOverGroups();
+        ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
@@ -61,14 +59,13 @@ public class WastageService {
             return data;
         }
 
-        for (HashMap<String,String> costCenter : costCenters) {
+        for (CostCenter costCenter : costCenters) {
             try {
-                HashMap<String, Object> CostCenterData = invoiceController.checkCostCenterExistence(costCenterLocationMapping, costCenter.get("cost_center"), false);
-                HashMap<String, String> CostCenter = (HashMap<String, String>) CostCenterData.get("costCenter");
+                CostCenter CostCenterData = conversions.checkCostCenterExistence(costCenterLocationMapping, costCenter.costCenter, false);
 
-                if (!(boolean)CostCenterData.get("status")) continue;
+                if (!CostCenterData.checked) continue;
 
-                String locationName = CostCenter.get("locationName");
+                String locationName = costCenter.locationName;
 
                 String bookedWasteUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=497";
                 driver.get(bookedWasteUrl);
@@ -110,9 +107,9 @@ public class WastageService {
 
                     // check if this row in selected waste type
                     WebElement td = cols.get(columns.indexOf("waste_type"));
-                    HashMap<String, Object> wasteTypeData = conversions.checkWasteTypeExistence(wasteGroups, td.getText().strip());
+                    WasteGroup wasteTypeData = conversions.checkWasteTypeExistence(wasteGroups, td.getText().strip());
 
-                    if (!(boolean) wasteTypeData.get("status")) {
+                    if (!wasteTypeData.getChecked()) {
                         continue;
                     }
 
@@ -131,7 +128,7 @@ public class WastageService {
                 }
 
                 for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteDetails(items, overGroups, waste, costCenter, driver, journalEntries);
+                    getWasteDetails(items, overGroups, costCenter, waste, driver, journalEntries);
                 }
 
             } catch (Exception e) {
@@ -153,9 +150,8 @@ public class WastageService {
     }
 
     private void getWasteDetails(
-            ArrayList<HashMap<String, String>> items, ArrayList<HashMap<String, String>> overGroups,
-            HashMap<String, Object> waste, HashMap<String, String> costCenter, WebDriver driver
-            , ArrayList<HashMap<String, Object>> journalEntries){
+            ArrayList<Item> items, ArrayList<OverGroup> overGroups, CostCenter costCenter,
+            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
@@ -174,19 +170,18 @@ public class WastageService {
                     continue;
                 }
 
-                // check if this item belong to selected items
-                WebElement td = cols.get(columns.indexOf("item"));
+                // check if this Item belong to selected items
+                WebElement td = cols.get(columns.indexOf("Item"));
 
-                HashMap<String, Object> oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+                Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
 
-                if (!(boolean) oldItemData.get("status")) {
+                if (!oldItemData.isChecked()) {
                     continue;
                 }
 
-                HashMap<String, String> oldItem = (HashMap<String, String>) oldItemData.get("item");
-                String overGroup = oldItem.get("over_group");
+                String overGroup = oldItemData.getOverGroup();
 
-                transferDetails.put("item", td.getText());
+                transferDetails.put("Item", td.getText());
 
                 td = cols.get(columns.indexOf("value"));
                 transferDetails.put("value", td.getText());
@@ -198,23 +193,22 @@ public class WastageService {
             }
 
             for (Journal journal : journals) {
-                HashMap<String, Object> oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-                HashMap<String, String> oldOverGroup = (HashMap<String, String>)oldOverGroupData.get("overGroup");
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
 
-                if (!(boolean) oldOverGroupData.get("status")) {
+                if (!oldOverGroupData.getChecked()) {
                     continue;
                 }
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
                 journalEntry.put("total", journal.getTotalTransfer());
-                journalEntry.put("from_cost_center", costCenter.get("costCenter"));
-                journalEntry.put("from_account_code", oldOverGroup.get("wasteAccountCredit"));
+                journalEntry.put("from_cost_center", costCenter.costCenter);
+                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
 
-                journalEntry.put("to_cost_center", costCenter.get("costCenter"));
-                journalEntry.put("to_account_code", oldOverGroup.get("wasteAccountDebit"));
+                journalEntry.put("to_cost_center", costCenter.costCenter);
+                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
 
-                journalEntry.put("description", "Wastage Entry For " + costCenter.get("costCenter") + " " + waste.get("waste_type") + " - " + " - " + journal.getOverGroup());
+                journalEntry.put("description", "Wastage Entry For " + costCenter.costCenter + " " + waste.get("waste_type") + " - " + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());

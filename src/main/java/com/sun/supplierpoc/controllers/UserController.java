@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/server")
+
 public class UserController {
     @Autowired
     UserRepo userRepo;

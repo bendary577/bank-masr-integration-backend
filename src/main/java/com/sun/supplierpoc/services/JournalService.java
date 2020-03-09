@@ -38,8 +38,8 @@ public class JournalService {
         ArrayList<Journal> journals = new ArrayList<>();
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        ArrayList<HashMap<String, String>> costCenters = (ArrayList<HashMap<String, String>>) syncJobTypeApprovedInvoice.getConfiguration().get("costCenters");
-        ArrayList<HashMap<String, String>> itemGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("itemGroups");
+        ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();
+        ArrayList<ItemGroup> itemGroups = syncJobType.getConfiguration().getItemGroups();
 
 
         try {
@@ -81,9 +81,9 @@ public class JournalService {
                 }
 
                 WebElement td = cols.get(columns.indexOf("cost_center"));
-                HashMap<String, Object> oldCostCenterData = invoiceController.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
-                if (!(boolean) oldCostCenterData.get("status")) {
+                if (!oldCostCenterData.checked) {
                     continue;
                 }
 
@@ -92,7 +92,7 @@ public class JournalService {
                 extensions = extensions.substring(0, index);
 
                 journal.put("extensions", extensions);
-                journal.put("cost_center", oldCostCenterData.get("costCenter"));
+                journal.put("cost_center", oldCostCenterData);
 
                 selectedCostCenters.add(journal);
             }
@@ -116,17 +116,16 @@ public class JournalService {
                             continue;
                         }
 
-                        // check if this item group belong to selected item groups
+                        // check if this Item group belong to selected Item groups
                         WebElement td = cols.get(columns.indexOf("item_group"));
 
-                        HashMap<String, Object> oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+                        ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
 
-                        if (!(boolean) oldItemData.get("status")) {
+                        if (!oldItemData.getChecked()) {
                             continue;
                         }
 
-                        HashMap<String, String> oldItemGroup = (HashMap<String, String>) oldItemData.get("itemGroup");
-                        String overGroup = oldItemGroup.get("over_group");
+                        String overGroup = oldItemData.getOverGroup();
 
 
                         for (int j = 0; j < cols.size(); j++) {

@@ -20,8 +20,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.sun.supplierpoc.services.TransferService.checkPagination;
-
 @Service
 
 public class WastageService {
@@ -46,7 +44,6 @@ public class WastageService {
         ArrayList<HashMap<String,String>> overGroups = (ArrayList<HashMap<String, String>>) syncJobTypeJournal.getConfiguration().get("overGroups");
 
         ArrayList<HashMap<String,String>> wasteGroups = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("wasteGroups");
-        int groupId = Integer.parseInt(((HashMap<String, String>) syncJobType.getConfiguration().get("accountSettings")).get("wastageGroupIdStarting"));
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();

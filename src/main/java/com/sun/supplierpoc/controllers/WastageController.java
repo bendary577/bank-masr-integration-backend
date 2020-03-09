@@ -159,8 +159,7 @@ public class WastageController {
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, user.getAccountId());
         ArrayList<HashMap<String, String>> oldWasteTypes = (ArrayList<HashMap<String, String>>) syncJobType.getConfiguration().get("overGroups");
 
-        if (!syncJobType.getConfiguration().containsKey("wasteGroups") ||
-                ((ArrayList<CostCenter>)syncJobType.getConfiguration().get("wasteGroups")).size() == 0){
+        if (!syncJobType.getConfiguration().containsKey("wasteGroups")){
             String message = "Error in getting old waste groups, please contact support team.";
             response.put("message", message);
             response.put("success", false);
@@ -206,7 +205,7 @@ public class WastageController {
                 }
 
                 // check existence of over group
-                WebElement td = cols.get(columns.indexOf("over_group"));
+                WebElement td = cols.get(columns.indexOf("waste_group"));
                 HashMap<String, Object> oldWasteTypesData = conversions.checkWasteTypeExistence(oldWasteTypes, td.getText().strip());
                 HashMap<String, String> oldWasteType = (HashMap<String, String>)oldWasteTypesData.get("wasteType");
 

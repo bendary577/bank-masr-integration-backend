@@ -25,7 +25,7 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController
-@RequestMapping("/server")
+
 
 public class WastageController {
     @Autowired

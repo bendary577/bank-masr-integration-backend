@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @EnableResourceServer
-@RequestMapping("/server")
+
 @RestController
 public class AccountController {
     @Autowired

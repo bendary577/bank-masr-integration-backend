@@ -27,7 +27,7 @@ import java.util.*;
 
 
 @RestController
-@RequestMapping("/server")
+
 public class InvoiceController {
     @Autowired
     private SyncJobRepo syncJobRepo;

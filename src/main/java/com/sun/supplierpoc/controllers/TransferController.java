@@ -28,7 +28,7 @@ import java.util.*;
 
 
 @RestController
-@RequestMapping("/server")
+
 
 public class TransferController {
     @Autowired

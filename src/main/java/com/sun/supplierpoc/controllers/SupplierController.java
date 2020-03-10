@@ -20,17 +20,15 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
+import java.util.stream.IntStream;
 
 
 @RestController
-@RequestMapping("/server")
+
 public class SupplierController {
 
     @Autowired
@@ -45,6 +43,11 @@ public class SupplierController {
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @GetMapping("/hello")
+    public String sayHello() {
+        return "Hello World!";
+    }
 
     @RequestMapping("/getSuppliers")
     @CrossOrigin(origins = "*")

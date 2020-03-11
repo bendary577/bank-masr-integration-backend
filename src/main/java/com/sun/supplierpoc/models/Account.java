@@ -1,8 +1,10 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.configurations.AccountCredential;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
@@ -12,14 +14,15 @@ public class Account implements Serializable {
     private String name;
     private String domain;
     private String ERD;
-    private HashMap<String, HashMap<String, String>> accountCredentials;
+    private ArrayList<AccountCredential> accountCredentials;
     private Date creationDate;
     private boolean deleted;
 
     public Account() {
     }
 
-    public Account(String id, String name, String domain, String ERD, HashMap<String, HashMap<String, String>> accountCredentials, Date creationDate, boolean deleted) {
+    public Account(String id, String name, String domain, String ERD, ArrayList<AccountCredential> accountCredentials,
+                   Date creationDate, boolean deleted) {
         this.id = id;
         this.name = name;
         this.domain = domain;
@@ -61,11 +64,11 @@ public class Account implements Serializable {
         this.ERD = ERD;
     }
 
-    public HashMap<String, HashMap<String, String>> getAccountCredentials() {
+    public ArrayList<AccountCredential> getAccountCredentials() {
         return accountCredentials;
     }
 
-    public void setAccountCredentials(HashMap<String, HashMap<String, String>> accountCredentials) {
+    public void setAccountCredentials(ArrayList<AccountCredential> accountCredentials) {
         this.accountCredentials = accountCredentials;
     }
 
@@ -83,5 +86,14 @@ public class Account implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public AccountCredential getAccountCredentialByAccount(String accountName, ArrayList<AccountCredential> accountCredentials){
+        for (AccountCredential accountCredential : accountCredentials) {
+            if (accountCredential.getAccount().equals(accountName)) {
+                return accountCredential;
+            }
+        }
+        return new AccountCredential();
     }
 }

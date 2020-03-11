@@ -1,6 +1,7 @@
 package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,7 +61,7 @@ public class Conversions {
     }
 
     public CostCenter checkCostCenterExistence(ArrayList<CostCenter> costCenters, String costCenterName,
-                                                            boolean getOrUseFlag){
+                                               boolean getOrUseFlag){
         for (CostCenter costCenter : costCenters) {
             String savedCostCenterName = costCenter.costCenter;
             if (!getOrUseFlag){ // True in case of getting and False in case od use

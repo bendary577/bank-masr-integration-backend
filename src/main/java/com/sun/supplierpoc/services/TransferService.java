@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.JournalSSC;
@@ -40,8 +41,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 
 @Service
@@ -62,6 +61,12 @@ public class TransferService {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
         ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();;
@@ -272,13 +277,16 @@ public class TransferService {
 
     }
 
-    public HashMap<String, Object> sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType,  SyncJobType syncJobTypeJournal) throws SoapFaultException, ComponentException {
+    public HashMap<String, Object> sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType,  SyncJobType syncJobTypeJournal, Account account) throws SoapFaultException, ComponentException {
         HashMap<String, Object> data = new HashMap<>();
-
         boolean useEncryption = false;
 
-        String username = "ACt";
-        String password = "P@ssw0rd";
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential sunCredentials = account.getAccountCredentialByAccount("Sun", accountCredentials);
+
+        String username = sunCredentials.getUsername();
+        String password = sunCredentials.getPassword();
+
         IAuthenticationVoucher voucher;
         String sccXMLStringValue = "";
 

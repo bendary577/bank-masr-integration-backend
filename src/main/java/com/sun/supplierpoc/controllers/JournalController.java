@@ -80,7 +80,7 @@ public class JournalController {
                     if (addedJournals.size() != 0) {
                         for (SyncJobData addedJournal : addedJournals) {
                             try {
-                                data  = transferService.sendTransferData(addedJournal, syncJobType, syncJobType);
+                                data  = transferService.sendTransferData(addedJournal, syncJobType, syncJobType, account);
                                 if ((Boolean) data.get("status")){
                                     addedJournal.setStatus(Constants.SUCCESS);
                                     addedJournal.setReason("");

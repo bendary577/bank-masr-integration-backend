@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.WasteGroup;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -99,7 +100,8 @@ public class WastageController {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
                 if (wastes.size() > 0) {
                     ArrayList<SyncJobData> addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
-                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedWastes, transferService, syncJobDataRepo);
+                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedWastes,
+                            transferService, syncJobDataRepo, account);
                     syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
                 }
@@ -151,6 +153,12 @@ public class WastageController {
         ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().getWasteGroups();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
 
         try {

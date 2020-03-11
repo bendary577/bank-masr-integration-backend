@@ -5,6 +5,8 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
@@ -35,6 +37,12 @@ public class JournalService {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         ArrayList<Journal> journals = new ArrayList<>();
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 

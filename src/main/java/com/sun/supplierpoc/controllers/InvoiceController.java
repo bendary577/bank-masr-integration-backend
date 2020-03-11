@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -16,8 +17,6 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -82,7 +81,8 @@ public class InvoiceController {
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
-                handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedInvoices, transferService, syncJobDataRepo);
+                handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedInvoices, transferService,
+                        syncJobDataRepo, account);
                 syncJob.setReason("");
                 syncJob.setEndDate(new Date());
                 syncJobRepo.save(syncJob);
@@ -114,12 +114,14 @@ public class InvoiceController {
         return response;
     }
 
-    static void handleSendTransfer(SyncJobType syncJobType, SyncJobType syncJobTypeJournal, SyncJob syncJob, ArrayList<SyncJobData> addedInvoices, TransferService transferService, SyncJobDataRepo syncJobDataRepo) {
+    static void handleSendTransfer(SyncJobType syncJobType, SyncJobType syncJobTypeJournal, SyncJob syncJob,
+                                   ArrayList<SyncJobData> addedInvoices, TransferService transferService,
+                                   SyncJobDataRepo syncJobDataRepo, Account account) {
         HashMap<String, Object> data;
         if(addedInvoices.size() != 0){
             for (SyncJobData addedInvoice : addedInvoices) {
                 try {
-                    data  = transferService.sendTransferData(addedInvoice, syncJobType, syncJobTypeJournal);
+                    data  = transferService.sendTransferData(addedInvoice, syncJobType, syncJobTypeJournal, account);
                     if ((Boolean) data.get("status")){
                         addedInvoice.setStatus(Constants.SUCCESS);
                         addedInvoice.setReason("");
@@ -153,6 +155,12 @@ public class InvoiceController {
 
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());

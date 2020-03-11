@@ -1,19 +1,18 @@
-package com.sun.supplierpoc.models;
+package com.sun.supplierpoc.models.configurations;
 
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 
-public class Item implements Serializable {
+public class ItemGroup implements Serializable {
     @Id
     private String id;
     private boolean checked;
-    private String item;
-    private String itemGroup;
     private String overGroup;
     private String majorGroup;
+    private String itemGroup;
 
-    public Item() {
+    public ItemGroup() {
         this.checked = false;
     }
 
@@ -25,28 +24,12 @@ public class Item implements Serializable {
         this.id = id;
     }
 
-    public boolean isChecked() {
+    public boolean getChecked() {
         return checked;
     }
 
     public void setChecked(boolean checked) {
         this.checked = checked;
-    }
-
-    public String getItem() {
-        return item;
-    }
-
-    public void setItem(String item) {
-        this.item = item;
-    }
-
-    public String getItemGroup() {
-        return itemGroup;
-    }
-
-    public void setItemGroup(String itemGroup) {
-        this.itemGroup = itemGroup;
     }
 
     public String getOverGroup() {
@@ -63,5 +46,13 @@ public class Item implements Serializable {
 
     public void setMajorGroup(String majorGroup) {
         this.majorGroup = majorGroup;
+    }
+
+    public String getItemGroup() {
+        return itemGroup;
+    }
+
+    public void setItemGroup(String itemGroup) {
+        this.itemGroup = itemGroup;
     }
 }

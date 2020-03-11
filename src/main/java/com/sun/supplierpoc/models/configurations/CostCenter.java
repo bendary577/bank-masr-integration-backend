@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models;
+package com.sun.supplierpoc.models.configurations;
 
 public class CostCenter {
     public boolean checked;

@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.configurations.*;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;

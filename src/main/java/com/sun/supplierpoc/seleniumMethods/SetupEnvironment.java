@@ -2,6 +2,7 @@ package com.sun.supplierpoc.seleniumMethods;
 
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -24,35 +25,38 @@ public class SetupEnvironment {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public WebDriver setupSeleniumEnv(boolean driverFlag) {
-        if (driverFlag){
-            String chromePath = "chromedriver.exe";
-            System.setProperty("webdriver.chrome.driver", chromePath);
-            ChromeOptions options = new ChromeOptions();
-            options.addArguments(
-                    "--headless",
-                    "--disable-gpu",
-                    "--window-size=1920,1200",
-                    "--ignore-certificate-errors");
-            return new ChromeDriver(options);
-        }
-        else {
-            FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+        try {
+            if (driverFlag){
+                String chromePath = "chromedriver.exe";
+                System.setProperty("webdriver.chrome.driver", chromePath);
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments(
+//                    "--headless",
+                        "--disable-gpu",
+                        "--window-size=1920,1200",
+                        "--ignore-certificate-errors");
+                return new ChromeDriver(options);
+            }
+            else {
+                FirefoxBinary firefoxBinary = new FirefoxBinary();
+//            firefoxBinary.addCommandLineOptions("--headless");
 
-            System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
-            FirefoxOptions firefoxOptions = new FirefoxOptions();
+                System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
+                FirefoxOptions firefoxOptions = new FirefoxOptions();
 
-            firefoxOptions.setBinary(firefoxBinary);
+                firefoxOptions.setBinary(firefoxBinary);
 //            firefoxOptions.setCapability("marionette", true);
-            return new FirefoxDriver(firefoxOptions);
+                return new FirefoxDriver(firefoxOptions);
+            }
+        } catch (Exception e) {
+            return null;
         }
     }
 
-
     public boolean loginOHIM(WebDriver driver, String url, Account account){
 
-        HashMap<String, HashMap<String, String>> accountCredentials = account.getAccountCredentials();
-        HashMap<String, String> hospitalityOHIMCredentials = accountCredentials.get("HospitalityOHIM");
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential hospitalityOHIMCredentials = account.getAccountCredentialByAccount("HospitalityOHIM", accountCredentials);
 
         driver.get(url);
 
@@ -62,9 +66,9 @@ public class SetupEnvironment {
         } catch (NoAlertPresentException Ex) {
             System.out.println("No alert exits");
         }
-        driver.findElement(By.id("igtxtdfUsername")).sendKeys(hospitalityOHIMCredentials.get("username"));
-        driver.findElement(By.id("igtxtdfPassword")).sendKeys(hospitalityOHIMCredentials.get("password"));
-        driver.findElement(By.id("igtxtdfCompany")).sendKeys(hospitalityOHIMCredentials.get("company"));
+        driver.findElement(By.id("igtxtdfUsername")).sendKeys(hospitalityOHIMCredentials.getUsername());
+        driver.findElement(By.id("igtxtdfPassword")).sendKeys(hospitalityOHIMCredentials.getPassword());
+        driver.findElement(By.id("igtxtdfCompany")).sendKeys(hospitalityOHIMCredentials.getCompany());
 
         String previous_url = driver.getCurrentUrl();
         driver.findElement(By.name("Login")).click();
@@ -73,8 +77,8 @@ public class SetupEnvironment {
     }
 
     public boolean loginOHRA(WebDriver driver, String url, Account account){
-        HashMap<String, HashMap<String, String>> accountCredentials = account.getAccountCredentials();
-        HashMap<String, String> hospitalityOHRACredentials = accountCredentials.get("HospitalityOHRA");
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
 
         driver.get(url);
         try {
@@ -83,9 +87,9 @@ public class SetupEnvironment {
         } catch (NoAlertPresentException Ex) {
             System.out.println("No alert exits");
         }
-        driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.get("username"));
-        driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.get("password"));
-        driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.get("company"));
+        driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
+        driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
+        driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
 
         String previous_url = driver.getCurrentUrl();
         driver.findElement(By.id("Login")).click();

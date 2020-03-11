@@ -80,7 +80,8 @@ public class CreditNoteController {
                 if(addedInvoices.size() != 0){
                     try {
                         for (SyncJobData invoice: addedInvoices ) {
-                            data  = transferService.sendTransferData(invoice, syncJobTypeApprovedInvoices, syncJobTypeJournal);
+                            data  = transferService.sendTransferData(invoice, syncJobTypeApprovedInvoices,
+                                    syncJobTypeJournal, account);
                             if ((Boolean) data.get("status")){
                                 invoice.setStatus(Constants.SUCCESS);
                                 invoice.setReason("");

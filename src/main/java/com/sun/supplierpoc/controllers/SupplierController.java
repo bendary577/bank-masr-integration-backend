@@ -67,13 +67,13 @@ public class SupplierController {
 
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Suppliers", account.getId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.SUPPLIERS, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
                 account.getId(), syncJobType.getId());
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = supplierService.getSuppliersData(syncJobType);
+        HashMap<String, Object> data = supplierService.getSuppliersData(syncJobType, account);
 
         if (data.get("status").equals(Constants.SUCCESS)) {
             ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
@@ -154,6 +154,12 @@ public class SupplierController {
         Account account = accountOptional.get();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
@@ -225,6 +231,12 @@ public class SupplierController {
         Account account = accountOptional.get();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<HashMap<String, Object>> groups = new ArrayList<>();
 

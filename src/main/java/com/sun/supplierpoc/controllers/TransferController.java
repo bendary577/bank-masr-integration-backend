@@ -4,14 +4,16 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
+import com.sun.supplierpoc.models.configurations.MajorGroup;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.TransferService;
-import com.systemsunion.ssc.client.ComponentException;
-import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -22,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Key;
 import java.security.Principal;
 import java.util.*;
 
@@ -81,7 +82,8 @@ public class TransferController {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
-                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedTransfers, transferService, syncJobDataRepo);
+                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedTransfers,
+                            transferService, syncJobDataRepo, account);
                     syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 
@@ -132,6 +134,12 @@ public class TransferController {
 
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<OverGroup> overGroups = new ArrayList<>();
 
@@ -222,6 +230,12 @@ public class TransferController {
         ArrayList<Item> items = new ArrayList<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
         HashMap<String, Object> response = new HashMap<>();
 
         try {

@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models;
+package com.sun.supplierpoc.models.configurations;
 
 import org.springframework.data.annotation.Id;
 

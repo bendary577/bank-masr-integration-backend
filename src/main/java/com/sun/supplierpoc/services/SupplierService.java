@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -48,12 +49,16 @@ public class SupplierService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getSuppliersData(SyncJobType syncJobType) throws SoapFaultException, ComponentException {
+    public HashMap<String, Object> getSuppliersData(SyncJobType syncJobType, Account account) throws SoapFaultException, ComponentException {
         HashMap<String, Object> data = new HashMap<>();
         boolean useEncryption = false;
 
-        String username = "ACt";
-        String password = "P@ssw0rd";
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+        String username = sunCredentials.getUsername();
+        String password = sunCredentials.getPassword();
+
         IAuthenticationVoucher voucher;
         String sccXMLStringValue = "";
 
@@ -171,8 +176,16 @@ public class SupplierService {
         } catch (ParserConfigurationException | TransformerException e) {
             e.printStackTrace();
         }
+        String strOut = "";
 
-        String strOut = component.execute("Supplier", "Query", sccXMLStringValue);
+        try {
+            strOut = component.execute("Supplier", "Query", sccXMLStringValue);
+        } catch (ComponentException | SoapFaultException e) {
+            data.put("status", Constants.FAILED);
+            data.put("message", e);
+            data.put("suppliers", new ArrayList<> ());
+            return data;
+        }
 
         // Convert XML to Object
         JAXBContext jaxbContext;
@@ -238,6 +251,12 @@ public class SupplierService {
         HashMap<String, Object> data = new HashMap<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        if (driver == null){
+            data.put("status", Constants.FAILED);
+            data.put("message", "Failed to establish connection with firefox driver.");
+            data.put("invoices", new ArrayList<>());
+            return data;
+        }
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";

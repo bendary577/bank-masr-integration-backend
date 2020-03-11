@@ -34,6 +34,8 @@ public class ScheduledTasks {
     private TransferController transferController;
     @Autowired
     private JournalController journalController;
+    @Autowired
+    private WastageController wastageController;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -133,6 +135,10 @@ public class ScheduledTasks {
                 }
                 else if (syncJobType.getName().equals(Constants.JOURNALS)){
                     response = journalController.getJournals("Automated User", account);
+                    System.out.println(response.get("message"));
+                }
+                else if (syncJobType.getName().equals(Constants.WASTAGE)){
+                    response = wastageController.getWastage("Automated User", account);
                     System.out.println(response.get("message"));
                 }
             }

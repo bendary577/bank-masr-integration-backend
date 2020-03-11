@@ -143,8 +143,6 @@ public class WastageController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getWasteGroups(Principal principal) {
-        HashMap<String, Object> response = new HashMap<>();
-
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
@@ -153,11 +151,13 @@ public class WastageController {
         ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().getWasteGroups();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
+        HashMap<String, Object> response = new HashMap<>();
+
         if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
         }
         ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
 

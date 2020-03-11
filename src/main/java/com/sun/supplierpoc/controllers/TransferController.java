@@ -132,15 +132,15 @@ public class TransferController {
 
         ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
 
-
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
-        }
         HashMap<String, Object> response = new HashMap<>();
+
+        if (driver == null){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
         ArrayList<OverGroup> overGroups = new ArrayList<>();
 
 
@@ -230,13 +230,14 @@ public class TransferController {
         ArrayList<Item> items = new ArrayList<>();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
-        }
         HashMap<String, Object> response = new HashMap<>();
+
+        if (driver == null){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";

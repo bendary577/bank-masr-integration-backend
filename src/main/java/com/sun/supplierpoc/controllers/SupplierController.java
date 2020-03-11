@@ -154,15 +154,16 @@ public class SupplierController {
         Account account = accountOptional.get();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
-        }
         HashMap<String, Object> response = new HashMap<>();
-        ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
+        if (driver == null){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
@@ -231,13 +232,14 @@ public class SupplierController {
         Account account = accountOptional.get();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
-        }
         HashMap<String, Object> response = new HashMap<>();
+
+        if (driver == null){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
         ArrayList<HashMap<String, Object>> groups = new ArrayList<>();
 
 

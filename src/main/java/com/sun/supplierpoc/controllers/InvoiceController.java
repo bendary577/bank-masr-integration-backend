@@ -143,7 +143,6 @@ public class InvoiceController {
         syncJob.setStatus(Constants.SUCCESS);
     }
 
-
     @RequestMapping("/getCostCenter")
     @CrossOrigin(origins = "*")
     @ResponseBody

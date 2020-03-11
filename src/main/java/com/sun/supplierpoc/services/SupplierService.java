@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLSocketFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -34,8 +36,10 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -239,7 +243,6 @@ public class SupplierService {
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
-            System.out.println(syncJobDataRepo.save(syncJobData));
             addedSuppliers.add(syncJobData);
 
         }
@@ -298,7 +301,14 @@ public class SupplierService {
                     WebElement taxValue = driver.findElement(By.id("tb__ctl0_cfTaxes_Value"));
                     wait.until(ExpectedConditions.textToBePresentInElementValue(taxValue, tax));
                 } catch (Exception e) {
-                    System.out.println("Time out our while setting supplier tax");
+                    driver.quit();
+
+                    String message = "Time out our while setting supplier tax";
+                    supplier.setStatus(Constants.FAILED);
+                    supplier.setReason(message);
+                    supplier.setSyncJobId(syncJob.getId());
+                    syncJobDataRepo.save(supplier);
+                    continue;
                 }
 
                 js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
@@ -315,7 +325,14 @@ public class SupplierService {
                     WebElement groupValue = driver.findElement(By.id("tb__ctl0_cfVendorGroup_Value"));
                     wait.until(ExpectedConditions.textToBePresentInElementValue(groupValue, group));
                 } catch (Exception e) {
-                    System.out.println("Time out our while setting supplier group");
+                    driver.quit();
+
+                    String message = "Time out our while setting supplier group";
+                    supplier.setStatus(Constants.FAILED);
+                    supplier.setReason(message);
+                    supplier.setSyncJobId(syncJob.getId());
+                    syncJobDataRepo.save(supplier);
+                    continue;
                 }
 
                 //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////

@@ -33,7 +33,7 @@ public class Constants {
 
     public static int PORT = 8080;
 //    public static String HOST = "192.168.1.15";
-    public static String HOST = "41.33.13.24:81";
+    public static String HOST = "41.33.13.24";
 
     public Constants() {}
 }

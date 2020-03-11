@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -16,6 +17,9 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.security.Key;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -64,7 +68,22 @@ public class InvoiceService {
             driver.get(approvedInvoices);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText(syncJobType.getConfiguration().getTimePeriod());
+            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+            select.selectByVisibleText(timePeriod);
+
+            if (timePeriod.equals("")){
+                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                Date date = new Date();
+                System.out.println(dateFormat.format(date));
+
+                driver.findElement(By.id("_ctl7_input")).clear();
+                driver.findElement(By.id("_ctl7_input")).sendKeys(dateFormat.format(date));
+                driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
+
+                driver.findElement(By.id("_ctl9_input")).clear();
+                driver.findElement(By.id("_ctl9_input")).sendKeys(dateFormat.format(date));
+                driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
+            }
 
             if (typeFlag){
                 driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");

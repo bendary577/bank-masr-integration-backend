@@ -10,7 +10,6 @@ import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.JournalService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.ssc.client.ComponentException;
@@ -62,7 +61,7 @@ public class JournalController {
     public HashMap<String, Object> getJournals(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
         SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,

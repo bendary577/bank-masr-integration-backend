@@ -64,7 +64,7 @@ public class WastageController {
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
 
         if (syncJobTypeJournal.getConfiguration().getCostCenters().size() == 0){
             String message = "Configure cost center before sync journals.";

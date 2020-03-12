@@ -6,11 +6,9 @@ import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
-import okhttp3.internal.platform.Platform;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.text.DateFormatSymbols;
@@ -133,7 +131,7 @@ public class ScheduledTasks {
                     response = transferController.getBookedTransfer("Automated User", account);
                     System.out.println(response.get("message"));
                 }
-                else if (syncJobType.getName().equals(Constants.JOURNALS)){
+                else if (syncJobType.getName().equals(Constants.CONSUMPTION)){
                     response = journalController.getJournals("Automated User", account);
                     System.out.println(response.get("message"));
                 }

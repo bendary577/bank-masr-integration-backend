@@ -62,7 +62,7 @@ public class CreditNoteController {
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
         SyncJobType syncJobTypeApprovedInvoices = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,

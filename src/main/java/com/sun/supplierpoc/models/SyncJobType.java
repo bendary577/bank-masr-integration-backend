@@ -21,7 +21,7 @@ public class SyncJobType implements Serializable {
     }
 
     public SyncJobType(String name, String description, String endPoint, Date creationDate, Configuration configuration,
-                       String accountId, boolean deleted) {
+                       String accountId) {
         this.name = name;
         this.description = description;
         this.endPoint = endPoint;

@@ -66,7 +66,7 @@ public class TransferController {
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
         SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,

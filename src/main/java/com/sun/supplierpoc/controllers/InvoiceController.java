@@ -68,7 +68,7 @@ public class InvoiceController {
         HashMap<String, Object> response = new HashMap<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.JOURNALS, account.getId());
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                 account.getId(), syncJobType.getId());

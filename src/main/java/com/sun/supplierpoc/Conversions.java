@@ -64,7 +64,7 @@ public class Conversions {
                                                boolean getOrUseFlag){
         for (CostCenter costCenter : costCenters) {
             String savedCostCenterName = costCenter.costCenter;
-            if (!getOrUseFlag){ // True in case of getting and False in case od use
+            if (!getOrUseFlag){ // True in case of getting and False in case of use
                 if (savedCostCenterName.indexOf('(') != -1){
                     savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
                 }
@@ -82,6 +82,54 @@ public class Conversions {
                 return supplier;
             }
         }
+        return null;
+    }
+
+    public HashMap<String, Object> checkSunDefaultConfiguration(SyncJobType syncJobType){
+        HashMap<String, Object> response = new HashMap<>();
+
+        if (syncJobType.getConfiguration().getBusinessUnit().equals("")){
+            String message = "Configure business unit before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (syncJobType.getConfiguration().getJournalSource().equals("")){
+            String message = "Configure journal source before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (syncJobType.getConfiguration().getJournalType().equals("")){
+            String message = "Configure journal type before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (syncJobType.getConfiguration().getCurrencyCode().equals("")){
+            String message = "Configure currency code before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (syncJobType.getConfiguration().getPostingType().equals("")){
+            String message = "Configure posting type before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (syncJobType.getConfiguration().getAnalysis().size() == 0){
+            String message = "Configure analysis before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         return null;
     }
 

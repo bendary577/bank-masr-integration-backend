@@ -277,29 +277,34 @@ public class TransferService {
 
     }
 
-    public HashMap<String, Object> sendTransferData(SyncJobData addedJournalEntry, SyncJobType syncJobType,  SyncJobType syncJobTypeJournal, Account account) throws SoapFaultException, ComponentException {
-        HashMap<String, Object> data = new HashMap<>();
+    public IAuthenticationVoucher connectToSunSystem(Account account){
         boolean useEncryption = false;
-
         ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-        AccountCredential sunCredentials = account.getAccountCredentialByAccount("Sun", accountCredentials);
+        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
 
         String username = sunCredentials.getUsername();
         String password = sunCredentials.getPassword();
 
         IAuthenticationVoucher voucher;
-        String sccXMLStringValue = "";
-
         try {
             SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
             voucher = securityProvider.Authenticate(username, password);
         } catch (ComponentException | SoapFaultException e) {
-            e.printStackTrace();
-
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to connect to sun system.");
-            return data;
+            System.out.println(e.getMessage());
+            return null;
         }
+        return voucher;
+    }
+
+    public HashMap<String, Object> sendJournalData(SyncJobData addedJournalEntry, SyncJobType syncJobType,
+                                                   SyncJobType syncJobTypeJournal, Account account, IAuthenticationVoucher voucher){
+        HashMap<String, Object> data = new HashMap<>();
+
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential sunCredentials = account.getAccountCredentialByAccount("Sun", accountCredentials);
+
+        String username = sunCredentials.getUsername();
+        String sccXMLStringValue = "";
 
         try {
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();

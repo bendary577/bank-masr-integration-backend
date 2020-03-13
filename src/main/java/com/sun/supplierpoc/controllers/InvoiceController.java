@@ -12,6 +12,7 @@ import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
 import com.sun.supplierpoc.services.TransferService;
+import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
@@ -36,7 +37,6 @@ public class InvoiceController {
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private AccountRepo accountRepo;
-
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
@@ -53,43 +53,83 @@ public class InvoiceController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getApprovedInvoicesRequest(Principal principal) {
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
-
-        HashMap<String, Object> response = getApprovedInvoices(user.getId(), account);
-
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = getApprovedInvoices(user.getId(), account);
+        }
         return response;
 
     }
 
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
-
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
+        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
+
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
+        if (sunConfigResponse != null){
+            return sunConfigResponse;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
+            String message = "Map time period before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+            String message = "Map cost centers before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                account.getId(), syncJobType.getId());
+                account.getId(), invoiceSyncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = invoiceService.getInvoicesData(false, syncJobType, account);
+        HashMap<String, Object> data = invoiceService.getInvoicesData(false, invoiceSyncJobType, account);
 
         if (data.get("status").equals(Constants.SUCCESS)){
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
             if (invoices.size() > 0){
                 ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, false);
-                handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedInvoices, transferService,
-                        syncJobDataRepo, account);
-                syncJob.setReason("");
-                syncJob.setEndDate(new Date());
-                syncJobRepo.save(syncJob);
+                if (addedInvoices.size() > 0){
+                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                    if (voucher != null){
+                        handleSendJournal(invoiceSyncJobType, journalSyncJobType, syncJob, addedInvoices, account, voucher);
+                        syncJob.setReason("");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
 
-                response.put("message", "Sync Invoices Successfully.");
-                response.put("success", true);
+                        response.put("message", "Sync Invoices Successfully.");
+                    }
+                    else {
+                        syncJob.setStatus(Constants.FAILED);
+                        syncJob.setReason("Failed to connect to Sun System.");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
 
+                        response.put("message", "Failed to connect to Sun System.");
+                        response.put("success", false);
+                        return response;
+                    }
+                }
+                else {
+                    syncJob.setStatus(Constants.SUCCESS);
+                    syncJob.setReason("No new invoices to add in middleware.");
+                    syncJob.setEndDate(new Date());
+                    syncJobRepo.save(syncJob);
+
+                    response.put("message", "No new invoices to add in middleware.");
+                }
             }
             else {
                 syncJob.setStatus(Constants.SUCCESS);
@@ -98,9 +138,9 @@ public class InvoiceController {
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "There is no invoices to get from Oracle Hospitality.");
-                response.put("success", true);
 
             }
+            response.put("success", true);
         }
         else {
             syncJob.setStatus(Constants.FAILED);
@@ -108,38 +148,34 @@ public class InvoiceController {
             syncJob.setEndDate(new Date());
             syncJobRepo.save(syncJob);
 
-            response.put("message", "Failed to sync Invoices.");
+            response.put("message", "Failed to get invoices from Oracle Hospitality.");
             response.put("success", false);
         }
         return response;
     }
 
-    static void handleSendTransfer(SyncJobType syncJobType, SyncJobType syncJobTypeJournal, SyncJob syncJob,
-                                   ArrayList<SyncJobData> addedInvoices, TransferService transferService,
-                                   SyncJobDataRepo syncJobDataRepo, Account account) {
+    void handleSendJournal(SyncJobType syncJobType, SyncJobType syncJobTypeJournal, SyncJob syncJob,
+                           ArrayList<SyncJobData> addedJournals, Account account, IAuthenticationVoucher voucher) {
         HashMap<String, Object> data;
-        if(addedInvoices.size() != 0){
-            for (SyncJobData addedInvoice : addedInvoices) {
-                try {
-                    data  = transferService.sendTransferData(addedInvoice, syncJobType, syncJobTypeJournal, account);
-                    if ((Boolean) data.get("status")){
-                        addedInvoice.setStatus(Constants.SUCCESS);
-                        addedInvoice.setReason("");
-                        syncJobDataRepo.save(addedInvoice);
-                    }
-                    else {
-                        addedInvoice.setStatus(Constants.FAILED);
-                        addedInvoice.setReason((String) data.get("message"));
-                        syncJobDataRepo.save(addedInvoice);
-                    }
-
-                } catch (SoapFaultException | ComponentException e) {
-                    e.printStackTrace();
-                    continue;
+        for (SyncJobData addedJournal : addedJournals) {
+            try {
+                data  = transferService.sendJournalData(addedJournal, syncJobType, syncJobTypeJournal, account, voucher);
+                if ((Boolean) data.get("status")){
+                    addedJournal.setStatus(Constants.SUCCESS);
+                    addedJournal.setReason("");
                 }
-            }
-        }
+                else {
+                    addedJournal.setStatus(Constants.FAILED);
+                    addedJournal.setReason((String) data.get("message"));
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
 
+                addedJournal.setStatus(Constants.FAILED);
+                addedJournal.setReason(e.getMessage());
+            }
+            syncJobDataRepo.save(addedJournal);
+        }
         syncJob.setStatus(Constants.SUCCESS);
     }
 
@@ -188,7 +224,7 @@ public class InvoiceController {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
 
             while (true){
-                fillCostCenterObject(costCenters, rows, 14, oldCostCenters, columns, account.getERD());
+                fillCostCenterObject(costCenters, rows, oldCostCenters, columns, account.getERD());
 
                 // check if there is other pages
                 if (driver.findElements(By.linkText("Next")).size() == 0){
@@ -218,11 +254,11 @@ public class InvoiceController {
         }
     }
 
-    private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows, int rowNumber,
+    private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows,
                                       ArrayList<CostCenter> oldCostCenters, ArrayList<String> columns,
                                       String accountERD){
 
-        for (int i = rowNumber; i < rows.size(); i++) {
+        for (int i = 14; i < rows.size(); i++) {
             CostCenter costCenter = new CostCenter();
 
             WebElement row = rows.get(i);

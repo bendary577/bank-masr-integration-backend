@@ -12,6 +12,7 @@ import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.TransferService;
 import com.sun.supplierpoc.services.WastageService;
+import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -41,6 +42,8 @@ public class WastageController {
     private TransferService transferService;
     @Autowired
     private WastageService wastageService;
+    @Autowired
+    private InvoiceController invoiceController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -100,10 +103,15 @@ public class WastageController {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
                 if (wastes.size() > 0) {
                     ArrayList<SyncJobData> addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
-                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedWastes,
-                            transferService, syncJobDataRepo, account);
-                    syncJob.setEndDate(new Date());
-                    syncJobRepo.save(syncJob);
+                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                    if (voucher != null){
+                        invoiceController.handleSendJournal(syncJobType, syncJobTypeJournal, syncJob, addedWastes, account, voucher);
+                        syncJob.setReason("");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
+
+                        response.put("message", "Sync Invoices Successfully.");
+                    }
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);

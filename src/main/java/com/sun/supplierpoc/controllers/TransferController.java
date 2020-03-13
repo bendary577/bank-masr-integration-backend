@@ -14,6 +14,7 @@ import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.TransferService;
+import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -42,10 +43,11 @@ public class TransferController {
     private AccountRepo accountRepo;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private InvoiceController invoiceController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
-
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -82,10 +84,15 @@ public class TransferController {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
-                    InvoiceController.handleSendTransfer(syncJobType, syncJobTypeJournal, syncJob, addedTransfers,
-                            transferService, syncJobDataRepo, account);
-                    syncJob.setEndDate(new Date());
-                    syncJobRepo.save(syncJob);
+                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                    if (voucher != null){
+                        invoiceController.handleSendJournal(syncJobType, syncJobTypeJournal, syncJob, addedTransfers, account, voucher);
+                        syncJob.setReason("");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
+
+                        response.put("message", "Sync Invoices Successfully.");
+                    }
 
                 } else {
                     syncJob.setStatus(Constants.SUCCESS);

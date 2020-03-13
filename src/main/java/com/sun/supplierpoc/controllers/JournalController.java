@@ -12,6 +12,7 @@ import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.JournalService;
 import com.sun.supplierpoc.services.TransferService;
+import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,35 +77,39 @@ public class JournalController {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
                     ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob);
-                    if (addedJournals.size() != 0) {
-                        for (SyncJobData addedJournal : addedJournals) {
-                            try {
-                                data  = transferService.sendTransferData(addedJournal, syncJobType, syncJobType, account);
-                                if ((Boolean) data.get("status")){
-                                    addedJournal.setStatus(Constants.SUCCESS);
-                                    addedJournal.setReason("");
-                                    syncJobDataRepo.save(addedJournal);
-                                }
-                                else {
-                                    addedJournal.setStatus(Constants.FAILED);
-                                    addedJournal.setReason((String) data.get("message"));
-                                    syncJobDataRepo.save(addedJournal);
-                                }
+                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                    if (voucher != null){
+                        if (addedJournals.size() != 0) {
+                            for (SyncJobData addedJournal : addedJournals) {
+                                try {
+                                    data  = transferService.sendJournalData(addedJournal, syncJobType, syncJobType,
+                                            account, voucher);
+                                    if ((Boolean) data.get("status")){
+                                        addedJournal.setStatus(Constants.SUCCESS);
+                                        addedJournal.setReason("");
+                                        syncJobDataRepo.save(addedJournal);
+                                    }
+                                    else {
+                                        addedJournal.setStatus(Constants.FAILED);
+                                        addedJournal.setReason((String) data.get("message"));
+                                        syncJobDataRepo.save(addedJournal);
+                                    }
 
-                            } catch (SoapFaultException | ComponentException e) {
-                                e.printStackTrace();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        }
 
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setEndDate(new Date());
-                        syncJobRepo.save(syncJob);
-                    }
-                    else {
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("There is no journals to save from Oracle Hospitality.");
-                        syncJob.setEndDate(new Date());
-                        syncJobRepo.save(syncJob);
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setEndDate(new Date());
+                            syncJobRepo.save(syncJob);
+                        }
+                        else {
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("There is no journals to save from Oracle Hospitality.");
+                            syncJob.setEndDate(new Date());
+                            syncJobRepo.save(syncJob);
+                        }
                     }
                 }
                 else {

@@ -68,21 +68,21 @@ public class SupplierController {
         SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.SUPPLIERS, account.getId());
 
         if (supplierSyncJobType.getConfiguration().getBusinessUnit().equals("")){
-            String message = "Configure business unit before sync journals.";
+            String message = "Configure business unit before sync suppliers.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (supplierSyncJobType.getConfiguration().getGroups().equals("")){
-            String message = "Configure supplier group before sync journals.";
+            String message = "Configure supplier group before sync suppliers.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (supplierSyncJobType.getConfiguration().getTaxes().equals("")){
-            String message = "Configure supplier tax before sync journals.";
+            String message = "Configure supplier tax before sync suppliers.";
             response.put("message", message);
             response.put("success", false);
             return response;
@@ -122,7 +122,6 @@ public class SupplierController {
                         response.put("success", false);
 
                     }
-                    return response;
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
@@ -132,8 +131,6 @@ public class SupplierController {
 
                     response.put("message", "No new suppliers to add in middleware.");
                     response.put("success", true);
-
-                    return response;
                 }
             }
             else {
@@ -144,9 +141,8 @@ public class SupplierController {
 
                 response.put("message", "There is no suppliers to get from Sun System.");
                 response.put("success", true);
-
-                return response;
             }
+            return response;
 
         }
         else {
@@ -155,7 +151,7 @@ public class SupplierController {
             syncJob.setEndDate(new Date());
             syncJobRepo.save(syncJob);
 
-            response.put("message", "Failed to get suppliers from Sun System");
+            response.put("message", "Failed to get suppliers from Sun System.");
             response.put("success", false);
             return response;
         }

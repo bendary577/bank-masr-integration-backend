@@ -27,11 +27,8 @@ import java.util.List;
 
 @Service
 public class InvoiceService {
-
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
-    @Autowired
-    private InvoiceController invoiceController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -71,10 +68,9 @@ public class InvoiceService {
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
             select.selectByVisibleText(timePeriod);
 
-            if (timePeriod.equals("")){
+            if (timePeriod.equals("User-defined")){
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
                 Date date = new Date();
-                System.out.println(dateFormat.format(date));
 
                 driver.findElement(By.id("_ctl7_input")).clear();
                 driver.findElement(By.id("_ctl7_input")).sendKeys(dateFormat.format(date));
@@ -83,6 +79,31 @@ public class InvoiceService {
                 driver.findElement(By.id("_ctl9_input")).clear();
                 driver.findElement(By.id("_ctl9_input")).sendKeys(dateFormat.format(date));
                 driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
+
+                String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
+                Date startDate = dateFormat.parse(startDateValue);
+
+                String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
+                Date endDate = dateFormat.parse(endDateValue);
+
+                if (!dateFormat.format(startDate).equals(dateFormat.format(date))){
+                    driver.quit();
+
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    data.put("invoices", invoices);
+                    return data;
+                }
+
+                if (!dateFormat.format(endDate).equals(dateFormat.format(date))){
+                    driver.quit();
+
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    data.put("invoices", invoices);
+                    return data;
+                }
+
             }
 
             if (typeFlag){
@@ -123,7 +144,7 @@ public class InvoiceService {
                         continue;
                     }
 
-                    // check if cost center choosen
+                    // check if cost center chosen
                     WebElement td = cols.get(columns.indexOf("cost_center"));
                     CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
@@ -143,7 +164,7 @@ public class InvoiceService {
 //                    }
 //                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
 
-                    // Mock supplier of nw
+                    // Mock supplier of now
                     HashMap<String, String> supplierData = new HashMap<>();
                     supplierData.put("accountCode", "64101");
                     supplierData.put("supplier", "PKP France S.A.");
@@ -194,7 +215,7 @@ public class InvoiceService {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         for (HashMap<String, Object> invoice : invoices) {
-            HashMap<String, String> costCenter = (HashMap<String, String>) invoice.get("cost_center");
+            CostCenter costCenter = (CostCenter) invoice.get("cost_center");
             SyncJobData supplier = (SyncJobData) invoice.get("vendor");
 
             // Invoice Part
@@ -211,8 +232,8 @@ public class InvoiceService {
             data.put("from_cost_center", supplier.getData().get("supplier") == null? "0":supplier.getData().get("supplier"));
             data.put("from_account_code", supplier.getData().get("accountCode") == null? "0":supplier.getData().get("accountCode"));
 
-            data.put("to_cost_center", costCenter.get("costCenter") == null? "0":costCenter.get("costCenter"));
-            data.put("to_account_code", costCenter.get("costCenter") == null? "0":costCenter.get("accountCode"));
+            data.put("to_cost_center", costCenter.costCenter == null? "0":costCenter.costCenter);
+            data.put("to_account_code", costCenter.costCenter == null? "0":costCenter.costCenter);
 
             data.put("status", invoice.get("status") == null? "0":(String)invoice.get("status"));
             data.put("invoiceDate", invoice.get("invoice_date") == null? "0":(String)invoice.get("invoice_date"));
@@ -226,9 +247,9 @@ public class InvoiceService {
 
 
             if (!flag)
-                data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.get("costCenter"));
+                data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenter);
             else
-                data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.get("costCenter"));
+                data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenter);
 
             data.put("transactionReference", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
 

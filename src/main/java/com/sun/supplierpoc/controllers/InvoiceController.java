@@ -43,9 +43,9 @@ public class InvoiceController {
     private TransferService transferService;
 
     public Conversions conversions = new Conversions();
-
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
+    public InvoiceController() {}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

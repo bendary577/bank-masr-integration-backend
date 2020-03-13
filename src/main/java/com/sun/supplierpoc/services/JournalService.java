@@ -11,6 +11,7 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice,
+    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, SyncJobType invoiceSyncJobType,
                                                   Account account){
         HashMap<String, Object> data = new HashMap<>();
 
@@ -46,9 +47,9 @@ public class JournalService {
         ArrayList<Journal> journals = new ArrayList<>();
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();
-        ArrayList<ItemGroup> itemGroups = syncJobType.getConfiguration().getItemGroups();
-
+        String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
+        ArrayList<CostCenter> costCenters =  invoiceSyncJobType.getConfiguration().getCostCenters();
+        ArrayList<ItemGroup> itemGroups = journalSyncJobType.getConfiguration().getItemGroups();
 
         try {
             String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
@@ -70,7 +71,35 @@ public class JournalService {
                 System.out.println("Waiting");
             }
 
-            String journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
+            String journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=499";
+            driver.get(journalUrl);
+
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            if (timePeriod.equals("Last Month")){
+                wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
+                driver.findElement(By.id("calendarBtn")).click();
+
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
+
+                Select businessDate = new Select(driver.findElement(By.id("'selectQuick'")));
+                businessDate.selectByVisibleText(timePeriod);
+                String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                while (!selectedOption.equals(timePeriod)){}
+            }
+            else {
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
+
+                Select businessDate = new Select(driver.findElement(By.id("calendarData")));
+                businessDate.selectByVisibleText(timePeriod);
+
+                String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                while (!selectedOption.equals(timePeriod)){}
+
+            }
+            driver.findElement(By.id("Run Report")).click();
+
+            journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
             driver.get(journalUrl);
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));

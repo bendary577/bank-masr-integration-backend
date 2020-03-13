@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -36,16 +37,17 @@ public class JournalController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
-    @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private JournalService journalService;
     @Autowired
     private TransferService transferService;
 
+    public Conversions conversions = new Conversions();
+    private InvoiceController invoiceController = new InvoiceController();
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    @RequestMapping("/getJournals")
+    @RequestMapping("/getConsumption")
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getJournalsRequest(Principal principal) {
@@ -62,16 +64,42 @@ public class JournalController {
     public HashMap<String, Object> getJournals(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
-        SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
+        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType);
+        if (sunConfigResponse != null){
+            return sunConfigResponse;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
+            String message = "Map time period before sync journals.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+            String message = "Map cost centers before sync journals.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (journalSyncJobType.getConfiguration().getItemGroups().size() == 0){
+            String message = "Map items before sync journals.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                account.getId(), syncJobType.getId());
+                account.getId(), journalSyncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
         try {
-            HashMap<String, Object> data = journalService.getJournalData(syncJobType, syncJobTypeApprovedInvoice, account);
+            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, invoiceSyncJobType, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
@@ -79,37 +107,22 @@ public class JournalController {
                     ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
-                        if (addedJournals.size() != 0) {
-                            for (SyncJobData addedJournal : addedJournals) {
-                                try {
-                                    data  = transferService.sendJournalData(addedJournal, syncJobType, syncJobType,
-                                            account, voucher);
-                                    if ((Boolean) data.get("status")){
-                                        addedJournal.setStatus(Constants.SUCCESS);
-                                        addedJournal.setReason("");
-                                        syncJobDataRepo.save(addedJournal);
-                                    }
-                                    else {
-                                        addedJournal.setStatus(Constants.FAILED);
-                                        addedJournal.setReason((String) data.get("message"));
-                                        syncJobDataRepo.save(addedJournal);
-                                    }
+                        invoiceController.handleSendJournal(journalSyncJobType, journalSyncJobType, syncJob, addedJournals, account, voucher);
+                        syncJob.setReason("");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
 
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                        response.put("message", "Sync journals Successfully.");
+                    }
+                    else {
+                        syncJob.setStatus(Constants.FAILED);
+                        syncJob.setReason("Failed to connect to Sun System.");
+                        syncJob.setEndDate(new Date());
+                        syncJobRepo.save(syncJob);
 
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setEndDate(new Date());
-                            syncJobRepo.save(syncJob);
-                        }
-                        else {
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setReason("There is no journals to save from Oracle Hospitality.");
-                            syncJob.setEndDate(new Date());
-                            syncJobRepo.save(syncJob);
-                        }
+                        response.put("message", "Failed to connect to Sun System.");
+                        response.put("success", false);
+                        return response;
                     }
                 }
                 else {
@@ -122,11 +135,11 @@ public class JournalController {
                     response.put("success", true);
 
                 }
-            } else {
+            }
+            else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason((String) data.get("message"));
                 syncJob.setEndDate(new Date());
-
                 syncJobRepo.save(syncJob);
 
                 response.put("message", data.get("message"));

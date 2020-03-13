@@ -146,6 +146,8 @@ public class TransferController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getOverGroups(@RequestParam(name = "syncJobType") String syncTypeName, Principal principal) {
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
@@ -155,7 +157,12 @@ public class TransferController {
         ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
 
         WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        HashMap<String, Object> response = new HashMap<>();
+        if (driver == null){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
 
         if (driver == null){
             response.put("status", Constants.FAILED);

@@ -9,12 +9,12 @@ public class OverGroup implements Serializable {
     @Id
     private String id;
     private boolean checked;
-    private String overGroup;
-    private String wasteAccountCredit;
-    private String wasteAccountDebit;
-    private String inventoryAccount;
-    private String expensesAccount;
-    private String product;
+    private String overGroup="";
+    private String wasteAccountCredit="";
+    private String wasteAccountDebit="";
+    private String inventoryAccount="";
+    private String expensesAccount="";
+    private String product="";
 
     public OverGroup() {
         this.checked = false;

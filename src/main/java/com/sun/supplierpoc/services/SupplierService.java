@@ -2,6 +2,7 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.controllers.SyncJobDataController;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -43,6 +44,8 @@ import java.util.HashMap;
 public class SupplierService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private SyncJobDataController syncJobTypeController;
 
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
     public Conversions conversions = new Conversions();
@@ -211,9 +214,9 @@ public class SupplierService {
         }
     }
 
-    public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers, SyncJob syncJob) {
+    public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers, SyncJob syncJob, SyncJobType syncJobType) {
         ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
-        ArrayList<SyncJobData> savedSuppliers = new ArrayList<>();
+        ArrayList<SyncJobData> savedSuppliers = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (Supplier supplier : suppliers) {
             HashMap<String, String> data = new HashMap<>();

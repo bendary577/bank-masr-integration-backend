@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -41,6 +42,8 @@ public class CreditNoteController {
     @Autowired
     private InvoiceController invoiceController;
 
+    public Conversions conversions = new Conversions();
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getCreditNotes")
@@ -61,12 +64,31 @@ public class CreditNoteController {
     public HashMap<String, Object> getCreditNotes(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, account.getId());
+        SyncJobType creditNoteSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CREDIT_NOTES, account.getId());
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
+        if (sunConfigResponse != null){
+            return sunConfigResponse;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
+            String message = "Map time period before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+            String message = "Map cost centers before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
-                account.getId(), syncJobType.getId());
+                account.getId(), creditNoteSyncJobType.getId());
         syncJobRepo.save(syncJob);
 
         HashMap<String, Object> data = invoiceService.getInvoicesData(true, invoiceSyncJobType, account);
@@ -74,7 +96,7 @@ public class CreditNoteController {
         if (data.get("status").equals(Constants.SUCCESS)){
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
             if (invoices.size() > 0){
-                ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, true);
+                ArrayList<SyncJobData> addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, creditNoteSyncJobType, true);
                 if (addedInvoices.size() > 0){
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){

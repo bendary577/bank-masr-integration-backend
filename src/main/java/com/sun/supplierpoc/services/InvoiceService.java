@@ -3,6 +3,8 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.controllers.SyncJobDataController;
+import com.sun.supplierpoc.controllers.SyncJobTypeController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
@@ -29,10 +31,11 @@ import java.util.List;
 public class InvoiceService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
+    private SyncJobDataController syncJobTypeController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType, Account account){
@@ -121,9 +124,16 @@ public class InvoiceService {
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
-                data.put("message", "Oracle Hospitality takes long time to load, Please try agin after few minutes.");
+                data.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
                 data.put("invoices", invoices);
                 return data;
+            }
+            try{
+                WebDriverWait wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("G_dg")));
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
 
             WebElement bodyTable = driver.findElement(By.id("G_dg"));
@@ -211,10 +221,17 @@ public class InvoiceService {
     }
 
     public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
-                                                   Boolean flag){
+                                                   SyncJobType syncJobType, Boolean flag){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
+        ArrayList<SyncJobData> savedInvoices = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (HashMap<String, Object> invoice : invoices) {
+            // check existence of invoice in middleware (UNIQUE: invoiceNo)
+            SyncJobData oldSupplier = conversions.checkInvoiceExistence(savedInvoices, (String)invoice.get("invoice_no."));
+            if (oldSupplier != null){
+                continue;
+            }
+
             CostCenter costCenter = (CostCenter) invoice.get("cost_center");
             SyncJobData supplier = (SyncJobData) invoice.get("vendor");
 

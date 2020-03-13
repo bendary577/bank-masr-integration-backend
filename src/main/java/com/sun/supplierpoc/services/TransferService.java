@@ -117,7 +117,6 @@ public class TransferService {
                     }
                     transfer.put("from_cost_center", oldCostCenterData);
 
-
                     td = cols.get(columns.indexOf("to_cost_center"));
                     oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 

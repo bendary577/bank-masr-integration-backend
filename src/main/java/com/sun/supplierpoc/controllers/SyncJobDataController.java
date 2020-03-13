@@ -18,8 +18,6 @@ public class SyncJobDataController {
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
-    @Autowired
     private SyncJobDataRepo syncJobDataRepo;
 
     @GetMapping("/getSyncJobDataById")
@@ -33,8 +31,7 @@ public class SyncJobDataController {
     public ArrayList<SyncJobData> getSyncJobData(String syncJobTypeId)  {
         List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdOrderByCreationDateDesc(syncJobTypeId);
         ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
-        for (SyncJob syncJob :
-                syncJobs) {
+        for (SyncJob syncJob : syncJobs) {
             List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobId(syncJob.getId());
             syncJobsData.addAll(syncJobData);
         }

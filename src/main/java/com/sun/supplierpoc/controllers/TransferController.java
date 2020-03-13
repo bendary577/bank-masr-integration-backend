@@ -38,8 +38,6 @@ public class TransferController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
-    @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private TransferService transferService;
@@ -67,18 +65,35 @@ public class TransferController {
     public HashMap<String, Object> getBookedTransfer(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
-        SyncJobType syncJobTypeApprovedInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+        SyncJobType transferSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, account.getId());
+        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
+        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
-        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                account.getId(), syncJobType.getId());
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);
+        if (sunConfigResponse != null){
+            return sunConfigResponse;
+        }
 
+        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+            String message = "Map cost centers before sync transfers.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (journalSyncJobType.getConfiguration().getItems().size() == 0){
+            String message = "Map items before sync transfers.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId, account.getId(),
+                transferSyncJobType.getId());
         syncJobRepo.save(syncJob);
 
         try {
-            HashMap<String, Object> data = transferService.getTransferData(syncJobTypeJournal,
-                    syncJobTypeApprovedInvoice, account);
+            HashMap<String, Object> data = transferService.getTransferData(journalSyncJobType, invoiceSyncJobType, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
@@ -86,7 +101,7 @@ public class TransferController {
                     ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
-                        invoiceController.handleSendJournal(syncJobType, syncJobTypeJournal, syncJob, addedTransfers, account, voucher);
+                        invoiceController.handleSendJournal(transferSyncJobType, journalSyncJobType, syncJob, addedTransfers, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
                         syncJobRepo.save(syncJob);

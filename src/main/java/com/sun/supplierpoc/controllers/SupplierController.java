@@ -98,7 +98,7 @@ public class SupplierController {
             ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
 
             if (suppliers.size() > 0){
-                ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob);
+                ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
 
                 if (addedSuppliers.size() != 0){
                     data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, supplierSyncJobType, account);

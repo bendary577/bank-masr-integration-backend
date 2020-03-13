@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.soapModels;
 
+import com.sun.supplierpoc.models.data.Data;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;

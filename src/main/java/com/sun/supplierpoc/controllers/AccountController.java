@@ -114,7 +114,7 @@ public class AccountController {
     }
 
 
-    @RequestMapping(value = "/addAccount")
+    @PostMapping(value = "/addAccount")
     @ResponseBody
     public HashMap<String, Object> addAccount(@RequestBody Account account) {
         HashMap<String, Object> response = new HashMap<>();
@@ -135,6 +135,7 @@ public class AccountController {
         userRepo.save(user);
 
         // add default sync jobs to account
+        addAccountSyncType(account);
 
         response.put("message", "Account added successfully.");
         response.put("success", true);

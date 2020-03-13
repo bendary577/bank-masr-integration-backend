@@ -76,18 +76,13 @@ public class Conversions {
         return new CostCenter();
     }
 
-    public HashMap<String, Object> checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
-        HashMap<String, Object> data = new HashMap<>();
+    public SyncJobData checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
         for (SyncJobData supplier : suppliers) {
             if (supplier.getData().get("supplier").equals(vendorName)) {
-                data.put("status", true);
-                data.put("supplier", supplier);
-                return data;
+                return supplier;
             }
         }
-        data.put("status", false);
-        data.put("supplier", new SyncJobData());
-        return data;
+        return null;
     }
 
     public float convertStringToFloat(String value){

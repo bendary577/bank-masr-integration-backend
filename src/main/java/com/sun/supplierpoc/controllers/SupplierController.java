@@ -64,16 +64,35 @@ public class SupplierController {
     }
 
     public HashMap<String, Object> getSuppliers(String userId, Account account) throws SoapFaultException, ComponentException{
-
         HashMap<String, Object> response = new HashMap<>();
+        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.SUPPLIERS, account.getId());
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.SUPPLIERS, account.getId());
+        if (supplierSyncJobType.getConfiguration().getBusinessUnit().equals("")){
+            String message = "Configure business unit before sync journals.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (supplierSyncJobType.getConfiguration().getGroups().equals("")){
+            String message = "Configure supplier group before sync journals.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (supplierSyncJobType.getConfiguration().getTaxes().equals("")){
+            String message = "Configure supplier tax before sync journals.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
-                account.getId(), syncJobType.getId());
+                account.getId(), supplierSyncJobType.getId());
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = supplierService.getSuppliersData(syncJobType, account);
+        HashMap<String, Object> data = supplierService.getSuppliersData(supplierSyncJobType, account);
 
         if (data.get("status").equals(Constants.SUCCESS)) {
             ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
@@ -82,7 +101,7 @@ public class SupplierController {
                 ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob);
 
                 if (addedSuppliers.size() != 0){
-                    data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, syncJobType, account);
+                    data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, supplierSyncJobType, account);
                     if (data.get("status").equals(Constants.SUCCESS)){
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("");
@@ -92,7 +111,6 @@ public class SupplierController {
                         response.put("message", data.get("message"));
                         response.put("success", true);
 
-                        return response;
                     }
                     else {
                         syncJob.setStatus(Constants.FAILED);
@@ -103,16 +121,16 @@ public class SupplierController {
                         response.put("message", data.get("message"));
                         response.put("success", false);
 
-                        return response;
                     }
+                    return response;
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
-                    syncJob.setReason("No new suppliers to add.");
+                    syncJob.setReason("No new suppliers to add in middleware.");
                     syncJob.setEndDate(new Date());
                     syncJobRepo.save(syncJob);
 
-                    response.put("message", "No new suppliers to add.");
+                    response.put("message", "No new suppliers to add in middleware.");
                     response.put("success", true);
 
                     return response;
@@ -132,17 +150,16 @@ public class SupplierController {
 
         }
         else {
-            syncJob.setStatus("Failed to get suppliers from Sun System");
-            syncJob.setReason("Failed to sync suppliers.");
+            syncJob.setStatus(Constants.FAILED);
+            syncJob.setReason((String) data.get("message"));
             syncJob.setEndDate(new Date());
             syncJobRepo.save(syncJob);
 
-            response.put("message", "Failed to sync suppliers.");
+            response.put("message", "Failed to get suppliers from Sun System");
             response.put("success", false);
             return response;
         }
     }
-
 
     @RequestMapping("/getSupplierTaxes")
     @CrossOrigin(origins = "*")

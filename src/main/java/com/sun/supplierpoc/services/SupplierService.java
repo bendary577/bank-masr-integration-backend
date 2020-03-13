@@ -1,14 +1,14 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
+import com.sun.supplierpoc.models.data.Data;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.SSC;
 import com.sun.supplierpoc.soapModels.Supplier;
@@ -16,15 +16,12 @@ import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.*;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -36,10 +33,8 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -50,10 +45,11 @@ public class SupplierService {
     private SyncJobDataRepo syncJobDataRepo;
 
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
+    public Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getSuppliersData(SyncJobType syncJobType, Account account) throws SoapFaultException, ComponentException {
+    public HashMap<String, Object> getSuppliersData(SyncJobType syncJobType, Account account){
         HashMap<String, Object> data = new HashMap<>();
         boolean useEncryption = false;
 
@@ -186,7 +182,7 @@ public class SupplierService {
             strOut = component.execute("Supplier", "Query", sccXMLStringValue);
         } catch (ComponentException | SoapFaultException e) {
             data.put("status", Constants.FAILED);
-            data.put("message", e);
+            data.put("message", e.getMessage());
             data.put("suppliers", new ArrayList<> ());
             return data;
         }
@@ -208,17 +204,16 @@ public class SupplierService {
         }
         catch (JAXBException e)
         {
-            e.printStackTrace();
+            data.put("status", Constants.FAILED);
+            data.put("message", e.getMessage());
+            data.put("suppliers", new ArrayList<> ());
+            return data;
         }
-
-        data.put("status", Constants.FAILED);
-        data.put("message", "");
-        data.put("suppliers", new ArrayList<> ());
-        return data;
     }
 
     public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers, SyncJob syncJob) {
         ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
+        ArrayList<SyncJobData> savedSuppliers = new ArrayList<>();
 
         for (Supplier supplier : suppliers) {
             HashMap<String, String> data = new HashMap<>();
@@ -240,11 +235,18 @@ public class SupplierService {
             data.put("faxNumber", "");
             data.put("contactFirstName", "");
 
+            // check existence of supplier in middleware (UNIQUE: supplierNumber)
+            SyncJobData oldSupplier = conversions.checkSupplierExistence(savedSuppliers, supplier.getSupplierCode());
+            if (oldSupplier != null){
+                oldSupplier.setData(data);
+                syncJobDataRepo.save(oldSupplier);
+                continue;
+            }
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
             addedSuppliers.add(syncJobData);
-
         }
         return addedSuppliers;
     }

@@ -6,8 +6,8 @@ public class MajorGroup {
     @Id
     private String id;
     private boolean checked;
-    private String overGroup;
-    private String majorGroup;
+    private String overGroup="";
+    private String majorGroup="";
 
     public MajorGroup() {
         this.checked = false;

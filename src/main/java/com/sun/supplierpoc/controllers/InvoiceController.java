@@ -231,7 +231,7 @@ public class InvoiceController {
                     break;
                 }
                 else {
-                    TransferService.checkPagination(driver);
+                    TransferService.checkPagination(driver, "dg_rc_0_1");
                     rows = driver.findElements(By.tagName("tr"));
                 }
             }

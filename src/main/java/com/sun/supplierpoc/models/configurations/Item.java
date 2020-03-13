@@ -8,10 +8,10 @@ public class Item implements Serializable {
     @Id
     private String id;
     private boolean checked;
-    private String item;
-    private String itemGroup;
-    private String overGroup;
-    private String majorGroup;
+    private String item="";
+    private String itemGroup="";
+    private String overGroup="";
+    private String majorGroup="";
 
     public Item() {
         this.checked = false;

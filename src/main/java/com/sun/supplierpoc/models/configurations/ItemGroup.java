@@ -8,9 +8,9 @@ public class ItemGroup implements Serializable {
     @Id
     private String id;
     private boolean checked;
-    private String overGroup;
-    private String majorGroup;
-    private String itemGroup;
+    private String overGroup="";
+    private String majorGroup="";
+    private String itemGroup="";
 
     public ItemGroup() {
         this.checked = false;

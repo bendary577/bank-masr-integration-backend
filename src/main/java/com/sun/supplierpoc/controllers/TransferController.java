@@ -251,7 +251,7 @@ public class TransferController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId("Journals", user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, user.getAccountId());
 
         ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
         ArrayList<MajorGroup> majorGroups = new ArrayList<>();
@@ -297,6 +297,7 @@ public class TransferController {
                 // check if this major group belong to chosen over group
                 OverGroup overGroupData = conversions.checkOverGroupExistence(oldOverGroups, majorGroup.getOverGroup());
                 if (overGroupData.getChecked()) {
+                    majorGroup.setChecked(true);
                     majorGroups.add(majorGroup);
                 }
             }
@@ -330,15 +331,16 @@ public class TransferController {
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
                 if (cols.size() != columns.size()) {
-                    return null;
+                    continue;
                 }
                 itemGroup.setItemGroup(cols.get(columns.indexOf("item_group")).getText());
                 itemGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText());
 
                 // check if this Item group belong to chosen major group
-                MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups,itemGroup.getMajorGroup());
+                MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups, itemGroup.getMajorGroup());
 
                 if (majorGroupData.getChecked()) {
+                    itemGroup.setChecked(true);
                     itemGroup.setOverGroup(majorGroupData.getOverGroup());
                     itemGroups.add(itemGroup);
                 }
@@ -348,7 +350,7 @@ public class TransferController {
                 driver.quit();
 
                 response.put("data", items);
-                response.put("message", "There is no Item groups in over group selected.");
+                response.put("message", "There is no item groups in over group selected.");
                 response.put("success", true);
 
                 return response;
@@ -361,26 +363,11 @@ public class TransferController {
             String itemsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Items/OverviewItem.aspx";
             driver.get(itemsURL);
 
-            // search by Item group
-            for (ItemGroup itemGroup : itemGroups) {
-                driver.findElement(By.id("cfItemGroup_Text")).clear();
-                driver.findElement(By.id("cfItemGroup_Text")).sendKeys(itemGroup.getItemGroup());
-                driver.findElement(By.id("cfItemGroup_Text")).sendKeys(Keys.ARROW_DOWN);
-                driver.findElement(By.id("cfItemGroup_Text")).sendKeys(Keys.ENTER);
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+            rows = driver.findElements(By.tagName("tr"));
+            columns = setupEnvironment.getTableColumns(rows, true, 17);
 
-                try {
-                    WebDriverWait wait = new WebDriverWait(driver, 10);
-                    WebElement itemGroupValue = driver.findElement(By.id("cfItemGroup_Value"));
-                    wait.until(ExpectedConditions.textToBePresentInElementValue(itemGroupValue, itemGroup.getItemGroup()));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                driver.findElement(By.name("filterPanel_btnRefresh")).click();
-                rows = driver.findElements(By.tagName("tr"));
-
-                columns = setupEnvironment.getTableColumns(rows, true, 17);
-
+            while (true){
                 for (int i = 11; i < rows.size(); i++) {
                     Item item = new Item();
 
@@ -388,18 +375,29 @@ public class TransferController {
                     List<WebElement> cols = row.findElements(By.tagName("td"));
 
                     if (cols.size() != columns.size()) {
-                        return null;
+                        continue;
                     }
 
                     item.setItem(cols.get(columns.indexOf("item")).getText());
-                    item.setItemGroup(cols.get(columns.indexOf("item_group")).getText());
+                    String itemGroupText = cols.get(columns.indexOf("item_group")).getText();
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, itemGroupText);
+                    item.setItemGroup(itemGroupText);
                     item.setMajorGroup(itemGroup.getMajorGroup());
                     item.setOverGroup(itemGroup.getOverGroup());
+                    item.setChecked(true);
 
                     items.add(item);
-
+                }
+                // check if there is other pages
+                if (driver.findElements(By.linkText("Next")).size() == 0){
+                    break;
+                }
+                else {
+                    TransferService.checkPagination(driver, "dg_rc_0_2");
+                    rows = driver.findElements(By.tagName("tr"));
                 }
             }
+
             // save new items
             syncJobType.getConfiguration().setItems(items);
             syncJobTypeRepo.save(syncJobType);

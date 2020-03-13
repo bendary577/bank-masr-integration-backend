@@ -196,7 +196,7 @@ public class InvoiceService {
                     break;
                 }
                 else {
-                    TransferService.checkPagination(driver);
+                    TransferService.checkPagination(driver, "dg_rc_0_1");
                     bodyTable = driver.findElement(By.id("G_dg"));
                     rows = bodyTable.findElements(By.tagName("tr"));
                 }

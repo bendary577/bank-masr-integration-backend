@@ -8,7 +8,7 @@ public class WasteGroup implements Serializable {
     @Id
     private String id;
     private boolean checked;
-    private String wasteGroup;
+    private String wasteGroup="";
 
     public WasteGroup() {
         this.checked = false;

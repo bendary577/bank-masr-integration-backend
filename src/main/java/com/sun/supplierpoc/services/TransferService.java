@@ -141,7 +141,7 @@ public class TransferService {
                     break;
                 }
                 else {
-                    checkPagination(driver);
+                    checkPagination(driver, "dg_rc_0_1");
                     table = driver.findElement(By.id("dg_main"));
                     rows = table.findElements(By.tagName("tr"));
                 }
@@ -168,13 +168,13 @@ public class TransferService {
         }
     }
 
-    public static void checkPagination(WebDriver driver) {
-        String first_element_text = driver.findElement(By.id("dg_rc_0_1")).getText();
+    public static void checkPagination(WebDriver driver, String itemChanged) {
+        String first_element_text = driver.findElement(By.id(itemChanged)).getText();
         driver.findElement(By.linkText("Next")).click();
         String element_txt = "";
 
         WebDriverWait wait = new WebDriverWait(driver, 20);
-        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
         try {
             element_txt = element.getText();
         } catch (Exception e) {
@@ -183,7 +183,7 @@ public class TransferService {
 
         while (element_txt.equals(first_element_text)){
             wait = new WebDriverWait(driver, 20);
-            element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("dg_rc_0_1")));
+            element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
             try {
                 element_txt = element.getText();
             } catch (Exception e) {

@@ -393,7 +393,17 @@ public class TransferController {
                     break;
                 }
                 else {
-                    TransferService.checkPagination(driver, "dg_rc_0_2");
+                    boolean paginationFlag = TransferService.checkPagination(driver, "dg_rc_0_2");
+                    if (!paginationFlag){
+                        driver.quit();
+
+                        response.put("data", items);
+                        response.put("message", "Failed to map over groups to items.");
+                        response.put("success", false);
+
+                        return response;
+                    }
+                    System.out.println("next");
                     rows = driver.findElements(By.tagName("tr"));
                 }
             }

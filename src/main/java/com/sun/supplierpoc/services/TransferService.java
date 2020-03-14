@@ -168,7 +168,8 @@ public class TransferService {
         }
     }
 
-    public static void checkPagination(WebDriver driver, String itemChanged) {
+    public static boolean checkPagination(WebDriver driver, String itemChanged) {
+        int counter = 0;
         String first_element_text = driver.findElement(By.id(itemChanged)).getText();
         driver.findElement(By.linkText("Next")).click();
         String element_txt = "";
@@ -181,15 +182,22 @@ public class TransferService {
             element_txt = "";
         }
 
-        while (element_txt.equals(first_element_text)){
-            wait = new WebDriverWait(driver, 20);
-            element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
-            try {
-                element_txt = element.getText();
-            } catch (Exception e) {
-                element_txt = "";
+        while (counter <= 20){
+            if (element_txt.equals(first_element_text)){
+                wait = new WebDriverWait(driver, 20);
+                element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
+                try {
+                    element_txt = element.getText();
+                } catch (Exception e) {
+                    element_txt = "";
+                }
             }
+            else {
+                return true;
+            }
+            counter++;
         }
+        return false;
     }
 
     private void getBookedTransferDetails(

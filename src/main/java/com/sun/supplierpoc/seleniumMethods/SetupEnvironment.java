@@ -31,7 +31,7 @@ public class SetupEnvironment {
                 System.setProperty("webdriver.chrome.driver", chromePath);
                 ChromeOptions options = new ChromeOptions();
                 options.addArguments(
-//                    "--headless",
+                        "--headless",
                         "--disable-gpu",
                         "--window-size=1920,1200",
                         "--ignore-certificate-errors");
@@ -39,7 +39,7 @@ public class SetupEnvironment {
             }
             else {
                 FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+                firefoxBinary.addCommandLineOptions("--headless");
 
                 System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
                 FirefoxOptions firefoxOptions = new FirefoxOptions();

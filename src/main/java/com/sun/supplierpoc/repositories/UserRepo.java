@@ -1,18 +1,14 @@
 package com.sun.supplierpoc.repositories;
 
-import com.sun.supplierpoc.models.User;
-
+import com.sun.supplierpoc.models.auth.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
-
-import org.springframework.stereotype.Repository;
 
 @Repository
 
 public interface UserRepo extends MongoRepository<User, String>{
 
-    User findByName(String Name);
-    List<User> findAllByName(String Name);
-
+    List<User> findByAccountId(String accountId);
 }

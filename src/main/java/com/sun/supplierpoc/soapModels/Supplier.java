@@ -1,7 +1,10 @@
 package com.sun.supplierpoc.soapModels;
 
+import com.sun.supplierpoc.models.data.Data;
+
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Objects;
 
 @XmlRootElement(name="Supplier")
 public class Supplier {
@@ -98,10 +101,7 @@ public class Supplier {
     }
 
     public String getCustomerNumber() {
-        if(CustomerNumber != null){
-            return CustomerNumber;
-        }
-        else return "";
+        return Objects.requireNonNullElse(CustomerNumber, "");
     }
 
     public void setCustomerNumber(String customerNumber) {

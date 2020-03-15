@@ -1,10 +1,7 @@
 package com.sun.supplierpoc.conf;
 
 
-import com.sun.supplierpoc.services.security.CustomApprovalStore;
-import com.sun.supplierpoc.services.security.CustomAuthorizationCodeServices;
-import com.sun.supplierpoc.services.security.CustomTokenStore;
-import com.sun.supplierpoc.services.security.CustomUserDetailsService;
+import com.sun.supplierpoc.services.security.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +11,6 @@ import org.springframework.security.oauth2.config.annotation.web.configuration.A
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,18 +21,13 @@ import org.springframework.web.client.RestTemplate;
 @EnableAuthorizationServer
 
 public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
-/*    private AuthenticationManager authenticationManagerBean;
-    @Autowired
-    public void setAuthenticationManagerBean(AuthenticationManager authenticationManagerBean) {
-        this.authenticationManagerBean = authenticationManagerBean;
-    }*/
 
     @Bean
-    public CustomClientDetailsService clientDetailsService() {
+    public CustomClientDetailsService customClientDetailsService() {
         return new CustomClientDetailsService();
     }
     @Bean
-    public CustomUserDetailsService clientUsersService() {
+    public CustomUserDetailsService customUsersService() {
         return new CustomUserDetailsService();
     }
 
@@ -57,7 +48,7 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
 
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.withClientDetails(clientDetailsService());
+        clients.withClientDetails(customClientDetailsService());
 
     }
     @Override
@@ -70,27 +61,10 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Autowired
     private AuthenticationManager authenticationManager;
 
-/*    @Override
-    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints.authenticationManager(authenticationManager);
-    }
-
-/*    @Override
-    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.inMemory()
-                .withClient("web-client")
-                .secret("web-client-secret")
-                .authorizedGrantTypes("client_credentials", "password", "refresh_token")
-                .scopes("all")
-                .resourceIds("oauth2-resource")
-                .accessTokenValiditySeconds(1200)
-                .refreshTokenValiditySeconds(50000);
-
-    }*/
         @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints.approvalStore(approvalStore())
-                .authorizationCodeServices(authorizationCodeServices()).userDetailsService(clientUsersService())
+                .authorizationCodeServices(authorizationCodeServices()).userDetailsService(customUsersService())
                 .tokenStore(tokenStore()).authenticationManager(authenticationManager);
 
     }

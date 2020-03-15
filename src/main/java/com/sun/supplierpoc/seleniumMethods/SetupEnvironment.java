@@ -1,14 +1,21 @@
 package com.sun.supplierpoc.seleniumMethods;
 
-import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
+import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 
+import org.openqa.selenium.firefox.FirefoxBinary;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class SetupEnvironment {
@@ -17,25 +24,51 @@ public class SetupEnvironment {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public WebDriver setupSeleniumEnv() {
-        String chromePath = "chromedriver.exe";
-        System.setProperty("webdriver.chrome.driver", chromePath);
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments(
-                "--headless",
-                "--disable-gpu",
-                "--window-size=1920,1200",
-                "--ignore-certificate-errors");
-        WebDriver driver = new ChromeDriver(options);
-        return driver;
+    public WebDriver setupSeleniumEnv(boolean driverFlag) {
+        try {
+            if (driverFlag){
+                String chromePath = "chromedriver.exe";
+                System.setProperty("webdriver.chrome.driver", chromePath);
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments(
+                        "--headless",
+                        "--disable-gpu",
+                        "--window-size=1920,1200",
+                        "--ignore-certificate-errors");
+                return new ChromeDriver(options);
+            }
+            else {
+                FirefoxBinary firefoxBinary = new FirefoxBinary();
+                firefoxBinary.addCommandLineOptions("--headless");
+
+                System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
+                FirefoxOptions firefoxOptions = new FirefoxOptions();
+
+                firefoxOptions.setBinary(firefoxBinary);
+//            firefoxOptions.setCapability("marionette", true);
+                return new FirefoxDriver(firefoxOptions);
+            }
+        } catch (Exception e) {
+            return null;
+        }
     }
 
-    public boolean loginOHIM(WebDriver driver, String url){
+    public boolean loginOHIM(WebDriver driver, String url, Account account){
+
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential hospitalityOHIMCredentials = account.getAccountCredentialByAccount("HospitalityOHIM", accountCredentials);
+
         driver.get(url);
 
-        driver.findElement(By.id("igtxtdfUsername")).sendKeys("Amr");
-        driver.findElement(By.id("igtxtdfPassword")).sendKeys("Mic@8000");
-        driver.findElement(By.id("igtxtdfCompany")).sendKeys("act");
+        try {
+            Alert al = driver.switchTo().alert();
+            al.accept();
+        } catch (NoAlertPresentException Ex) {
+            System.out.println("No alert exits");
+        }
+        driver.findElement(By.id("igtxtdfUsername")).sendKeys(hospitalityOHIMCredentials.getUsername());
+        driver.findElement(By.id("igtxtdfPassword")).sendKeys(hospitalityOHIMCredentials.getPassword());
+        driver.findElement(By.id("igtxtdfCompany")).sendKeys(hospitalityOHIMCredentials.getCompany());
 
         String previous_url = driver.getCurrentUrl();
         driver.findElement(By.name("Login")).click();
@@ -43,12 +76,51 @@ public class SetupEnvironment {
         return !driver.getCurrentUrl().equals(previous_url);
     }
 
-    public ArrayList<String> getTableColumns(List<WebElement> rows, int rowNumber){
+    public boolean loginOHRA(WebDriver driver, String url, Account account){
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
+
+        driver.get(url);
+        try {
+            Alert al = driver.switchTo().alert();
+            al.accept();
+        } catch (NoAlertPresentException Ex) {
+            System.out.println("No alert exits");
+        }
+        driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
+        driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
+        driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
+
+        String previous_url = driver.getCurrentUrl();
+        driver.findElement(By.id("Login")).click();
+
+        try {
+            // card is wrong
+            Alert al = driver.switchTo().alert();
+            al.accept();
+
+            return false;
+        } catch (NoAlertPresentException Ex) {
+            System.out.println("No alert exits");
+        }
+
+        return !driver.getCurrentUrl().equals(previous_url);
+    }
+
+    public ArrayList<String> getTableColumns(List<WebElement> rows, boolean rowType, int rowNumber){
         ArrayList<String> columns = new ArrayList<>();
         WebElement row = rows.get(rowNumber);
-        List<WebElement> cols = row.findElements(By.tagName("th"));
+        List<WebElement> cols;
+        if (rowType){
+            cols = row.findElements(By.tagName("th"));
+        }
+        else {
+            cols = row.findElements(By.tagName("td"));
+        }
 
-        for (int j = 1; j < cols.size(); j++) columns.add(conversions.transformColName(cols.get(j).getText()));
+        for (WebElement col : cols){
+            columns.add(conversions.transformColName(col.getText()));
+        }
 
         return columns;
     }

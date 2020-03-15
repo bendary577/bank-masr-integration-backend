@@ -1,13 +1,11 @@
 package com.sun.supplierpoc.services.security;
 
 
-import com.sun.supplierpoc.models.auth.MongoUser;
+import com.sun.supplierpoc.models.auth.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -24,15 +22,14 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Query query = new Query();
         query.addCriteria(Criteria.where("username").is(username));
-        MongoUser user =
-                mongoTemplate.findOne(query, MongoUser.class);
+        User user =
+                mongoTemplate.findOne(query, User.class);
         if (user == null) {
             throw new UsernameNotFoundException(String.format("Username %s not found", username));
         }
 
-        String[] roles = new String[user.getRoles().size()];
-
-        return new User(user.getUsername(), user.getPassword(),
-                AuthorityUtils.createAuthorityList(user.getRoles().toArray(roles)));
+       // String[] roles = new String[user.getAuthorities().size()];
+        return new User(user.getName(), user.getAccountId(), user.getId(),user.getUsername(),user.getPassword(),user.getAuthorities()
+                ,user.isEnabled(),user.isAccountNonExpired(),user.isAccountNonLocked(),user.isCredentialsNonExpired());
     }
 }

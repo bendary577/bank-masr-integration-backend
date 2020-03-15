@@ -1,7 +1,7 @@
 package com.sun.supplierpoc.services.security;
 
 
-import com.sun.supplierpoc.models.auth.MongoAuthorizationCode;
+import com.sun.supplierpoc.models.auth.AuthorizationCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -19,7 +19,7 @@ public class CustomAuthorizationCodeServices extends RandomValueAuthorizationCod
 
     @Override
     protected void store(String code, OAuth2Authentication authentication) {
-        MongoAuthorizationCode authorizationCode = new MongoAuthorizationCode();
+        AuthorizationCode authorizationCode = new AuthorizationCode();
         authorizationCode.setCode(code);
         authorizationCode.setAuthentication(authentication);
         mongoTemplate.save(authorizationCode);
@@ -28,9 +28,9 @@ public class CustomAuthorizationCodeServices extends RandomValueAuthorizationCod
     @Override
     protected OAuth2Authentication remove(String code) {
         Query query = new Query();
-        query.addCriteria(Criteria.where(MongoAuthorizationCode.CODE).is(code));
+        query.addCriteria(Criteria.where(AuthorizationCode.CODE).is(code));
         OAuth2Authentication authentication = null;
-        MongoAuthorizationCode authorizationCode = mongoTemplate.findOne(query, MongoAuthorizationCode.class);
+        AuthorizationCode authorizationCode = mongoTemplate.findOne(query, AuthorizationCode.class);
         if (authorizationCode != null) {
             authentication = authorizationCode.getAuthentication();
         }

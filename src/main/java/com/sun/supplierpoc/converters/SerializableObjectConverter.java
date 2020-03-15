@@ -1,12 +1,9 @@
-package com.sun.supplierpoc.Converters;
+package com.sun.supplierpoc.converters;
 
 import org.apache.commons.codec.binary.Base64;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.SerializationUtils;
 
-/**
- * Created by jeebb on 11/17/14.
- */
 public class SerializableObjectConverter {
 
     public static String serialize(OAuth2Authentication object) {

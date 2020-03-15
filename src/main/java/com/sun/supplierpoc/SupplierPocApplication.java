@@ -1,18 +1,13 @@
 package com.sun.supplierpoc;
 
-import com.google.common.collect.Sets;
-import com.sun.supplierpoc.conf.CustomClientDetailsService;
-import com.sun.supplierpoc.models.auth.MongoClientDetails;
-import com.sun.supplierpoc.models.auth.MongoUser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
+@EnableScheduling
+
 public class SupplierPocApplication {
 
     public static void main(String[] args) {
@@ -24,21 +19,21 @@ public class SupplierPocApplication {
 
 
             // init the users
-            MongoUser mongoUser = new MongoUser();
+            User mongoUser = new User();
             mongoUser.setUsername("user");
             mongoUser.setPassword("user");
             mongoUser.setRoles(Sets.newHashSet("ROLE_USER"));
             mongoTemplate.save(mongoUser);
 
             // init the client details
-            MongoClientDetails clientDetails = new MongoClientDetails();
+            OauthClientDetails clientDetails = new OauthClientDetails();
             clientDetails.setClientId("web-client");
             clientDetails.setClientSecret("web-client-secret");
             clientDetails.setSecretRequired(true);
             clientDetails.setResourceIds(Sets.newHashSet("project-man"));
             clientDetails.setScope(Sets.newHashSet("call-services"));
             clientDetails.setAuthorizedGrantTypes(Sets.newHashSet("authorization_code", "refresh_token"));
-            clientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localhost:8080"));
+            clientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localConstants.HOST:8080"));
             clientDetails.setAuthorities(AuthorityUtils.createAuthorityList("ROLE_USER"));
             clientDetails.setAccessTokenValiditySeconds(60);
             clientDetails.setRefreshTokenValiditySeconds(14400);

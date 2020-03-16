@@ -14,6 +14,7 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
+// @RequestMapping(path = "server")
 
 
 public class SyncJobController {

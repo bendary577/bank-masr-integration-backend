@@ -28,6 +28,7 @@ import java.util.stream.IntStream;
 
 
 @RestController
+// @RequestMapping(path = "server")
 
 public class SupplierController {
 

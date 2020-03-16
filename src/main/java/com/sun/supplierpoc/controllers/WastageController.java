@@ -27,6 +27,7 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController
+// @RequestMapping(path = "server")
 
 
 public class WastageController {

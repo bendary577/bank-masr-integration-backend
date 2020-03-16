@@ -33,6 +33,8 @@ import java.util.*;
 @EnableResourceServer
 
 @RestController
+// @RequestMapping(path = "server")
+
 public class AccountController {
     @Autowired
     private AccountRepo accountRepo;

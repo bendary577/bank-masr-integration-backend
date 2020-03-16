@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
+// @RequestMapping(path = "server")
 
 public class CreditNoteController {
     @Autowired

@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
+// @RequestMapping(path = "server")
 
 public class JournalController {
     @Autowired

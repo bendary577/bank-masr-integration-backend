@@ -48,7 +48,7 @@ public class JournalService {
             return response;
         }
 
-        ArrayList<Journal> journals = new ArrayList<>();
+        ArrayList<Journal> journals;
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
         String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
@@ -63,7 +63,7 @@ public class JournalService {
 
                 response.put("status", Constants.FAILED);
                 response.put("message", "Invalid username and password.");
-                response.put("journals", journals);
+                response.put("journals", journalsEntries);
                 return response;
             }
             // just wait to make sure credentials of user saved to be able to move to another pages.
@@ -78,6 +78,12 @@ public class JournalService {
             String journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=499";
             driver.get(journalUrl);
 
+            try {
+                WebDriverWait wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+            }
+            catch (Exception ex){ }
+
             WebDriverWait wait = new WebDriverWait(driver, 20);
             if (timePeriod.equals("Last Month")){
                 wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
@@ -86,14 +92,15 @@ public class JournalService {
                 wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                 wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                Select businessDate = new Select(driver.findElement(By.id("'selectQuick'")));
+                Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
                 businessDate.selectByVisibleText(timePeriod);
+
                 String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                 while (!selectedOption.equals(timePeriod)){}
+
+                driver.switchTo().defaultContent();
             }
             else {
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
-
                 Select businessDate = new Select(driver.findElement(By.id("calendarData")));
                 businessDate.selectByVisibleText(timePeriod);
 
@@ -108,7 +115,7 @@ public class JournalService {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
             ArrayList<HashMap<String, Object>> selectedCostCenters = new ArrayList<>();
 
@@ -142,11 +149,13 @@ public class JournalService {
 
             for (HashMap<String, Object> costCenter : selectedCostCenters) {
                 try {
+                    journals = new ArrayList<>();
+
                     driver.get(baseURL + costCenter.get("extensions"));
 
                     rows = driver.findElements(By.tagName("tr"));
 
-                    columns = setupEnvironment.getTableColumns(rows, false, 4);
+                    columns = setupEnvironment.getTableColumns(rows, false, 3);
 
                     for (int i = 6; i < rows.size(); i++) {
                         HashMap<String, Object> transferDetails = new HashMap<>();
@@ -220,19 +229,19 @@ public class JournalService {
 
         for (HashMap<String, Object> journal : journals) {
             // check zero entries (not needed)
-            HashMap<String, String> costCenter = (HashMap<String, String>) journal.get("cost_center");
+            CostCenter costCenter = (CostCenter) journal.get("cost_center");
             Journal journalData = (Journal) journal.get("journal");
 
             if (journalData.getTotalWaste() != 0){
                 HashMap<String, String> wasteData = new HashMap<>();
 
                 wasteData.put("total", String.valueOf(journalData.getTotalWaste()));
-                wasteData.put("from_cost_center", costCenter.get("costCenter"));
-                wasteData.put("from_account_code", costCenter.get("accountCode"));
+                wasteData.put("from_cost_center", costCenter.costCenter);
+                wasteData.put("from_account_code", costCenter.accountCode);
 
-                wasteData.put("to_cost_center", costCenter.get("costCenter"));
-                wasteData.put("to_account_code", costCenter.get("accountCode"));
-                wasteData.put("description", "Wastage Entry For " + costCenter.get("costCenter") + " " + journalData.getOverGroup());
+                wasteData.put("to_cost_center", costCenter.costCenter);
+                wasteData.put("to_account_code", costCenter.accountCode);
+                wasteData.put("description", "Wastage Entry For " + costCenter.costCenter + " " + journalData.getOverGroup());
 
                 wasteData.put("transactionReference", "");
                 wasteData.put("overGroup", journalData.getOverGroup());
@@ -249,12 +258,12 @@ public class JournalService {
                 HashMap<String, String> varianceData = new HashMap<>();
 
                 varianceData.put("total", String.valueOf(journalData.getTotalVariance()));
-                varianceData.put("from_cost_center", costCenter.get("costCenter"));
-                varianceData.put("from_account_code", costCenter.get("accountCode"));
+                varianceData.put("from_cost_center", costCenter.costCenter);
+                varianceData.put("from_account_code", costCenter.accountCode);
 
-                varianceData.put("to_cost_center", costCenter.get("costCenter"));
-                varianceData.put("to_account_code", costCenter.get("accountCode"));
-                varianceData.put("description", "Staff Meal Cost For " + costCenter.get("costCenter") + " " + journalData.getOverGroup());
+                varianceData.put("to_cost_center", costCenter.costCenter);
+                varianceData.put("to_account_code", costCenter.accountCode);
+                varianceData.put("description", "Staff Meal Cost For " + costCenter.costCenter + " " + journalData.getOverGroup());
 
                 varianceData.put("transactionReference", "");
                 varianceData.put("overGroup", journalData.getOverGroup());
@@ -270,12 +279,12 @@ public class JournalService {
                 HashMap<String, String> costData = new HashMap<>();
 
                 costData.put("total", String.valueOf(journalData.getTotalCost()));
-                costData.put("from_cost_center", costCenter.get("costCenter"));
-                costData.put("from_account_code", costCenter.get("accountCode"));
+                costData.put("from_cost_center", costCenter.costCenter);
+                costData.put("from_account_code", costCenter.accountCode);
 
-                costData.put("to_cost_center", costCenter.get("costCenter"));
-                costData.put("to_account_code", costCenter.get("accountCode"));
-                costData.put("description", "Cost Of Sales For " + costCenter.get("costCenter") + " " + journalData.getOverGroup());
+                costData.put("to_cost_center", costCenter.costCenter);
+                costData.put("to_account_code", costCenter.accountCode);
+                costData.put("description", "Cost Of Sales For " + costCenter.costCenter + " " + journalData.getOverGroup());
 
                 costData.put("transactionReference", "");
                 costData.put("overGroup", journalData.getOverGroup());

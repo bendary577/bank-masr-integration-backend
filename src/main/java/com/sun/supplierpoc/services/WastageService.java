@@ -98,9 +98,7 @@ public class WastageService {
                     WebDriverWait wait = new WebDriverWait(driver, 60);
                     wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
                 }
-                catch (Exception ex){
-                    System.out.println("lolo error");
-                }
+                catch (Exception ex){ }
 
                 String timePeriod = syncJobType.getConfiguration().getTimePeriod();
 
@@ -123,6 +121,8 @@ public class WastageService {
 
                     selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                     while (!selectedOption.equals(timePeriod)){}
+
+                    driver.switchTo().defaultContent();
                 }
                 else {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
@@ -140,34 +140,6 @@ public class WastageService {
                     while (!selectedOption.equals(locationName)){}
 
                 }
-
-//                if (timePeriod.equals("Last Month")){
-//                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
-//                    driver.findElement(By.id("calendarBtn")).click();
-//
-//                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("locationData")));
-//                    Select location = new Select(driver.findElement(By.id("locationData")));
-//                    location.selectByVisibleText(locationName);
-//
-//                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
-//                    wait.until(ExpectedConditions.elementToBeSelected(By.id("selectQuick")));
-//
-//                    Select date = new Select(driver.findElement(By.id("'selectQuick'")));
-//                    date.selectByVisibleText("Last Month");
-//
-//                    selectedOption = date.getFirstSelectedOption().getText().strip();
-//                    while (!selectedOption.equals(timePeriod)){}
-//
-//                    driver.switchTo().defaultContent();
-//                }
-//                else {
-//                    Select date = new Select(driver.findElement(By.id("calendarData")));
-//                    date.selectByVisibleText(timePeriod);
-//
-//                    selectedOption = date.getFirstSelectedOption().getText().strip();
-//                    while (!selectedOption.equals(timePeriod)){}
-//                }
-                driver.switchTo().defaultContent();
                 driver.findElement(By.id("Run Report")).click();
 
                 String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";

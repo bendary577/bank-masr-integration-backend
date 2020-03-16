@@ -42,10 +42,10 @@ public class JournalController {
     private JournalService journalService;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private InvoiceController invoiceController;
 
     public Conversions conversions = new Conversions();
-    private InvoiceController invoiceController = new InvoiceController();
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @RequestMapping("/getConsumption")
     @CrossOrigin(origins = "*")
@@ -73,21 +73,21 @@ public class JournalController {
         }
 
         if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
-            String message = "Map time period before sync journals.";
+            String message = "Map time period before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
-            String message = "Map cost centers before sync journals.";
+            String message = "Map cost centers before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (journalSyncJobType.getConfiguration().getItemGroups().size() == 0){
-            String message = "Map items before sync journals.";
+            String message = "Map items before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;

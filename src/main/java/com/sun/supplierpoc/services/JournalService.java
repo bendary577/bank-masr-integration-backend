@@ -35,15 +35,19 @@ public class JournalService {
 
     public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, SyncJobType invoiceSyncJobType,
                                                   Account account){
-        HashMap<String, Object> data = new HashMap<>();
+        HashMap<String, Object> response = new HashMap<>();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
         }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
         ArrayList<Journal> journals = new ArrayList<>();
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
@@ -57,10 +61,10 @@ public class JournalService {
             if (!setupEnvironment.loginOHRA(driver, url, account)){
                 driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", "Invalid username and password.");
-                data.put("journals", journals);
-                return data;
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("journals", journals);
+                return response;
             }
             // just wait to make sure credentials of user saved to be able to move to another pages.
             try {
@@ -195,19 +199,19 @@ public class JournalService {
 
             driver.quit();
 
-            data.put("status", Constants.SUCCESS);
-            data.put("message", "");
-            data.put("journals", journalsEntries);
-            return data;
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "");
+            response.put("journals", journalsEntries);
+            return response;
 
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
 
-            data.put("status", Constants.FAILED);
-            data.put("message", e.getMessage());
-            data.put("journals", journalsEntries);
-            return data;
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            response.put("journals", journalsEntries);
+            return response;
         }
     }
 

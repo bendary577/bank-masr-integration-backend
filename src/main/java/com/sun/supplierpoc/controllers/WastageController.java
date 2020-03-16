@@ -66,11 +66,17 @@ public class WastageController {
     public HashMap<String, Object> getWastage(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, account.getId());
+        SyncJobType wastageSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, account.getId());
         SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
+        SyncJobType syncJobTypeInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
 
-        if (syncJobTypeJournal.getConfiguration().getCostCenters().size() == 0){
-            String message = "Configure cost center before sync journals.";
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType);
+        if (sunConfigResponse != null){
+            return sunConfigResponse;
+        }
+
+        if (syncJobTypeInvoice.getConfiguration().getCostCenters().size() == 0){
+            String message = "Configure cost center before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
@@ -91,13 +97,14 @@ public class WastageController {
         }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                account.getId(), syncJobType.getId());
+                account.getId(), wastageSyncJobType.getId());
 
         syncJobRepo.save(syncJob);
 
         try {
 
-            HashMap<String, Object> data = wastageService.getWastageData(syncJobTypeJournal, syncJobTypeJournal, account);
+            HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, syncJobTypeJournal,
+                    syncJobTypeInvoice, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
@@ -105,7 +112,7 @@ public class WastageController {
                     ArrayList<SyncJobData> addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
-                        invoiceController.handleSendJournal(syncJobType, syncJobTypeJournal, syncJob, addedWastes, account, voucher);
+                        invoiceController.handleSendJournal(wastageSyncJobType, syncJobTypeJournal, syncJob, addedWastes, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
                         syncJobRepo.save(syncJob);
@@ -157,11 +164,13 @@ public class WastageController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, user.getAccountId());
         ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().getWasteGroups();
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
 
-        if (driver == null){
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
             response.put("status", Constants.FAILED);
             response.put("message", "Failed to establish connection with firefox driver.");
             response.put("invoices", new ArrayList<>());

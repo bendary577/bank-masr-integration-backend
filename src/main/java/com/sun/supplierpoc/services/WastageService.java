@@ -38,35 +38,47 @@ public class WastageService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getWastageData(SyncJobType syncJobType, SyncJobType syncJobTypeJournal,
-                                                   Account account) {
+                                                   SyncJobType invoiceSyncJobType, Account account) {
 
-        HashMap<String, Object> data = new HashMap<>();
+        HashMap<String, Object> response = new HashMap<>();
         ArrayList<Item> items = syncJobTypeJournal.getConfiguration().getItems();
-        ArrayList<CostCenter> costCenters = syncJobTypeJournal.getConfiguration().getCostCenters();
+        ArrayList<CostCenter> costCenters = invoiceSyncJobType.getConfiguration().getCostCenters();
         ArrayList<CostCenter> costCenterLocationMapping = syncJobTypeJournal.getConfiguration().getCostCenterLocationMapping();
         ArrayList<OverGroup> overGroups = syncJobTypeJournal.getConfiguration().getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
         }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
         ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
         ArrayList<HashMap<String, Object>> wastesStatus = new ArrayList<>();
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
-        String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+        String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
 
-        if (!setupEnvironment.loginOHIM(driver, url, account)) {
+        if (!setupEnvironment.loginOHRA(driver, url, account)) {
             driver.quit();
 
-            data.put("status", Constants.FAILED);
-            data.put("message", "Invalid username and password.");
-            data.put("wastes", wastes);
-            return data;
+            response.put("status", Constants.FAILED);
+            response.put("message", "Invalid username and password.");
+            response.put("wastes", wastes);
+            return response;
+        }
+
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 3);
+            wait.until(ExpectedConditions.alertIsPresent());
+        }
+        catch (Exception e) {
+            System.out.println("Waiting");
         }
 
         for (CostCenter costCenter : costCenters) {
@@ -75,38 +87,96 @@ public class WastageService {
 
                 if (!CostCenterData.checked) continue;
 
-                String locationName = costCenter.locationName;
+                String locationName = CostCenterData.locationName;
 
                 String bookedWasteUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=497";
                 driver.get(bookedWasteUrl);
 
+                try {
+                    WebDriverWait wait = new WebDriverWait(driver, 60);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
+                }
+                catch (Exception ex){
+                    System.out.println("lolo error");
+                }
+
+                String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+
                 WebDriverWait wait = new WebDriverWait(driver, 20);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
+                if (timePeriod.equals("Last Month")){
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
+                    driver.findElement(By.id("calendarBtn")).click();
 
-                wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
-                driver.findElement(By.id("calendarBtn")).click();
+                    Select locationDate= new Select(driver.findElement(By.id("locationData")));
+                    locationDate.selectByVisibleText(locationName);
 
-                Select location = new Select(driver.findElement(By.id("locationData")));
-                location.selectByVisibleText(locationName);
+                    String selectedOption = locationDate.getFirstSelectedOption().getText().strip();
+                    while (!selectedOption.equals(locationName)){}
 
-                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
+                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
+                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                Select date = new Select(driver.findElement(By.id("'selectQuick'")));
-                date.selectByVisibleText("Last Month");
+                    Select businessDate = new Select(driver.findElement(By.id("'selectQuick'")));
+                    businessDate.selectByVisibleText(timePeriod);
+                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                    while (!selectedOption.equals(timePeriod)){}
+                }
+                else {
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
 
-                driver.switchTo().defaultContent();
+                    Select businessDate = new Select(driver.findElement(By.id("calendarData")));
+                    businessDate.selectByVisibleText(timePeriod);
+
+                    String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                    while (!selectedOption.equals(timePeriod)){}
+
+                    Select locationDate= new Select(driver.findElement(By.id("locationData")));
+                    locationDate.selectByVisibleText(locationName);
+
+                    selectedOption = locationDate.getFirstSelectedOption().getText().strip();
+                    while (!selectedOption.equals(locationName)){}
+
+                }
+
+//                if (timePeriod.equals("Last Month")){
+//                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
+//                    driver.findElement(By.id("calendarBtn")).click();
+//
+//                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("locationData")));
+//                    Select location = new Select(driver.findElement(By.id("locationData")));
+//                    location.selectByVisibleText(locationName);
+//
+//                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
+//                    wait.until(ExpectedConditions.elementToBeSelected(By.id("selectQuick")));
+//
+//                    Select date = new Select(driver.findElement(By.id("'selectQuick'")));
+//                    date.selectByVisibleText("Last Month");
+//
+//                    selectedOption = date.getFirstSelectedOption().getText().strip();
+//                    while (!selectedOption.equals(timePeriod)){}
+//
+//                    driver.switchTo().defaultContent();
+//                }
+//                else {
+//                    Select date = new Select(driver.findElement(By.id("calendarData")));
+//                    date.selectByVisibleText(timePeriod);
+//
+//                    selectedOption = date.getFirstSelectedOption().getText().strip();
+//                    while (!selectedOption.equals(timePeriod)){}
+//                }
+
                 driver.findElement(By.id("Run Report")).click();
 
                 String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";
 
                 driver.get(baseURL);
 
-                List<WebElement> rows = driver.findElements(By.tagName("tr"));
+                WebElement table = driver.findElement(By.id("tableContainer"));
+                List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 6);
+                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
-                for (int i = 7; i < rows.size(); i++) {
+                for (int i = 1; i < rows.size(); i++) {
                     HashMap<String, Object> waste = new HashMap<>();
 
                     WebElement row = rows.get(i);
@@ -142,21 +212,20 @@ public class WastageService {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
                 driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", e);
-                data.put("wastes", journalEntries);
-                return data;
+                response.put("status", Constants.FAILED);
+                response.put("message", e.getMessage());
+                response.put("wastes", journalEntries);
+                return response;
             }
         }
         driver.quit();
 
-        data.put("status", Constants.SUCCESS);
-        data.put("message", "");
-        data.put("wastes", journalEntries);
-        return data;
+        response.put("status", Constants.SUCCESS);
+        response.put("message", "");
+        response.put("wastes", journalEntries);
+        return response;
     }
 
     private void getWasteDetails(
@@ -246,7 +315,5 @@ public class WastageService {
         return addedTransfers;
 
     }
-
-
 
 }

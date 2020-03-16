@@ -155,16 +155,11 @@ public class TransferController {
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
 
         ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
-            return response;
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
         }
-
-        if (driver == null){
+        catch (Exception ex){
             response.put("status", Constants.FAILED);
             response.put("message", "Failed to establish connection with firefox driver.");
             response.put("invoices", new ArrayList<>());
@@ -257,11 +252,13 @@ public class TransferController {
         ArrayList<MajorGroup> majorGroups = new ArrayList<>();
         ArrayList<ItemGroup> itemGroups = new ArrayList<>();
         ArrayList<Item> items = new ArrayList<>();
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
 
-        if (driver == null){
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
             response.put("status", Constants.FAILED);
             response.put("message", "Failed to establish connection with firefox driver.");
             response.put("invoices", new ArrayList<>());
@@ -338,6 +335,7 @@ public class TransferController {
 
                 // check if this Item group belong to chosen major group
                 MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups, itemGroup.getMajorGroup());
+//                System.out.println(majorGroupData.getOverGroup());
 
                 if (majorGroupData.getChecked()) {
                     itemGroup.setChecked(true);
@@ -403,7 +401,6 @@ public class TransferController {
 
                         return response;
                     }
-                    System.out.println("next");
                     rows = driver.findElements(By.tagName("tr"));
                 }
             }

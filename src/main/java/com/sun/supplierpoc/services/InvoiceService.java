@@ -39,14 +39,17 @@ public class InvoiceService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType, Account account){
-        HashMap<String, Object> data = new HashMap<>();
+        HashMap<String, Object> response = new HashMap<>();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
         }
 
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
@@ -58,10 +61,10 @@ public class InvoiceService {
             if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", "Invalid username and password.");
-                data.put("invoices", invoices);
-                return data;
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("invoices", invoices);
+                return response;
             }
 
             String approvedInvoices = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
@@ -92,19 +95,19 @@ public class InvoiceService {
                 if (!dateFormat.format(startDate).equals(dateFormat.format(date))){
                     driver.quit();
 
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Failed to get invoices of today, please try again or contact support team.");
-                    data.put("invoices", invoices);
-                    return data;
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    response.put("invoices", invoices);
+                    return response;
                 }
 
                 if (!dateFormat.format(endDate).equals(dateFormat.format(date))){
                     driver.quit();
 
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Failed to get invoices of today, please try again or contact support team.");
-                    data.put("invoices", invoices);
-                    return data;
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    response.put("invoices", invoices);
+                    return response;
                 }
 
             }
@@ -115,7 +118,6 @@ public class InvoiceService {
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
-            // wait until loading finished "tableLoadingBar"
             try{
                 WebDriverWait wait = new WebDriverWait(driver, 60);
                 wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
@@ -123,10 +125,10 @@ public class InvoiceService {
             } catch (Exception e) {
                 driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
-                data.put("invoices", invoices);
-                return data;
+                response.put("status", Constants.FAILED);
+                response.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
+                response.put("invoices", invoices);
+                return response;
             }
             try{
                 WebDriverWait wait = new WebDriverWait(driver, 60);
@@ -165,14 +167,14 @@ public class InvoiceService {
                     invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
 
                     // check if vendor exits in middleware
-//                    td = cols.get(columns.indexOf("vendor"));
-//                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
-//                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
-//
-//                    if (!(boolean) oldSupplierData.get("status")) {
-//                        continue;
-//                    }
-//                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
+    //                    td = cols.get(columns.indexOf("vendor"));
+    //                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
+    //                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+    //
+    //                    if (!(boolean) oldSupplierData.get("status")) {
+    //                        continue;
+    //                    }
+    //                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
 
                     // Mock supplier of now
                     HashMap<String, String> supplierData = new HashMap<>();
@@ -182,6 +184,11 @@ public class InvoiceService {
                     SyncJobData supplier = new SyncJobData(supplierData, Constants.RECEIVED, "", new Date(), "");
 
                     invoice.put(columns.get(columns.indexOf("vendor")), supplier);
+
+                    String link = cols.get(columns.indexOf("invoice_no.")).findElement(By.tagName("a")).getAttribute("href");
+                    link = link.substring(link.indexOf('(') + 1, link.indexOf(','));
+                    String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
+                    invoice.put("reference_link", fullLink);
 
                     for (int j = 0; j < cols.size(); j++) {
                         if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
@@ -202,22 +209,43 @@ public class InvoiceService {
                 }
             }
 
+            for (HashMap<String, Object> invoice:invoices) {
+                String reference = getInvoicesReceipt(driver, (String) invoice.get("reference_link"));
+                invoice.put("reference", reference);
+            }
+
             driver.quit();
 
-            data.put("status", Constants.SUCCESS);
-            data.put("message", "");
-            data.put("invoices", invoices);
-            return data;
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "");
+            response.put("invoices", invoices);
+            return response;
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
 
-            data.put("status", Constants.FAILED);
-            data.put("message", e.getMessage());
-            data.put("invoices", invoices);
-            return data;
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            response.put("invoices", invoices);
+            return response;
         }
 
+    }
+
+    public String getInvoicesReceipt(WebDriver driver, String link){
+        String reference = "";
+        try{
+            driver.get(link);
+
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("igtxtdfReference")));
+
+            reference = driver.findElement(By.id("igtxtdfReference")).getAttribute("value");
+            return reference;
+        }
+        catch (Exception ex){
+            return reference;
+        }
     }
 
     public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
@@ -245,12 +273,20 @@ public class InvoiceService {
             HashMap<String, String> data = new HashMap<>();
 
             data.put("invoiceNo", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
+            if (((String)invoice.get("reference")).equals("")){
+                data.put("reference", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
+                data.put("transactionReference", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
+            }
+            else {
+                data.put("reference", invoice.get("reference") == null? "0": (String)invoice.get("reference"));
+                data.put("transactionReference", invoice.get("reference") == null? "0": (String)invoice.get("reference"));
+            }
 
             data.put("from_cost_center", supplier.getData().get("supplier") == null? "0":supplier.getData().get("supplier"));
             data.put("from_account_code", supplier.getData().get("accountCode") == null? "0":supplier.getData().get("accountCode"));
 
             data.put("to_cost_center", costCenter.costCenter == null? "0":costCenter.costCenter);
-            data.put("to_account_code", costCenter.costCenter == null? "0":costCenter.costCenter);
+            data.put("to_account_code", costCenter.costCenter == null? "0":costCenter.accountCode);
 
             data.put("status", invoice.get("status") == null? "0":(String)invoice.get("status"));
             data.put("invoiceDate", invoice.get("invoice_date") == null? "0":(String)invoice.get("invoice_date"));
@@ -267,9 +303,6 @@ public class InvoiceService {
                 data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenter);
             else
                 data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenter);
-
-            data.put("transactionReference", invoice.get("invoice_no.") == null? "0": (String)invoice.get("invoice_no."));
-
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

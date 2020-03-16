@@ -25,31 +25,27 @@ public class SetupEnvironment {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public WebDriver setupSeleniumEnv(boolean driverFlag) {
-        try {
-            if (driverFlag){
-                String chromePath = "chromedriver.exe";
-                System.setProperty("webdriver.chrome.driver", chromePath);
-                ChromeOptions options = new ChromeOptions();
-                options.addArguments(
-                        "--headless",
-                        "--disable-gpu",
-                        "--window-size=1920,1200",
-                        "--ignore-certificate-errors");
-                return new ChromeDriver(options);
-            }
-            else {
-                FirefoxBinary firefoxBinary = new FirefoxBinary();
-                firefoxBinary.addCommandLineOptions("--headless");
+        if (driverFlag){
+            String chromePath = "chromedriver.exe";
+            System.setProperty("webdriver.chrome.driver", chromePath);
+            ChromeOptions options = new ChromeOptions();
+            options.addArguments(
+                    "--headless",
+                    "--disable-gpu",
+                    "--window-size=1920,1200",
+                    "--ignore-certificate-errors");
+            return new ChromeDriver(options);
+        }
+        else {
+            FirefoxBinary firefoxBinary = new FirefoxBinary();
+//                firefoxBinary.addCommandLineOptions("--headless");
 
-                System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
-                FirefoxOptions firefoxOptions = new FirefoxOptions();
+            System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
+            FirefoxOptions firefoxOptions = new FirefoxOptions();
 
-                firefoxOptions.setBinary(firefoxBinary);
+            firefoxOptions.setBinary(firefoxBinary);
 //            firefoxOptions.setCapability("marionette", true);
-                return new FirefoxDriver(firefoxOptions);
-            }
-        } catch (Exception e) {
-            return null;
+            return new FirefoxDriver(firefoxOptions);
         }
     }
 

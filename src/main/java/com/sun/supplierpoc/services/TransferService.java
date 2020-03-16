@@ -59,14 +59,17 @@ public class TransferService {
     public HashMap<String, Object> getTransferData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice,
                                                    Account account) {
         HashMap<String, Object> data = new HashMap<>();
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
             data.put("status", Constants.FAILED);
             data.put("message", "Failed to establish connection with firefox driver.");
             data.put("invoices", new ArrayList<>());
             return data;
         }
+
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
         ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();;
@@ -169,7 +172,6 @@ public class TransferService {
     }
 
     public static boolean checkPagination(WebDriver driver, String itemChanged) {
-        int counter = 0;
         String first_element_text = driver.findElement(By.id(itemChanged)).getText();
         driver.findElement(By.linkText("Next")).click();
         String element_txt = "";
@@ -182,7 +184,7 @@ public class TransferService {
             element_txt = "";
         }
 
-        while (counter <= 20){
+        while (true){
             if (element_txt.equals(first_element_text)){
                 wait = new WebDriverWait(driver, 20);
                 element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
@@ -192,12 +194,9 @@ public class TransferService {
                     element_txt = "";
                 }
             }
-            else {
-                return true;
-            }
-            counter++;
+            else break;
         }
-        return false;
+        return true;
     }
 
     private void getBookedTransferDetails(
@@ -220,7 +219,7 @@ public class TransferService {
                 }
 
                 // check if this Item belong to selected items
-                WebElement td = cols.get(columns.indexOf("Item"));
+                WebElement td = cols.get(columns.indexOf("item"));
 
                 Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
 
@@ -229,6 +228,9 @@ public class TransferService {
                 }
 
                 String overGroup = oldItemData.getOverGroup();
+                if (overGroup.equals("")){
+                    continue;
+                }
 
                 transferDetails.put("Item", td.getText());
 
@@ -243,18 +245,18 @@ public class TransferService {
 
             for (Journal journal : journals) {
                 HashMap<String, Object> journalEntry = new HashMap<>();
-                HashMap<String, String> fromCostCenter = (HashMap<String, String>) transfer.get("from_cost_center");
-                HashMap<String, String> toCostCenter = (HashMap<String, String>) transfer.get("to_cost_center");
+                CostCenter fromCostCenter = (CostCenter) transfer.get("from_cost_center");
+                CostCenter toCostCenter = (CostCenter) transfer.get("to_cost_center");
 
                 journalEntry.put("total", journal.getTotalTransfer());
-                journalEntry.put("from_cost_center", fromCostCenter.get("costCenter"));
-                journalEntry.put("from_account_code", fromCostCenter.get("accountCode"));
+                journalEntry.put("from_cost_center", fromCostCenter.costCenter);
+                journalEntry.put("from_account_code", fromCostCenter.accountCode);
 
-                journalEntry.put("to_cost_center", toCostCenter.get("costCenter"));
-                journalEntry.put("to_account_code", fromCostCenter.get("accountCode"));
+                journalEntry.put("to_cost_center", toCostCenter.costCenter);
+                journalEntry.put("to_account_code", fromCostCenter.accountCode);
 
-                journalEntry.put("description", "Transfer From " + fromCostCenter.get("costCenter") + " to "+
-                        toCostCenter.get("costCenter") + " - " + journal.getOverGroup());
+                journalEntry.put("description", "Transfer From " + fromCostCenter.costCenter + " to "+
+                        toCostCenter.costCenter + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());
@@ -396,19 +398,15 @@ public class TransferService {
         JAXBContext jaxbContext;
         try {
             jaxbContext = JAXBContext.newInstance(JournalSSC.class);
-
             Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
             JournalSSC query = (JournalSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
-
-            System.out.println(query.getPayload());
 
             boolean status = query.getPayload().get(0).getLine().getStatus().equals("success");
             ArrayList<Message> messages = query.getPayload().get(0).getLine().getMessages().getMessage();
             String message = "";
             for (Message msg : messages) {
                 if (msg.getLevel().equals("error")){
-                    message += " - ";
+                    message += " * ";
                     message  +=  msg.getUserText();
                 }
             }
@@ -431,6 +429,9 @@ public class TransferService {
         ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
         OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, addedJournalEntry.getData().get("overGroup"));
 
+        if (!oldOverGroupData.getChecked()){
+
+        }
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);

@@ -188,13 +188,17 @@ public class InvoiceController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        HashMap<String, Object> data = new HashMap<>();
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
         }
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
@@ -208,10 +212,10 @@ public class InvoiceController {
             if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", "Invalid username and password.");
-                data.put("costCenters", costCenters);
-                return data;
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("costCenters", costCenters);
+                return response;
             }
 
             String costCentersURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/CostCenters/OverviewCC.aspx";
@@ -237,20 +241,20 @@ public class InvoiceController {
             }
             driver.quit();
 
-            data.put("status", Constants.SUCCESS);
-            data.put("message", "Get cost centers successfully");
-            data.put("costCenters", costCenters);
-            return data;
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "Get cost centers successfully");
+            response.put("costCenters", costCenters);
+            return response;
 
         }catch (Exception e) {
             e.printStackTrace();
 
             driver.quit();
 
-            data.put("status", Constants.FAILED);
-            data.put("message", e);
-            data.put("costCenters", costCenters);
-            return data;
+            response.put("status", Constants.FAILED);
+            response.put("message", e);
+            response.put("costCenters", costCenters);
+            return response;
         }
     }
 

@@ -165,11 +165,13 @@ public class SupplierController {
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
 
-        if (driver == null){
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
             response.put("status", Constants.FAILED);
             response.put("message", "Failed to establish connection with firefox driver.");
             response.put("invoices", new ArrayList<>());
@@ -243,11 +245,13 @@ public class SupplierController {
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
-
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
         HashMap<String, Object> response = new HashMap<>();
 
-        if (driver == null){
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
             response.put("status", Constants.FAILED);
             response.put("message", "Failed to establish connection with firefox driver.");
             response.put("invoices", new ArrayList<>());

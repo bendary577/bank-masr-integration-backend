@@ -256,14 +256,17 @@ public class SupplierService {
 
     public HashMap<String, Object> sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob,
                                                      SyncJobType syncJobType, Account account){
-        HashMap<String, Object> data = new HashMap<>();
+        HashMap<String, Object> response = new HashMap<>();
 
-        WebDriver driver = setupEnvironment.setupSeleniumEnv(false);
-        if (driver == null){
-            data.put("status", Constants.FAILED);
-            data.put("message", "Failed to establish connection with firefox driver.");
-            data.put("invoices", new ArrayList<>());
-            return data;
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
         }
 
         try {
@@ -273,9 +276,9 @@ public class SupplierService {
             if (!setupEnvironment.loginOHIM(driver, url, account)){
                 driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", "Invalid username and password.");
-                return data;
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                return response;
             }
 
             for (SyncJobData supplier : suppliers) {
@@ -286,8 +289,9 @@ public class SupplierService {
                 // wait to make sure elements exits
                 WebDriverWait wait = new WebDriverWait(driver, 10);
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxtLF_NAME")));
-
                 driver.findElement(By.id("igtxtLF_NAME")).sendKeys(((HashMap) supplier.getData()).get("supplier").toString());
+
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxttb__ctl0_LF_KONR")));
                 driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
 
                 //////////////////////////////////////  Set Hidden Elements  ///////////////////////////////////////////
@@ -306,8 +310,6 @@ public class SupplierService {
                     WebElement taxValue = driver.findElement(By.id("tb__ctl0_cfTaxes_Value"));
                     wait.until(ExpectedConditions.textToBePresentInElementValue(taxValue, tax));
                 } catch (Exception e) {
-                    driver.quit();
-
                     String message = "Time out our while setting supplier tax";
                     supplier.setStatus(Constants.FAILED);
                     supplier.setReason(message);
@@ -330,8 +332,6 @@ public class SupplierService {
                     WebElement groupValue = driver.findElement(By.id("tb__ctl0_cfVendorGroup_Value"));
                     wait.until(ExpectedConditions.textToBePresentInElementValue(groupValue, group));
                 } catch (Exception e) {
-                    driver.quit();
-
                     String message = "Time out our while setting supplier group";
                     supplier.setStatus(Constants.FAILED);
                     supplier.setReason(message);
@@ -417,16 +417,16 @@ public class SupplierService {
 
             driver.quit();
 
-            data.put("status", Constants.SUCCESS);
-            data.put("message", "Save Suppliers Successfully.");
-            return data;
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "Save Suppliers Successfully.");
+            return response;
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
 
-            data.put("status", Constants.FAILED);
-            data.put("message", e.getMessage());
-            return data;
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            return response;
         }
     }
 }

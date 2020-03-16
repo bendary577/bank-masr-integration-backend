@@ -59,7 +59,7 @@ public class WastageService {
         }
 
         ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
-        ArrayList<HashMap<String, Object>> wastesStatus = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> wastesStatus;
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
@@ -87,6 +87,8 @@ public class WastageService {
 
                 if (!CostCenterData.checked) continue;
 
+                wastesStatus = new ArrayList<>();
+
                 String locationName = CostCenterData.locationName;
 
                 String bookedWasteUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=497";
@@ -94,7 +96,7 @@ public class WastageService {
 
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 60);
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
+                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
                 }
                 catch (Exception ex){
                     System.out.println("lolo error");
@@ -107,7 +109,7 @@ public class WastageService {
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
                     driver.findElement(By.id("calendarBtn")).click();
 
-                    Select locationDate= new Select(driver.findElement(By.id("locationData")));
+                    Select locationDate = new Select(driver.findElement(By.id("locationData")));
                     locationDate.selectByVisibleText(locationName);
 
                     String selectedOption = locationDate.getFirstSelectedOption().getText().strip();
@@ -116,8 +118,9 @@ public class WastageService {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                    Select businessDate = new Select(driver.findElement(By.id("'selectQuick'")));
+                    Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
                     businessDate.selectByVisibleText(timePeriod);
+
                     selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                     while (!selectedOption.equals(timePeriod)){}
                 }
@@ -164,7 +167,7 @@ public class WastageService {
 //                    selectedOption = date.getFirstSelectedOption().getText().strip();
 //                    while (!selectedOption.equals(timePeriod)){}
 //                }
-
+                driver.switchTo().defaultContent();
                 driver.findElement(By.id("Run Report")).click();
 
                 String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";
@@ -198,7 +201,8 @@ public class WastageService {
                         if (j == columns.indexOf("document_name")){
                             String extension = td.findElement(By.tagName("div")).getAttribute("onclick");
                             int index = extension.indexOf('\'');
-                            extension = extension.substring(0, index);
+                            int index2 = extension.indexOf(',');
+                            extension = extension.substring(index+1 , index2-1);
                             waste.put("waste_details_link", extension);
                             continue;
                         }
@@ -238,7 +242,7 @@ public class WastageService {
             driver.get(baseURL + waste.get("waste_details_link"));
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 6);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
             for (int i = 7; i < rows.size(); i++) {
                 HashMap<String, Object> transferDetails = new HashMap<>();
@@ -250,7 +254,7 @@ public class WastageService {
                 }
 
                 // check if this Item belong to selected items
-                WebElement td = cols.get(columns.indexOf("Item"));
+                WebElement td = cols.get(columns.indexOf("item"));
 
                 Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
 
@@ -287,7 +291,7 @@ public class WastageService {
                 journalEntry.put("to_cost_center", costCenter.costCenter);
                 journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
 
-                journalEntry.put("description", "Wastage Entry For " + costCenter.costCenter + " " + waste.get("waste_type") + " - " + " - " + journal.getOverGroup());
+                journalEntry.put("description", "Wastage Entry For " + costCenter.costCenter + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());

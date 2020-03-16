@@ -41,20 +41,6 @@ public class AccountController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
-    private RestTemplate restTemplate;
-
-    @Value("${oauth.auth.url}")
-    private String authUrl;
-
-    @Value("${oauth.token.url}")
-    private String accessTokenUrl;
-
-    @Value("${oauth.token.refresh.url}")
-    private String refreshTokenUrl;
-
-    @Value("${oauth.id.secret}")
-    private String encodedIdSecret;
-    @Autowired
     CustomClientDetailsService customClientDetailsService;
     @Autowired
     UserDetailsService userDetailsService;

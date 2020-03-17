@@ -241,7 +241,7 @@ public class JournalService {
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
 
-                varianceData.put("total", String.valueOf(journalData.getTotalVariance()));
+                varianceData.put("total", String.valueOf(Math.round(journalData.getTotalVariance())));
                 varianceData.put("from_cost_center", costCenter.costCenter);
                 varianceData.put("from_account_code", costCenter.accountCode);
 
@@ -267,7 +267,7 @@ public class JournalService {
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
 
-                costData.put("total", String.valueOf(journalData.getTotalCost()));
+                costData.put("total", String.valueOf(Math.round(journalData.getTotalCost())));
                 costData.put("from_cost_center", costCenter.costCenter);
                 costData.put("from_account_code", costCenter.accountCode);
 

@@ -78,7 +78,21 @@ public class InvoiceController {
         }
 
         if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
-            String message = "Map time period before sync invoices.";
+            String message = "Configure time period before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getExpensesAccount().equals("")){
+            String message = "Configure expenses account before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (invoiceSyncJobType.getConfiguration().getInventoryAccount().equals("")){
+            String message = "Configure inventory account before sync invoices.";
             response.put("message", message);
             response.put("success", false);
             return response;

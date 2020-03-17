@@ -143,7 +143,11 @@ public class Conversions {
     }
 
     public float convertStringToFloat(String value){
-        value = value.toLowerCase().replaceAll(",", "").replace("(", "").replace(")", "");
-        return Float.parseFloat(value);
+        value = value.toLowerCase().replaceAll(",", "");
+        if (value.contains("(")){
+            value = value.replace("(", "").replace(")", "");
+            value = "-" + value;
+        }
+        return Math.round(Float.parseFloat(value));
     }
 }

@@ -256,7 +256,7 @@ public class TransferService {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
 
-                journalEntry.put("total", journal.getTotalTransfer());
+                journalEntry.put("total", Math.round(journal.getTotalTransfer()));
                 journalEntry.put("from_cost_center", fromCostCenter.costCenter);
                 journalEntry.put("from_account_code", fromCostCenter.accountCode);
 

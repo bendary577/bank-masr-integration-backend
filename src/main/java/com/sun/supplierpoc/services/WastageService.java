@@ -260,7 +260,7 @@ public class WastageService {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
-                journalEntry.put("total", journal.getTotalTransfer());
+                journalEntry.put("total", journal.getTotalWaste());
                 journalEntry.put("from_cost_center", costCenter.costCenterReference);
                 journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
 

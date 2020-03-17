@@ -119,6 +119,7 @@ public class WastageController {
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "Sync Invoices Successfully.");
+                        response.put("success", true);
                     }
                 }
                 else {

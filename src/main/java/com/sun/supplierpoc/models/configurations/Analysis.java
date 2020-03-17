@@ -5,9 +5,6 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 
 public class Analysis implements Serializable {
-
-    @Id
-    private String id;
     private boolean checked;
     private String number;
     private String codeElement;
@@ -16,12 +13,11 @@ public class Analysis implements Serializable {
     public Analysis() {
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
+    public Analysis(boolean checked, String number, String codeElement, String reference) {
+        this.checked = checked;
+        this.number = number;
+        this.codeElement = codeElement;
+        this.reference = reference;
     }
 
     public boolean getChecked() {

@@ -37,14 +37,15 @@ public class SetupEnvironment {
             return new ChromeDriver(options);
         }
         else {
+
             FirefoxBinary firefoxBinary = new FirefoxBinary();
             firefoxBinary.addCommandLineOptions("--headless");
 
-            System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
+//            System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
-//            firefoxOptions.setCapability("marionette", true);
+            firefoxOptions.setCapability("marionette", true);
             return new FirefoxDriver(firefoxOptions);
         }
     }

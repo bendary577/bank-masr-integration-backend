@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.Analysis;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,7 +28,23 @@ public class SyncJobTypeController {
     @ResponseBody
     public SyncJobType getSyncJobType(@RequestParam(name = "typeName") String syncJobTypeName, Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        return  syncJobTypeRepo.findByNameAndAccountId(syncJobTypeName, user.getAccountId());
+        SyncJobType syncJobType =  syncJobTypeRepo.findByNameAndAccountId(syncJobTypeName, user.getAccountId());
+        if (syncJobType.getConfiguration().getAnalysis().size() == 0){
+            ArrayList<Analysis> analysis = new ArrayList<>();
+            analysis.add(new Analysis(false, "1", "", ""));
+            analysis.add(new Analysis(false, "2", "", ""));
+            analysis.add(new Analysis(false, "3", "", ""));
+            analysis.add(new Analysis(false, "4", "", ""));
+            analysis.add(new Analysis(false, "5", "", ""));
+            analysis.add(new Analysis(false, "6", "", ""));
+            analysis.add(new Analysis(false, "7", "", ""));
+            analysis.add(new Analysis(false, "8", "", ""));
+            analysis.add(new Analysis(false, "9", "", ""));
+            analysis.add(new Analysis(false, "10", "", ""));
+            syncJobType.getConfiguration().setAnalysis(analysis);
+        }
+
+        return syncJobType;
     }
 
     @GetMapping("/getSyncJobTypes")

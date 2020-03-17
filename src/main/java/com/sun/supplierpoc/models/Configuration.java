@@ -25,6 +25,9 @@ public class Configuration implements Serializable {
     private String day = "";
     private String dayName = "";
 
+    private String inventoryAccount = "";
+    private String expensesAccount = "";
+
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
@@ -36,16 +39,7 @@ public class Configuration implements Serializable {
 
     private AccountSettings accountSettings;
 
-    public Configuration() {
-//        items ;
-//        itemGroups;
-//        overGroups;
-//        majorGroups;
-//        costCenters;
-//        costCenterLocationMapping;
-//        wasteGroups;
-//        analysis;
-    }
+    public Configuration() { }
 
     public String getId() {
         return id;
@@ -157,6 +151,22 @@ public class Configuration implements Serializable {
 
     public void setDayName(String dayName) {
         this.dayName = dayName;
+    }
+
+    public String getInventoryAccount() {
+        return inventoryAccount;
+    }
+
+    public void setInventoryAccount(String inventoryAccount) {
+        this.inventoryAccount = inventoryAccount;
+    }
+
+    public String getExpensesAccount() {
+        return expensesAccount;
+    }
+
+    public void setExpensesAccount(String expensesAccount) {
+        this.expensesAccount = expensesAccount;
     }
 
     public ArrayList<Item> getItems() {

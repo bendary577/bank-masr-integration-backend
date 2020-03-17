@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -100,12 +101,13 @@ public class JournalController {
         syncJobRepo.save(syncJob);
 
         try {
+            ArrayList<OverGroup> overGroups = journalSyncJobType.getConfiguration().getOverGroups();
             HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, invoiceSyncJobType, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
-                    ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob);
+                    ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob, overGroups);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
                         invoiceController.handleSendJournal(journalSyncJobType, journalSyncJobType, syncJob, addedJournals, account, voucher);

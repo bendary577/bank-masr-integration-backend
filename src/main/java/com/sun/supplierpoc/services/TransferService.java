@@ -56,7 +56,7 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobType, SyncJobType syncJobTypeApprovedInvoice,
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeJournal, SyncJobType syncJobTypeApprovedInvoice,
                                                    Account account) {
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver;
@@ -73,7 +73,8 @@ public class TransferService {
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
         ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();;
-        ArrayList<Item> items =  syncJobType.getConfiguration().getItems();
+        ArrayList<Item> items =  syncJobTypeJournal.getConfiguration().getItems();
+        ArrayList<OverGroup> overGroups =  syncJobTypeJournal.getConfiguration().getOverGroups();
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
@@ -150,7 +151,7 @@ public class TransferService {
                 }
             }
             for (HashMap<String, Object> transfer: transfers) {
-                getBookedTransferDetails(items, transfer, driver, journalEntries);
+                getBookedTransferDetails(items, overGroups, transfer, driver, journalEntries);
             }
 
             driver.quit();
@@ -200,7 +201,7 @@ public class TransferService {
     }
 
     private void getBookedTransferDetails(
-            ArrayList<Item> items, HashMap<String, Object> transfer, WebDriver driver,
+            ArrayList<Item> items, ArrayList<OverGroup> overGroups, HashMap<String, Object> transfer, WebDriver driver,
             ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
@@ -268,6 +269,10 @@ public class TransferService {
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());
 
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
 
                 journalEntries.add(journalEntry);
             }
@@ -432,9 +437,7 @@ public class TransferService {
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
                                    SyncJobType syncJobTypeJournal, SyncJobData addedJournalEntry) {
-        ArrayList<OverGroup> overGroups = syncJobTypeJournal.getConfiguration().getOverGroups();
         ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
-        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, addedJournalEntry.getData().get("overGroup"));
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);
@@ -445,9 +448,9 @@ public class TransferService {
 
         Element accountCodeElement = doc.createElement("AccountCode");
         if (creditDebitFlag) // Credit
-            accountCodeElement.appendChild(doc.createTextNode(oldOverGroupData.getInventoryAccount()));
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("inventoryAccount")));
         else // Debit
-            accountCodeElement.appendChild(doc.createTextNode(oldOverGroupData.getExpensesAccount()));
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("expensesAccount")));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");

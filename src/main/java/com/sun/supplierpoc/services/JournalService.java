@@ -7,6 +7,7 @@ import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
@@ -224,7 +225,8 @@ public class JournalService {
         }
     }
 
-    public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob){
+    public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
+                                                  ArrayList<OverGroup> overGroups){
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
         for (HashMap<String, Object> journal : journals) {
@@ -235,28 +237,6 @@ public class JournalService {
             if (costCenter.costCenterReference.equals("")){
                 costCenter.costCenterReference = costCenter.costCenter;
             }
-
-//            if (journalData.getTotalWaste() != 0){
-//                HashMap<String, String> wasteData = new HashMap<>();
-//
-//                wasteData.put("total", String.valueOf(journalData.getTotalWaste()));
-//                wasteData.put("from_cost_center", costCenter.costCenter);
-//                wasteData.put("from_account_code", costCenter.accountCode);
-//
-//                wasteData.put("to_cost_center", costCenter.costCenter);
-//                wasteData.put("to_account_code", costCenter.accountCode);
-//                wasteData.put("description", "Wastage Entry For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
-//
-//                wasteData.put("transactionReference", "");
-//                wasteData.put("overGroup", journalData.getOverGroup());
-//
-//                SyncJobData syncJobData = new SyncJobData(wasteData, Constants.RECEIVED, "", new Date(),
-//                        syncJob.getId());
-//                syncJobDataRepo.save(syncJobData);
-//
-//                addedJournals.add(syncJobData);
-//
-//            }
 
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
@@ -271,6 +251,11 @@ public class JournalService {
 
                 varianceData.put("transactionReference", "");
                 varianceData.put("overGroup", journalData.getOverGroup());
+
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
+
+                varianceData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                varianceData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
 
                 SyncJobData syncJobData = new SyncJobData(varianceData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -292,6 +277,11 @@ public class JournalService {
 
                 costData.put("transactionReference", "");
                 costData.put("overGroup", journalData.getOverGroup());
+
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
+
+                costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
 
                 SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());

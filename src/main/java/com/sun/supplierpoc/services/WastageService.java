@@ -262,15 +262,20 @@ public class WastageService {
 
                 journalEntry.put("total", journal.getTotalWaste());
                 journalEntry.put("from_cost_center", costCenter.costCenter);
-                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
+//                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
+                journalEntry.put("from_account_code", costCenter.accountCode);
 
                 journalEntry.put("to_cost_center", costCenter.costCenter);
-                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
+//                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
+                journalEntry.put("to_account_code", costCenter.accountCode);
 
                 journalEntry.put("description", "Wastage Entry For " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());
+
+                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
 
                 journalEntries.add(journalEntry);
             }

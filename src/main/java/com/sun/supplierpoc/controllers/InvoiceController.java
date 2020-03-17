@@ -285,6 +285,7 @@ public class InvoiceController {
                 // Sun Data
                 else if (accountERD.equals("SUN")){
                     costCenter.accountCode = oldCostCenterData.accountCode;
+                    costCenter.locationName = oldCostCenterData.locationName;
                     costCenter.costCenterReference = oldCostCenterData.costCenterReference;
                 }
             }

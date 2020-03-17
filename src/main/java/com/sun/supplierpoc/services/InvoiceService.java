@@ -301,9 +301,11 @@ public class InvoiceService {
             data.put("total", invoice.get("gross") == null? "0": String.valueOf(conversions.convertStringToFloat((String)invoice.get("gross"))));
             data.put("createdBy", invoice.get("created_by") == null? "0":(String)invoice.get("created_by"));
             data.put("createdAt", invoice.get("created_at") == null? "0":(String)invoice.get("created_at"));
-            // Fixed for now
+
             data.put("overGroup", "General");
 
+            data.put("inventoryAccount", syncJobType.getConfiguration().getInventoryAccount());
+            data.put("expensesAccount", syncJobType.getConfiguration().getExpensesAccount());
 
             if (!flag)
                 data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenterReference);

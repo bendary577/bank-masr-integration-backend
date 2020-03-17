@@ -285,6 +285,7 @@ public class InvoiceController {
                 // Sun Data
                 else if (accountERD.equals("SUN")){
                     costCenter.accountCode = oldCostCenterData.accountCode;
+                    costCenter.costCenterReference = oldCostCenterData.costCenterReference;
                 }
             }
             else {
@@ -301,6 +302,7 @@ public class InvoiceController {
                     costCenter.interCompany = "000";
                     costCenter.location = "11101";
                     costCenter.currency = "AED";
+                    costCenter.costCenterReference = "";
                 }
                 // Sun Data
                 else if(accountERD.equals("SUN")){

@@ -318,7 +318,7 @@ public class TransferService {
     }
 
     public HashMap<String, Object> sendJournalData(SyncJobData addedJournalEntry, SyncJobType syncJobType,
-                                                   SyncJobType syncJobTypeJournal, Account account, IAuthenticationVoucher voucher){
+                                                    Account account, IAuthenticationVoucher voucher){
         HashMap<String, Object> data = new HashMap<>();
 
         ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
@@ -376,10 +376,10 @@ public class TransferService {
             payloadElement.appendChild(ledgerElement);
 
             ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            createJournalLine(true, doc, ledgerElement, syncJobType, syncJobTypeJournal, addedJournalEntry);
+            createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
 
             ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-            createJournalLine(false, doc, ledgerElement, syncJobType, syncJobTypeJournal, addedJournalEntry);
+            createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
 
             ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
             TransformerFactory tf = TransformerFactory.newInstance();
@@ -436,7 +436,7 @@ public class TransferService {
     }
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
-                                   SyncJobType syncJobTypeJournal, SyncJobData addedJournalEntry) {
+                                   SyncJobData addedJournalEntry) {
         ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
 
         Element lineElement = doc.createElement("Line");
@@ -510,16 +510,18 @@ public class TransferService {
 
         lineElement.appendChild(accountCodeElement);
 
-        // T3
-        Element analysisCode2ElementT3 = doc.createElement("AnalysisCode3");
-        analysisCode2ElementT3.appendChild(doc.createTextNode("13"));
+        // T#loctionAnalysis
+        String locationAnalysis = syncJobType.getConfiguration().getLocationAnalysis();
+
+        Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
+        analysisCode2ElementT3.appendChild(doc.createTextNode("1" + locationAnalysis));
         lineElement.appendChild(analysisCode2ElementT3);
 
-        Element enterAnalysis1ElementT3 = doc.createElement("EnterAnalysis3");
+        Element enterAnalysis1ElementT3 = doc.createElement("EnterAnalysis"+ locationAnalysis);
         enterAnalysis1ElementT3.appendChild(doc.createTextNode("1"));
         accountsElement.appendChild(enterAnalysis1ElementT3);
 
-        Element analysis2ElementT3 = doc.createElement("Analysis3");
+        Element analysis2ElementT3 = doc.createElement("Analysis" + locationAnalysis);
         accountsElement.appendChild(analysis2ElementT3);
 
         if (creditDebitFlag){
@@ -534,6 +536,9 @@ public class TransferService {
         }
 
         for (Analysis analysisObject: analysis) {
+            if (analysisObject.getNumber().equals(locationAnalysis)){
+                continue;
+            }
             if (analysisObject.getChecked()){
 
                 Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.getNumber());

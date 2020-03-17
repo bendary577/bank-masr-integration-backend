@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -74,7 +75,7 @@ public class CreditNoteController {
             return sunConfigResponse;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
+        if (creditNoteSyncJobType.getConfiguration().getTimePeriod().equals("")){
             String message = "Map time period before sync invoices.";
             response.put("message", message);
             response.put("success", false);
@@ -92,7 +93,9 @@ public class CreditNoteController {
                 account.getId(), creditNoteSyncJobType.getId());
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = invoiceService.getInvoicesData(true, invoiceSyncJobType, account);
+        ArrayList<CostCenter> costCenters = invoiceSyncJobType.getConfiguration().getCostCenters();
+
+        HashMap<String, Object> data = invoiceService.getInvoicesData(true, invoiceSyncJobType, costCenters, account);
 
         if (data.get("status").equals(Constants.SUCCESS)){
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");

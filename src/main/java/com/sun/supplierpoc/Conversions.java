@@ -105,40 +105,46 @@ public class Conversions {
         }
 
         if (syncJobType.getConfiguration().getJournalSource().equals("")){
-            String message = "Configure journal source before sync invoices " + syncJobType.getName();
+            String message = "Configure journal source before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (syncJobType.getConfiguration().getJournalType().equals("")){
-            String message = "Configure journal type before sync invoices " + syncJobType.getName();
+            String message = "Configure journal type before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (syncJobType.getConfiguration().getCurrencyCode().equals("")){
-            String message = "Configure currency code before sync invoices " + syncJobType.getName();
+            String message = "Configure currency code before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (syncJobType.getConfiguration().getPostingType().equals("")){
-            String message = "Configure posting type before sync invoices " + syncJobType.getName();
+            String message = "Configure posting type before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (syncJobType.getConfiguration().getAnalysis().size() == 0){
-            String message = "Configure analysis before sync invoices " + syncJobType.getName();
+            String message = "Configure analysis before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
+        if (syncJobType.getConfiguration().getLocationAnalysis().equals("")){
+            String message = "Configure location ledger analysis before sync invoices " + syncJobType.getName().toLowerCase();
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
         return null;
     }
 

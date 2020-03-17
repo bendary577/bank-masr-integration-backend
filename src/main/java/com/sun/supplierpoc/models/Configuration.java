@@ -27,6 +27,7 @@ public class Configuration implements Serializable {
 
     private String inventoryAccount = "";
     private String expensesAccount = "";
+    private String locationAnalysis = "";
 
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
@@ -167,6 +168,14 @@ public class Configuration implements Serializable {
 
     public void setExpensesAccount(String expensesAccount) {
         this.expensesAccount = expensesAccount;
+    }
+
+    public String getLocationAnalysis() {
+        return locationAnalysis;
+    }
+
+    public void setLocationAnalysis(String locationAnalysis) {
+        this.locationAnalysis = locationAnalysis;
     }
 
     public ArrayList<Item> getItems() {

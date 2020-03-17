@@ -110,7 +110,9 @@ public class InvoiceController {
 
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = invoiceService.getInvoicesData(false, invoiceSyncJobType, account);
+        ArrayList<CostCenter> costCenters = invoiceSyncJobType.getConfiguration().getCostCenters();
+
+        HashMap<String, Object> data = invoiceService.getInvoicesData(false, invoiceSyncJobType, costCenters, account);
 
         if (data.get("status").equals(Constants.SUCCESS)){
             ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
@@ -174,7 +176,7 @@ public class InvoiceController {
         HashMap<String, Object> data;
         for (SyncJobData addedJournal : addedJournals) {
             try {
-                data  = transferService.sendJournalData(addedJournal, syncJobType, syncJobTypeJournal, account, voucher);
+                data  = transferService.sendJournalData(addedJournal, syncJobType, account, voucher);
                 if ((Boolean) data.get("status")){
                     addedJournal.setStatus(Constants.SUCCESS);
                     addedJournal.setReason("");

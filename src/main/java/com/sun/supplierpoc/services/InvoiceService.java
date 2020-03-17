@@ -38,7 +38,8 @@ public class InvoiceService {
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType, Account account){
+    public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType, ArrayList<CostCenter> costCenters,
+                                                   Account account){
         HashMap<String, Object> response = new HashMap<>();
 
         WebDriver driver;
@@ -53,7 +54,6 @@ public class InvoiceService {
         }
 
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
-        ArrayList<CostCenter> costCenters = syncJobType.getConfiguration().getCostCenters();
 
         try {
             String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";

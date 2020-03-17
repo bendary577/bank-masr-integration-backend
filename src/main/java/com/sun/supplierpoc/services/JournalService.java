@@ -236,36 +236,36 @@ public class JournalService {
                 costCenter.costCenterReference = costCenter.costCenter;
             }
 
-            if (journalData.getTotalWaste() != 0){
-                HashMap<String, String> wasteData = new HashMap<>();
-
-                wasteData.put("total", String.valueOf(journalData.getTotalWaste()));
-                wasteData.put("from_cost_center", costCenter.costCenterReference);
-                wasteData.put("from_account_code", costCenter.accountCode);
-
-                wasteData.put("to_cost_center", costCenter.costCenterReference);
-                wasteData.put("to_account_code", costCenter.accountCode);
-                wasteData.put("description", "Wastage Entry For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
-
-                wasteData.put("transactionReference", "");
-                wasteData.put("overGroup", journalData.getOverGroup());
-
-                SyncJobData syncJobData = new SyncJobData(wasteData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
-
-                addedJournals.add(syncJobData);
-
-            }
+//            if (journalData.getTotalWaste() != 0){
+//                HashMap<String, String> wasteData = new HashMap<>();
+//
+//                wasteData.put("total", String.valueOf(journalData.getTotalWaste()));
+//                wasteData.put("from_cost_center", costCenter.costCenter);
+//                wasteData.put("from_account_code", costCenter.accountCode);
+//
+//                wasteData.put("to_cost_center", costCenter.costCenter);
+//                wasteData.put("to_account_code", costCenter.accountCode);
+//                wasteData.put("description", "Wastage Entry For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
+//
+//                wasteData.put("transactionReference", "");
+//                wasteData.put("overGroup", journalData.getOverGroup());
+//
+//                SyncJobData syncJobData = new SyncJobData(wasteData, Constants.RECEIVED, "", new Date(),
+//                        syncJob.getId());
+//                syncJobDataRepo.save(syncJobData);
+//
+//                addedJournals.add(syncJobData);
+//
+//            }
 
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
 
                 varianceData.put("total", String.valueOf(journalData.getTotalVariance()));
-                varianceData.put("from_cost_center", costCenter.costCenterReference);
+                varianceData.put("from_cost_center", costCenter.costCenter);
                 varianceData.put("from_account_code", costCenter.accountCode);
 
-                varianceData.put("to_cost_center", costCenter.costCenterReference);
+                varianceData.put("to_cost_center", costCenter.costCenter);
                 varianceData.put("to_account_code", costCenter.accountCode);
                 varianceData.put("description", "Staff Meal Cost For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
@@ -283,10 +283,10 @@ public class JournalService {
                 HashMap<String, String> costData = new HashMap<>();
 
                 costData.put("total", String.valueOf(journalData.getTotalCost()));
-                costData.put("from_cost_center", costCenter.costCenterReference);
+                costData.put("from_cost_center", costCenter.costCenter);
                 costData.put("from_account_code", costCenter.accountCode);
 
-                costData.put("to_cost_center", costCenter.costCenterReference);
+                costData.put("to_cost_center", costCenter.costCenter);
                 costData.put("to_account_code", costCenter.accountCode);
                 costData.put("description", "Cost Of Sales For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 

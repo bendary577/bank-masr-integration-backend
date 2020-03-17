@@ -256,10 +256,10 @@ public class TransferService {
                 }
 
                 journalEntry.put("total", journal.getTotalTransfer());
-                journalEntry.put("from_cost_center", fromCostCenter.costCenterReference);
+                journalEntry.put("from_cost_center", fromCostCenter.costCenter);
                 journalEntry.put("from_account_code", fromCostCenter.accountCode);
 
-                journalEntry.put("to_cost_center", toCostCenter.costCenterReference);
+                journalEntry.put("to_cost_center", toCostCenter.costCenter);
                 journalEntry.put("to_account_code", fromCostCenter.accountCode);
 
                 journalEntry.put("description", "Transfer From " + fromCostCenter.costCenterReference + " to "+

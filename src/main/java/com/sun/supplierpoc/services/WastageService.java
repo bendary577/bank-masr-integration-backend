@@ -256,14 +256,18 @@ public class WastageService {
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
+                if (costCenter.costCenterReference.equals("")){
+                    costCenter.costCenterReference = costCenter.costCenter;
+                }
+
                 journalEntry.put("total", journal.getTotalTransfer());
-                journalEntry.put("from_cost_center", costCenter.costCenter);
+                journalEntry.put("from_cost_center", costCenter.costCenterReference);
                 journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
 
-                journalEntry.put("to_cost_center", costCenter.costCenter);
+                journalEntry.put("to_cost_center", costCenter.costCenterReference);
                 journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
 
-                journalEntry.put("description", "Wastage Entry For " + costCenter.costCenter + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
+                journalEntry.put("description", "Wastage Entry For " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());

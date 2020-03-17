@@ -232,16 +232,20 @@ public class JournalService {
             CostCenter costCenter = (CostCenter) journal.get("cost_center");
             Journal journalData = (Journal) journal.get("journal");
 
+            if (costCenter.costCenterReference.equals("")){
+                costCenter.costCenterReference = costCenter.costCenter;
+            }
+
             if (journalData.getTotalWaste() != 0){
                 HashMap<String, String> wasteData = new HashMap<>();
 
                 wasteData.put("total", String.valueOf(journalData.getTotalWaste()));
-                wasteData.put("from_cost_center", costCenter.costCenter);
+                wasteData.put("from_cost_center", costCenter.costCenterReference);
                 wasteData.put("from_account_code", costCenter.accountCode);
 
-                wasteData.put("to_cost_center", costCenter.costCenter);
+                wasteData.put("to_cost_center", costCenter.costCenterReference);
                 wasteData.put("to_account_code", costCenter.accountCode);
-                wasteData.put("description", "Wastage Entry For " + costCenter.costCenter + " " + journalData.getOverGroup());
+                wasteData.put("description", "Wastage Entry For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
                 wasteData.put("transactionReference", "");
                 wasteData.put("overGroup", journalData.getOverGroup());
@@ -258,12 +262,12 @@ public class JournalService {
                 HashMap<String, String> varianceData = new HashMap<>();
 
                 varianceData.put("total", String.valueOf(journalData.getTotalVariance()));
-                varianceData.put("from_cost_center", costCenter.costCenter);
+                varianceData.put("from_cost_center", costCenter.costCenterReference);
                 varianceData.put("from_account_code", costCenter.accountCode);
 
-                varianceData.put("to_cost_center", costCenter.costCenter);
+                varianceData.put("to_cost_center", costCenter.costCenterReference);
                 varianceData.put("to_account_code", costCenter.accountCode);
-                varianceData.put("description", "Staff Meal Cost For " + costCenter.costCenter + " " + journalData.getOverGroup());
+                varianceData.put("description", "Staff Meal Cost For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
                 varianceData.put("transactionReference", "");
                 varianceData.put("overGroup", journalData.getOverGroup());
@@ -279,12 +283,12 @@ public class JournalService {
                 HashMap<String, String> costData = new HashMap<>();
 
                 costData.put("total", String.valueOf(journalData.getTotalCost()));
-                costData.put("from_cost_center", costCenter.costCenter);
+                costData.put("from_cost_center", costCenter.costCenterReference);
                 costData.put("from_account_code", costCenter.accountCode);
 
-                costData.put("to_cost_center", costCenter.costCenter);
+                costData.put("to_cost_center", costCenter.costCenterReference);
                 costData.put("to_account_code", costCenter.accountCode);
-                costData.put("description", "Cost Of Sales For " + costCenter.costCenter + " " + journalData.getOverGroup());
+                costData.put("description", "Cost Of Sales For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
                 costData.put("transactionReference", "");
                 costData.put("overGroup", journalData.getOverGroup());

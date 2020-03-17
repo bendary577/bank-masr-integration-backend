@@ -243,7 +243,12 @@ public class SupplierService {
             if (oldSupplier != null){
                 oldSupplier.setData(data);
                 syncJobDataRepo.save(oldSupplier);
-                continue;
+                if (!oldSupplier.getStatus().equals(Constants.FAILED)){
+                    continue;
+                }
+//                else {
+//                    addedSuppliers.add(oldSupplier);
+//                }
             }
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),

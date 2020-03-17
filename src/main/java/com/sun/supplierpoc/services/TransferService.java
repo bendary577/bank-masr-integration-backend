@@ -248,15 +248,22 @@ public class TransferService {
                 CostCenter fromCostCenter = (CostCenter) transfer.get("from_cost_center");
                 CostCenter toCostCenter = (CostCenter) transfer.get("to_cost_center");
 
+                if (fromCostCenter.costCenterReference.equals("")){
+                    fromCostCenter.costCenterReference = fromCostCenter.costCenter;
+                }
+                if (toCostCenter.costCenterReference.equals("")){
+                    toCostCenter.costCenterReference = toCostCenter.costCenter;
+                }
+
                 journalEntry.put("total", journal.getTotalTransfer());
-                journalEntry.put("from_cost_center", fromCostCenter.costCenter);
+                journalEntry.put("from_cost_center", fromCostCenter.costCenterReference);
                 journalEntry.put("from_account_code", fromCostCenter.accountCode);
 
-                journalEntry.put("to_cost_center", toCostCenter.costCenter);
+                journalEntry.put("to_cost_center", toCostCenter.costCenterReference);
                 journalEntry.put("to_account_code", fromCostCenter.accountCode);
 
-                journalEntry.put("description", "Transfer From " + fromCostCenter.costCenter + " to "+
-                        toCostCenter.costCenter + " - " + journal.getOverGroup());
+                journalEntry.put("description", "Transfer From " + fromCostCenter.costCenterReference + " to "+
+                        toCostCenter.costCenterReference + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());
@@ -428,10 +435,6 @@ public class TransferService {
         ArrayList<OverGroup> overGroups = syncJobTypeJournal.getConfiguration().getOverGroups();
         ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
         OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, addedJournalEntry.getData().get("overGroup"));
-
-        if (!oldOverGroupData.getChecked()){
-
-        }
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);

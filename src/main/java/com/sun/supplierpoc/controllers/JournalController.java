@@ -114,6 +114,7 @@ public class JournalController {
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "Sync journals Successfully.");
+                        response.put("success", true);
                     }
                     else {
                         syncJob.setStatus(Constants.FAILED);
@@ -123,8 +124,8 @@ public class JournalController {
 
                         response.put("message", "Failed to connect to Sun System.");
                         response.put("success", false);
-                        return response;
                     }
+                    return response;
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
@@ -160,6 +161,5 @@ public class JournalController {
         }
 
     }
-
 
 }

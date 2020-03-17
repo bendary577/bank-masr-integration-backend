@@ -255,13 +255,19 @@ public class InvoiceService {
 
         for (HashMap<String, Object> invoice : invoices) {
             // check existence of invoice in middleware (UNIQUE: invoiceNo)
-            SyncJobData oldSupplier = conversions.checkInvoiceExistence(savedInvoices, (String)invoice.get("invoice_no."));
-            if (oldSupplier != null){
-                continue;
+            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, (String)invoice.get("invoice_no."));
+            if (oldInvoice != null){
+                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
+                    continue;
+                }
             }
 
             CostCenter costCenter = (CostCenter) invoice.get("cost_center");
             SyncJobData supplier = (SyncJobData) invoice.get("vendor");
+
+            if (costCenter.costCenterReference.equals("")){
+                costCenter.costCenterReference = costCenter.costCenter;
+            }
 
             // Invoice Part
             if (!flag) {
@@ -285,7 +291,7 @@ public class InvoiceService {
             data.put("from_cost_center", supplier.getData().get("supplier") == null? "0":supplier.getData().get("supplier"));
             data.put("from_account_code", supplier.getData().get("accountCode") == null? "0":supplier.getData().get("accountCode"));
 
-            data.put("to_cost_center", costCenter.costCenter == null? "0":costCenter.costCenter);
+            data.put("to_cost_center", costCenter.costCenter == null? "0":costCenter.costCenterReference);
             data.put("to_account_code", costCenter.costCenter == null? "0":costCenter.accountCode);
 
             data.put("status", invoice.get("status") == null? "0":(String)invoice.get("status"));
@@ -296,13 +302,13 @@ public class InvoiceService {
             data.put("createdBy", invoice.get("created_by") == null? "0":(String)invoice.get("created_by"));
             data.put("createdAt", invoice.get("created_at") == null? "0":(String)invoice.get("created_at"));
             // Fixed for now
-            data.put("overGroup", "FOOD");
+            data.put("overGroup", "General");
 
 
             if (!flag)
-                data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenter);
+                data.put("description", "Invoice From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenterReference);
             else
-                data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenter);
+                data.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + costCenter.costCenterReference);
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

@@ -19,6 +19,7 @@ public class Configuration implements Serializable {
     private String timePeriod = "";
     private String taxes = "";
     private String groups = "";
+    private String suspenseAccount = "";
 
     private String hour = "";
     private String duration = "";
@@ -51,7 +52,7 @@ public class Configuration implements Serializable {
     }
 
     public String getBusinessUnit() {
-        return businessUnit;
+        return businessUnit.strip();
     }
 
     public void setBusinessUnit(String businessUnit) {
@@ -59,7 +60,7 @@ public class Configuration implements Serializable {
     }
 
     public String getJournalSource() {
-        return journalSource;
+        return journalSource.strip();
     }
 
     public void setJournalSource(String journalSource) {
@@ -67,7 +68,7 @@ public class Configuration implements Serializable {
     }
 
     public String getTransactionReference() {
-        return transactionReference;
+        return transactionReference.strip();
     }
 
     public void setTransactionReference(String transactionReference) {
@@ -75,7 +76,7 @@ public class Configuration implements Serializable {
     }
 
     public String getJournalType() {
-        return journalType;
+        return journalType.strip();
     }
 
     public void setJournalType(String journalType) {
@@ -83,7 +84,7 @@ public class Configuration implements Serializable {
     }
 
     public String getCurrencyCode() {
-        return currencyCode;
+        return currencyCode.strip();
     }
 
     public void setCurrencyCode(String currencyCode) {
@@ -91,7 +92,7 @@ public class Configuration implements Serializable {
     }
 
     public String getPostingType() {
-        return postingType;
+        return postingType.strip();
     }
 
     public void setPostingType(String postingType) {
@@ -120,6 +121,14 @@ public class Configuration implements Serializable {
 
     public void setGroups(String groups) {
         this.groups = groups;
+    }
+
+    public String getSuspenseAccount() {
+        return suspenseAccount;
+    }
+
+    public void setSuspenseAccount(String suspenseAccount) {
+        this.suspenseAccount = suspenseAccount;
     }
 
     public String getHour() {
@@ -163,7 +172,7 @@ public class Configuration implements Serializable {
     }
 
     public String getExpensesAccount() {
-        return expensesAccount;
+        return expensesAccount.strip();
     }
 
     public void setExpensesAccount(String expensesAccount) {

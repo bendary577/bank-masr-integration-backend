@@ -145,6 +145,14 @@ public class Conversions {
             response.put("success", false);
             return response;
         }
+
+        if (syncJobType.getConfiguration().getSuspenseAccount().equals("")){
+            String message = "Configure suspense account before sync invoices " + syncJobType.getName().toLowerCase();
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         return null;
     }
 

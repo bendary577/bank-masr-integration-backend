@@ -61,7 +61,7 @@ public class OverGroup implements Serializable {
     }
 
     public String getInventoryAccount() {
-        return inventoryAccount;
+        return inventoryAccount.strip();
     }
 
     public void setInventoryAccount(String inventoryAccount) {
@@ -69,7 +69,7 @@ public class OverGroup implements Serializable {
     }
 
     public String getExpensesAccount() {
-        return expensesAccount;
+        return expensesAccount.strip();
     }
 
     public void setExpensesAccount(String expensesAccount) {

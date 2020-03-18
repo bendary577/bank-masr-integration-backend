@@ -178,7 +178,7 @@ public class WastageService {
                             waste.put("waste_details_link", extension);
                             continue;
                         }
-                        waste.put(columns.get(j), td.getText());
+                        waste.put(columns.get(j), td.getText().strip());
                     }
                     wastesStatus.add(waste);
                 }
@@ -236,10 +236,10 @@ public class WastageService {
 
                 String overGroup = oldItemData.getOverGroup();
 
-                transferDetails.put("Item", td.getText());
+                transferDetails.put("Item", td.getText().strip());
 
                 td = cols.get(columns.indexOf("value"));
-                transferDetails.put("value", td.getText());
+                transferDetails.put("value", td.getText().strip());
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) transferDetails.get("value")),

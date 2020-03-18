@@ -115,7 +115,7 @@ public class SetupEnvironment {
         }
 
         for (WebElement col : cols){
-            columns.add(conversions.transformColName(col.getText()));
+            columns.add(conversions.transformColName(col.getText().strip()));
         }
 
         return columns;

@@ -180,7 +180,7 @@ public class JournalService {
 
 
                         for (int j = 0; j < cols.size(); j++) {
-                            transferDetails.put(columns.get(j), cols.get(j).getText());
+                            transferDetails.put(columns.get(j), cols.get(j).getText().strip());
                         }
 
                         Journal journal = new Journal();

@@ -193,7 +193,7 @@ public class InvoiceService {
                     for (int j = 0; j < cols.size(); j++) {
                         if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
                             continue;
-                        invoice.put(columns.get(j), cols.get(j).getText());
+                        invoice.put(columns.get(j), cols.get(j).getText().strip());
                     }
                     invoices.add(invoice);
                 }

@@ -208,7 +208,7 @@ public class TransferController {
                 }
                 else {
                     overGroup.setChecked(false);
-                    overGroup.setOverGroup(td.getText());
+                    overGroup.setOverGroup(td.getText().strip());
                     overGroup.setProduct("1100");
                     overGroup.setExpensesAccount("511101");
                     overGroup.setInventoryAccount("114101");
@@ -289,8 +289,8 @@ public class TransferController {
                     continue;
                 }
 
-                majorGroup.setOverGroup(cols.get(columns.indexOf("over_group")).getText());
-                majorGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText());
+                majorGroup.setOverGroup(cols.get(columns.indexOf("over_group")).getText().strip());
+                majorGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText().strip());
 
                 // check if this major group belong to chosen over group
                 OverGroup overGroupData = conversions.checkOverGroupExistence(oldOverGroups, majorGroup.getOverGroup());
@@ -331,13 +331,11 @@ public class TransferController {
                 if (cols.size() != columns.size()) {
                     continue;
                 }
-                itemGroup.setItemGroup(cols.get(columns.indexOf("item_group")).getText());
-                itemGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText());
+                itemGroup.setItemGroup(cols.get(columns.indexOf("item_group")).getText().strip());
+                itemGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText().strip());
 
                 // check if this Item group belong to chosen major group
                 MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups, itemGroup.getMajorGroup());
-//                System.out.println(majorGroupData.getOverGroup());
-
                 if (majorGroupData.getChecked()) {
                     itemGroup.setChecked(true);
                     itemGroup.setOverGroup(majorGroupData.getOverGroup());
@@ -377,8 +375,9 @@ public class TransferController {
                         continue;
                     }
 
-                    item.setItem(cols.get(columns.indexOf("item")).getText());
-                    String itemGroupText = cols.get(columns.indexOf("item_group")).getText();
+                    item.setItem(cols.get(columns.indexOf("item")).getText().strip());
+                    String itemGroupText = cols.get(columns.indexOf("item_group")).getText().strip();
+
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, itemGroupText);
                     item.setItemGroup(itemGroupText);
                     item.setMajorGroup(itemGroup.getMajorGroup());

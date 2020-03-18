@@ -131,12 +131,12 @@ public class TransferService {
                     transfer.put("to_cost_center", oldCostCenterData);
 
                     td = cols.get(columns.indexOf("document"));
-                    transfer.put(columns.get(columns.indexOf("document")), td.getText());
+                    transfer.put(columns.get(columns.indexOf("document")), td.getText().strip());
                     String detailsLink = td.findElement(By.tagName("a")).getAttribute("href");
                     transfer.put("details_url", detailsLink);
 
                     for (int j = columns.indexOf("delivery_date"); j < cols.size(); j++) {
-                        transfer.put(columns.get(j), cols.get(j).getText());
+                        transfer.put(columns.get(j), cols.get(j).getText().strip());
                     }
                     transfers.add(transfer);
                 }
@@ -174,14 +174,14 @@ public class TransferService {
     }
 
     public static boolean checkPagination(WebDriver driver, String itemChanged) {
-        String first_element_text = driver.findElement(By.id(itemChanged)).getText();
+        String first_element_text = driver.findElement(By.id(itemChanged)).getText().strip();
         driver.findElement(By.linkText("Next")).click();
         String element_txt = "";
 
         WebDriverWait wait = new WebDriverWait(driver, 20);
         WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
         try {
-            element_txt = element.getText();
+            element_txt = element.getText().strip();
         } catch (Exception e) {
             element_txt = "";
         }
@@ -191,7 +191,7 @@ public class TransferService {
                 wait = new WebDriverWait(driver, 20);
                 element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
                 try {
-                    element_txt = element.getText();
+                    element_txt = element.getText().strip();
                 } catch (Exception e) {
                     element_txt = "";
                 }
@@ -234,10 +234,10 @@ public class TransferService {
                     continue;
                 }
 
-                transferDetails.put("Item", td.getText());
+                transferDetails.put("Item", td.getText().strip());
 
                 td = cols.get(columns.indexOf("total"));
-                transferDetails.put("total", td.getText());
+                transferDetails.put("total", td.getText().strip());
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, overGroup, 0,0, 0,
@@ -375,11 +375,11 @@ public class TransferService {
             LedgerPostingParametersElement.appendChild(postingTypeElement);
 
             Element SuspenseAccount = doc.createElement("SuspenseAccount");
-            SuspenseAccount.appendChild(doc.createTextNode("11001"));
+            SuspenseAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
             LedgerPostingParametersElement.appendChild(SuspenseAccount);
 
             Element TransactionAmountAccount = doc.createElement("TransactionAmountAccount");
-            TransactionAmountAccount.appendChild(doc.createTextNode("11001"));
+            TransactionAmountAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
             LedgerPostingParametersElement.appendChild(TransactionAmountAccount);
 
 

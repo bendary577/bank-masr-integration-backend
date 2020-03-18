@@ -212,7 +212,7 @@ public class SupplierController {
                     continue;
                 }
                 for (int j = 0; j < cols.size(); j++) {
-                    tax.put(columns.get(j), cols.get(j).getText());
+                    tax.put(columns.get(j), cols.get(j).getText().strip());
                 }
                 taxes.add(tax);
             }
@@ -293,7 +293,7 @@ public class SupplierController {
                 }
 
                 for (int j = 0; j < cols.size(); j++) {
-                    group.put(columns.get(j), cols.get(j).getText());
+                    group.put(columns.get(j), cols.get(j).getText().strip());
                 }
                 groups.add(group);
             }

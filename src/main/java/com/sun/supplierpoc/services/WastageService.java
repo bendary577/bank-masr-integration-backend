@@ -260,7 +260,9 @@ public class WastageService {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
-                journalEntry.put("total", Math.round(journal.getTotalWaste()));
+                journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
+                journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
+
                 journalEntry.put("from_cost_center", costCenter.costCenter);
 //                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
                 journalEntry.put("from_account_code", costCenter.accountCode);
@@ -271,7 +273,7 @@ public class WastageService {
 
                 journalEntry.put("description", "Wastage Entry For " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
 
-                journalEntry.put("transactionReference", "");
+                journalEntry.put("transactionReference", "Wastage Transaction Reference");
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());

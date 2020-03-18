@@ -241,15 +241,17 @@ public class JournalService {
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
 
-                varianceData.put("total", String.valueOf(Math.round(journalData.getTotalVariance())));
+                varianceData.put("totalCr", String.valueOf(Math.round(journalData.getTotalVariance())));
+                varianceData.put("totalDr", String.valueOf(Math.round(journalData.getTotalVariance()) * -1));
+
                 varianceData.put("from_cost_center", costCenter.costCenter);
                 varianceData.put("from_account_code", costCenter.accountCode);
 
                 varianceData.put("to_cost_center", costCenter.costCenter);
                 varianceData.put("to_account_code", costCenter.accountCode);
-                varianceData.put("description", "Staff Meal Cost For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
+                varianceData.put("description", "Variance Cost For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
-                varianceData.put("transactionReference", "");
+                varianceData.put("transactionReference", "Variance Transaction Reference");
                 varianceData.put("overGroup", journalData.getOverGroup());
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
@@ -267,7 +269,9 @@ public class JournalService {
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
 
-                costData.put("total", String.valueOf(Math.round(journalData.getTotalCost())));
+                costData.put("totalCr", String.valueOf(Math.round(journalData.getTotalCost())));
+                costData.put("totalDr", String.valueOf(Math.round(journalData.getTotalCost()) * -1));
+
                 costData.put("from_cost_center", costCenter.costCenter);
                 costData.put("from_account_code", costCenter.accountCode);
 
@@ -275,7 +279,7 @@ public class JournalService {
                 costData.put("to_account_code", costCenter.accountCode);
                 costData.put("description", "Cost Of Sales For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
-                costData.put("transactionReference", "");
+                costData.put("transactionReference", "Cost Transaction Reference");
                 costData.put("overGroup", journalData.getOverGroup());
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());

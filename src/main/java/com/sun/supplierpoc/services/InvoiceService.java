@@ -298,7 +298,8 @@ public class InvoiceService {
             data.put("invoiceDate", invoice.get("invoice_date") == null? "0":(String)invoice.get("invoice_date"));
             data.put("net", invoice.get("net") == null? "0": String.valueOf(Math.round(conversions.convertStringToFloat((String)invoice.get("net")))));
             data.put("vat", invoice.get("vat") == null? "0": String.valueOf(Math.round(conversions.convertStringToFloat((String)invoice.get("vat")))));
-            data.put("total", invoice.get("gross") == null? "0": String.valueOf(Math.round(conversions.convertStringToFloat((String)invoice.get("gross")))));
+            data.put("totalCr", invoice.get("gross") == null? "0": String.valueOf(Math.round(conversions.convertStringToFloat((String)invoice.get("gross")))));
+            data.put("totalDr", invoice.get("gross") == null? "0": String.valueOf(Math.round(conversions.convertStringToFloat((String)invoice.get("gross")) * -1)));
             data.put("createdBy", invoice.get("created_by") == null? "0":(String)invoice.get("created_by"));
             data.put("createdAt", invoice.get("created_at") == null? "0":(String)invoice.get("created_at"));
 

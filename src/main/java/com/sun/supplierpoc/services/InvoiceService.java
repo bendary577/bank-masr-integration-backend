@@ -9,10 +9,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -74,6 +71,7 @@ public class InvoiceService {
 
             if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
                 select.selectByVisibleText("User-defined");
+
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
                 String targetDate = "";
 
@@ -142,6 +140,19 @@ public class InvoiceService {
                 response.put("invoices", invoices);
                 return response;
             }
+
+            try {
+                Alert al = driver.switchTo().alert();
+                al.accept();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", al.getText());
+                response.put("invoices", invoices);
+                return response;
+            } catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
             try{
                 WebDriverWait wait = new WebDriverWait(driver, 60);
                 wait.until(ExpectedConditions.presenceOfElementLocated(By.id("G_dg")));

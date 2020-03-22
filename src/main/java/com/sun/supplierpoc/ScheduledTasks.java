@@ -63,7 +63,7 @@ public class ScheduledTasks {
             if (syncJobTypes.size() == 0) continue;
 
             for (SyncJobType syncJobType : syncJobTypes) {
-                if (syncJobType.getConfiguration().getHour() != null) continue;
+                if (syncJobType.getConfiguration().getHour().equals("")) continue;
 
                 String[] weekdays = new DateFormatSymbols(Locale.ENGLISH).getWeekdays();
 

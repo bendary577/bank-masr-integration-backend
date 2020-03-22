@@ -22,10 +22,9 @@ import org.springframework.stereotype.Service;
 import java.security.Key;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @Service
 public class InvoiceService {
@@ -72,18 +71,28 @@ public class InvoiceService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
-            select.selectByVisibleText(timePeriod);
 
-            if (timePeriod.equals("User-defined")){
+            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
+                select.selectByVisibleText("User-defined");
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                Date date = new Date();
+                String targetDate = "";
+
+                if (timePeriod.equals("Yesterday")){
+                    Calendar cal = Calendar.getInstance();
+                    cal.add(Calendar.DATE, -1);
+                    targetDate = dateFormat.format(cal.getTime());
+                }
+                else {
+                    Date date = new Date();
+                    targetDate = dateFormat.format(date);
+                }
 
                 driver.findElement(By.id("_ctl7_input")).clear();
-                driver.findElement(By.id("_ctl7_input")).sendKeys(dateFormat.format(date));
+                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
                 driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
 
                 driver.findElement(By.id("_ctl9_input")).clear();
-                driver.findElement(By.id("_ctl9_input")).sendKeys(dateFormat.format(date));
+                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
                 driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
 
                 String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
@@ -92,7 +101,7 @@ public class InvoiceService {
                 String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
                 Date endDate = dateFormat.parse(endDateValue);
 
-                if (!dateFormat.format(startDate).equals(dateFormat.format(date))){
+                if (!dateFormat.format(startDate).equals(targetDate)){
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
@@ -101,7 +110,7 @@ public class InvoiceService {
                     return response;
                 }
 
-                if (!dateFormat.format(endDate).equals(dateFormat.format(date))){
+                if (!dateFormat.format(endDate).equals(targetDate)){
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
@@ -110,6 +119,9 @@ public class InvoiceService {
                     return response;
                 }
 
+            }
+            else{
+                select.selectByVisibleText(timePeriod);
             }
 
             if (typeFlag){

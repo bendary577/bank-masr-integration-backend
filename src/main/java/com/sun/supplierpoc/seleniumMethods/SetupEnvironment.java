@@ -40,7 +40,6 @@ public class SetupEnvironment {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
             firefoxBinary.addCommandLineOptions("--headless");
-//            System.setProperty("webdriver.gecko.driver", "geckodriver.exe");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);

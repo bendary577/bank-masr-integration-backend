@@ -9,6 +9,7 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.text.DateFormatSymbols;
@@ -45,7 +46,7 @@ public class ScheduledTasks {
     }
 
     // run every 60 min
-//    @Scheduled(cron="0 0/60 * * * SUN-THU")
+    @Scheduled(cron="0 0/60 * * * SUN-THU")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());

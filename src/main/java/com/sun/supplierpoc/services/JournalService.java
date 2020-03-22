@@ -249,7 +249,7 @@ public class JournalService {
 
                 varianceData.put("to_cost_center", costCenter.costCenter);
                 varianceData.put("to_account_code", costCenter.accountCode);
-                varianceData.put("description", "Variance Cost For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
+                varianceData.put("description", "Variance For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
 
                 varianceData.put("transactionReference", "Variance Transaction Reference");
                 varianceData.put("overGroup", journalData.getOverGroup());

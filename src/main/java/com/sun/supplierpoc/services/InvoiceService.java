@@ -201,8 +201,8 @@ public class InvoiceService {
 
                     // Mock supplier of now
                     HashMap<String, String> supplierData = new HashMap<>();
-                    supplierData.put("accountCode", "64101");
-                    supplierData.put("supplier", "PKP France S.A.");
+                    supplierData.put("accountCode", "001");
+                    supplierData.put("supplier", "Golden greenz");
 
                     SyncJobData supplier = new SyncJobData(supplierData, Constants.RECEIVED, "", new Date(), "");
 

@@ -15,6 +15,7 @@ import com.systemsunion.ssc.client.SecurityProvider;
 import com.systemsunion.ssc.client.SoapComponent;
 import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -37,11 +38,9 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 
 @Service
@@ -96,7 +95,59 @@ public class TransferService {
             driver.get(bookedTransfersUrl);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText(timePeriod);
+
+            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
+                select.selectByVisibleText("User-defined");
+
+                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                String targetDate = "";
+
+                if (timePeriod.equals("Yesterday")){
+                    Calendar cal = Calendar.getInstance();
+                    cal.add(Calendar.DATE, -1);
+                    targetDate = dateFormat.format(cal.getTime());
+                }
+                else {
+                    Date date = new Date();
+                    targetDate = dateFormat.format(date);
+                }
+
+                driver.findElement(By.id("_ctl7_input")).clear();
+                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
+                driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
+
+                driver.findElement(By.id("_ctl9_input")).clear();
+                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
+                driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
+
+                String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
+                Date startDate = dateFormat.parse(startDateValue);
+
+                String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
+                Date endDate = dateFormat.parse(endDateValue);
+
+                if (!dateFormat.format(startDate).equals(targetDate)){
+                    driver.quit();
+
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Failed to get transfers of selected date, please try again or contact support team.");
+                    data.put("invoices", transfers);
+                    return data;
+                }
+
+                if (!dateFormat.format(endDate).equals(targetDate)){
+                    driver.quit();
+
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Failed to get transfers of selected date, please try again or contact support team.");
+                    data.put("invoices", transfers);
+                    return data;
+                }
+
+            }
+            else{
+                select.selectByVisibleText(timePeriod);
+            }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 

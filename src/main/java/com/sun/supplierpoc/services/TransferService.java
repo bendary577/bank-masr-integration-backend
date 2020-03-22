@@ -57,8 +57,8 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeJournal, SyncJobType syncJobTypeApprovedInvoice,
-                                                   Account account) {
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer, SyncJobType syncJobTypeJournal,
+                                                   SyncJobType syncJobTypeApprovedInvoice, Account account) {
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver;
         try{
@@ -76,6 +76,7 @@ public class TransferService {
         ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();;
         ArrayList<Item> items =  syncJobTypeJournal.getConfiguration().getItems();
         ArrayList<OverGroup> overGroups =  syncJobTypeJournal.getConfiguration().getOverGroups();
+        String timePeriod = syncJobTypeTransfer.getConfiguration().getTimePeriod();
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
@@ -95,7 +96,7 @@ public class TransferService {
             driver.get(bookedTransfersUrl);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            select.selectByVisibleText("Last Month");
+            select.selectByVisibleText(timePeriod);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 

@@ -76,6 +76,13 @@ public class WastageController {
             return sunConfigResponse;
         }
 
+        if (wastageSyncJobType.getConfiguration().getTimePeriod().equals("")){
+            String message = "Configure business date before sync transfers.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         if (syncJobTypeInvoice.getConfiguration().getCostCenters().size() == 0){
             String message = "Configure cost center before sync wastage.";
             response.put("message", message);

@@ -75,6 +75,13 @@ public class TransferController {
             return sunConfigResponse;
         }
 
+        if (transferSyncJobType.getConfiguration().getTimePeriod().equals("")){
+            String message = "Configure business date before sync transfers.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
             String message = "Map cost centers before sync transfers.";
             response.put("message", message);
@@ -94,7 +101,8 @@ public class TransferController {
         syncJobRepo.save(syncJob);
 
         try {
-            HashMap<String, Object> data = transferService.getTransferData(journalSyncJobType, invoiceSyncJobType, account);
+            HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, journalSyncJobType,
+                    invoiceSyncJobType, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");

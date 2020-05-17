@@ -1,14 +1,14 @@
-1. Port Forwarding
-    sudo iptables -A INPUT -i eth0 -p tcp --dport 8081 -j ACCEPT
+1. Port Forwarding (After starting server only)
+    ==> sudo iptables -A INPUT -i eth0 -p tcp --dport 8081 -j ACCEPT
 
 2. Upload new JAR
     -Generate new jar from terminal
-        clean package
+       ==> mvn clean package
     -Rename it to "yyyy-mm-dd.h=jar"
     -Upload it to "Buckets/oracle-integrator-bucket/Deployed WAR Files"
 
 3. Change current running jar
-    ps -ef | grep java
-    kill -9 <current running process port>
-    java -jar <JAR_NAME>.jar &
+    ==> ps -ef | grep java
+    ==> kill -9 <current running process port>
+    ==> java -jar <JAR_NAME>.jar &
 

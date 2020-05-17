@@ -200,6 +200,7 @@ public class InvoiceController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName,
+                                                 @RequestParam(name = "toLocation") boolean toLocation,
                                                  Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -220,7 +221,13 @@ public class InvoiceController {
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
-        ArrayList<CostCenter> oldCostCenters = syncJobType.getConfiguration().getCostCenters();
+        ArrayList<CostCenter> oldCostCenters;
+        if (toLocation){
+            oldCostCenters = syncJobType.getConfiguration().getCostCenterLocationMapping();
+        }
+        else{
+            oldCostCenters = syncJobType.getConfiguration().getCostCenters();
+        }
 
         try
         {
@@ -245,7 +252,7 @@ public class InvoiceController {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
 
             while (true){
-                fillCostCenterObject(costCenters, rows, oldCostCenters, columns, account.getERD());
+                fillCostCenterObject(costCenters, rows, oldCostCenters, columns);
 
                 // check if there is other pages
                 if (driver.findElements(By.linkText("Next")).size() == 0){
@@ -276,8 +283,7 @@ public class InvoiceController {
     }
 
     private void fillCostCenterObject(ArrayList<CostCenter> costCenters, List<WebElement> rows,
-                                      ArrayList<CostCenter> oldCostCenters, ArrayList<String> columns,
-                                      String accountERD){
+                                      ArrayList<CostCenter> oldCostCenters, ArrayList<String> columns){
 
         for (int i = 14; i < rows.size(); i++) {
             CostCenter costCenter = new CostCenter();
@@ -294,37 +300,10 @@ public class InvoiceController {
 
             if (oldCostCenterData.checked){
                 costCenter.checked = true;
-                // Fusion Data
-                if (accountERD.equals("FUSION")){
-                    costCenter = oldCostCenterData;
-                }
-                // Sun Data
-                else if (accountERD.equals("SUN")){
-                    costCenter.accountCode = oldCostCenterData.accountCode;
-                    costCenter.locationName = oldCostCenterData.locationName;
-                    costCenter.costCenterReference = oldCostCenterData.costCenterReference;
-                }
+                costCenter = oldCostCenterData;
             }
             else {
                 costCenter.checked = false;
-                // Fusion Data
-                if (accountERD.equals("FUSION")){
-                    costCenter.department = "000";
-                    costCenter.project = "000000";
-                    costCenter.future2 = "0000";
-                    costCenter.company = "517";
-                    costCenter.businessUnit = "";
-                    costCenter.account = "411101";
-                    costCenter.product = "1200";
-                    costCenter.interCompany = "000";
-                    costCenter.location = "11101";
-                    costCenter.currency = "AED";
-                    costCenter.costCenterReference = "";
-                }
-                // Sun Data
-                else if(accountERD.equals("SUN")){
-                    costCenter.accountCode = oldCostCenterData.accountCode;
-                }
             }
 
             costCenters.add(costCenter);

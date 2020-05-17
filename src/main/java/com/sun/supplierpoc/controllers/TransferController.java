@@ -342,8 +342,16 @@ public class TransferController {
                 itemGroup.setItemGroup(cols.get(columns.indexOf("item_group")).getText().strip());
                 itemGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText().strip());
 
+                if (itemGroup.getItemGroup().equals("Cooking")){
+                    System.out.println("error here");
+                }
+
                 // check if this Item group belong to chosen major group
                 MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups, itemGroup.getMajorGroup());
+
+                if (majorGroupData.getMajorGroup().equals("Cooking") || majorGroupData.getMajorGroup().equals("Catering")){
+                    System.out.println("error here");
+                }
                 if (majorGroupData.getChecked()) {
                     itemGroup.setChecked(true);
                     itemGroup.setOverGroup(majorGroupData.getOverGroup());
@@ -387,12 +395,14 @@ public class TransferController {
                     String itemGroupText = cols.get(columns.indexOf("item_group")).getText().strip();
 
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, itemGroupText);
-                    item.setItemGroup(itemGroupText);
-                    item.setMajorGroup(itemGroup.getMajorGroup());
-                    item.setOverGroup(itemGroup.getOverGroup());
-                    item.setChecked(true);
+                    if (itemGroup.getChecked()){
+                        item.setItemGroup(itemGroupText);
+                        item.setMajorGroup(itemGroup.getMajorGroup());
+                        item.setOverGroup(itemGroup.getOverGroup());
+                        item.setChecked(true);
 
-                    items.add(item);
+                        items.add(item);
+                    }
                 }
                 // check if there is other pages
                 if (driver.findElements(By.linkText("Next")).size() == 0){

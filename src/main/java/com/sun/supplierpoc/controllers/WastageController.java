@@ -105,10 +105,11 @@ public class WastageController {
         }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                account.getId(), wastageSyncJobType.getId());
+                account.getId(), wastageSyncJobType.getId(), 0);
 
         syncJobRepo.save(syncJob);
 
+        ArrayList<SyncJobData> addedWastes = new ArrayList<>();
         try {
 
             HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, syncJobTypeJournal,
@@ -117,12 +118,13 @@ public class WastageController {
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
                 if (wastes.size() > 0) {
-                    ArrayList<SyncJobData> addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
+                    addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
                         invoiceController.handleSendJournal(wastageSyncJobType, syncJobTypeJournal, syncJob, addedWastes, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(addedWastes.size());
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "Sync Invoices Successfully.");
@@ -133,6 +135,7 @@ public class WastageController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no wastage to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
+                    syncJob.setRowsFetched(addedWastes.size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no wastage to get from Oracle Hospitality.");
@@ -143,6 +146,7 @@ public class WastageController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason("Failed to get wastage from Oracle Hospitality.");
                 syncJob.setEndDate(new Date());
+                syncJob.setRowsFetched(addedWastes.size());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", data.get("message"));
@@ -155,6 +159,7 @@ public class WastageController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
+            syncJob.setRowsFetched(addedWastes.size());
             syncJobRepo.save(syncJob);
 
             response.put("message", e);

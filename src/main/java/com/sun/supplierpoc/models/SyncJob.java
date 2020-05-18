@@ -16,13 +16,14 @@ public class SyncJob implements Serializable {
     private String userId;
     private String accountId;
     private String syncJobTypeId;
+    private int rowsFetched;
     private boolean deleted;
 
     public SyncJob() {
     }
 
     public SyncJob(String status, String reason, Date creationDate, Date endDate, String userId, String accountId,
-                   String syncJobTypeId) {
+                   String syncJobTypeId, int rowsFetched) {
         this.status = status;
         this.reason = reason;
         this.creationDate = creationDate;
@@ -30,6 +31,7 @@ public class SyncJob implements Serializable {
         this.userId = userId;
         this.accountId = accountId;
         this.syncJobTypeId = syncJobTypeId;
+        this.rowsFetched = rowsFetched;
         this.deleted = false;
     }
 
@@ -105,5 +107,11 @@ public class SyncJob implements Serializable {
         this.syncJobTypeId = syncJobTypeId;
     }
 
+    public int getRowsFetched() {
+        return rowsFetched;
+    }
 
+    public void setRowsFetched(int rowsFetched) {
+        this.rowsFetched = rowsFetched;
+    }
 }

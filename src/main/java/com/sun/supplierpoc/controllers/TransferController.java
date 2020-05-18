@@ -97,8 +97,10 @@ public class TransferController {
         }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId, account.getId(),
-                transferSyncJobType.getId());
+                transferSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
+
+        ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
         try {
             HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, journalSyncJobType,
@@ -107,12 +109,13 @@ public class TransferController {
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
-                    ArrayList<SyncJobData> addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
+                    addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
                         invoiceController.handleSendJournal(transferSyncJobType, journalSyncJobType, syncJob, addedTransfers, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(addedTransfers.size());
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "Sync Invoices Successfully.");
@@ -122,6 +125,7 @@ public class TransferController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no transfers to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
+                    syncJob.setRowsFetched(addedTransfers.size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no transfers to get from Oracle Hospitality.");
@@ -132,6 +136,7 @@ public class TransferController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason("Failed to get transfers from Oracle Hospitality.");
                 syncJob.setEndDate(new Date());
+                syncJob.setRowsFetched(addedTransfers.size());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", data.get("message"));
@@ -143,6 +148,7 @@ public class TransferController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
+            syncJob.setRowsFetched(addedTransfers.size());
             syncJobRepo.save(syncJob);
 
             response.put("message", e);
@@ -459,7 +465,5 @@ public class TransferController {
         }
         return false;
     }
-
-
 
 }

@@ -96,9 +96,11 @@ public class JournalController {
         }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                account.getId(), journalSyncJobType.getId());
+                account.getId(), journalSyncJobType.getId(), 0);
 
         syncJobRepo.save(syncJob);
+
+        ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
         try {
             ArrayList<OverGroup> overGroups = journalSyncJobType.getConfiguration().getOverGroups();
@@ -107,12 +109,13 @@ public class JournalController {
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
-                    ArrayList<SyncJobData> addedJournals = journalService.saveJournalData(journals, syncJob, overGroups);
+                    addedJournals = journalService.saveJournalData(journals, syncJob, overGroups);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
                         invoiceController.handleSendJournal(journalSyncJobType, journalSyncJobType, syncJob, addedJournals, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(addedJournals.size());
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "Sync journals Successfully.");
@@ -122,6 +125,7 @@ public class JournalController {
                         syncJob.setStatus(Constants.FAILED);
                         syncJob.setReason("Failed to connect to Sun System.");
                         syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(addedJournals.size());
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "Failed to connect to Sun System.");
@@ -133,6 +137,7 @@ public class JournalController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no journals to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
+                    syncJob.setRowsFetched(addedJournals.size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no journals to get from Oracle Hospitality.");
@@ -144,24 +149,24 @@ public class JournalController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason((String) data.get("message"));
                 syncJob.setEndDate(new Date());
+                syncJob.setRowsFetched(addedJournals.size());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", data.get("message"));
                 response.put("success", false);
             }
             return response;
-
         } catch (Exception e) {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
-
+            syncJob.setRowsFetched(addedJournals.size());
             syncJobRepo.save(syncJob);
+
             response.put("message", e);
             response.put("success", false);
             return response;
         }
-
     }
 
 }

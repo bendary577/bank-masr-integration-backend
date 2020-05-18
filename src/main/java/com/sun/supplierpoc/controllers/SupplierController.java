@@ -90,69 +90,88 @@ public class SupplierController {
         }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
-                account.getId(), supplierSyncJobType.getId());
+                account.getId(), supplierSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
 
-        HashMap<String, Object> data = supplierService.getSuppliersData(supplierSyncJobType, account);
+        ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
 
-        if (data.get("status").equals(Constants.SUCCESS)) {
-            ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
+        try {
+            HashMap<String, Object> data = supplierService.getSuppliersData(supplierSyncJobType, account);
 
-            if (suppliers.size() > 0){
-                ArrayList<SyncJobData> addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
+            if (data.get("status").equals(Constants.SUCCESS)) {
+                ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
 
-                if (addedSuppliers.size() != 0){
-                    data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, supplierSyncJobType, account);
-                    if (data.get("status").equals(Constants.SUCCESS)){
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("");
-                        syncJob.setEndDate(new Date());
-                        syncJobRepo.save(syncJob);
+                if (suppliers.size() > 0){
+                    addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
 
-                        response.put("message", data.get("message"));
-                        response.put("success", true);
+                    if (addedSuppliers.size() != 0){
+                        data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, supplierSyncJobType, account);
+                        if (data.get("status").equals(Constants.SUCCESS)){
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedSuppliers.size());
+                            syncJobRepo.save(syncJob);
 
+                            response.put("message", data.get("message"));
+                            response.put("success", true);
+
+                        }
+                        else {
+                            syncJob.setStatus(Constants.FAILED);
+                            syncJob.setReason((String) data.get("message"));
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedSuppliers.size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", data.get("message"));
+                            response.put("success", false);
+
+                        }
                     }
                     else {
-                        syncJob.setStatus(Constants.FAILED);
-                        syncJob.setReason((String) data.get("message"));
+                        syncJob.setStatus(Constants.SUCCESS);
+                        syncJob.setReason("No new suppliers to add in middleware.");
                         syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(addedSuppliers.size());
                         syncJobRepo.save(syncJob);
 
-                        response.put("message", data.get("message"));
-                        response.put("success", false);
-
+                        response.put("message", "No new suppliers to add in middleware.");
+                        response.put("success", true);
                     }
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
-                    syncJob.setReason("No new suppliers to add in middleware.");
+                    syncJob.setReason("There is no suppliers to get from Sun System.");
                     syncJob.setEndDate(new Date());
+                    syncJob.setRowsFetched(addedSuppliers.size());
                     syncJobRepo.save(syncJob);
 
-                    response.put("message", "No new suppliers to add in middleware.");
+                    response.put("message", "There is no suppliers to get from Sun System.");
                     response.put("success", true);
                 }
+                return response;
+
             }
             else {
-                syncJob.setStatus(Constants.SUCCESS);
-                syncJob.setReason("There is no suppliers to get from Sun System.");
+                syncJob.setStatus(Constants.FAILED);
+                syncJob.setReason((String) data.get("message"));
                 syncJob.setEndDate(new Date());
+                syncJob.setRowsFetched(addedSuppliers.size());
                 syncJobRepo.save(syncJob);
 
-                response.put("message", "There is no suppliers to get from Sun System.");
-                response.put("success", true);
+                response.put("message", "Failed to get suppliers from Sun System.");
+                response.put("success", false);
+                return response;
             }
-            return response;
-
-        }
-        else {
+        }catch (Exception e) {
             syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason((String) data.get("message"));
+            syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
+            syncJob.setRowsFetched(addedSuppliers.size());
             syncJobRepo.save(syncJob);
 
-            response.put("message", "Failed to get suppliers from Sun System.");
+            response.put("message", e);
             response.put("success", false);
             return response;
         }

@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface SyncJobRepo extends MongoRepository<SyncJob, String>{
-    List<SyncJob> findBySyncJobTypeIdOrderByCreationDateDesc(String syncJobTypeId);
+    List<SyncJob> findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(String syncJobTypeId, boolean deleted);
 }

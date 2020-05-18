@@ -30,7 +30,7 @@ public class SyncJobController {
     @ResponseBody
     public List<SyncJob> getSyncJobs(@RequestParam(name = "typeName") String syncJobTypeId, Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        SyncJobType syncJobType =  syncJobTypeRepo.findByNameAndAccountId(syncJobTypeId, user.getAccountId());
-        return syncJobRepo.findBySyncJobTypeIdOrderByCreationDateDesc(syncJobType.getId());
+        SyncJobType syncJobType =  syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
+        return syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobType.getId(), false);
     }
 }

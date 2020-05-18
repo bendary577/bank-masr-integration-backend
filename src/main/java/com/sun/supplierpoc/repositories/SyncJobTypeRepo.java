@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface SyncJobTypeRepo extends MongoRepository<SyncJobType, String>{
 
-    SyncJobType findByNameAndAccountId(String name, String accountId);
-    List<SyncJobType> findByAccountId(String accountId);
+    SyncJobType findByNameAndAccountIdAndDeleted(String name, String accountId, boolean deleted);
+    List<SyncJobType> findByAccountIdAndDeleted(String accountId, boolean deleted);
 
 }

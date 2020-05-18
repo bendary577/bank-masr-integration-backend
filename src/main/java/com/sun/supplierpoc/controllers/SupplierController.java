@@ -66,7 +66,7 @@ public class SupplierController {
 
     public HashMap<String, Object> getSuppliers(String userId, Account account) throws SoapFaultException, ComponentException{
         HashMap<String, Object> response = new HashMap<>();
-        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.SUPPLIERS, account.getId());
+        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
         if (supplierSyncJobType.getConfiguration().getBusinessUnit().equals("")){
             String message = "Configure business unit before sync suppliers.";

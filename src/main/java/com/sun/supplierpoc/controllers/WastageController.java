@@ -67,9 +67,9 @@ public class WastageController {
     public HashMap<String, Object> getWastage(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType wastageSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, account.getId());
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
-        SyncJobType syncJobTypeInvoice = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+        SyncJobType wastageSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, account.getId(), false);
+        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
+        SyncJobType syncJobTypeInvoice = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType);
         if (sunConfigResponse != null){
@@ -176,7 +176,7 @@ public class WastageController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.WASTAGE, user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, user.getAccountId(), false);
         ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().getWasteGroups();
         HashMap<String, Object> response = new HashMap<>();
 

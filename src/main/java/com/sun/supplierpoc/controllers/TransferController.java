@@ -66,9 +66,9 @@ public class TransferController {
     public HashMap<String, Object> getBookedTransfer(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType transferSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.TRANSFERS, account.getId());
-        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
-        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
+        SyncJobType transferSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
+        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
+        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);
         if (sunConfigResponse != null){
@@ -167,7 +167,7 @@ public class TransferController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(), false);
 
         ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
         WebDriver driver;
@@ -261,7 +261,7 @@ public class TransferController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, user.getAccountId(), false);
 
         ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
         ArrayList<MajorGroup> majorGroups = new ArrayList<>();

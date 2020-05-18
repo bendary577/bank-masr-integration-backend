@@ -25,15 +25,15 @@ public class SyncJobDataController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public List<SyncJobData> getSyncJobDataById(@RequestParam(name = "syncJobId") String syncJobId)  {
-        List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobId(syncJobId);
+        List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId, false);
         return syncJobData;
     }
 
     public ArrayList<SyncJobData> getSyncJobData(String syncJobTypeId)  {
-        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdOrderByCreationDateDesc(syncJobTypeId);
+        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
         ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
         for (SyncJob syncJob : syncJobs) {
-            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobId(syncJob.getId());
+            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
             syncJobsData.addAll(syncJobData);
         }
         return syncJobsData;

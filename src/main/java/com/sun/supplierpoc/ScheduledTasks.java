@@ -58,7 +58,7 @@ public class ScheduledTasks {
         for (Account account : accounts) {
             ArrayList<SyncJobType> syncJobsQueue = new ArrayList<>();
 
-            ArrayList<SyncJobType> syncJobTypes = (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountId(account.getId());
+            ArrayList<SyncJobType> syncJobTypes = (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             if (syncJobTypes.size() == 0) continue;
 

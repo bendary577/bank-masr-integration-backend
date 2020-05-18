@@ -9,5 +9,5 @@ import java.util.List;
 
 public interface SyncJobDataRepo extends MongoRepository<SyncJobData, String>{
 
-    List<SyncJobData> findBySyncJobId(String syncJobId);
+    List<SyncJobData> findBySyncJobIdAndDeleted(String syncJobId, boolean deleted);
 }

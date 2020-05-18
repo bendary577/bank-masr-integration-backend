@@ -69,8 +69,8 @@ public class InvoiceController {
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.APPROVED_INVOICES, account.getId());
-        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountId(Constants.CONSUMPTION, account.getId());
+        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
+        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
         if (sunConfigResponse != null){
@@ -239,7 +239,7 @@ public class InvoiceController {
         }
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountId(syncTypeName, user.getAccountId());
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(), false);
         ArrayList<CostCenter> oldCostCenters;
         if (toLocation){
             oldCostCenters = syncJobType.getConfiguration().getCostCenterLocationMapping();

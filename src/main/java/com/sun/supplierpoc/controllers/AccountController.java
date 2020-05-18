@@ -56,7 +56,7 @@ public class AccountController {
     @ResponseBody
     public Optional<Account> getAccount(Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        return accountRepo.findById(user.getAccountId());
+        return accountRepo.findByIdAndDeleted(user.getAccountId(), false);
     }
 
     @RequestMapping("/updateAccount")
@@ -108,7 +108,7 @@ public class AccountController {
         HashMap<String, Object> response = new HashMap<>();
 
         // check existence of account name
-        if (accountRepo.existsAccountByName(account.getName())){
+        if (accountRepo.existsAccountByNameAndDeleted(account.getName(), false)){
             response.put("message", "Account name already exits.");
             response.put("success", false);
             return response;
@@ -169,8 +169,6 @@ public class AccountController {
 
         return true;
     }
-
-
 
     public ArrayList<Account> getAccounts() {
         return (ArrayList<Account>) accountRepo.findAll();

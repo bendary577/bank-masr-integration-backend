@@ -107,17 +107,31 @@ public class WastageService {
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
                     driver.findElement(By.id("calendarBtn")).click();
 
-                    Select locationDate = new Select(driver.findElement(By.id("locationData")));
-                    locationDate.selectByVisibleText(locationName);
+                    Select locationData = new Select(driver.findElement(By.id("locationData")));
+                    try {
+                        locationData.selectByVisibleText(locationName);
+                    } catch (Exception e) {
+                        System.out.println("Invalid location");
+                        continue;
+                    }
 
-                    String selectedOption = locationDate.getFirstSelectedOption().getText().strip();
+                    String selectedOption = locationData.getFirstSelectedOption().getText().strip();
                     while (!selectedOption.equals(locationName)){}
 
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
                     Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                    businessDate.selectByVisibleText(timePeriod);
+                    try{
+                        businessDate.selectByVisibleText(timePeriod);
+                    } catch (Exception e) {
+                        System.out.println("Invalid business date.");
+                        driver.quit();
+                        response.put("status", Constants.FAILED);
+                        response.put("message", "Invalid business date.");
+                        response.put("wastes", journalEntries);
+                        return response;
+                    }
 
                     selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                     while (!selectedOption.equals(timePeriod)){}
@@ -128,13 +142,25 @@ public class WastageService {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
 
                     Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                    businessDate.selectByVisibleText(timePeriod);
+                    try {
+                        businessDate.selectByVisibleText(timePeriod);
+                    } catch (Exception e) {
+                        driver.quit();
+                        response.put("status", Constants.FAILED);
+                        response.put("message", "Invalid business date.");
+                        response.put("wastes", journalEntries);
+                        return response;
+                    }
 
                     String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                     while (!selectedOption.equals(timePeriod)){}
 
                     Select locationDate= new Select(driver.findElement(By.id("locationData")));
-                    locationDate.selectByVisibleText(locationName);
+                    try {
+                        locationDate.selectByVisibleText(locationName);
+                    } catch (Exception e) {
+                        continue;
+                    }
 
                     selectedOption = locationDate.getFirstSelectedOption().getText().strip();
                     while (!selectedOption.equals(locationName)){}

@@ -94,7 +94,16 @@ public class JournalService {
                 wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
                 Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                businessDate.selectByVisibleText(timePeriod);
+                try {
+                    businessDate.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid business date.");
+                    response.put("journals", journalsEntries);
+                    return response;
+                }
 
                 String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                 while (!selectedOption.equals(timePeriod)){}
@@ -103,7 +112,16 @@ public class JournalService {
             }
             else {
                 Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                businessDate.selectByVisibleText(timePeriod);
+                try{
+                    businessDate.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid business date.");
+                    response.put("journals", journalsEntries);
+                    return response;
+                }
 
                 String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                 while (!selectedOption.equals(timePeriod)){}

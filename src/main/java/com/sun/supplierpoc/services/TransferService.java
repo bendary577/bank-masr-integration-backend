@@ -97,7 +97,17 @@ public class TransferService {
             Select select = new Select(driver.findElement(By.id("_ctl5")));
 
             if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
-                select.selectByVisibleText("User-defined");
+                try {
+                    select.selectByVisibleText("User-defined");
+                } catch (Exception e) {
+                    System.out.println("Invalid Business Date");
+                    driver.quit();
+
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Invalid business date.");
+                    data.put("transfers", transfers);
+                    return data;
+                }
 
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
                 String targetDate = "";
@@ -146,7 +156,17 @@ public class TransferService {
 
             }
             else{
-                select.selectByVisibleText(timePeriod);
+                try {
+                    select.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    System.out.println("Invalid Business Date");
+                    driver.quit();
+
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Invalid business date.");
+                    data.put("transfers", transfers);
+                    return data;
+                }
             }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();

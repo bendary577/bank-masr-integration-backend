@@ -70,7 +70,16 @@ public class InvoiceService {
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
 
             if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
-                select.selectByVisibleText("User-defined");
+                try {
+                    select.selectByVisibleText("User-defined");
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid time period.");
+                    response.put("invoices", invoices);
+                    return response;
+                }
 
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
                 String targetDate = "";
@@ -119,7 +128,16 @@ public class InvoiceService {
 
             }
             else{
-                select.selectByVisibleText(timePeriod);
+                try{
+                    select.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid time period.");
+                    response.put("invoices", invoices);
+                    return response;
+                }
             }
 
             if (typeFlag){

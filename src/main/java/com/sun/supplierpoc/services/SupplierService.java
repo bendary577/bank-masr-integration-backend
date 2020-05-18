@@ -311,7 +311,7 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ENTER);
 
                 try {
-                    wait = new WebDriverWait(driver, 10);
+                    wait = new WebDriverWait(driver, 20);
                     WebElement taxValue = driver.findElement(By.id("tb__ctl0_cfTaxes_Value"));
                     wait.until(ExpectedConditions.textToBePresentInElementValue(taxValue, tax));
                 } catch (Exception e) {
@@ -333,7 +333,7 @@ public class SupplierService {
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ENTER);
 
                 try {
-                    wait = new WebDriverWait(driver, 10);
+                    wait = new WebDriverWait(driver, 20);
                     WebElement groupValue = driver.findElement(By.id("tb__ctl0_cfVendorGroup_Value"));
                     wait.until(ExpectedConditions.textToBePresentInElementValue(groupValue, group));
                 } catch (Exception e) {

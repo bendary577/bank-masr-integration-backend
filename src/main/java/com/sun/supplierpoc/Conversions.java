@@ -104,13 +104,6 @@ public class Conversions {
             return response;
         }
 
-        if (syncJobType.getConfiguration().getJournalSource().equals("")){
-            String message = "Configure journal source before sync invoices " + syncJobType.getName().toLowerCase();
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
-
         if (syncJobType.getConfiguration().getJournalType().equals("")){
             String message = "Configure journal type before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);

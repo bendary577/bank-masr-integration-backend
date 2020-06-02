@@ -11,7 +11,6 @@ public class Configuration implements Serializable {
     @Id
     private String id;
     private String businessUnit = "";
-    private String journalSource = "";
     private String transactionReference = "";
     private String journalType = "";
     private String currencyCode = "";
@@ -57,14 +56,6 @@ public class Configuration implements Serializable {
 
     public void setBusinessUnit(String businessUnit) {
         this.businessUnit = businessUnit;
-    }
-
-    public String getJournalSource() {
-        return journalSource.strip();
-    }
-
-    public void setJournalSource(String journalSource) {
-        this.journalSource = journalSource;
     }
 
     public String getTransactionReference() {

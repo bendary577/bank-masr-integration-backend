@@ -572,9 +572,9 @@ public class TransferService {
             journalLineNumberElement.appendChild(doc.createTextNode("2"));
         lineElement.appendChild(journalLineNumberElement);
 
-        Element journalSourceElement = doc.createElement("JournalSource");
-        journalSourceElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalSource()));
-        lineElement.appendChild(journalSourceElement);
+//        Element journalSourceElement = doc.createElement("JournalSource");
+//        journalSourceElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalSource()));
+//        lineElement.appendChild(journalSourceElement);
 
         SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
         String date = simpleformat.format(new Date());

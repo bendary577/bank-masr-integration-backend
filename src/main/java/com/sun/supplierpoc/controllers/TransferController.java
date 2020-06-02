@@ -64,7 +64,6 @@ public class TransferController {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType transferSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
-        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);
         if (sunConfigResponse != null){

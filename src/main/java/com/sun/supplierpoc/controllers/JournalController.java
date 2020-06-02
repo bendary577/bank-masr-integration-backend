@@ -102,7 +102,7 @@ public class JournalController {
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
         try {
-            ArrayList<OverGroup> overGroups = journalSyncJobType.getConfiguration().getOverGroups();
+            ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
             ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
             ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 

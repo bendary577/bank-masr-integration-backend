@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.OverGroup;
+import com.sun.supplierpoc.models.configurations.*;
 import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
@@ -11,7 +10,11 @@ public class GeneralSettings {
     @Id
     private String id;
     private String accountId;
+    private ArrayList<Item> items = new ArrayList<>();
+    ArrayList<ItemGroup> itemGroups = new ArrayList<>();
+    private ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
+    private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
     private ArrayList<CostCenter> costCenterLocationMapping = new ArrayList<>();
     private Date creationDate;
     private boolean deleted;
@@ -19,10 +22,8 @@ public class GeneralSettings {
     public GeneralSettings() {
     }
 
-    public GeneralSettings(String accountId, ArrayList<OverGroup> overGroups, ArrayList<CostCenter> costCenterLocationMapping, Date creationDate, boolean deleted) {
+    public GeneralSettings(String accountId, Date creationDate, boolean deleted) {
         this.accountId = accountId;
-        this.overGroups = overGroups;
-        this.costCenterLocationMapping = costCenterLocationMapping;
         this.creationDate = creationDate;
         this.deleted = deleted;
     }
@@ -43,12 +44,44 @@ public class GeneralSettings {
         this.accountId = accountId;
     }
 
+    public ArrayList<Item> getItems() {
+        return items;
+    }
+
+    public void setItems(ArrayList<Item> items) {
+        this.items = items;
+    }
+
+    public ArrayList<ItemGroup> getItemGroups() {
+        return itemGroups;
+    }
+
+    public void setItemGroups(ArrayList<ItemGroup> itemGroups) {
+        this.itemGroups = itemGroups;
+    }
+
+    public ArrayList<MajorGroup> getMajorGroups() {
+        return majorGroups;
+    }
+
+    public void setMajorGroups(ArrayList<MajorGroup> majorGroups) {
+        this.majorGroups = majorGroups;
+    }
+
     public ArrayList<OverGroup> getOverGroups() {
         return overGroups;
     }
 
     public void setOverGroups(ArrayList<OverGroup> overGroups) {
         this.overGroups = overGroups;
+    }
+
+    public ArrayList<CostCenter> getCostCenterAccountMapping() {
+        return costCenterAccountMapping;
+    }
+
+    public void setCostCenterAccountMapping(ArrayList<CostCenter> costCenterAccountMapping) {
+        this.costCenterAccountMapping = costCenterAccountMapping;
     }
 
     public ArrayList<CostCenter> getCostCenterLocationMapping() {

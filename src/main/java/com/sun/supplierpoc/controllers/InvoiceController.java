@@ -5,10 +5,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
 import com.sun.supplierpoc.services.TransferService;
@@ -38,6 +35,9 @@ public class InvoiceController {
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private AccountRepo accountRepo;
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
@@ -69,8 +69,8 @@ public class InvoiceController {
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
-        SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
         if (sunConfigResponse != null){
@@ -98,7 +98,7 @@ public class InvoiceController {
             return response;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+        if (generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Map cost centers before sync invoices.";
             response.put("message", message);
             response.put("success", false);
@@ -110,7 +110,7 @@ public class InvoiceController {
 
         syncJobRepo.save(syncJob);
 
-        ArrayList<CostCenter> costCenters = invoiceSyncJobType.getConfiguration().getCostCenters();
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
 
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
@@ -124,7 +124,7 @@ public class InvoiceController {
                     if (addedInvoices.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){
-                            handleSendJournal(invoiceSyncJobType, journalSyncJobType, syncJob, addedInvoices, account, voucher);
+                            handleSendJournal(invoiceSyncJobType, syncJob, addedInvoices, account, voucher);
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
                             syncJob.setRowsFetched(addedInvoices.size());
@@ -190,7 +190,7 @@ public class InvoiceController {
         return response;
     }
 
-    void handleSendJournal(SyncJobType syncJobType, SyncJobType syncJobTypeJournal, SyncJob syncJob,
+    void handleSendJournal(SyncJobType syncJobType, SyncJob syncJob,
                            ArrayList<SyncJobData> addedJournals, Account account, IAuthenticationVoucher voucher) {
         HashMap<String, Object> data;
         for (SyncJobData addedJournal : addedJournals) {
@@ -239,13 +239,29 @@ public class InvoiceController {
         }
         ArrayList<CostCenter> costCenters = new ArrayList<>();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(), false);
-        ArrayList<CostCenter> oldCostCenters;
-        if (toLocation){
-            oldCostCenters = syncJobType.getConfiguration().getCostCenterLocationMapping();
-        }
-        else{
-            oldCostCenters = syncJobType.getConfiguration().getCostCenters();
+        ArrayList<CostCenter> oldCostCenters = new ArrayList<>();
+        if (syncTypeName != null && !syncTypeName.equals("")){
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(),
+                    false);
+            if (toLocation){
+                oldCostCenters = syncJobType.getConfiguration().getCostCenterLocationMapping();
+            }
+            else{
+                oldCostCenters = syncJobType.getConfiguration().getCostCenters();
+            }
+        }else{
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
+            if (generalSettings != null){
+                if (toLocation){
+                    oldCostCenters = generalSettings.getCostCenterLocationMapping();
+                }
+                else{
+                    oldCostCenters = generalSettings.getCostCenterAccountMapping();
+                }
+            }else {
+                generalSettings = new GeneralSettings(user.getAccountId(), new Date(), false);
+                generalSettingsRepo.save(generalSettings);
+            }
         }
 
         try

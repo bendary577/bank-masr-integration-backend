@@ -56,8 +56,7 @@ public class GeneralSettingController {
             if (generalSettings != null){
                 oldOverGroups = generalSettings.getOverGroups();
             }else {
-                generalSettings = new GeneralSettings(user.getAccountId(), new ArrayList<>(),
-                        new ArrayList<>(), new Date(), false);
+                generalSettings = new GeneralSettings(user.getAccountId(), new Date(), false);
                 generalSettingsRepo.save(generalSettings);
             }
         }
@@ -137,27 +136,6 @@ public class GeneralSettingController {
 
             return response;
         }
-    }
-
-
-    @RequestMapping("/updateOverGroups")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public HashMap<String, Object> updateOverGroups(@RequestBody ArrayList<OverGroup> overGroups, Principal principal){
-        HashMap<String, Object> response = new HashMap<>();
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-        try {
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
-            generalSettings.setOverGroups(overGroups);
-            generalSettingsRepo.save(generalSettings);
-            response.put("message", "Update over groups.");
-            response.put("success", true);
-        } catch (Exception e) {
-            response.put("message", "Failed to update over groups.");
-            response.put("success", false);
-        }
-        return response;
     }
 
     @RequestMapping("/getGeneralSettings")

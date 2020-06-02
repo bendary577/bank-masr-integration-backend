@@ -2,16 +2,10 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.OverGroup;
-import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.JournalService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -41,6 +35,9 @@ public class JournalController {
     @Autowired
     private AccountRepo accountRepo;
     @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
+    @Autowired
     private JournalService journalService;
     @Autowired
     private TransferService transferService;
@@ -66,29 +63,29 @@ public class JournalController {
     public HashMap<String, Object> getJournals(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
-        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
+        if (journalSyncJobType.getConfiguration().getTimePeriod().equals("")){
             String message = "Map time period before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+        if (generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Map cost centers before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (journalSyncJobType.getConfiguration().getItemGroups().size() == 0){
+        if (generalSettings.getItemGroups().size() == 0){
             String message = "Map items before sync consumption.";
             response.put("message", message);
             response.put("success", false);
@@ -104,7 +101,7 @@ public class JournalController {
 
         try {
             ArrayList<OverGroup> overGroups = journalSyncJobType.getConfiguration().getOverGroups();
-            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, invoiceSyncJobType, account);
+            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, generalSettings, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
@@ -112,7 +109,7 @@ public class JournalController {
                     addedJournals = journalService.saveJournalData(journals, syncJob, overGroups);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
-                        invoiceController.handleSendJournal(journalSyncJobType, journalSyncJobType, syncJob, addedJournals, account, voucher);
+                        invoiceController.handleSendJournal(journalSyncJobType, syncJob, addedJournals, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(addedJournals.size());

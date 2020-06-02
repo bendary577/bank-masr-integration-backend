@@ -37,17 +37,16 @@ public class WastageService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getWastageData(SyncJobType syncJobType, SyncJobType syncJobTypeJournal,
-                                                   SyncJobType invoiceSyncJobType, Account account) {
+    public HashMap<String, Object> getWastageData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
 
         HashMap<String, Object> response = new HashMap<>();
-        ArrayList<Item> items = syncJobTypeJournal.getConfiguration().getItems();
-        ArrayList<CostCenter> costCenters = invoiceSyncJobType.getConfiguration().getCostCenters();
-        ArrayList<CostCenter> costCenterLocationMapping = syncJobTypeJournal.getConfiguration().getCostCenterLocationMapping();
-        ArrayList<OverGroup> overGroups = syncJobTypeJournal.getConfiguration().getOverGroups();
+        ArrayList<Item> items = generalSettings.getItems();
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+        ArrayList<CostCenter> costCenterLocationMapping = generalSettings.getCostCenterLocationMapping();
+        ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
 
-        WebDriver driver;
+        WebDriver driver = null;
         try{
             driver = setupEnvironment.setupSeleniumEnv(false);
         }

@@ -5,10 +5,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.WasteGroup;
-import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.TransferService;
 import com.sun.supplierpoc.services.WastageService;
@@ -36,9 +33,10 @@ public class WastageController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
-    @Autowired
     private AccountRepo accountRepo;
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
     @Autowired
     private TransferService transferService;
     @Autowired
@@ -67,9 +65,8 @@ public class WastageController {
     public HashMap<String, Object> getWastage(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType wastageSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, account.getId(), false);
-        SyncJobType syncJobTypeJournal = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
-        SyncJobType syncJobTypeInvoice = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType);
         if (sunConfigResponse != null){
@@ -83,21 +80,21 @@ public class WastageController {
             return response;
         }
 
-        if (syncJobTypeInvoice.getConfiguration().getCostCenters().size() == 0){
+        if (generalSettings != null && generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Configure cost center before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobTypeJournal.getConfiguration().getItems().size() == 0){
+        if (generalSettings != null && generalSettings.getItems().size() == 0){
             String message = "Map items before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobTypeJournal.getConfiguration().getCostCenterLocationMapping().size() == 0){
+        if (generalSettings != null && generalSettings.getCostCenterLocationMapping().size() == 0){
             String message = "Map cost centers to location before sync wastage.";
             response.put("message", message);
             response.put("success", false);
@@ -112,8 +109,7 @@ public class WastageController {
         ArrayList<SyncJobData> addedWastes = new ArrayList<>();
         try {
 
-            HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, syncJobTypeJournal,
-                    syncJobTypeInvoice, account);
+            HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, generalSettings, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
@@ -121,7 +117,7 @@ public class WastageController {
                     addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
-                        invoiceController.handleSendJournal(wastageSyncJobType, syncJobTypeJournal, syncJob, addedWastes, account, voucher);
+                        invoiceController.handleSendJournal(wastageSyncJobType, syncJob, addedWastes, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(addedWastes.size());

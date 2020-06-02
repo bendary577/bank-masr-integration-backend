@@ -65,9 +65,9 @@ public class TransferController {
     public HashMap<String, Object> getBookedTransfer(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType transferSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
-        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);
         if (sunConfigResponse != null){
@@ -81,7 +81,7 @@ public class TransferController {
             return response;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getCostCenters().size() == 0){
+        if (generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Map cost centers before sync transfers.";
             response.put("message", message);
             response.put("success", false);
@@ -103,7 +103,7 @@ public class TransferController {
 
         try {
             HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, journalSyncJobType,
-                    invoiceSyncJobType, account);
+                    generalSettings, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
@@ -111,7 +111,7 @@ public class TransferController {
                     addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
                     IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                     if (voucher != null){
-                        invoiceController.handleSendJournal(transferSyncJobType, journalSyncJobType, syncJob, addedTransfers, account, voucher);
+                        invoiceController.handleSendJournal(transferSyncJobType, syncJob, addedTransfers, account, voucher);
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(addedTransfers.size());
@@ -164,9 +164,9 @@ public class TransferController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, user.getAccountId(), false);
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
 
-        ArrayList<OverGroup> oldOverGroups = syncJobType.getConfiguration().getOverGroups();
+        ArrayList<OverGroup> oldOverGroups = generalSettings.getOverGroups();
         ArrayList<MajorGroup> majorGroups = new ArrayList<>();
         ArrayList<ItemGroup> itemGroups = new ArrayList<>();
         ArrayList<Item> items = new ArrayList<>();
@@ -227,7 +227,7 @@ public class TransferController {
                 return response;
             }
             // save new major groups
-            syncJobType.getConfiguration().setMajorGroups(majorGroups);
+            generalSettings.setMajorGroups(majorGroups);
 
             // Get Items Group
             String mainMenuURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Common/Menu/MainMenu.aspx";
@@ -251,16 +251,9 @@ public class TransferController {
                 itemGroup.setItemGroup(cols.get(columns.indexOf("item_group")).getText().strip());
                 itemGroup.setMajorGroup(cols.get(columns.indexOf("major_group")).getText().strip());
 
-                if (itemGroup.getItemGroup().equals("Cooking")){
-                    System.out.println("error here");
-                }
-
                 // check if this Item group belong to chosen major group
                 MajorGroup majorGroupData = conversions.checkMajorGroupExistence(majorGroups, itemGroup.getMajorGroup());
 
-                if (majorGroupData.getMajorGroup().equals("Cooking") || majorGroupData.getMajorGroup().equals("Catering")){
-                    System.out.println("error here");
-                }
                 if (majorGroupData.getChecked()) {
                     itemGroup.setChecked(true);
                     itemGroup.setOverGroup(majorGroupData.getOverGroup());
@@ -278,7 +271,7 @@ public class TransferController {
                 return response;
             }
             // save new Item groups
-            syncJobType.getConfiguration().setItemGroups(itemGroups);
+            generalSettings.setItemGroups(itemGroups);
 
             // Get Items Group
             driver.get(mainMenuURL);
@@ -333,8 +326,9 @@ public class TransferController {
             }
 
             // save new items
-            syncJobType.getConfiguration().setItems(items);
-            syncJobTypeRepo.save(syncJobType);
+            generalSettings.setItems(items);
+
+            generalSettingsRepo.save(generalSettings);
 
             driver.quit();
 

@@ -57,7 +57,7 @@ public class TransferService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer, SyncJobType syncJobTypeJournal,
-                                                   SyncJobType syncJobTypeApprovedInvoice, Account account) {
+                                                   GeneralSettings generalSettings, Account account) {
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver;
         try{
@@ -72,7 +72,7 @@ public class TransferService {
 
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
 
-        ArrayList<CostCenter> costCenters =  syncJobTypeApprovedInvoice.getConfiguration().getCostCenters();;
+        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  syncJobTypeJournal.getConfiguration().getItems();
         ArrayList<OverGroup> overGroups =  syncJobTypeJournal.getConfiguration().getOverGroups();
         String timePeriod = syncJobTypeTransfer.getConfiguration().getTimePeriod();

@@ -34,7 +34,7 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, SyncJobType invoiceSyncJobType,
+    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, GeneralSettings generalSettings,
                                                   Account account){
         HashMap<String, Object> response = new HashMap<>();
 
@@ -53,8 +53,8 @@ public class JournalService {
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
         String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
-        ArrayList<CostCenter> costCenters =  invoiceSyncJobType.getConfiguration().getCostCenters();
-        ArrayList<ItemGroup> itemGroups = journalSyncJobType.getConfiguration().getItemGroups();
+        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
         try {
             String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";

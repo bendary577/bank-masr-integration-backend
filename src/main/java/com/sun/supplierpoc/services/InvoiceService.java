@@ -399,7 +399,7 @@ public class InvoiceService {
 
         for (HashMap<String, String> invoice : invoices) {
             // check existence of invoice in middleware (UNIQUE: invoiceNo)
-            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, (String)invoice.get("invoice_no."));
+            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, (String)invoice.get("invoiceNo"));
             if (oldInvoice != null){
                 if (!oldInvoice.getStatus().equals(Constants.FAILED)){
                     continue;

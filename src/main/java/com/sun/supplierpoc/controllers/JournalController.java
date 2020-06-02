@@ -4,6 +4,8 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.JournalService;
@@ -101,7 +103,10 @@ public class JournalController {
 
         try {
             ArrayList<OverGroup> overGroups = journalSyncJobType.getConfiguration().getOverGroups();
-            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, generalSettings, account);
+            ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+            ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
+
+            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters, itemGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");

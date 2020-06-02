@@ -34,8 +34,8 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, GeneralSettings generalSettings,
-                                                  Account account){
+    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+                                                  ArrayList<ItemGroup> itemGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();
 
         WebDriver driver;
@@ -53,8 +53,6 @@ public class JournalService {
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
         String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
-        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
-        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
         try {
             String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";

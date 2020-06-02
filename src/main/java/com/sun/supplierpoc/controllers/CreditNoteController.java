@@ -5,6 +5,8 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -90,6 +92,13 @@ public class CreditNoteController {
             return response;
         }
 
+        if (generalSettings.getItems().size() == 0){
+            String message = "Map items before sync credit notes.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
                 account.getId(), creditNoteSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
@@ -97,11 +106,14 @@ public class CreditNoteController {
         try {
 
             ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+            ArrayList<Item> items =  generalSettings.getItems();
+            ArrayList<OverGroup> overGroups =  generalSettings.getOverGroups();
 
-            HashMap<String, Object> data = invoiceService.getInvoicesData(true, invoiceSyncJobType, costCenters, account);
+            HashMap<String, Object> data = invoiceService.getInvoicesData(true, invoiceSyncJobType, costCenters,
+                    items, overGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)){
-                ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
+                ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
                 if (invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, creditNoteSyncJobType, true);
                     if (addedInvoices.size() > 0){

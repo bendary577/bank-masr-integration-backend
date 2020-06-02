@@ -5,6 +5,8 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
@@ -84,22 +86,15 @@ public class InvoiceController {
             return response;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getExpensesAccount().equals("")){
-            String message = "Configure expenses account before sync invoices.";
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
-
-        if (invoiceSyncJobType.getConfiguration().getInventoryAccount().equals("")){
-            String message = "Configure inventory account before sync invoices.";
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
-
         if (generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Map cost centers before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
+        if (generalSettings.getItems().size() == 0){
+            String message = "Map items before sync invoices.";
             response.put("message", message);
             response.put("success", false);
             return response;
@@ -111,14 +106,17 @@ public class InvoiceController {
         syncJobRepo.save(syncJob);
 
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+        ArrayList<Item> items =  generalSettings.getItems();
+        ArrayList<OverGroup> overGroups =  generalSettings.getOverGroups();
 
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         try {
-            HashMap<String, Object> data = invoiceService.getInvoicesData(false, invoiceSyncJobType, costCenters, account);
+            HashMap<String, Object> data = invoiceService.getInvoicesData(false, invoiceSyncJobType, costCenters,
+                    items, overGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)){
-                ArrayList<HashMap<String, Object>> invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
+                ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
                 if (invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, invoiceSyncJobType, false);
                     if (addedInvoices.size() > 0){

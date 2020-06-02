@@ -4,10 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.Item;
-import com.sun.supplierpoc.models.configurations.ItemGroup;
-import com.sun.supplierpoc.models.configurations.MajorGroup;
-import com.sun.supplierpoc.models.configurations.OverGroup;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.TransferService;
@@ -88,7 +85,7 @@ public class TransferController {
             return response;
         }
 
-        if (journalSyncJobType.getConfiguration().getItems().size() == 0){
+        if (generalSettings.getItems().size() == 0){
             String message = "Map items before sync transfers.";
             response.put("message", message);
             response.put("success", false);
@@ -102,8 +99,12 @@ public class TransferController {
         ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
         try {
-            HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, journalSyncJobType,
-                    generalSettings, account);
+            ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+            ArrayList<Item> items =  generalSettings.getItems();
+            ArrayList<OverGroup> overGroups =  generalSettings.getOverGroups();
+
+            HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, costCenters, items,
+                    overGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");

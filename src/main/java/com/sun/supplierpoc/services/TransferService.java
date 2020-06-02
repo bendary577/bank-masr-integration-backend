@@ -56,8 +56,9 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer, SyncJobType syncJobTypeJournal,
-                                                   GeneralSettings generalSettings, Account account) {
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer,
+                                                   ArrayList<CostCenter> costCenters, ArrayList<Item> items,
+                                                   ArrayList<OverGroup> overGroups , Account account) {
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver;
         try{
@@ -71,10 +72,6 @@ public class TransferService {
         }
 
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
-
-        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
-        ArrayList<Item> items =  syncJobTypeJournal.getConfiguration().getItems();
-        ArrayList<OverGroup> overGroups =  syncJobTypeJournal.getConfiguration().getOverGroups();
         String timePeriod = syncJobTypeTransfer.getConfiguration().getTimePeriod();
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
@@ -336,7 +333,7 @@ public class TransferService {
                 journalEntry.put("from_account_code", fromCostCenter.accountCode);
 
                 journalEntry.put("to_cost_center", toCostCenter.costCenter);
-                journalEntry.put("to_account_code", fromCostCenter.accountCode);
+                journalEntry.put("to_account_code", toCostCenter.accountCode);
 
                 journalEntry.put("description", "Transfer From " + fromCostCenter.costCenterReference + " to "+
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup());

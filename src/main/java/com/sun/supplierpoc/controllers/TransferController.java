@@ -65,6 +65,16 @@ public class TransferController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType transferSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
 
+        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+        ArrayList<Item> items =  generalSettings.getItems();
+        ArrayList<OverGroup> overGroups;
+
+        if (transferSyncJobType.getConfiguration().getOverGroups().size() == 0){
+            overGroups =  generalSettings.getOverGroups();
+        }else{
+            overGroups =  transferSyncJobType.getConfiguration().getOverGroups();
+        }
+
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
@@ -98,9 +108,6 @@ public class TransferController {
         ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
         try {
-            ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
-            ArrayList<Item> items =  generalSettings.getItems();
-            ArrayList<OverGroup> overGroups =  generalSettings.getOverGroups();
 
             HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, costCenters, items,
                     overGroups, account);

@@ -68,6 +68,16 @@ public class JournalController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
+        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
+
+        ArrayList<OverGroup> overGroups ;
+        if (journalSyncJobType.getConfiguration().getOverGroups().size() == 0){
+            overGroups =  generalSettings.getOverGroups();
+        }else{
+            overGroups =  journalSyncJobType.getConfiguration().getOverGroups();
+        }
+
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
@@ -102,10 +112,6 @@ public class JournalController {
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
         try {
-            ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
-            ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
-            ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
-
             HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters, itemGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {

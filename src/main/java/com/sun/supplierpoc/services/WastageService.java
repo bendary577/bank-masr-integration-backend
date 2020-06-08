@@ -37,13 +37,11 @@ public class WastageService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getWastageData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
+    public HashMap<String, Object> getWastageData(SyncJobType syncJobType, ArrayList<Item> items,
+                                                  ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
+                                                  ArrayList<WasteGroup> wasteGroups, Account account) {
 
         HashMap<String, Object> response = new HashMap<>();
-        ArrayList<Item> items = generalSettings.getItems();
-        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-        ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
-        ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
 
         WebDriver driver = null;
         try{

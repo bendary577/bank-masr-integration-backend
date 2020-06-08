@@ -74,6 +74,16 @@ public class InvoiceController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+        ArrayList<Item> items =  generalSettings.getItems();
+
+        ArrayList<OverGroup> overGroups ;
+        if (invoiceSyncJobType.getConfiguration().getOverGroups().size() == 0){
+            overGroups =  generalSettings.getOverGroups();
+        }else{
+            overGroups =  invoiceSyncJobType.getConfiguration().getOverGroups();
+        }
+
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
@@ -104,10 +114,6 @@ public class InvoiceController {
                 account.getId(), invoiceSyncJobType.getId(), 0);
 
         syncJobRepo.save(syncJob);
-
-        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-        ArrayList<Item> items =  generalSettings.getItems();
-        ArrayList<OverGroup> overGroups =  generalSettings.getOverGroups();
 
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 

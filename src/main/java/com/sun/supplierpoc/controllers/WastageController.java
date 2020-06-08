@@ -4,6 +4,9 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.models.configurations.WasteGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
@@ -68,6 +71,17 @@ public class WastageController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType wastageSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, account.getId(), false);
 
+        ArrayList<Item> items = generalSettings.getItems();
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+        ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().getWasteGroups();
+
+        ArrayList<OverGroup> overGroups;
+        if (wastageSyncJobType.getConfiguration().getOverGroups().size() == 0){
+            overGroups =  generalSettings.getOverGroups();
+        }else{
+            overGroups =  wastageSyncJobType.getConfiguration().getOverGroups();
+        }
+
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
@@ -109,7 +123,8 @@ public class WastageController {
         ArrayList<SyncJobData> addedWastes = new ArrayList<>();
         try {
 
-            HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, generalSettings, account);
+            HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, items, costCenters,
+                    overGroups, wasteGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");

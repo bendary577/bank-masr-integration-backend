@@ -72,75 +72,10 @@ public class InvoiceService {
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
 
-            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
-                try {
-                    select.selectByVisibleText("User-defined");
-                } catch (Exception e) {
-                    driver.quit();
+            response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
 
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Invalid time period.");
-                    response.put("invoices", journalEntries);
-                    return response;
-                }
-
-                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                String targetDate = "";
-
-                if (timePeriod.equals("Yesterday")){
-                    Calendar cal = Calendar.getInstance();
-                    cal.add(Calendar.DATE, -1);
-                    targetDate = dateFormat.format(cal.getTime());
-                }
-                else {
-                    Date date = new Date();
-                    targetDate = dateFormat.format(date);
-                }
-
-                driver.findElement(By.id("_ctl7_input")).clear();
-                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
-                driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
-
-                driver.findElement(By.id("_ctl9_input")).clear();
-                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
-                driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
-
-                String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
-                Date startDate = dateFormat.parse(startDateValue);
-
-                String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
-                Date endDate = dateFormat.parse(endDateValue);
-
-                if (!dateFormat.format(startDate).equals(targetDate)){
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
-                    response.put("invoices", journalEntries);
-                    return response;
-                }
-
-                if (!dateFormat.format(endDate).equals(targetDate)){
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
-                    response.put("invoices", journalEntries);
-                    return response;
-                }
-
-            }
-            else{
-                try{
-                    select.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Invalid time period.");
-                    response.put("invoices", journalEntries);
-                    return response;
-                }
+            if (!response.get("status").equals(Constants.SUCCESS)){
+                return response;
             }
 
             if (typeFlag){

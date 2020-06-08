@@ -335,7 +335,7 @@ public class TransferService {
                 journalEntry.put("to_cost_center", toCostCenter.costCenter);
                 journalEntry.put("to_account_code", toCostCenter.accountCode);
 
-                journalEntry.put("description", "Transfer From " + fromCostCenter.costCenterReference + " to "+
+                journalEntry.put("description", "Tr F " + fromCostCenter.costCenterReference + " T "+
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "");

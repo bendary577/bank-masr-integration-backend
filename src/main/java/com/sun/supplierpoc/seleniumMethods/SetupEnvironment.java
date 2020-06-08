@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.seleniumMethods;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
@@ -10,13 +11,12 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
+import org.openqa.selenium.support.ui.Select;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class SetupEnvironment {
 
@@ -30,7 +30,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -39,7 +39,7 @@ public class SetupEnvironment {
         else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -118,5 +118,98 @@ public class SetupEnvironment {
         }
 
         return columns;
+    }
+
+    public HashMap<String, Object> selectTimePeriod(String timePeriod, Select select, WebDriver driver){
+        HashMap<String, Object> response = new HashMap<>();
+
+        try {
+            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")) {
+                try {
+                    select.selectByVisibleText("User-defined");
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid time period.");
+                    response.put("invoices", new ArrayList<>());
+                    return response;
+                }
+
+                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                String targetDate = "";
+
+                if (timePeriod.equals("Yesterday")) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.add(Calendar.DATE, -1);
+                    targetDate = dateFormat.format(cal.getTime());
+                } else {
+                    Date date = new Date();
+                    targetDate = dateFormat.format(date);
+                }
+
+                driver.findElement(By.id("_ctl7_input")).clear();
+                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
+                driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
+
+                driver.findElement(By.id("_ctl9_input")).clear();
+                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
+                driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
+
+                String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
+                Date startDate = dateFormat.parse(startDateValue);
+
+                String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
+                Date endDate = dateFormat.parse(endDateValue);
+
+                if (!dateFormat.format(startDate).equals(targetDate)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    response.put("invoices", new ArrayList<>());
+                    return response;
+                }
+
+                if (!dateFormat.format(endDate).equals(targetDate)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    response.put("invoices", new ArrayList<>());
+                    return response;
+                }
+
+                response.put("status", Constants.SUCCESS);
+                response.put("message", "");
+                response.put("invoices", new ArrayList<>());
+                return response;
+
+            } else {
+                try {
+                    select.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid time period.");
+                    response.put("invoices", new ArrayList<>());
+                    return response;
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        response.put("status", Constants.SUCCESS);
+        response.put("message", "");
+        response.put("invoices", new ArrayList<>());
+        return response;
     }
 }

@@ -42,6 +42,269 @@ public class WastageService {
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<Item> items = generalSettings.getItems();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+        ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
+        ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
+
+        WebDriver driver = null;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> wastesStatus;
+        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
+
+        try{
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LINK, account)) {
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("wastes", wastes);
+                return response;
+            }
+
+            String bookedWastes = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/Waste/WstOverviewView.aspx?type=1";
+            driver.get(bookedWastes);
+
+            Select select = new Select(driver.findElement(By.id("_ctl5")));
+            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+
+            // Open filter search
+            String filterStatus = driver.findElement(By.id("filterPanel_btnToggleFilter")).getAttribute("value");
+
+            if (filterStatus.equals("Show Filter")){
+                driver.findElement(By.id("filterPanel_btnToggleFilter")).click();
+            }
+
+            response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
+
+            if (!response.get("status").equals(Constants.SUCCESS)){
+                return response;
+            }
+
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+            try{
+                WebDriverWait wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
+
+            } catch (Exception e) {
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
+                response.put("invoices", journalEntries);
+                return response;
+            }
+
+            try{
+                // wait until table is ready
+                WebDriverWait wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("G_dg")));
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+            WebElement bodyTable = driver.findElement(By.id("G_dg"));
+            WebElement headerTable = driver.findElement(By.id("dg_main"));
+
+            List<WebElement> rows = bodyTable.findElements(By.tagName("tr"));
+            List<WebElement> headerRows = headerTable.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+
+            while (true){
+                for (int i = 1; i < rows.size(); i++) {
+                    HashMap<String, Object> waste = new HashMap<>();
+
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+                    if (cols.size() !=  columns.size()){
+                        continue;
+                    }
+
+                    // check if cost center chosen
+                    WebElement td = cols.get(columns.indexOf("cost_center"));
+                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                    if (!oldCostCenterData.checked) {
+                        continue;
+                    }
+
+                    waste.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
+
+                    // check if waste group chosen
+                    td = cols.get(columns.indexOf("waste_group"));
+                    WasteGroup oldWasteGroupData = conversions.checkWasteTypeExistence(wasteGroups, td.getText().strip());
+
+                    if (!oldWasteGroupData.getChecked()) {
+                        continue;
+                    }
+
+                    waste.put(columns.get(columns.indexOf("waste_group")), oldWasteGroupData);
+
+                    String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
+                    waste.put("waste_details_link", link);
+
+                    for (int j = 0; j < cols.size(); j++) {
+                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("waste_group"))
+                            continue;
+                        waste.put(columns.get(j), cols.get(j).getText().strip());
+                    }
+                    wastes.add(waste);
+                }
+
+                // check if there is other pages
+                if (driver.findElements(By.linkText("Next")).size() == 0){
+                    break;
+                }
+                else {
+                    TransferService.checkPagination(driver, "dg_rc_0_1");
+                    bodyTable = driver.findElement(By.id("G_dg"));
+                    rows = bodyTable.findElements(By.tagName("tr"));
+                }
+            }
+
+            for (HashMap<String, Object> waste:wastes) {
+                getWasteDetails(items, overGroups, waste, driver, journalEntries);
+            }
+
+
+            driver.quit();
+
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "");
+            response.put("wastes", journalEntries);
+            return response;
+
+        }catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            response.put("wastes", journalEntries);
+            return response;
+        }
+    }
+
+    private void getWasteDetails(
+            ArrayList<Item> items, ArrayList<OverGroup> overGroups,
+            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
+        ArrayList<Journal> journals = new ArrayList<>();
+
+        try {
+            driver.get((String) waste.get("waste_details_link"));
+
+            WebElement bodyTable = driver.findElement(By.id("G_dg"));
+            WebElement headerTable = driver.findElement(By.xpath("/html/body/form/table/tbody/tr[5]/td/table/tbody/tr[1]/td/div/table"));
+
+            List<WebElement> headerRows = headerTable.findElements(By.tagName("tr"));
+            List<WebElement> rows = bodyTable.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                HashMap<String, Object> transferDetails = new HashMap<>();
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                // check if this Item belong to selected items
+                WebElement td = cols.get(columns.indexOf("item"));
+
+                Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+
+                if (!oldItemData.isChecked()) {
+                    continue;
+                }
+
+                String overGroup = oldItemData.getOverGroup();
+
+                transferDetails.put("Item", td.getText().strip());
+
+                td = cols.get(columns.indexOf("total"));
+                transferDetails.put("value", td.getText().strip());
+
+                Journal journal = new Journal();
+                journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) transferDetails.get("value")),
+                        0,0, 0);
+
+            }
+
+            CostCenter costCenter = (CostCenter) waste.get("cost_center");
+            for (Journal journal : journals) {
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                if (!oldOverGroupData.getChecked()) {
+                    continue;
+                }
+
+                HashMap<String, Object> journalEntry = new HashMap<>();
+
+                if (costCenter.costCenterReference.equals("")){
+                    costCenter.costCenterReference = costCenter.costCenter;
+                }
+
+                journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
+                journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
+
+                journalEntry.put("from_cost_center", costCenter.costCenter);
+//                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
+                journalEntry.put("from_account_code", costCenter.accountCode);
+
+                journalEntry.put("to_cost_center", costCenter.costCenter);
+//                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
+                journalEntry.put("to_account_code", costCenter.accountCode);
+
+                journalEntry.put("description", "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup());
+
+                journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                journalEntry.put("overGroup", journal.getOverGroup());
+
+                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+
+                journalEntries.add(journalEntry);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public ArrayList<SyncJobData> saveWastageSunData(ArrayList<HashMap<String, String>> wastes, SyncJob syncJob) {
+        ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
+
+        for (HashMap<String, String> waste : wastes) {
+
+            SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
+
+            addedTransfers.add(syncJobData);
+        }
+        return addedTransfers;
+
+    }
+
+    @Deprecated
+    public HashMap<String, Object> getWastageReportData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
+
+        HashMap<String, Object> response = new HashMap<>();
+        ArrayList<Item> items = generalSettings.getItems();
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<CostCenter> costCenterLocationMapping = generalSettings.getCostCenterLocationMapping();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
@@ -209,7 +472,7 @@ public class WastageService {
                 }
 
                 for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteDetails(items, overGroups, costCenter, waste, driver, journalEntries);
+                    getWasteReportDetails(items, overGroups, costCenter, waste, driver, journalEntries);
                 }
 
             } catch (Exception e) {
@@ -229,7 +492,8 @@ public class WastageService {
         return response;
     }
 
-    private void getWasteDetails(
+    @Deprecated
+    private void getWasteReportDetails(
             ArrayList<Item> items, ArrayList<OverGroup> overGroups, CostCenter costCenter,
             HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
@@ -296,7 +560,7 @@ public class WastageService {
 //                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
                 journalEntry.put("to_account_code", costCenter.accountCode);
 
-                journalEntry.put("description", "Wastage Entry For " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
+                journalEntry.put("description", "W For " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
 
                 journalEntry.put("transactionReference", "Wastage Transaction Reference");
                 journalEntry.put("overGroup", journal.getOverGroup());
@@ -312,20 +576,5 @@ public class WastageService {
         }
     }
 
-
-    public ArrayList<SyncJobData> saveWastageSunData(ArrayList<HashMap<String, String>> wastes, SyncJob syncJob) {
-        ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
-
-        for (HashMap<String, String> waste : wastes) {
-
-            SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-
-            addedTransfers.add(syncJobData);
-        }
-        return addedTransfers;
-
-    }
 
 }

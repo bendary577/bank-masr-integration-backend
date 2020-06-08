@@ -23,17 +23,23 @@ public class Constants {
     public static String WEEKLY = "Weekly";
     public static String MONTHLY = "Monthly";
 
-    ////////////////////////////////////////// Accounts //////////////////////////////////////////////////////
+    ////////////////////////////////////////// Accounts ////////////////////////////////////////////////////////////////
     public static String SUN = "Sun";
     public static String FUSION = "Fusion";
     public static String ORACLE_OHIM = "HospitalityOHIM";
     public static String ORACLE_OHRA = "HospitalityOHRA";
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Sun Server ///////////////////////////////////////////////////////////////
 
     public static int PORT = 8080;
 //    public static String HOST = "192.168.1.15";
     public static String HOST = "41.33.13.24";
+
+    ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
+
+    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+    public static String OHRA_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
+
 
     public Constants() {}
 }

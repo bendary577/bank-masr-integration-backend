@@ -74,11 +74,12 @@ public class InvoiceController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
+        String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().getInvoiceTypeIncluded();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
 
         ArrayList<OverGroup> overGroups ;
-        if (invoiceSyncJobType.getConfiguration().getOverGroups().size() == 0){
+        if (!invoiceSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
         }else{
             overGroups =  invoiceSyncJobType.getConfiguration().getOverGroups();
@@ -87,6 +88,13 @@ public class InvoiceController {
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
+        }
+
+        if (invoiceSyncJobType.equals("")){
+            String message = "Configure invoice types before sync invoices.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
         }
 
         if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
@@ -118,8 +126,14 @@ public class InvoiceController {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         try {
-            HashMap<String, Object> data = invoiceService.getInvoicesData(false, invoiceSyncJobType, costCenters,
-                    items, overGroups, account);
+            HashMap<String, Object> data = new HashMap<>();
+            if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
+                data = invoiceService.getInvoicesData(false,true, invoiceSyncJobType, costCenters,
+                        items, overGroups, account);
+            }else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
+                data = invoiceService.getInvoicesData(false, false, invoiceSyncJobType, costCenters,
+                        items, overGroups, account);
+            }
 
             if (data.get("status").equals(Constants.SUCCESS)){
                 ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");

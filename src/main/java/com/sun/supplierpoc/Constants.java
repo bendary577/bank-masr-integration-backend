@@ -40,6 +40,15 @@ public class Constants {
     public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
     public static String OHRA_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
 
+    public static String APPROVED_INVOICES_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+    public static String ACCOUNT_PAYABLE_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
+
+    public static String SUPPLIER_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
+    ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
+
+    public static String APPROVED_INVOICE = "Approved Invoices";
+    public static String ACCOUNT_PAYABLE = "Approved Invoices";
+
 
     public Constants() {}
 }

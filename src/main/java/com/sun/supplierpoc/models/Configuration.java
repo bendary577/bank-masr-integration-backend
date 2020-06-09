@@ -29,6 +29,10 @@ public class Configuration implements Serializable {
     private String expensesAccount = "";
     private String locationAnalysis = "";
 
+    private String invoiceTypeIncluded = "";
+
+    private Boolean uniqueOverGroupMapping = false;
+
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
@@ -176,6 +180,22 @@ public class Configuration implements Serializable {
 
     public void setLocationAnalysis(String locationAnalysis) {
         this.locationAnalysis = locationAnalysis;
+    }
+
+    public String getInvoiceTypeIncluded() {
+        return invoiceTypeIncluded;
+    }
+
+    public void setInvoiceTypeIncluded(String invoiceTypeIncluded) {
+        this.invoiceTypeIncluded = invoiceTypeIncluded;
+    }
+
+    public Boolean getUniqueOverGroupMapping() {
+        return uniqueOverGroupMapping;
+    }
+
+    public void setUniqueOverGroupMapping(Boolean uniqueOverGroupMapping) {
+        this.uniqueOverGroupMapping = uniqueOverGroupMapping;
     }
 
     public ArrayList<Item> getItems() {

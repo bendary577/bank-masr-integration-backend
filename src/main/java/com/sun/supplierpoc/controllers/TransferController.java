@@ -69,7 +69,7 @@ public class TransferController {
         ArrayList<Item> items =  generalSettings.getItems();
         ArrayList<OverGroup> overGroups;
 
-        if (transferSyncJobType.getConfiguration().getOverGroups().size() == 0){
+        if (!transferSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
         }else{
             overGroups =  transferSyncJobType.getConfiguration().getOverGroups();

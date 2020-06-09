@@ -36,7 +36,8 @@ public class InvoiceService {
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getInvoicesData(Boolean typeFlag, SyncJobType syncJobType, ArrayList<CostCenter> costCenters,
+    public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, Boolean typeFlag, SyncJobType syncJobType,
+                                                   ArrayList<CostCenter> costCenters,
                                                    ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();
 
@@ -66,8 +67,11 @@ public class InvoiceService {
                 return response;
             }
 
-            String approvedInvoices = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
-            driver.get(approvedInvoices);
+            if (typeFlag){
+                driver.get(Constants.APPROVED_INVOICES_LINK);
+            }else{
+                driver.get(Constants.ACCOUNT_PAYABLE_LINK);
+            }
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
@@ -78,7 +82,7 @@ public class InvoiceService {
                 return response;
             }
 
-            if (typeFlag){
+            if (creditNoteFlag){
                 driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");
             }
 
@@ -189,7 +193,7 @@ public class InvoiceService {
             }
 
             for (HashMap<String, Object> invoice:invoices) {
-                getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, typeFlag);
+                getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
             }
 
             driver.quit();

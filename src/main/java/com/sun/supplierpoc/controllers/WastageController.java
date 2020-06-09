@@ -76,7 +76,7 @@ public class WastageController {
         ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().getWasteGroups();
 
         ArrayList<OverGroup> overGroups;
-        if (wastageSyncJobType.getConfiguration().getOverGroups().size() == 0){
+        if (!wastageSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
         }else{
             overGroups =  wastageSyncJobType.getConfiguration().getOverGroups();

@@ -72,7 +72,7 @@ public class JournalController {
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
         ArrayList<OverGroup> overGroups ;
-        if (journalSyncJobType.getConfiguration().getOverGroups().size() == 0){
+        if (!journalSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
         }else{
             overGroups =  journalSyncJobType.getConfiguration().getOverGroups();

@@ -85,9 +85,10 @@ public class Conversions {
         return null;
     }
 
-    public SyncJobData checkInvoiceExistence(ArrayList<SyncJobData> invoices, String invoiceNumber){
+    public SyncJobData checkInvoiceExistence(ArrayList<SyncJobData> invoices, String invoiceNumber, String overGroup){
         for (SyncJobData invoice : invoices) {
-            if (invoice.getData().get("invoiceNo").equals(invoiceNumber)) {
+            if (invoice.getData().get("invoiceNo").equals(invoiceNumber) &&
+                    invoice.getData().get("overGroup").equals(overGroup)) {
                 return invoice;
             }
         }

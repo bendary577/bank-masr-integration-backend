@@ -314,7 +314,6 @@ public class InvoiceService {
             else
                 journalEntry.put("description", "Credit Note From "+ supplier.getData().get("supplier") + " to " + toCostCenter.costCenterReference);
 
-            journalEntry.put("transactionReference", "");
             journalEntry.put("overGroup", journal.getOverGroup());
 
             OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
@@ -333,8 +332,9 @@ public class InvoiceService {
         ArrayList<SyncJobData> savedInvoices = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (HashMap<String, String> invoice : invoices) {
-            // check existence of invoice in middleware (UNIQUE: invoiceNo)
-            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, (String)invoice.get("invoiceNo"));
+            // check existence of invoice in middleware (UNIQUE: invoiceNo with over group)
+            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
+                    invoice.get("overGroup"));
             if (oldInvoice != null){
                 if (!oldInvoice.getStatus().equals(Constants.FAILED)){
                     continue;

@@ -460,11 +460,11 @@ public class TransferService {
             Element ledgerElement = doc.createElement("Ledger");
             payloadElement.appendChild(ledgerElement);
 
-            ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
-
             ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
             createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
+
+            ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
+            createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
 
             ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
             TransformerFactory tf = TransformerFactory.newInstance();
@@ -544,8 +544,6 @@ public class TransferService {
         else
             base2ReportingAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalDr"))));
         lineElement.appendChild(base2ReportingAmountElement);
-        lineElement.appendChild(base2ReportingAmountElement);
-
 
         Element baseAmountElement = doc.createElement("BaseAmount");
         if (creditDebitFlag)

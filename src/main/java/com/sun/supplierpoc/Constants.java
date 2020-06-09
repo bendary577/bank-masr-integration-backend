@@ -47,7 +47,7 @@ public class Constants {
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
 
     public static String APPROVED_INVOICE = "Approved Invoices";
-    public static String ACCOUNT_PAYABLE = "Approved Invoices";
+    public static String ACCOUNT_PAYABLE = "Account Payable";
 
 
     public Constants() {}

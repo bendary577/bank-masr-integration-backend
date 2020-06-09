@@ -36,7 +36,7 @@ public class InvoiceService {
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, Boolean typeFlag, SyncJobType syncJobType,
+    public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, int typeFlag, SyncJobType syncJobType,
                                                    ArrayList<CostCenter> costCenters,
                                                    ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();
@@ -67,133 +67,41 @@ public class InvoiceService {
                 return response;
             }
 
-            if (typeFlag){
-                driver.get(Constants.APPROVED_INVOICES_LINK);
+            if (typeFlag == 1){
+                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
+                        costCenters, driver, Constants.APPROVED_INVOICES_LINK);
+                if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
+                    return invoiceResponse;
+                }
+                invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
+            }else if (typeFlag == 2){
+                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
+                        costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK);
+                if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
+                    return accountPayableResponse;
+                }
+                ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
+                invoices.addAll(accountPayable);
             }else{
-                driver.get(Constants.ACCOUNT_PAYABLE_LINK);
-            }
-
-            Select select = new Select(driver.findElement(By.id("_ctl5")));
-            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
-
-            response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
-
-            if (!response.get("status").equals(Constants.SUCCESS)){
-                return response;
-            }
-
-            if (creditNoteFlag){
-                driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");
-            }
-
-            driver.findElement(By.name("filterPanel_btnRefresh")).click();
-
-            try{
-                WebDriverWait wait = new WebDriverWait(driver, 60);
-                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
-
-            } catch (Exception e) {
-                driver.quit();
-
-                response.put("status", Constants.FAILED);
-                response.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
-                response.put("invoices", journalEntries);
-                return response;
-            }
-
-            try {
-                Alert al = driver.switchTo().alert();
-                al.accept();
-
-                response.put("status", Constants.FAILED);
-                response.put("message", al.getText());
-                response.put("invoices", journalEntries);
-                return response;
-            } catch (NoAlertPresentException Ex) {
-                System.out.println("No alert exits");
-            }
-
-            try{
-                WebDriverWait wait = new WebDriverWait(driver, 60);
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("G_dg")));
-
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-            }
-
-            WebElement bodyTable = driver.findElement(By.id("G_dg"));
-            WebElement headerTable = driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[1]/td/div/table"));
-
-            List<WebElement> headerRows = headerTable.findElements(By.tagName("tr"));
-            List<WebElement> rows = bodyTable.findElements(By.tagName("tr"));
-
-            ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
-
-            while (true){
-                for (int i = 1; i < rows.size(); i++) {
-                    HashMap<String, Object> invoice = new HashMap<>();
-
-                    WebElement row = rows.get(i);
-                    List<WebElement> cols = row.findElements(By.tagName("td"));
-                    if (cols.size() !=  columns.size()){
-                        continue;
-                    }
-
-                    // check if cost center chosen
-                    WebElement td = cols.get(columns.indexOf("cost_center"));
-                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
-
-                    if (!oldCostCenterData.checked) {
-                        continue;
-                    }
-
-                    invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
-
-                    // check if vendor exits in middleware
-    //                    td = cols.get(columns.indexOf("vendor"));
-    //                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
-    //                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
-    //
-    //                    if (!(boolean) oldSupplierData.get("status")) {
-    //                        continue;
-    //                    }
-    //                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
-
-                    // Mock supplier of now
-                    HashMap<String, String> supplierData = new HashMap<>();
-                    supplierData.put("accountCode", "001");
-                    supplierData.put("supplier", "Golden greenz");
-
-                    SyncJobData supplier = new SyncJobData(supplierData, Constants.RECEIVED, "", new Date(), "");
-
-                    invoice.put(columns.get(columns.indexOf("vendor")), supplier);
-
-                    String link = cols.get(columns.indexOf("invoice_no.")).findElement(By.tagName("a")).getAttribute("href");
-                    link = link.substring(link.indexOf('(') + 1, link.indexOf(','));
-                    String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
-                    invoice.put("reference_link", fullLink);
-
-                    for (int j = 0; j < cols.size(); j++) {
-                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
-                            continue;
-                        invoice.put(columns.get(j), cols.get(j).getText().strip());
-                    }
-                    invoices.add(invoice);
+                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
+                        costCenters, driver, Constants.APPROVED_INVOICES_LINK);
+                if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
+                    return invoiceResponse;
                 }
+                invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
 
-                // check if there is other pages
-                if (driver.findElements(By.linkText("Next")).size() == 0){
-                    break;
+                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
+                        costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK);
+                if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
+                    return accountPayableResponse;
                 }
-                else {
-                    TransferService.checkPagination(driver, "dg_rc_0_1");
-                    bodyTable = driver.findElement(By.id("G_dg"));
-                    rows = bodyTable.findElements(By.tagName("tr"));
-                }
+                ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
+                invoices.addAll(accountPayable);
             }
 
             for (HashMap<String, Object> invoice:invoices) {
                 getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
+                break;
             }
 
             driver.quit();
@@ -211,6 +119,140 @@ public class InvoiceService {
             response.put("invoices", journalEntries);
             return response;
         }
+    }
+
+
+    public HashMap<String, Object> getAccountPayableData(Boolean creditNoteFlag, SyncJobType syncJobType,
+                                                   ArrayList<CostCenter> costCenters, WebDriver driver, String url){
+        HashMap<String, Object> response ;
+        ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
+
+        driver.get(url);
+
+        Select select = new Select(driver.findElement(By.id("_ctl5")));
+        String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+
+        response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
+
+        if (!response.get("status").equals(Constants.SUCCESS)){
+            return response;
+        }
+
+        if (creditNoteFlag){
+            driver.findElement(By.id("igtxttbxInvoiceFilter")).sendKeys("RTV");
+        }
+
+        driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 60);
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
+
+        } catch (Exception e) {
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        try {
+            Alert al = driver.switchTo().alert();
+            al.accept();
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", al.getText());
+            response.put("invoices", new ArrayList<>());
+            return response;
+        } catch (NoAlertPresentException Ex) {
+            System.out.println("No alert exits");
+        }
+
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 60);
+            wait.until(ExpectedConditions.presenceOfElementLocated(By.id("G_dg")));
+
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        WebElement bodyTable = driver.findElement(By.id("G_dg"));
+        WebElement headerTable = driver.findElement(By.xpath("/html/body/form/table/tbody/tr[4]/td/table/tbody/tr[1]/td/div/table"));
+
+        List<WebElement> headerRows = headerTable.findElements(By.tagName("tr"));
+        List<WebElement> rows = bodyTable.findElements(By.tagName("tr"));
+
+        ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+
+        while (true){
+            for (int i = 1; i < rows.size(); i++) {
+                HashMap<String, Object> invoice = new HashMap<>();
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+                if (cols.size() !=  columns.size()){
+                    continue;
+                }
+
+                // check if cost center chosen
+                WebElement td = cols.get(columns.indexOf("cost_center"));
+                CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                if (!oldCostCenterData.checked) {
+                    continue;
+                }
+
+                invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
+
+                // check if vendor exits in middleware
+                //                    td = cols.get(columns.indexOf("vendor"));
+                //                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
+                //                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+                //
+                //                    if (!(boolean) oldSupplierData.get("status")) {
+                //                        continue;
+                //                    }
+                //                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
+
+                // Mock supplier of now
+                HashMap<String, String> supplierData = new HashMap<>();
+                supplierData.put("accountCode", "001");
+                supplierData.put("supplier", "Golden greenz");
+
+                SyncJobData supplier = new SyncJobData(supplierData, Constants.RECEIVED, "", new Date(), "");
+
+                invoice.put(columns.get(columns.indexOf("vendor")), supplier);
+
+                String link = cols.get(columns.indexOf("invoice_no.")).findElement(By.tagName("a")).getAttribute("href");
+                link = link.substring(link.indexOf('(') + 1, link.indexOf(','));
+                String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
+                invoice.put("reference_link", fullLink);
+
+                for (int j = 0; j < cols.size(); j++) {
+                    if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
+                        continue;
+                    invoice.put(columns.get(j), cols.get(j).getText().strip());
+                }
+                invoices.add(invoice);
+            }
+
+            // check if there is other pages
+            if (driver.findElements(By.linkText("Next")).size() == 0){
+                break;
+            }
+            else {
+                TransferService.checkPagination(driver, "dg_rc_0_1");
+                bodyTable = driver.findElement(By.id("G_dg"));
+                rows = bodyTable.findElements(By.tagName("tr"));
+            }
+        }
+
+        response.put("status", Constants.SUCCESS);
+        response.put("message", "");
+        response.put("invoices", invoices);
+        return response;
     }
 
     private void getInvoiceDetails(
@@ -236,7 +278,7 @@ public class InvoiceService {
             Alert al = driver.switchTo().alert();
             al.accept();
         } catch (NoAlertPresentException Ex) {
-            System.out.println("No alert exits");
+//            System.out.println("No alert exits");
         }
 
         // Fetch table rows

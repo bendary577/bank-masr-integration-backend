@@ -126,17 +126,24 @@ public class InvoiceController {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
 
         try {
-            HashMap<String, Object> data = new HashMap<>();
+            HashMap<String, Object> data ;
+            ArrayList<HashMap<String, String>> invoices ;
+
             if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
-                data = invoiceService.getInvoicesData(false,true, invoiceSyncJobType, costCenters,
-                        items, overGroups, account);
-            }else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
-                data = invoiceService.getInvoicesData(false, false, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(false,1, invoiceSyncJobType, costCenters,
                         items, overGroups, account);
             }
+            else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
+                data = invoiceService.getInvoicesData(false, 2, invoiceSyncJobType, costCenters,
+                        items, overGroups, account);
+            }
+            else{
+                data = invoiceService.getInvoicesData(false,3, invoiceSyncJobType, costCenters,
+                        items, overGroups, account);
+            }
+            invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 
             if (data.get("status").equals(Constants.SUCCESS)){
-                ArrayList<HashMap<String, String>> invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
                 if (invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, invoiceSyncJobType, false);
                     if (addedInvoices.size() > 0){

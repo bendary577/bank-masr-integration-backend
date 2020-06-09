@@ -239,16 +239,17 @@ public class SupplierService {
             data.put("contactFirstName", "");
 
             // check existence of supplier in middleware (UNIQUE: supplierNumber)
-            SyncJobData oldSupplier = conversions.checkSupplierExistence(savedSuppliers, supplier.getSupplierCode());
+            SyncJobData oldSupplier = conversions.checkSupplierExistence(savedSuppliers, supplier.getSupplierName());
             if (oldSupplier != null){
                 oldSupplier.setData(data);
                 syncJobDataRepo.save(oldSupplier);
                 if (!oldSupplier.getStatus().equals(Constants.FAILED)){
                     continue;
                 }
-//                else {
-//                    addedSuppliers.add(oldSupplier);
-//                }
+                else {
+                    addedSuppliers.add(oldSupplier);
+                    continue;
+                }
             }
 
             SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(),

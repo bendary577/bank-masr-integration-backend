@@ -101,7 +101,6 @@ public class InvoiceService {
 
             for (HashMap<String, Object> invoice:invoices) {
                 getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
-                break;
             }
 
             driver.quit();

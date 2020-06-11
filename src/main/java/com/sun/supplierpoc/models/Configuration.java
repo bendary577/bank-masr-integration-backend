@@ -29,7 +29,14 @@ public class Configuration implements Serializable {
     private String expensesAccount = "";
     private String locationAnalysis = "";
 
+    // Invoices/Credit Notes variables
     private String invoiceTypeIncluded = "";
+
+    // Sales variables
+    private String revenue = "";
+    private String vatOut = "";
+    private String cashShortagePOS = "";
+    private String cashSurplusPOS = "";
 
     private Boolean uniqueOverGroupMapping = false;
 
@@ -41,6 +48,7 @@ public class Configuration implements Serializable {
     private ArrayList<CostCenter> costCenterLocationMapping = new ArrayList<>();
     private ArrayList<WasteGroup> wasteGroups = new ArrayList<>();
     private ArrayList<Analysis> analysis = new ArrayList<>();
+    private ArrayList<Tender> tenders = new ArrayList<>();
 
     private AccountSettings accountSettings;
 
@@ -190,6 +198,38 @@ public class Configuration implements Serializable {
         this.invoiceTypeIncluded = invoiceTypeIncluded;
     }
 
+    public String getRevenue() {
+        return revenue;
+    }
+
+    public void setRevenue(String revenue) {
+        this.revenue = revenue;
+    }
+
+    public String getVatOut() {
+        return vatOut;
+    }
+
+    public void setVatOut(String vatOut) {
+        this.vatOut = vatOut;
+    }
+
+    public String getCashShortagePOS() {
+        return cashShortagePOS;
+    }
+
+    public void setCashShortagePOS(String cashShortagePOS) {
+        this.cashShortagePOS = cashShortagePOS;
+    }
+
+    public String getCashSurplusPOS() {
+        return cashSurplusPOS;
+    }
+
+    public void setCashSurplusPOS(String cashSurplusPOS) {
+        this.cashSurplusPOS = cashSurplusPOS;
+    }
+
     public Boolean getUniqueOverGroupMapping() {
         return uniqueOverGroupMapping;
     }
@@ -260,6 +300,14 @@ public class Configuration implements Serializable {
 
     public void setAnalysis(ArrayList<Analysis> analysis) {
         this.analysis = analysis;
+    }
+
+    public ArrayList<Tender> getTenders() {
+        return tenders;
+    }
+
+    public void setTenders(ArrayList<Tender> tenders) {
+        this.tenders = tenders;
     }
 
     public AccountSettings getAccountSettings() {

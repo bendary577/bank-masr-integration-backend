@@ -55,9 +55,7 @@ public class JournalService {
         String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
 
         try {
-            String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
-
-            if (!setupEnvironment.loginOHRA(driver, url, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);

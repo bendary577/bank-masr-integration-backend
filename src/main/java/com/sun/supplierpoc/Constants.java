@@ -6,6 +6,10 @@ public class Constants {
     public static String FAILED = "Failed";
     public static String RECEIVED = "Received";
 
+
+    public static String INVALID_LOCATION = "Invalid location";
+    public static String INVALID_BUSINESS_DATE = "Invalid business Date";
+
     ///////////////////////////////////////// Sync Job Status///////////////////////////////////////////////////////////
     public static String RUNNING = "Running";
 
@@ -37,13 +41,22 @@ public class Constants {
 
     ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
 
-    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-    public static String OHRA_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
+    public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+
+    public static String OHIM_LOGIN_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+    public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
 
     public static String APPROVED_INVOICES_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
     public static String ACCOUNT_PAYABLE_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     public static String SUPPLIER_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
+
+    // SALES LINKS
+    public static String TENDERS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=19";
+    public static String TAXES_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=18";
+    // Menu Engineering/Sales Mix Summary
+    public static String OVER_GROUP_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=46";
+
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
 
     public static String APPROVED_INVOICE = "Approved Invoices";

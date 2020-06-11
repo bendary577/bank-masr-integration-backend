@@ -59,7 +59,7 @@ public class WastageService {
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try{
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LINK, account)) {
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();
 
                 response.put("status", Constants.FAILED);

@@ -118,27 +118,39 @@ public class JournalController {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
                     addedJournals = journalService.saveJournalData(journals, syncJob, overGroups);
-                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
-                    if (voucher != null){
-                        invoiceController.handleSendJournal(journalSyncJobType, syncJob, addedJournals, account, voucher);
-                        syncJob.setReason("");
+                    if (addedJournals.size() > 0){
+                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                        if (voucher != null){
+                            invoiceController.handleSendJournal(journalSyncJobType, syncJob, addedJournals, account, voucher);
+                            syncJob.setReason("");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedJournals.size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", "Sync journals Successfully.");
+                            response.put("success", true);
+                        }
+                        else {
+                            syncJob.setStatus(Constants.FAILED);
+                            syncJob.setReason("Failed to connect to Sun System.");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedJournals.size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", "Failed to connect to Sun System.");
+                            response.put("success", false);
+                        }
+                    }else {
+                        syncJob.setStatus(Constants.SUCCESS);
+                        syncJob.setReason("No consumption to add in middleware.");
                         syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedJournals.size());
+                        syncJob.setRowsFetched(0);
                         syncJobRepo.save(syncJob);
 
-                        response.put("message", "Sync journals Successfully.");
                         response.put("success", true);
+                        response.put("message", "No new consumption to add in middleware.");
                     }
-                    else {
-                        syncJob.setStatus(Constants.FAILED);
-                        syncJob.setReason("Failed to connect to Sun System.");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedJournals.size());
-                        syncJobRepo.save(syncJob);
 
-                        response.put("message", "Failed to connect to Sun System.");
-                        response.put("success", false);
-                    }
                     return response;
                 }
                 else {

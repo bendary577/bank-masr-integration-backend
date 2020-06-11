@@ -14,6 +14,15 @@ public class Conversions {
         return columnName.strip().toLowerCase().replace(' ', '_');
     }
 
+    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName) {
+        for (Tender tender : tenders) {
+            if (tender.getTender().equals(tenderName)) {
+                return tender;
+            }
+        }
+        return new Tender();
+    }
+
     public OverGroup checkOverGroupExistence(ArrayList<OverGroup> overGroups, String overGroupName) {
         for (OverGroup overGroup : overGroups) {
             if (overGroup.getOverGroup().equals(overGroupName)) {

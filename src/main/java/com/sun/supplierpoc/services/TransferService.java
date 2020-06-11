@@ -461,11 +461,13 @@ public class TransferService {
             payloadElement.appendChild(ledgerElement);
 
             ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-            createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
-
+            if (addedJournalEntry.getData().containsKey("totalDr")){
+                createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
+            }
             ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
-
+            if (addedJournalEntry.getData().containsKey("totalCr")){
+                createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
+            }
             ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
             TransformerFactory tf = TransformerFactory.newInstance();
             Transformer transformer = tf.newTransformer();

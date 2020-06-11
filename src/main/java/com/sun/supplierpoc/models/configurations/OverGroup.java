@@ -16,6 +16,8 @@ public class OverGroup implements Serializable {
     private String expensesAccount="";
     private String product="";
 
+    private Float total;
+
     public OverGroup() {
         this.checked = false;
     }
@@ -82,5 +84,13 @@ public class OverGroup implements Serializable {
 
     public void setProduct(String product) {
         this.product = product;
+    }
+
+    public Float getTotal() {
+        return total;
+    }
+
+    public void setTotal(Float total) {
+        this.total = total;
     }
 }

@@ -126,15 +126,15 @@ public class CreditNoteController {
             ArrayList<HashMap<String, String>> invoices ;
 
             if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
-                data = invoiceService.getInvoicesData(false,1, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(true,1, invoiceSyncJobType, costCenters,
                         items, overGroups, account);
             }
             else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
-                data = invoiceService.getInvoicesData(false, 2, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(true, 2, invoiceSyncJobType, costCenters,
                         items, overGroups, account);
             }
             else{
-                data = invoiceService.getInvoicesData(false,3, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(true,3, invoiceSyncJobType, costCenters,
                         items, overGroups, account);
             }
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");

@@ -189,7 +189,7 @@ public class CreditNoteController {
             }
             else {
                 syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason((String) data.get("message"));
+                syncJob.setReason("Failed to get credit notes from Oracle hospitality.");
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(addedInvoices.size());
                 syncJobRepo.save(syncJob);

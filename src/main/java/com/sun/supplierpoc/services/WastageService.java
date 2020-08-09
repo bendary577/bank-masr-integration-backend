@@ -19,6 +19,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -152,6 +153,17 @@ public class WastageService {
                     String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
                     waste.put("waste_details_link", link);
 
+                    td = cols.get(columns.indexOf("delivery_date"));
+                    String deliveryDate = td.getText().strip();
+                    // 7/11/2020 "Hospitality Format"
+                    SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
+                    Date deliveryDateFormatted =formatter1.parse(deliveryDate);
+
+                    SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+                    String date = simpleformat.format(deliveryDateFormatted);
+
+                    waste.put("waste_date", date);
+
                     for (int j = 0; j < cols.size(); j++) {
                         if (j == columns.indexOf("cost_center") || j == columns.indexOf("waste_group"))
                             continue;
@@ -253,6 +265,8 @@ public class WastageService {
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
+
+                journalEntry.put("transactionDate", waste.get("waste_date"));
 
                 journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
                 journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);

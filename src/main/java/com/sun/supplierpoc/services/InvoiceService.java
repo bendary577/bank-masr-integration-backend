@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -229,8 +230,24 @@ public class InvoiceService {
                 String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
                 invoice.put("reference_link", fullLink);
 
+
+                td = cols.get(columns.indexOf("invoice_date"));
+                String deliveryDate = td.getText().strip();
+                SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
+                Date deliveryDateFormatted = null;
+                try {
+                    deliveryDateFormatted = formatter1.parse(deliveryDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+                String date = simpleformat.format(deliveryDateFormatted);
+                invoice.put("invoice_date", date);
+
                 for (int j = 0; j < cols.size(); j++) {
-                    if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor"))
+                    if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor")
+                            || j == columns.indexOf("invoice_date"))
                         continue;
                     invoice.put(columns.get(j), cols.get(j).getText().strip());
                 }
@@ -309,12 +326,17 @@ public class InvoiceService {
 
             invoiceDetails.put("Item", td.getText().strip());
 
-            td = cols.get(columns.indexOf("total"));
-            invoiceDetails.put("total", td.getText().strip());
+            if(columns.indexOf("gross") != -1){
+                td = cols.get(columns.indexOf("gross"));
+                invoiceDetails.put("gross", td.getText().strip());
+            }
+
+//            td = cols.get(columns.indexOf("total"));
+//            invoiceDetails.put("total", td.getText().strip());
 
             Journal journal = new Journal();
             journals = journal.checkExistence(journals, overGroup, 0,
-                    conversions.convertStringToFloat((String) invoiceDetails.get("total")),0, 0);
+                    conversions.convertStringToFloat((String) invoiceDetails.get("gross")),0, 0);
 
         }
 
@@ -338,6 +360,8 @@ public class InvoiceService {
                 journalEntry.put("reference", reference);
                 journalEntry.put("transactionReference", reference);
             }
+
+            journalEntry.put("transactionDate", invoice.get("invoice_date"));
 
             journalEntry.put("totalCr", Math.round(journal.getTotalCost()));
             journalEntry.put("totalDr", Math.round(journal.getTotalCost()) * -1);

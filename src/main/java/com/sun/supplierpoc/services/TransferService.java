@@ -204,7 +204,19 @@ public class TransferService {
                     String detailsLink = td.findElement(By.tagName("a")).getAttribute("href");
                     transfer.put("details_url", detailsLink);
 
-                    for (int j = columns.indexOf("delivery_date"); j < cols.size(); j++) {
+
+                    td = cols.get(columns.indexOf("delivery_date"));
+                    String deliveryDate = td.getText().strip();
+                    // 7/11/2020 "Hospitality Format"
+                    SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
+                    Date deliveryDateFormatted =formatter1.parse(deliveryDate);
+
+                    SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+                    String date = simpleformat.format(deliveryDateFormatted);
+
+                    transfer.put("delivery_date", date);
+
+                    for (int j = columns.indexOf("delivery_date")+1 ; j < cols.size(); j++) {
                         transfer.put(columns.get(j), cols.get(j).getText().strip());
                     }
                     transfers.add(transfer);
@@ -325,6 +337,8 @@ public class TransferService {
                 if (toCostCenter.costCenterReference.equals("")){
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
+
+                journalEntry.put("transactionDate", transfer.get("delivery_date"));
 
                 journalEntry.put("totalCr", Math.round(journal.getTotalTransfer()));
                 journalEntry.put("totalDr", Math.round(journal.getTotalTransfer()) * -1);
@@ -580,7 +594,12 @@ public class TransferService {
         String date = simpleformat.format(new Date());
 
         Element TransactionDate = doc.createElement("TransactionDate");
-        TransactionDate.appendChild(doc.createTextNode(date));
+
+        if(addedJournalEntry.getData().containsKey("transactionDate")){
+            TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
+        }else{
+            TransactionDate.appendChild(doc.createTextNode(date));
+        }
         lineElement.appendChild(TransactionDate);
 
         Element transactionAmountElement = doc.createElement("TransactionAmount");

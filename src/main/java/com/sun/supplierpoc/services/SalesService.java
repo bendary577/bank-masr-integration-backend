@@ -122,6 +122,8 @@ public class SalesService {
 
                 // Check if there is different entry
 
+                break;
+
             }
             driver.quit();
 
@@ -167,6 +169,14 @@ public class SalesService {
         // Wait until location value changed
         String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
         while (!selectLocationOption.equals(location)){
+            try {
+                selectLocation.selectByVisibleText(location);
+            } catch (Exception e) {
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_LOCATION);
+                response.setEntries(new ArrayList<>());
+                return response;
+            }
             continue;
         }
 
@@ -185,6 +195,16 @@ public class SalesService {
         // Wait until business date value changed
         String selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
         while (!selectBusinessDateOption.equals(businessDate)){
+            try {
+                selectBusinessDate.selectByVisibleText(businessDate);
+            } catch (Exception e) {
+                driver.quit();
+
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                response.setEntries(new ArrayList<>());
+                return response;
+            }
             continue;
         }
 
@@ -454,6 +474,8 @@ public class SalesService {
 
             HashMap<String, String> tenderData = new HashMap<>();
 
+            tenderData.put("transactionDate", "01072020");
+
             tenderData.put("totalDr", String.valueOf(Math.round(tender.getTotal()) * -1));
 
             tenderData.put("from_cost_center", tender.getCostCenter().costCenter);
@@ -484,6 +506,8 @@ public class SalesService {
         for (int i = 0; i < taxes.size(); i++) {
             Tax tax = taxes.get(i);
             HashMap<String, String> taxData = new HashMap<>();
+
+            taxData.put("transactionDate", "01072020");
 
             taxData.put("totalCr", String.valueOf(Math.round(tax.getTotal())));
 
@@ -522,6 +546,9 @@ public class SalesService {
 
             if ((totalOverGroupNet + totalTax) != totalTender){
                 HashMap<String, String> differentData = new HashMap<>();
+
+                differentData.put("transactionDate", "01072020");
+
                 // {Debit} - ShortagePOS
                 if ((totalOverGroupNet + totalTax) > totalTender){
                     String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();

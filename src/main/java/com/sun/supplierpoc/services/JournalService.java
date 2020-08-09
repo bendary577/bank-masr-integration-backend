@@ -17,10 +17,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class JournalService {
@@ -252,8 +249,17 @@ public class JournalService {
                 costCenter.costCenterReference = costCenter.costCenter;
             }
 
+
+//            Date today = new Date();
+//            Calendar cal = Calendar.getInstance();
+//            cal.setTime(today);
+//            int year = cal.get(Calendar.YEAR);
+
+
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
+
+                varianceData.put("transactionDate", "01072020");
 
                 varianceData.put("totalCr", String.valueOf(Math.round(journalData.getTotalVariance())));
                 varianceData.put("totalDr", String.valueOf(Math.round(journalData.getTotalVariance()) * -1));
@@ -282,6 +288,9 @@ public class JournalService {
 
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
+
+                // Example: 01062020
+                costData.put("transactionDate", "01072020");
 
                 costData.put("totalCr", String.valueOf(Math.round(journalData.getTotalCost())));
                 costData.put("totalDr", String.valueOf(Math.round(journalData.getTotalCost()) * -1));

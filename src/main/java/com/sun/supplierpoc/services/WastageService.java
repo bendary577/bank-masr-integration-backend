@@ -153,7 +153,7 @@ public class WastageService {
                     String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
                     waste.put("waste_details_link", link);
 
-                    td = cols.get(columns.indexOf("delivery_date"));
+                    td = cols.get(columns.indexOf("waste_date"));
                     String deliveryDate = td.getText().strip();
                     // 7/11/2020 "Hospitality Format"
                     SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
@@ -165,7 +165,8 @@ public class WastageService {
                     waste.put("waste_date", date);
 
                     for (int j = 0; j < cols.size(); j++) {
-                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("waste_group"))
+                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("waste_group")
+                                || j == columns.indexOf("waste_date"))
                             continue;
                         waste.put(columns.get(j), cols.get(j).getText().strip());
                     }

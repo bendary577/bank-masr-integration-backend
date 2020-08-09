@@ -207,14 +207,15 @@ public class InvoiceService {
                 invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
 
                 // check if vendor exits in middleware
-                //                    td = cols.get(columns.indexOf("vendor"));
-                //                    ArrayList<SyncJobData> suppliers = syncJobDataController.getSyncJobData(syncJobType.getId());
-                //                    HashMap<String, Object> oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
-                //
-                //                    if (!(boolean) oldSupplierData.get("status")) {
-                //                        continue;
-                //                    }
-                //                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
+//                td = cols.get(columns.indexOf("vendor"));
+//                ArrayList<SyncJobData> suppliers =  syncJobTypeController.getSyncJobData(syncJobType.getId());
+//
+//                SyncJobData oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+//
+//                if (oldSupplierData != null) {
+//                    continue;
+//                }
+//                invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData.get("supplier"));
 
                 // Mock supplier of now
                 HashMap<String, String> supplierData = new HashMap<>();

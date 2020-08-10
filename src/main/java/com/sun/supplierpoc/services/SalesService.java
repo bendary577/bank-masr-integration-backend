@@ -32,7 +32,7 @@ public class SalesService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCenters,
-                                 ArrayList<CostCenter> costCentersLocation, ArrayList<Item> items,
+                                 ArrayList<CostCenter> costCentersLocation, ArrayList<MajorGroup> majorGroups,
                                  ArrayList<Tender> includedTenders, Account account){
 
         Response response = new Response();
@@ -103,16 +103,16 @@ public class SalesService {
                 }
 
                 // Get over group gross
-//                Response overGroupGrossResponse = getSalesOverGroupGross(costCenterLocation.locationName, timePeriod,
-//                        items, driver);
-//                if (!overGroupGrossResponse.isStatus()){
-//                    if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)){
-//                        continue;
-//                    }
-//                    response.setStatus(false);
-//                    response.setMessage(overGroupGrossResponse.getMessage());
-//                    return response;
-//                }
+                Response overGroupGrossResponse = getSalesOverGroupGross(costCenterLocation.locationName, timePeriod,
+                        majorGroups, driver);
+                if (!overGroupGrossResponse.isStatus()){
+                    if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)){
+                        continue;
+                    }
+                    response.setStatus(false);
+                    response.setMessage(overGroupGrossResponse.getMessage());
+                    return response;
+                }
 
                 // Set Debit Entries (Tenders)
                 response.getSalesTender().addAll(tenderResponse.getSalesTender());
@@ -363,7 +363,7 @@ public class SalesService {
         return response;
     }
 
-    public Response getSalesOverGroupGross(String location, String businessDate, ArrayList<Item> items,
+    public Response getSalesOverGroupGross(String location, String businessDate, ArrayList<MajorGroup> majorGroups,
                                            WebDriver driver){
         Response response = new Response();
         ArrayList<Journal> overGroupsGross = new ArrayList<>();
@@ -390,7 +390,7 @@ public class SalesService {
         // Wait until location value changed
         String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
         while (!selectLocationOption.equals(location)){
-            continue;
+            selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
         }
 
         Select selectBusinessDate = new Select(driver.findElement(By.id("calendarData")));
@@ -408,7 +408,7 @@ public class SalesService {
         // Wait until business date value changed
         String selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
         while (!selectBusinessDateOption.equals(businessDate)){
-            continue;
+            selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
         }
 
         driver.findElement(By.id("Run Report")).click();
@@ -429,18 +429,18 @@ public class SalesService {
                     continue;
                 }
 
-                WebElement td = cols.get(columns.indexOf("item"));
-                Item item = conversions.checkItemExistence(items, td.getText().strip().toLowerCase());
+//                WebElement td = cols.get(columns.indexOf("item"));
+//                Item item = conversions.checkItemExistence(items, td.getText().strip().toLowerCase());
+//
+//                if (!item.isChecked()) {
+//                    continue;
+//                }
 
-                if (!item.isChecked()) {
-                    continue;
-                }
+//                Journal journal = new Journal();
+//                float itemGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
+//                String overGroup = item.getOverGroup();
 
-                Journal journal = new Journal();
-                float itemGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
-                String overGroup = item.getOverGroup();
-
-                overGroupsGross = journal.checkExistence(overGroupsGross, overGroup, 0, itemGross, 0, 0);
+//                overGroupsGross = journal.checkExistence(overGroupsGross, overGroup, 0, itemGross, 0, 0);
             }
 
             response.setStatus(true);

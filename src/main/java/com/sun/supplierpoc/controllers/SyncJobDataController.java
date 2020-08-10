@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.controllers;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
@@ -34,6 +35,17 @@ public class SyncJobDataController {
         ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
         for (SyncJob syncJob : syncJobs) {
             List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+            syncJobsData.addAll(syncJobData);
+        }
+        return syncJobsData;
+    }
+
+    public ArrayList<SyncJobData> getFailedSyncJobData(String syncJobTypeId)  {
+        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
+        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
+        for (SyncJob syncJob : syncJobs) {
+            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeletedAndStatus(syncJob.getId(),
+                    false, Constants.FAILED);
             syncJobsData.addAll(syncJobData);
         }
         return syncJobsData;

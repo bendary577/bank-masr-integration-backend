@@ -76,7 +76,9 @@ public class JournalService {
                 WebDriverWait wait = new WebDriverWait(driver, 60);
                 wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
             }
-            catch (Exception ex){ }
+            catch (Exception ex){
+                System.out.println(ex.getMessage());
+            }
 
             WebDriverWait wait = new WebDriverWait(driver, 20);
             if (timePeriod.equals("Last Month")){
@@ -99,7 +101,9 @@ public class JournalService {
                 }
 
                 String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(timePeriod)){}
+                while (!selectedOption.equals(timePeriod)){
+                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                }
 
                 driver.switchTo().defaultContent();
             }
@@ -117,7 +121,9 @@ public class JournalService {
                 }
 
                 String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(timePeriod)){}
+                while (!selectedOption.equals(timePeriod)){
+                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                }
 
             }
             driver.findElement(By.id("Run Report")).click();

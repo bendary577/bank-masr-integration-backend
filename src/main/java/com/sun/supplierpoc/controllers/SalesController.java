@@ -143,6 +143,8 @@ public class SalesController {
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<SyncJobData> addedSales = new ArrayList<>();
+            ArrayList<SyncJobData> failedSales = new ArrayList<>();
+
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                     account.getId(), syncJobType.getId(), 0);
 
@@ -153,55 +155,49 @@ public class SalesController {
                         majorGroups, tenders, account);
 
                 if (salesResponse.isStatus()){
-                    if (salesResponse.getSalesTender().size() > 0 || salesResponse.getSalesTax().size() > 0){
+                    if (salesResponse.getSalesTender().size() > 0 || salesResponse.getSalesTax().size() > 0) {
                         // Save Sales Entries
                         addedSales = salesService.saveSalesData(salesResponse, syncJob, syncJobType);
+                    }
+                    // Resend failed sales
+                    failedSales = salesService.getFailedSalesData(syncJobType);
 
-                        if (addedSales.size() > 0){
-                            // Sent Sales Entries
-                            IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
-                            if (voucher != null){
-                                invoiceController.handleSendJournal(syncJobType, syncJob, addedSales, account, voucher);
-                                syncJob.setReason("");
-                                syncJob.setEndDate(new Date());
-                                syncJob.setRowsFetched(addedSales.size());
-                                syncJobRepo.save(syncJob);
+                    addedSales.addAll(failedSales);
 
-                                response.setStatus(true);
-                                response.setMessage("Sync journals Successfully.");
-                            }
-                            else {
-                                syncJob.setStatus(Constants.FAILED);
-                                syncJob.setReason("Failed to connect to Sun System.");
-                                syncJob.setEndDate(new Date());
-                                syncJob.setRowsFetched(addedSales.size());
-                                syncJobRepo.save(syncJob);
-
-                                response.setStatus(false);
-                                response.setMessage("Failed to connect to Sun System.");
-                            }
-
-                        }else {
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setReason("No sales to add in middleware.");
+                    if (addedSales.size() > 0){
+                        // Sent Sales Entries
+                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                        if (voucher != null){
+                            invoiceController.handleSendJournal(syncJobType, syncJob, addedSales, account, voucher);
+                            syncJob.setReason("");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(0);
+                            syncJob.setRowsFetched(addedSales.size());
                             syncJobRepo.save(syncJob);
 
                             response.setStatus(true);
-                            response.setMessage("No new sales to add in middleware.");
+                            response.setMessage("Sync journals Successfully.");
                         }
-                    }else{
+                        else {
+                            syncJob.setStatus(Constants.FAILED);
+                            syncJob.setReason("Failed to connect to Sun System.");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedSales.size());
+                            syncJobRepo.save(syncJob);
+
+                            response.setStatus(false);
+                            response.setMessage("Failed to connect to Sun System.");
+                        }
+
+                    }else {
                         syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("There is no sales to get from Oracle Hospitality.");
+                        syncJob.setReason("No sales to add in middleware.");
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(0);
                         syncJobRepo.save(syncJob);
 
                         response.setStatus(true);
-                        response.setMessage("There is no sales to get from Oracle Hospitality.");
+                        response.setMessage("No new sales to add in middleware.");
                     }
-
                 }else {
                     syncJob.setStatus(Constants.FAILED);
                     syncJob.setReason(salesResponse.getMessage());

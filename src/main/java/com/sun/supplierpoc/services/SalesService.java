@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.controllers.SyncJobDataController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
@@ -23,6 +24,8 @@ public class SalesService {
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataController syncJobTypeController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -481,18 +484,17 @@ public class SalesService {
         int year = Calendar.getInstance().get(Calendar.YEAR);
         int month = Calendar.getInstance().get(Calendar.MONTH);
 
-        // 01072020
         String transactionDate;
 
-        SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
-        transactionDate = simpleformat.format(new Date());
+//        SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+//        transactionDate = simpleformat.format(new Date());
+//
+//        // Need to test it later
+//        if (syncJobType.getConfiguration().getTimePeriod().equals("Month to Date")){
+//            transactionDate = "01" + String.valueOf(month - 1) + String.valueOf(year);
+//        }
 
-        // Need to test it later
-        if (syncJobType.getConfiguration().getTimePeriod().equals("Month to Date")){
-            transactionDate = "01" + String.valueOf(month - 1) + String.valueOf(year);
-        }
-
-//        transactionDate = "01062020";
+        transactionDate = "01072020";
 
         // Save tenders {Debit}
         ArrayList<Tender> tenders = salesResponse.getSalesTender();
@@ -662,5 +664,7 @@ public class SalesService {
         return addedSales;
     }
 
-
+    public ArrayList<SyncJobData> getFailedSalesData(SyncJobType syncJobType){
+       return syncJobTypeController.getFailedSyncJobData(syncJobType.getId());
+    }
 }

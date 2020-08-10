@@ -73,6 +73,7 @@ public class InvoiceController {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
+        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
         String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().getInvoiceTypeIncluded();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
@@ -130,15 +131,18 @@ public class InvoiceController {
             ArrayList<HashMap<String, String>> invoices ;
 
             if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
-                data = invoiceService.getInvoicesData(false,1, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(false,1, invoiceSyncJobType, supplierSyncJobType,
+                        costCenters,
                         items, overGroups, account);
             }
             else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
-                data = invoiceService.getInvoicesData(false, 2, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(false, 2, invoiceSyncJobType, supplierSyncJobType,
+                        costCenters,
                         items, overGroups, account);
             }
             else{
-                data = invoiceService.getInvoicesData(false,3, invoiceSyncJobType, costCenters,
+                data = invoiceService.getInvoicesData(false,3, invoiceSyncJobType, supplierSyncJobType,
+                        costCenters,
                         items, overGroups, account);
             }
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");

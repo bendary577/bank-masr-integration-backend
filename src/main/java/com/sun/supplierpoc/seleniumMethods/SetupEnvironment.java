@@ -30,7 +30,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -39,7 +39,7 @@ public class SetupEnvironment {
         else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -150,19 +150,25 @@ public class SetupEnvironment {
 
                 driver.findElement(By.id("_ctl7_input")).clear();
                 driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
+//                driver.findElement(By.id("_ctl7_input")).sendKeys("6/1/2020");
                 driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
 
                 driver.findElement(By.id("_ctl9_input")).clear();
                 driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
+//                driver.findElement(By.id("_ctl9_input")).sendKeys("6/30/2020");
                 driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
 
                 String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
                 Date startDate = dateFormat.parse(startDateValue);
+//                Date startDate = dateFormat.parse("6/1/2020");
 
                 String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
                 Date endDate = dateFormat.parse(endDateValue);
+//                Date endDate = dateFormat.parse("6/30/2020");
 
+//                if (!dateFormat.format(startDate).equals("06/01/2020")) {
                 if (!dateFormat.format(startDate).equals(targetDate)) {
+
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
@@ -171,6 +177,7 @@ public class SetupEnvironment {
                     return response;
                 }
 
+//                if (!dateFormat.format(endDate).equals("06/30/2020")) {
                 if (!dateFormat.format(endDate).equals(targetDate)) {
                     driver.quit();
 

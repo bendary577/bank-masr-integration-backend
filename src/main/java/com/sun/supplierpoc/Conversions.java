@@ -16,7 +16,7 @@ public class Conversions {
 
     public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName) {
         for (Tender tender : tenders) {
-            if (tender.getTender().equals(tenderName)) {
+            if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())) {
                 return tender;
             }
         }
@@ -25,7 +25,7 @@ public class Conversions {
 
     public OverGroup checkOverGroupExistence(ArrayList<OverGroup> overGroups, String overGroupName) {
         for (OverGroup overGroup : overGroups) {
-            if (overGroup.getOverGroup().equals(overGroupName)) {
+            if (overGroup.getOverGroup().toLowerCase().equals(overGroupName.toLowerCase())) {
                 return overGroup;
             }
         }
@@ -34,7 +34,7 @@ public class Conversions {
 
     public MajorGroup checkMajorGroupExistence(ArrayList<MajorGroup> majorGroups, String majorGroupName){
         for (MajorGroup majorGroup : majorGroups) {
-            if (majorGroup.getMajorGroup().equals(majorGroupName)) {
+            if (majorGroup.getMajorGroup().toLowerCase().equals(majorGroupName.toLowerCase())) {
                 return majorGroup;
             }
         }
@@ -44,7 +44,7 @@ public class Conversions {
 
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
         for (ItemGroup itemGroup : itemGroups) {
-            if (itemGroup.getItemGroup().equals(itemGroupName)) {
+            if (itemGroup.getItemGroup().toLowerCase().equals(itemGroupName.toLowerCase())) {
                 return itemGroup;
             }
         }
@@ -53,7 +53,7 @@ public class Conversions {
 
     public Item checkItemExistence(ArrayList<Item> items, String itemName){
         for (Item item : items) {
-            if (item.getItem().equals(itemName)) {
+            if (item.getItem().toLowerCase().equals(itemName.toLowerCase())) {
                 return item;
             }
         }
@@ -62,7 +62,7 @@ public class Conversions {
 
     public WasteGroup checkWasteTypeExistence(ArrayList<WasteGroup> wasteTypes, String wasteTypeName){
         for (WasteGroup wasteType : wasteTypes) {
-            if (wasteType.getWasteGroup().equals(wasteTypeName)) {
+            if (wasteType.getWasteGroup().toLowerCase().equals(wasteTypeName.toLowerCase())) {
                 return wasteType;
             }
         }
@@ -78,7 +78,7 @@ public class Conversions {
                     savedCostCenterName = savedCostCenterName.substring(0, savedCostCenterName.indexOf('(') - 1);
                 }
             }
-            if (savedCostCenterName.equals(costCenterName)) {
+            if (savedCostCenterName.toLowerCase().equals(costCenterName.toLowerCase())) {
                 return costCenter;
             }
         }
@@ -87,7 +87,7 @@ public class Conversions {
 
     public SyncJobData checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
         for (SyncJobData supplier : suppliers) {
-            if (supplier.getData().get("supplier").equals(vendorName)) {
+            if (supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())) {
                 return supplier;
             }
         }

@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.models.configurations.Tax;
 import com.sun.supplierpoc.models.configurations.Tender;
 
@@ -15,7 +14,7 @@ public class Response {
     // Sales Variables
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
-    private ArrayList<Journal> salesOverGroupGross = new ArrayList<>();
+    private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
 
     public Response() {
     }
@@ -60,11 +59,11 @@ public class Response {
         this.salesTender = salesTender;
     }
 
-    public ArrayList<Journal> getSalesOverGroupGross() {
-        return salesOverGroupGross;
+    public ArrayList<Journal> getSalesMajorGroupGross() {
+        return salesMajorGroupGross;
     }
 
-    public void setSalesOverGroupGross(ArrayList<Journal> salesOverGroupGross) {
-        this.salesOverGroupGross = salesOverGroupGross;
+    public void setSalesMajorGroupGross(ArrayList<Journal> salesMajorGroupGross) {
+        this.salesMajorGroupGross = salesMajorGroupGross;
     }
 }

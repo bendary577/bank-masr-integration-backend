@@ -69,15 +69,9 @@ public class SalesController {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
-            syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                    account.getId(), syncJobType.getId(), 0);
-
-            syncJobRepo.save(syncJob);
-
             ArrayList<Tender> tenders = syncJobType.getConfiguration().getTenders();
             ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
 
-//            ArrayList<Item> items = generalSettings.getItems();
             ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
             ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
 
@@ -149,6 +143,10 @@ public class SalesController {
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<SyncJobData> addedSales = new ArrayList<>();
+            syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
+                    account.getId(), syncJobType.getId(), 0);
+
+            syncJobRepo.save(syncJob);
 
             try {
                 Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,

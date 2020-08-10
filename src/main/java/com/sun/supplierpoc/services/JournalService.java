@@ -249,13 +249,6 @@ public class JournalService {
                 costCenter.costCenterReference = costCenter.costCenter;
             }
 
-
-//            Date today = new Date();
-//            Calendar cal = Calendar.getInstance();
-//            cal.setTime(today);
-//            int year = cal.get(Calendar.YEAR);
-
-
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
 
@@ -269,7 +262,13 @@ public class JournalService {
 
                 varianceData.put("to_cost_center", costCenter.costCenter);
                 varianceData.put("to_account_code", costCenter.accountCode);
-                varianceData.put("description", "Variance For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
+
+                String description =  "Variance F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                varianceData.put("description", description);
 
                 varianceData.put("transactionReference", "Variance Transaction Reference");
                 varianceData.put("overGroup", journalData.getOverGroup());
@@ -300,7 +299,13 @@ public class JournalService {
 
                 costData.put("to_cost_center", costCenter.costCenter);
                 costData.put("to_account_code", costCenter.accountCode);
-                costData.put("description", "Cost Of Sales For " + costCenter.costCenterReference + " " + journalData.getOverGroup());
+
+                String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getMajorGroup();
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                costData.put("description", description);
 
                 costData.put("transactionReference", "Cost Transaction Reference");
                 costData.put("overGroup", journalData.getOverGroup());

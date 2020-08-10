@@ -280,7 +280,12 @@ public class WastageService {
 //                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
                 journalEntry.put("to_account_code", costCenter.accountCode);
 
-                journalEntry.put("description", "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup());
+                String description =  "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup();
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                journalEntry.put("description", description);
 
                 journalEntry.put("transactionReference", "Wastage Transaction Reference");
                 journalEntry.put("overGroup", journal.getOverGroup());
@@ -573,7 +578,12 @@ public class WastageService {
 //                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
                 journalEntry.put("to_account_code", costCenter.accountCode);
 
-                journalEntry.put("description", "W For " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup());
+                String description = "W F " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup();
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                journalEntry.put("description", description);
 
                 journalEntry.put("transactionReference", "Wastage Transaction Reference");
                 journalEntry.put("overGroup", journal.getOverGroup());

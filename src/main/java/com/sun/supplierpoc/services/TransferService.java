@@ -349,8 +349,13 @@ public class TransferService {
                 journalEntry.put("to_cost_center", toCostCenter.costCenter);
                 journalEntry.put("to_account_code", toCostCenter.accountCode);
 
-                journalEntry.put("description", "Tr F " + fromCostCenter.costCenterReference + " T "+
-                        toCostCenter.costCenterReference + " - " + journal.getOverGroup());
+                String description = "Tr F " + fromCostCenter.costCenterReference + " T "+
+                        toCostCenter.costCenterReference + " - " + journal.getOverGroup();
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                journalEntry.put("description", description);
 
                 journalEntry.put("transactionReference", "");
                 journalEntry.put("overGroup", journal.getOverGroup());

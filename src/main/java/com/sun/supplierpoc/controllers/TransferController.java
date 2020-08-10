@@ -272,7 +272,7 @@ public class TransferController {
                 driver.quit();
 
                 response.put("data", items);
-                response.put("message", "There is no item groups in over group selected.");
+                response.put("message", "There is no item groups in major group selected.");
                 response.put("success", true);
 
                 return response;

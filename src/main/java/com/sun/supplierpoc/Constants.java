@@ -55,7 +55,9 @@ public class Constants {
     public static String TENDERS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=19";
     public static String TAXES_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=18";
     // Menu Engineering/Sales Mix Summary
-    public static String OVER_GROUP_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=46";
+    public static String ITEM_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=46";
+    // Daily Detail/Sales Mix
+    public static String OVER_GROUP_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=15";
 
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
 

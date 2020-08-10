@@ -8,6 +8,7 @@ public class MajorGroup {
     private boolean checked;
     private String overGroup="";
     private String majorGroup="";
+    private String account="";
 
     public MajorGroup() {
         this.checked = false;
@@ -43,5 +44,17 @@ public class MajorGroup {
 
     public void setMajorGroup(String majorGroup) {
         this.majorGroup = majorGroup;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
     }
 }

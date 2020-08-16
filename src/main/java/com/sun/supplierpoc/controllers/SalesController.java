@@ -62,7 +62,7 @@ public class SalesController {
         return response;
     }
 
-    public Response getPOSSales(String userId, Account account){
+    private Response getPOSSales(String userId, Account account){
         Response response = new Response();
         SyncJob syncJob = null;
         try {
@@ -142,7 +142,7 @@ public class SalesController {
 
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
-            ArrayList<SyncJobData> addedSales = new ArrayList<>();
+            ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
             ArrayList<SyncJobData> failedSales = new ArrayList<>();
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
@@ -155,54 +155,58 @@ public class SalesController {
                         majorGroups, tenders, account);
 
                 if (salesResponse.isStatus()){
-                    if (salesResponse.getSalesTender().size() > 0 || salesResponse.getSalesTax().size() > 0) {
+                    if (salesResponse.getJournalBatches().size() > 0) {
                         // Save Sales Entries
-                        addedSales = salesService.saveSalesData(salesResponse, syncJob, syncJobType);
-                    }
-                    // Resend failed sales
-                    failedSales = salesService.getFailedSalesData(syncJobType);
+                        addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob, syncJobType);
 
-                    addedSales.addAll(failedSales);
+                        if (addedSalesBatches.size() > 0){
+                            // Sent Sales Entries
+                            IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                            if (voucher != null){
+                                // Loop over batches
+                                HashMap<String, Object> data;
 
-                    if (addedSales.size() > 0){
-                        // Sent Sales Entries
-                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
-                        if (voucher != null){
-                            invoiceController.handleSendJournal(syncJobType, syncJob, addedSales, account, voucher);
-                            syncJob.setReason("");
+                                for (JournalBatch salesJournalBatch : addedSalesBatches) {
+                                    data  = salesService.sendJournalBatches(salesJournalBatch, syncJobType, account, voucher);
+                                    salesService.updateJournalBatchStatus(salesJournalBatch, data);
+                                }
+
+                                syncJob.setStatus(Constants.SUCCESS);
+                                syncJob.setReason("");
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(addedSalesBatches.size());
+                                syncJobRepo.save(syncJob);
+
+                                response.setStatus(true);
+                                response.setMessage("Sync journals Successfully.");
+                            }
+                            else {
+                                syncJob.setStatus(Constants.FAILED);
+                                syncJob.setReason("Failed to connect to Sun System.");
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(addedSalesBatches.size());
+                                syncJobRepo.save(syncJob);
+
+                                response.setStatus(false);
+                                response.setMessage("Failed to connect to Sun System.");
+                            }
+
+                        }else {
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("No sales to add in middleware.");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedSales.size());
+                            syncJob.setRowsFetched(0);
                             syncJobRepo.save(syncJob);
 
                             response.setStatus(true);
-                            response.setMessage("Sync journals Successfully.");
+                            response.setMessage("No new sales to add in middleware.");
                         }
-                        else {
-                            syncJob.setStatus(Constants.FAILED);
-                            syncJob.setReason("Failed to connect to Sun System.");
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedSales.size());
-                            syncJobRepo.save(syncJob);
-
-                            response.setStatus(false);
-                            response.setMessage("Failed to connect to Sun System.");
-                        }
-
-                    }else {
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("No sales to add in middleware.");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(0);
-                        syncJobRepo.save(syncJob);
-
-                        response.setStatus(true);
-                        response.setMessage("No new sales to add in middleware.");
                     }
                 }else {
                     syncJob.setStatus(Constants.FAILED);
                     syncJob.setReason(salesResponse.getMessage());
                     syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedSales.size());
+                    syncJob.setRowsFetched(addedSalesBatches.size());
                     syncJobRepo.save(syncJob);
 
                     response.setStatus(false);
@@ -213,7 +217,7 @@ public class SalesController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(e.getMessage());
                 syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedSales.size());
+                syncJob.setRowsFetched(addedSalesBatches.size());
                 syncJobRepo.save(syncJob);
 
                 response.setStatus(false);

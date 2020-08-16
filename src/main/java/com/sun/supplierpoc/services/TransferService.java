@@ -541,7 +541,7 @@ public class TransferService {
         return data;
     }
 
-    private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
+    public void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
                                    SyncJobData addedJournalEntry) {
         ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
 

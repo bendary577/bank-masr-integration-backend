@@ -15,6 +15,7 @@ public class Response {
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
+    private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
     public Response() {
     }
@@ -65,5 +66,13 @@ public class Response {
 
     public void setSalesMajorGroupGross(ArrayList<Journal> salesMajorGroupGross) {
         this.salesMajorGroupGross = salesMajorGroupGross;
+    }
+
+    public ArrayList<JournalBatch> getJournalBatches() {
+        return journalBatches;
+    }
+
+    public void setJournalBatches(ArrayList<JournalBatch> journalBatches) {
+        this.journalBatches = journalBatches;
     }
 }

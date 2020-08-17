@@ -24,6 +24,8 @@ public class Supplier {
     SupplierAddress SupplierAddress;
     @XmlElement
     Address_Contact Address_Contact;
+    @XmlElement
+    Accounts Accounts;
 
     public String getAccountCode() {
         return AccountCode;
@@ -108,4 +110,11 @@ public class Supplier {
         CustomerNumber = customerNumber;
     }
 
+    public com.sun.supplierpoc.soapModels.Accounts getAccounts() {
+        return Accounts;
+    }
+
+    public void setAccounts(com.sun.supplierpoc.soapModels.Accounts accounts) {
+        Accounts = accounts;
+    }
 }

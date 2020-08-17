@@ -87,7 +87,8 @@ public class Conversions {
 
     public SyncJobData checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
         for (SyncJobData supplier : suppliers) {
-            if (supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())) {
+            if (supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())
+            || supplier.getData().get("description").toLowerCase().equals(vendorName.toLowerCase())) {
                 return supplier;
             }
         }

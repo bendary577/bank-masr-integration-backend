@@ -139,6 +139,14 @@ public class SupplierService {
             Element paymentTermsGroupCodeElement = doc.createElement("PaymentTermsGroupCode");
             supplierElement.appendChild(paymentTermsGroupCodeElement);
 
+            ///////////////////////////////////////////  Supplier Accounts /////////////////////////////////////////////
+
+            Element accountsElement = doc.createElement("Accounts");
+            supplierElement.appendChild(accountsElement);
+
+            Element descriptionElement = doc.createElement("Description");
+            accountsElement.appendChild(descriptionElement);
+
             ///////////////////////////////////////////  Address Contact //////////////////////////////////////////////
 
             Element addressContactElement = doc.createElement("Address_Contact");
@@ -223,6 +231,7 @@ public class SupplierService {
 
             data.put("supplierId", "");
             data.put("supplier", supplier.getSupplierName());
+            data.put("description", supplier.getAccounts().getDescription());
             data.put("supplierNumber", supplier.getSupplierCode());
             data.put("accountCode", supplier.getAccountCode());
             data.put("status", supplier.getStatus());

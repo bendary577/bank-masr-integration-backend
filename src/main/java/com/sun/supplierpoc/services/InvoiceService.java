@@ -131,7 +131,7 @@ public class InvoiceService {
         Select select = new Select(driver.findElement(By.id("_ctl5")));
         String timePeriod = syncJobType.getConfiguration().getTimePeriod();
 
-        response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
+        response = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
 
         if (!response.get("status").equals(Constants.SUCCESS)){
             return response;
@@ -367,11 +367,21 @@ public class InvoiceService {
             journalEntry.put("totalCr", Math.round(journal.getTotalCost()));
             journalEntry.put("totalDr", Math.round(journal.getTotalCost()) * -1);
 
-            journalEntry.put("from_cost_center", supplier.getData().get("supplier"));
-            journalEntry.put("from_account_code", supplier.getData().get("accountCode"));
+            if (!flag){
+                journalEntry.put("from_cost_center", supplier.getData().get("supplier"));
+                journalEntry.put("from_account_code", supplier.getData().get("accountCode"));
 
-            journalEntry.put("to_cost_center", toCostCenter.costCenter);
-            journalEntry.put("to_account_code", toCostCenter.accountCode);
+                journalEntry.put("to_cost_center", toCostCenter.costCenter);
+                journalEntry.put("to_account_code", toCostCenter.accountCode);
+            }else{
+                journalEntry.put("to_cost_center", supplier.getData().get("supplier"));
+                journalEntry.put("to_account_code", supplier.getData().get("accountCode"));
+
+                journalEntry.put("from_cost_center", toCostCenter.costCenter);
+                journalEntry.put("from_account_code", toCostCenter.accountCode);
+            }
+
+            journalEntry.put("location", toCostCenter.accountCode);
 
             journalEntry.put("status", invoice.get("status"));
             journalEntry.put("invoiceDate", invoice.get("invoice_date"));
@@ -395,8 +405,16 @@ public class InvoiceService {
 
             OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
 
-            journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-            journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+//            journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+//            journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+
+            if (!flag){ // Invoice from supplier to cost center
+                journalEntry.put("inventoryAccount", supplier.getData().get("accountCode"));
+                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+            }else{  // Credit Note from cost center to supplier
+                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                journalEntry.put("expensesAccount", supplier.getData().get("accountCode"));
+            }
 
             journalEntries.add(journalEntry);
         }

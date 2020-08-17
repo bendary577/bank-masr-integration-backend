@@ -269,6 +269,8 @@ public class JournalService {
                 varianceData.put("to_cost_center", costCenter.costCenter);
                 varianceData.put("to_account_code", costCenter.accountCode);
 
+                varianceData.put("location", costCenter.accountCode);
+
                 String description =  "Variance F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
@@ -305,6 +307,8 @@ public class JournalService {
 
                 costData.put("to_cost_center", costCenter.costCenter);
                 costData.put("to_account_code", costCenter.accountCode);
+
+                costData.put("location", costCenter.accountCode);
 
                 String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getMajorGroup();
                 if (description.length() > 50){

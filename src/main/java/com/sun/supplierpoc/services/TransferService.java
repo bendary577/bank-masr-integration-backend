@@ -349,6 +349,8 @@ public class TransferService {
                 journalEntry.put("to_cost_center", toCostCenter.costCenter);
                 journalEntry.put("to_account_code", toCostCenter.accountCode);
 
+                journalEntry.put("location", toCostCenter.accountCode);
+
                 String description = "Tr F " + fromCostCenter.costCenterReference + " T "+
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup();
                 if (description.length() > 50){
@@ -479,13 +481,13 @@ public class TransferService {
             Element ledgerElement = doc.createElement("Ledger");
             payloadElement.appendChild(ledgerElement);
 
-            ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-            if (addedJournalEntry.getData().containsKey("totalDr")){
-                createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
-            }
             ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
             if (addedJournalEntry.getData().containsKey("totalCr")){
                 createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
+            }
+            ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
+            if (addedJournalEntry.getData().containsKey("totalDr")){
+                createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
             }
             ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
             TransformerFactory tf = TransformerFactory.newInstance();
@@ -591,19 +593,18 @@ public class TransferService {
             journalLineNumberElement.appendChild(doc.createTextNode("2"));
         lineElement.appendChild(journalLineNumberElement);
 
-//        Element journalSourceElement = doc.createElement("JournalSource");
-//        journalSourceElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalSource()));
-//        lineElement.appendChild(journalSourceElement);
-
         SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
         String date = simpleformat.format(new Date());
 
         Element TransactionDate = doc.createElement("TransactionDate");
+        Element EntryDate = doc.createElement("EntryDate");
 
         if(addedJournalEntry.getData().containsKey("transactionDate")){
             TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
+            EntryDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
         }else{
             TransactionDate.appendChild(doc.createTextNode(date));
+            EntryDate.appendChild(doc.createTextNode(date));
         }
         lineElement.appendChild(TransactionDate);
 
@@ -633,24 +634,32 @@ public class TransferService {
         Element analysis2ElementT3 = doc.createElement("Analysis" + locationAnalysis);
         accountsElement.appendChild(analysis2ElementT3);
 
-        if (creditDebitFlag){
-            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
+        Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
+        vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("location")));
+        analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
-            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-            lineElement.appendChild(analysisCode2ElementT3);
-        }
-        else{
-            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
+        Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
+        analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("location")));
+        lineElement.appendChild(analysisCode2ElementT3);
 
-            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-            lineElement.appendChild(analysisCode2ElementT3);
-        }
+//        if (creditDebitFlag){
+//            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
+//            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
+//            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
+//
+//            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
+//            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
+//            lineElement.appendChild(analysisCode2ElementT3);
+//        }
+//        else{
+//            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
+//            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+//            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
+//
+//            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
+//            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
+//            lineElement.appendChild(analysisCode2ElementT3);
+//        }
 
         for (Analysis analysisObject: analysis) {
             if (analysisObject.getNumber().equals(locationAnalysis)){

@@ -82,7 +82,7 @@ public class WastageService {
                 driver.findElement(By.id("filterPanel_btnToggleFilter")).click();
             }
 
-            response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
+            response = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
 
             if (!response.get("status").equals(Constants.SUCCESS)){
                 return response;
@@ -273,12 +273,12 @@ public class WastageService {
                 journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
 
                 journalEntry.put("from_cost_center", costCenter.costCenter);
-//                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
                 journalEntry.put("from_account_code", costCenter.accountCode);
 
                 journalEntry.put("to_cost_center", costCenter.costCenter);
-//                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
                 journalEntry.put("to_account_code", costCenter.accountCode);
+
+                journalEntry.put("location", costCenter.accountCode);
 
                 String description =  "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup();
                 if (description.length() > 50){
@@ -571,12 +571,12 @@ public class WastageService {
                 journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
 
                 journalEntry.put("from_cost_center", costCenter.costCenter);
-//                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
                 journalEntry.put("from_account_code", costCenter.accountCode);
 
                 journalEntry.put("to_cost_center", costCenter.costCenter);
-//                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
                 journalEntry.put("to_account_code", costCenter.accountCode);
+
+                journalEntry.put("location", costCenter.accountCode);
 
                 String description = "W F " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup();
                 if (description.length() > 50){

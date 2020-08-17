@@ -3,6 +3,7 @@ package com.sun.supplierpoc.seleniumMethods;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -30,7 +31,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -39,7 +40,7 @@ public class SetupEnvironment {
         else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -120,7 +121,7 @@ public class SetupEnvironment {
         return columns;
     }
 
-    public HashMap<String, Object> selectTimePeriod(String timePeriod, Select select, WebDriver driver){
+    public HashMap<String, Object> selectTimePeriodOHIM(String timePeriod, Select select, WebDriver driver){
         HashMap<String, Object> response = new HashMap<>();
 
         try {
@@ -217,6 +218,48 @@ public class SetupEnvironment {
         response.put("status", Constants.SUCCESS);
         response.put("message", "");
         response.put("invoices", new ArrayList<>());
+        return response;
+    }
+
+    public Response selectTimePeriodOHRA(String timePeriod, Select select, WebDriver driver){
+        Response response = new Response();
+        try {
+            if (timePeriod.equals("Most Recent") || timePeriod.equals("Financial Week to Date")
+            || timePeriod.equals("Past 7 Days") || timePeriod.equals("Today")
+            || timePeriod.equals("Yesterday") || timePeriod.equals("Month to Date")
+            || timePeriod.equals("Financial Period to Date") ){
+                try {
+                    select.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+            }else if (timePeriod.equals("Last Month") || timePeriod.equals("Last Quarter")
+            || timePeriod.equals("Year to Date") || timePeriod.equals("Last Year YTD")){
+                try {
+                    driver.findElement(By.id("calendarBtn")).click();
+                    Select selectQuick = new Select(driver.findElement(By.id("selectQuick")));
+                    selectQuick.selectByVisibleText(timePeriod);
+                    select.selectByVisibleText(timePeriod);
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+            }
+            response.setStatus(true);
+            response.setMessage("");
+        }catch (Exception e) {
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+        }
         return response;
     }
 }

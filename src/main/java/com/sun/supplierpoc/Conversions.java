@@ -161,11 +161,20 @@ public class Conversions {
     }
 
     public float convertStringToFloat(String value){
-        value = value.toLowerCase().replaceAll(",", "");
-        if (value.contains("(")){
-            value = value.replace("(", "").replace(")", "");
-            value = "-" + value;
+        if (value == null){
+            return 0;
         }
-        return Math.round(Float.parseFloat(value));
+        try{
+            value = value.toLowerCase().replaceAll(",", "");
+            if (value.contains("(")){
+                value = value.replace("(", "").replace(")", "");
+                value = "-" + value;
+            }
+            return Math.round(Float.parseFloat(value));
+        } catch (NumberFormatException e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+
     }
 }

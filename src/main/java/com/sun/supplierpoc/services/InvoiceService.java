@@ -381,7 +381,8 @@ public class InvoiceService {
                 journalEntry.put("from_account_code", toCostCenter.accountCode);
             }
 
-            journalEntry.put("location", toCostCenter.accountCode);
+            journalEntry.put("from_location", toCostCenter.accountCode);
+            journalEntry.put("to_location", toCostCenter.accountCode);
 
             journalEntry.put("status", invoice.get("status"));
             journalEntry.put("invoiceDate", invoice.get("invoice_date"));

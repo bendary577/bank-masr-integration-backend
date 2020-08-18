@@ -278,7 +278,8 @@ public class WastageService {
                 journalEntry.put("to_cost_center", costCenter.costCenter);
                 journalEntry.put("to_account_code", costCenter.accountCode);
 
-                journalEntry.put("location", costCenter.accountCode);
+                journalEntry.put("from_location", costCenter.accountCode);
+                journalEntry.put("to_location", costCenter.accountCode);
 
                 String description =  "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup();
                 if (description.length() > 50){
@@ -534,7 +535,8 @@ public class WastageService {
                 journalEntry.put("to_cost_center", costCenter.costCenter);
                 journalEntry.put("to_account_code", costCenter.accountCode);
 
-                journalEntry.put("location", costCenter.accountCode);
+                journalEntry.put("from_location", costCenter.accountCode);
+                journalEntry.put("to_location", costCenter.accountCode);
 
                 String description = "W F " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup();
                 if (description.length() > 50){

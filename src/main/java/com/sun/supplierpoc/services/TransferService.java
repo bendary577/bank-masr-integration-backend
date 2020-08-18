@@ -282,7 +282,8 @@ public class TransferService {
                 journalEntry.put("to_cost_center", toCostCenter.costCenter);
                 journalEntry.put("to_account_code", toCostCenter.accountCode);
 
-                journalEntry.put("location", toCostCenter.accountCode);
+                journalEntry.put("from_location", fromCostCenter.accountCode);
+                journalEntry.put("to_location", toCostCenter.accountCode);
 
                 String description = "Tr F " + fromCostCenter.costCenterReference + " T "+
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup();
@@ -567,32 +568,24 @@ public class TransferService {
         Element analysis2ElementT3 = doc.createElement("Analysis" + locationAnalysis);
         accountsElement.appendChild(analysis2ElementT3);
 
-        Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
-        vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("location")));
-        analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
+        if (creditDebitFlag){
+            Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
+            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_location")));
+            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
-        Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-        analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("location")));
-        lineElement.appendChild(analysisCode2ElementT3);
+            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
+            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_location")));
+            lineElement.appendChild(analysisCode2ElementT3);
+        }
+        else{
+            Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
+            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_location")));
+            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
-//        if (creditDebitFlag){
-//            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-//            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-//            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
-//
-//            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-//            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-//            lineElement.appendChild(analysisCode2ElementT3);
-//        }
-//        else{
-//            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-//            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-//            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
-//
-//            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-//            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-//            lineElement.appendChild(analysisCode2ElementT3);
-//        }
+            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
+            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_location")));
+            lineElement.appendChild(analysisCode2ElementT3);
+        }
 
         for (Analysis analysisObject: analysis) {
             if (analysisObject.getNumber().equals(locationAnalysis)){

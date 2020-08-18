@@ -230,7 +230,6 @@ public class SalesService {
                 response.setEntries(new ArrayList<>());
                 return response;
             }
-            continue;
         }
 
         driver.findElement(By.id("Run Report")).click();

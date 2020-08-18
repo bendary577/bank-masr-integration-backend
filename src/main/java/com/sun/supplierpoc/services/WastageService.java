@@ -382,70 +382,28 @@ public class WastageService {
 
                 String timePeriod = syncJobType.getConfiguration().getTimePeriod();
 
-                WebDriverWait wait = new WebDriverWait(driver, 20);
-                if (timePeriod.equals("Last Month")){
-                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
-                    driver.findElement(By.id("calendarBtn")).click();
-
-                    Select locationData = new Select(driver.findElement(By.id("locationData")));
-                    try {
-                        locationData.selectByVisibleText(locationName);
-                    } catch (Exception e) {
-                        System.out.println("Invalid location");
-                        continue;
-                    }
-
-                    String selectedOption = locationData.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(locationName)){}
-
-                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
-                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
-
-                    Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                    try{
-                        businessDate.selectByVisibleText(timePeriod);
-                    } catch (Exception e) {
-                        System.out.println("Invalid business date.");
-                        driver.quit();
-                        response.put("status", Constants.FAILED);
-                        response.put("message", "Invalid business date.");
-                        response.put("wastes", journalEntries);
-                        return response;
-                    }
-
-                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(timePeriod)){}
-
-                    driver.switchTo().defaultContent();
+                Select locationData = new Select(driver.findElement(By.id("locationData")));
+                try {
+                    locationData.selectByVisibleText(locationName);
+                } catch (Exception e) {
+                    System.out.println("Invalid location");
+                    continue;
                 }
-                else {
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
 
-                    Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                    try {
-                        businessDate.selectByVisibleText(timePeriod);
-                    } catch (Exception e) {
-                        driver.quit();
-                        response.put("status", Constants.FAILED);
-                        response.put("message", "Invalid business date.");
-                        response.put("wastes", journalEntries);
-                        return response;
-                    }
-
-                    String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(timePeriod)){}
-
-                    Select locationDate= new Select(driver.findElement(By.id("locationData")));
-                    try {
-                        locationDate.selectByVisibleText(locationName);
-                    } catch (Exception e) {
-                        continue;
-                    }
-
-                    selectedOption = locationDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(locationName)){}
-
+                String selectedOption = locationData.getFirstSelectedOption().getText().strip();
+                while (!selectedOption.equals(locationName)){
+                    selectedOption = locationData.getFirstSelectedOption().getText().strip();
                 }
+
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, driver);
+
+                if (!dateResponse.isStatus()){
+                    response.put("status", Constants.FAILED);
+                    response.put("message", dateResponse.getMessage());
+                    response.put("wastes", journalEntries);
+                    return response;
+                }
+
                 driver.findElement(By.id("Run Report")).click();
 
                 String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";

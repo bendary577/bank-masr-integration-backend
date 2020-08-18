@@ -93,77 +93,10 @@ public class TransferService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
 
-            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
-                try {
-                    select.selectByVisibleText("User-defined");
-                } catch (Exception e) {
-                    System.out.println("Invalid Business Date");
-                    driver.quit();
+            data = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
 
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Invalid business date.");
-                    data.put("transfers", transfers);
-                    return data;
-                }
-
-                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                String targetDate = "";
-
-                if (timePeriod.equals("Yesterday")){
-                    Calendar cal = Calendar.getInstance();
-                    cal.add(Calendar.DATE, -1);
-                    targetDate = dateFormat.format(cal.getTime());
-                }
-                else {
-                    Date date = new Date();
-                    targetDate = dateFormat.format(date);
-                }
-
-                driver.findElement(By.id("_ctl7_input")).clear();
-                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
-                driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
-
-                driver.findElement(By.id("_ctl9_input")).clear();
-                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
-                driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
-
-                String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
-                Date startDate = dateFormat.parse(startDateValue);
-
-                String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
-                Date endDate = dateFormat.parse(endDateValue);
-
-                if (!dateFormat.format(startDate).equals(targetDate)){
-                    driver.quit();
-
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Failed to get transfers of selected date, please try again or contact support team.");
-                    data.put("invoices", transfers);
-                    return data;
-                }
-
-                if (!dateFormat.format(endDate).equals(targetDate)){
-                    driver.quit();
-
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Failed to get transfers of selected date, please try again or contact support team.");
-                    data.put("invoices", transfers);
-                    return data;
-                }
-
-            }
-            else{
-                try {
-                    select.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    System.out.println("Invalid Business Date");
-                    driver.quit();
-
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Invalid business date.");
-                    data.put("transfers", transfers);
-                    return data;
-                }
+            if (!data.get("status").equals(Constants.SUCCESS)){
+                return data;
             }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
@@ -359,7 +292,7 @@ public class TransferService {
 
                 journalEntry.put("description", description);
 
-                journalEntry.put("transactionReference", "");
+                journalEntry.put("transactionReference", "Transfer Reference");
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());

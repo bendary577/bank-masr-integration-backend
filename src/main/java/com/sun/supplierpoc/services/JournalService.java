@@ -80,58 +80,31 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            if (timePeriod.equals("Last Month")){
-                wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
-                driver.findElement(By.id("calendarBtn")).click();
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, driver);
 
-                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
-
-                Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                try {
-                    businessDate.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Invalid business date.");
-                    response.put("journals", journalsEntries);
-                    return response;
-                }
-
-                String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(timePeriod)){
-                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                }
-
-                driver.switchTo().defaultContent();
+            if (!dateResponse.isStatus()){
+                response.put("status", Constants.FAILED);
+                response.put("message", dateResponse.getMessage());
+                response.put("journals", journalsEntries);
+                return response;
             }
-            else {
-                Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                try{
-                    businessDate.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    driver.quit();
 
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Invalid business date.");
-                    response.put("journals", journalsEntries);
-                    return response;
-                }
-
-                String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(timePeriod)){
-                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                }
-
-            }
             driver.findElement(By.id("Run Report")).click();
 
             journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
             driver.get(journalUrl);
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+
+            if (rows.size() < 4){
+                driver.quit();
+
+                response.put("status", Constants.SUCCESS);
+                response.put("message", "There is no journals in selected range");
+                response.put("journals", journalsEntries);
+                return response;
+            }
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
@@ -172,6 +145,10 @@ public class JournalService {
                     driver.get(baseURL + costCenter.get("extensions"));
 
                     rows = driver.findElements(By.tagName("tr"));
+
+                    if (rows.size() <= 3){
+                        continue;
+                    }
 
                     columns = setupEnvironment.getTableColumns(rows, false, 3);
 
@@ -310,7 +287,7 @@ public class JournalService {
 
                 costData.put("location", costCenter.accountCode);
 
-                String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getMajorGroup();
+                String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }

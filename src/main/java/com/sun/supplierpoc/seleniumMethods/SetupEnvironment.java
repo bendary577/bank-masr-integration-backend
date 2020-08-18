@@ -12,7 +12,9 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 
 import java.text.DateFormat;
@@ -221,7 +223,7 @@ public class SetupEnvironment {
         return response;
     }
 
-    public Response selectTimePeriodOHRA(String timePeriod, Select select, WebDriver driver){
+    public Response selectTimePeriodOHRA(String timePeriod, WebDriver driver){
         Response response = new Response();
         try {
             if (timePeriod.equals("Most Recent") || timePeriod.equals("Financial Week to Date")
@@ -229,7 +231,8 @@ public class SetupEnvironment {
             || timePeriod.equals("Yesterday") || timePeriod.equals("Month to Date")
             || timePeriod.equals("Financial Period to Date") ){
                 try {
-                    select.selectByVisibleText(timePeriod);
+                    Select businessDate = new Select(driver.findElement(By.id("calendarData")));
+                    businessDate.selectByVisibleText(timePeriod);
                 } catch (Exception e) {
                     driver.quit();
 
@@ -241,10 +244,32 @@ public class SetupEnvironment {
             }else if (timePeriod.equals("Last Month") || timePeriod.equals("Last Quarter")
             || timePeriod.equals("Year to Date") || timePeriod.equals("Last Year YTD")){
                 try {
+                    WebDriverWait wait = new WebDriverWait(driver, 20);
+
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
                     driver.findElement(By.id("calendarBtn")).click();
-                    Select selectQuick = new Select(driver.findElement(By.id("selectQuick")));
-                    selectQuick.selectByVisibleText(timePeriod);
-                    select.selectByVisibleText(timePeriod);
+
+                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
+                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
+
+                    Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
+                    try {
+                        businessDate.selectByVisibleText(timePeriod);
+                    } catch (Exception e) {
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                        response.setEntries(new ArrayList<>());
+                        return response;
+                    }
+
+                    String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                    while (!selectedOption.equals(timePeriod)){
+                        selectedOption = businessDate.getFirstSelectedOption().getText().strip();
+                    }
+
+                    driver.switchTo().defaultContent();
                 } catch (Exception e) {
                     driver.quit();
 

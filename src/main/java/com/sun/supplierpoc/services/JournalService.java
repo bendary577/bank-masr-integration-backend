@@ -231,6 +231,7 @@ public class JournalService {
             if (costCenter.costCenterReference.equals("")){
                 costCenter.costCenterReference = costCenter.costCenter;
             }
+/*
 
             if(journalData.getTotalVariance() != 0){
                 HashMap<String, String> varianceData = new HashMap<>();
@@ -270,6 +271,7 @@ public class JournalService {
 
                 addedJournals.add(syncJobData);
             }
+*/
 
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();

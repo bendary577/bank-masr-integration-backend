@@ -80,7 +80,7 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, driver);
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod,"", driver);
 
             if (!dateResponse.isStatus()){
                 response.put("status", Constants.FAILED);
@@ -238,8 +238,8 @@ public class JournalService {
 
                 varianceData.put("transactionDate", "01072020");
 
-                varianceData.put("totalCr", String.valueOf(Math.round(journalData.getTotalVariance())));
-                varianceData.put("totalDr", String.valueOf(Math.round(journalData.getTotalVariance()) * -1));
+                varianceData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalVariance())));
+                varianceData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalVariance()) * -1));
 
                 varianceData.put("from_cost_center", costCenter.costCenter);
                 varianceData.put("from_account_code", costCenter.accountCode);
@@ -279,8 +279,8 @@ public class JournalService {
                 // Example: 01062020
                 costData.put("transactionDate", "01072020");
 
-                costData.put("totalCr", String.valueOf(Math.round(journalData.getTotalCost())));
-                costData.put("totalDr", String.valueOf(Math.round(journalData.getTotalCost()) * -1));
+                costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost())));
+                costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost()) * -1));
 
                 costData.put("from_cost_center", costCenter.costCenter);
                 costData.put("from_account_code", costCenter.accountCode);

@@ -269,8 +269,8 @@ public class WastageService {
 
                 journalEntry.put("transactionDate", waste.get("waste_date"));
 
-                journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
-                journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
 
                 journalEntry.put("from_cost_center", costCenter.costCenter);
                 journalEntry.put("from_account_code", costCenter.accountCode);
@@ -396,7 +396,7 @@ public class WastageService {
                     selectedOption = locationData.getFirstSelectedOption().getText().strip();
                 }
 
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, driver);
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, "", driver);
 
                 if (!dateResponse.isStatus()){
                     response.put("status", Constants.FAILED);
@@ -526,8 +526,8 @@ public class WastageService {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
-                journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
-                journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
 
                 journalEntry.put("from_cost_center", costCenter.costCenter);
                 journalEntry.put("from_account_code", costCenter.accountCode);

@@ -3,6 +3,7 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -170,11 +171,23 @@ public class Conversions {
                 value = value.replace("(", "").replace(")", "");
                 value = "-" + value;
             }
-            return Math.round(Float.parseFloat(value));
+
+            NumberFormat nf = NumberFormat.getInstance();
+            nf.setMaximumFractionDigits(3);
+            value = nf.format(Float.parseFloat(value));
+            value = value.toLowerCase().replaceAll(",", "");
+            return Float.parseFloat(value);
         } catch (NumberFormatException e) {
             System.out.println(e.getMessage());
             return 0;
         }
+    }
 
+    public float roundUpFloat(float value){
+        NumberFormat nf = NumberFormat.getInstance();
+        nf.setMaximumFractionDigits(3);
+        String temp = nf.format(value);
+        temp = temp.toLowerCase().replaceAll(",", "");
+        return Float.parseFloat(temp);
     }
 }

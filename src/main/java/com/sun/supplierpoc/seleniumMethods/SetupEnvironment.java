@@ -223,8 +223,26 @@ public class SetupEnvironment {
         return response;
     }
 
-    public Response selectTimePeriodOHRA(String timePeriod, WebDriver driver){
+    public Response selectTimePeriodOHRA(String timePeriod, String location, WebDriver driver){
         Response response = new Response();
+
+        if (!location.equals("")){
+            Select selectLocation = new Select(driver.findElement(By.id("locationData")));
+
+            try {
+                selectLocation.selectByVisibleText(location);
+            } catch (Exception e) {
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_LOCATION);
+                response.setEntries(new ArrayList<>());
+                return response;
+            }
+
+            String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+            while (!selectLocationOption.equals(location)) {
+                selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+            }
+        }
         try {
             if (timePeriod.equals("Most Recent") || timePeriod.equals("Financial Week to Date")
             || timePeriod.equals("Past 7 Days") || timePeriod.equals("Today")

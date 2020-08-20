@@ -273,8 +273,8 @@ public class TransferService {
 
                 journalEntry.put("transactionDate", transfer.get("delivery_date"));
 
-                journalEntry.put("totalCr", Math.round(journal.getTotalTransfer()));
-                journalEntry.put("totalDr", Math.round(journal.getTotalTransfer()) * -1);
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalTransfer()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalTransfer()) * -1);
 
                 journalEntry.put("from_cost_center", fromCostCenter.costCenter);
                 journalEntry.put("from_account_code", fromCostCenter.accountCode);
@@ -534,8 +534,10 @@ public class TransferService {
         Element EntryDate = doc.createElement("EntryDate");
 
         if(addedJournalEntry.getData().containsKey("transactionDate")){
-            TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
-            EntryDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
+//            TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
+//            EntryDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
+            TransactionDate.appendChild(doc.createTextNode("01072020"));
+            EntryDate.appendChild(doc.createTextNode("01072020"));
         }else{
             TransactionDate.appendChild(doc.createTextNode(date));
             EntryDate.appendChild(doc.createTextNode(date));

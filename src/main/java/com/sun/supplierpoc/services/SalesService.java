@@ -182,54 +182,13 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-        try {
-            selectLocation.selectByVisibleText(location);
-        } catch (Exception e) {
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, location, driver);
+
+        if (!dateResponse.isStatus()){
             response.setStatus(false);
-            response.setMessage(Constants.INVALID_LOCATION);
-            response.setEntries(new ArrayList<>());
+            response.setMessage( dateResponse.getMessage());
+            response.setSalesTender(tenders);
             return response;
-        }
-
-        // Wait until location value changed
-        String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-        while (!selectLocationOption.equals(location)) {
-            try {
-                selectLocation.selectByVisibleText(location);
-            } catch (Exception e) {
-                response.setStatus(false);
-                response.setMessage(Constants.INVALID_LOCATION);
-                response.setEntries(new ArrayList<>());
-                return response;
-            }
-        }
-
-        Select selectBusinessDate = new Select(driver.findElement(By.id("calendarData")));
-        try {
-            selectBusinessDate.selectByVisibleText(businessDate);
-        } catch (Exception e) {
-            driver.quit();
-
-            response.setStatus(false);
-            response.setMessage(Constants.INVALID_BUSINESS_DATE);
-            response.setEntries(new ArrayList<>());
-            return response;
-        }
-
-        // Wait until business date value changed
-        String selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
-        while (!selectBusinessDateOption.equals(businessDate)) {
-            try {
-                selectBusinessDate.selectByVisibleText(businessDate);
-            } catch (Exception e) {
-                driver.quit();
-
-                response.setStatus(false);
-                response.setMessage(Constants.INVALID_BUSINESS_DATE);
-                response.setEntries(new ArrayList<>());
-                return response;
-            }
         }
 
         driver.findElement(By.id("Run Report")).click();
@@ -300,38 +259,13 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-        try {
-            selectLocation.selectByVisibleText(location);
-        } catch (Exception e) {
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, location, driver);
+
+        if (!dateResponse.isStatus()){
             response.setStatus(false);
-            response.setMessage(Constants.INVALID_LOCATION);
-            response.setEntries(new ArrayList<>());
+            response.setMessage( dateResponse.getMessage());
+            response.setSalesTax(salesTax);
             return response;
-        }
-
-        // Wait until location value changed
-        String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-        while (!selectLocationOption.equals(location)) {
-            selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-        }
-
-        Select selectBusinessDate = new Select(driver.findElement(By.id("calendarData")));
-        try {
-            selectBusinessDate.selectByVisibleText(businessDate);
-        } catch (Exception e) {
-            driver.quit();
-
-            response.setStatus(false);
-            response.setMessage(Constants.INVALID_BUSINESS_DATE);
-            response.setEntries(new ArrayList<>());
-            return response;
-        }
-
-        // Wait until business date value changed
-        String selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
-        while (!selectBusinessDateOption.equals(businessDate)) {
-            selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
         }
 
         driver.findElement(By.id("Run Report")).click();
@@ -401,38 +335,13 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-        try {
-            selectLocation.selectByVisibleText(location);
-        } catch (Exception e) {
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, location, driver);
+
+        if (!dateResponse.isStatus()){
             response.setStatus(false);
-            response.setMessage(Constants.INVALID_LOCATION);
-            response.setEntries(new ArrayList<>());
+            response.setMessage( dateResponse.getMessage());
+            response.setSalesMajorGroupGross(majorGroupsGross);
             return response;
-        }
-
-        // Wait until location value changed
-        String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-        while (!selectLocationOption.equals(location)) {
-            selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-        }
-
-        Select selectBusinessDate = new Select(driver.findElement(By.id("calendarData")));
-        try {
-            selectBusinessDate.selectByVisibleText(businessDate);
-        } catch (Exception e) {
-            driver.quit();
-
-            response.setStatus(false);
-            response.setMessage(Constants.INVALID_BUSINESS_DATE);
-            response.setEntries(new ArrayList<>());
-            return response;
-        }
-
-        // Wait until business date value changed
-        String selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
-        while (!selectBusinessDateOption.equals(businessDate)) {
-            selectBusinessDateOption = selectBusinessDate.getFirstSelectedOption().getText().strip();
         }
 
         driver.findElement(By.id("Run Report")).click();
@@ -530,7 +439,7 @@ public class SalesService {
 
             tenderData.put("transactionDate", transactionDate);
 
-            tenderData.put("totalDr", String.valueOf(Math.round(tender.getTotal()) * -1));
+            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
 
             tenderData.put("from_cost_center", tender.getCostCenter().costCenter);
             tenderData.put("from_account_code", tender.getCostCenter().accountCode);
@@ -571,7 +480,7 @@ public class SalesService {
 
             taxData.put("transactionDate", transactionDate);
 
-            taxData.put("totalCr", String.valueOf(Math.round(tax.getTotal())));
+            taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
 
             taxData.put("from_cost_center", tax.getCostCenter().costCenter);
             taxData.put("from_account_code", tax.getCostCenter().accountCode);
@@ -614,7 +523,7 @@ public class SalesService {
 
             majorGroupData.put("transactionDate", transactionDate);
 
-            majorGroupData.put("totalCr", String.valueOf(Math.round(majorGroupJournal.getTotalCost())));
+            majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
 
             majorGroupData.put("from_cost_center", majorGroupJournal.getCostCenter().costCenter);
             majorGroupData.put("from_account_code", majorGroupJournal.getCostCenter().accountCode);
@@ -664,13 +573,13 @@ public class SalesService {
                 // {Debit} - ShortagePOS
                 if ((totalOverGroupNet + totalTax) > totalTender) {
                     String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
-                    differentData.put("totalDr", String.valueOf(Math.round((totalOverGroupNet + totalTax) - totalTender)));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalOverGroupNet + totalTax) - totalTender)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
-                    differentData.put("totalCr", String.valueOf(Math.round(totalTender - (totalOverGroupNet + totalTax))));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalTender - (totalOverGroupNet + totalTax))));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 
@@ -721,7 +630,7 @@ public class SalesService {
 
                 tenderData.put("transactionDate", transactionDate);
 
-                tenderData.put("totalDr", String.valueOf(Math.round(tender.getTotal()) * -1));
+                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
 
                 tenderData.put("from_cost_center", tender.getCostCenter().costCenter);
                 tenderData.put("from_account_code", tender.getCostCenter().accountCode);
@@ -760,7 +669,7 @@ public class SalesService {
 
                 taxData.put("transactionDate", transactionDate);
 
-                taxData.put("totalCr", String.valueOf(Math.round(tax.getTotal())));
+                taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
 
                 taxData.put("from_cost_center", tax.getCostCenter().costCenter);
                 taxData.put("from_account_code", tax.getCostCenter().accountCode);
@@ -801,7 +710,7 @@ public class SalesService {
 
                 majorGroupData.put("transactionDate", transactionDate);
 
-                majorGroupData.put("totalCr", String.valueOf(Math.round(majorGroupJournal.getTotalCost())));
+                majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
 
                 majorGroupData.put("from_cost_center", majorGroupJournal.getCostCenter().costCenter);
                 majorGroupData.put("from_account_code", majorGroupJournal.getCostCenter().accountCode);
@@ -841,13 +750,13 @@ public class SalesService {
                 // {Debit} - ShortagePOS
                 if ((totalMajorGroupNet + totalTax) > totalTender) {
                     String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
-                    differentData.put("totalDr", String.valueOf(Math.round((totalMajorGroupNet + totalTax) - totalTender)));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalMajorGroupNet + totalTax) - totalTender)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
-                    differentData.put("totalCr", String.valueOf(Math.round(totalTender - (totalMajorGroupNet + totalTax))));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalTender - (totalMajorGroupNet + totalTax))));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 

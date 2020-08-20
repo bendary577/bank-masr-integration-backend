@@ -534,10 +534,8 @@ public class TransferService {
         Element EntryDate = doc.createElement("EntryDate");
 
         if(addedJournalEntry.getData().containsKey("transactionDate")){
-//            TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
-//            EntryDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
-            TransactionDate.appendChild(doc.createTextNode("01072020"));
-            EntryDate.appendChild(doc.createTextNode("01072020"));
+            TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
+            EntryDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
         }else{
             TransactionDate.appendChild(doc.createTextNode(date));
             EntryDate.appendChild(doc.createTextNode(date));

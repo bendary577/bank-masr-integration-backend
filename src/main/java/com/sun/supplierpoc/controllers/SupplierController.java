@@ -2,10 +2,7 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -93,7 +90,7 @@ public class SupplierController {
                 account.getId(), supplierSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
 
-        ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
+        Response supplierResponse = new Response();
 
         try {
             HashMap<String, Object> data = supplierService.getSuppliersData(supplierSyncJobType, account);
@@ -102,26 +99,46 @@ public class SupplierController {
                 ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
 
                 if (suppliers.size() > 0){
-                    addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
+                    supplierResponse = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
 
-                    if (addedSuppliers.size() != 0){
-                        data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, supplierSyncJobType, account);
+                    if (supplierResponse.getAddedSuppliers().size() != 0){
+                        data  = supplierService.sendSuppliersData(supplierResponse.getAddedSuppliers(), syncJob,
+                                supplierSyncJobType, account, true);
                         if (data.get("status").equals(Constants.SUCCESS)){
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setReason("");
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedSuppliers.size());
-                            syncJobRepo.save(syncJob);
+                            // check if there is suppliers need update
+                            ArrayList<SyncJobData> updatedSuppliers = (ArrayList<SyncJobData>) data.get("updatedSuppliers");
+                            supplierResponse.getUpdatedSuppliers().addAll(updatedSuppliers);
+                            if (supplierResponse.getUpdatedSuppliers().size() > 0){
+                                data  = supplierService.sendSuppliersData(supplierResponse.getUpdatedSuppliers(), syncJob,
+                                        supplierSyncJobType, account, false);
 
-                            response.put("message", data.get("message"));
-                            response.put("success", true);
+                                if (data.get("status").equals(Constants.SUCCESS)){
+                                    syncJob.setStatus(Constants.SUCCESS);
+                                    syncJob.setReason("");
+                                    syncJob.setEndDate(new Date());
+                                    syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                    syncJobRepo.save(syncJob);
+
+                                    response.put("message", data.get("message"));
+                                    response.put("success", true);
+                                }else{
+                                    syncJob.setStatus(Constants.FAILED);
+                                    syncJob.setReason((String) data.get("message"));
+                                    syncJob.setEndDate(new Date());
+                                    syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                    syncJobRepo.save(syncJob);
+
+                                    response.put("message", data.get("message"));
+                                    response.put("success", false);
+                                }
+                            }
 
                         }
                         else {
                             syncJob.setStatus(Constants.FAILED);
                             syncJob.setReason((String) data.get("message"));
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedSuppliers.size());
+                            syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", data.get("message"));
@@ -133,7 +150,7 @@ public class SupplierController {
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("No new suppliers to add in middleware.");
                         syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedSuppliers.size());
+                        syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "No new suppliers to add in middleware.");
@@ -144,7 +161,7 @@ public class SupplierController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no suppliers to get from Sun System.");
                     syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedSuppliers.size());
+                    syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no suppliers to get from Sun System.");
@@ -157,7 +174,7 @@ public class SupplierController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason((String) data.get("message"));
                 syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedSuppliers.size());
+                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "Failed to get suppliers from Sun System.");
@@ -168,7 +185,7 @@ public class SupplierController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
-            syncJob.setRowsFetched(addedSuppliers.size());
+            syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
             syncJobRepo.save(syncJob);
 
             response.put("message", e);

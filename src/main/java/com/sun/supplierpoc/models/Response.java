@@ -17,6 +17,10 @@ public class Response {
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
+    // Supplier Variables
+    private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
+    private ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
+
     public Response() {
     }
 
@@ -74,5 +78,21 @@ public class Response {
 
     public void setJournalBatches(ArrayList<JournalBatch> journalBatches) {
         this.journalBatches = journalBatches;
+    }
+
+    public ArrayList<SyncJobData> getAddedSuppliers() {
+        return addedSuppliers;
+    }
+
+    public void setAddedSuppliers(ArrayList<SyncJobData> addedSuppliers) {
+        this.addedSuppliers = addedSuppliers;
+    }
+
+    public ArrayList<SyncJobData> getUpdatedSuppliers() {
+        return updatedSuppliers;
+    }
+
+    public void setUpdatedSuppliers(ArrayList<SyncJobData> updatedSuppliers) {
+        this.updatedSuppliers = updatedSuppliers;
     }
 }

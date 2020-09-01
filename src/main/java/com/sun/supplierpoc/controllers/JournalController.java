@@ -69,6 +69,7 @@ public class JournalController {
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
         ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+        ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
         ArrayList<OverGroup> overGroups ;
@@ -97,6 +98,13 @@ public class JournalController {
             return response;
         }
 
+        if (costCentersLocation.size() == 0){
+            String message = "Map cost centers to location before sync sales.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         if (generalSettings.getItemGroups().size() == 0){
             String message = "Map items before sync consumption.";
             response.put("message", message);
@@ -112,7 +120,8 @@ public class JournalController {
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
         try {
-            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters, itemGroups, account);
+            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters,
+                    costCentersLocation,itemGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
@@ -183,7 +192,7 @@ public class JournalController {
             syncJob.setRowsFetched(addedJournals.size());
             syncJobRepo.save(syncJob);
 
-            response.put("message", e);
+            response.put("message", e.getMessage());
             response.put("success", false);
             return response;
         }

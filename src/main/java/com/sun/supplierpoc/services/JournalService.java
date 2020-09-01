@@ -31,7 +31,11 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+    /*
+    * Get consumptions entries based on cost center
+    * */
+    @Deprecated
+    public HashMap<String, Object> getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
                                                   ArrayList<ItemGroup> itemGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();
 
@@ -218,6 +222,181 @@ public class JournalService {
             return response;
         }
     }
+
+
+    /*
+     * Get consumptions entries based on location
+     * */
+    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+                                                  ArrayList<CostCenter> costCentersLocation,
+                                                  ArrayList<ItemGroup> itemGroups, Account account){
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        ArrayList<Journal> journals;
+        ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
+
+        String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
+
+        try {
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("journals", journalsEntries);
+                return response;
+            }
+            // just wait to make sure credentials of user saved to be able to move to another pages.
+            try {
+                WebDriverWait wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            }
+            catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
+
+            for (CostCenter costCenter : costCenters) {
+                if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)){
+                    driver.get(Constants.CONSUMPTION_REPORT_LINK);
+
+                    try {
+                        WebDriverWait wait = new WebDriverWait(driver, 60);
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                    }
+                    catch (Exception ex){
+                        System.out.println(ex.getMessage());
+                    }
+                }
+
+                // check if cost center has location mapping
+                CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
+
+                if (!costCenterLocation.checked)
+                    continue;
+
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod,
+                        costCenterLocation.locationName, driver);
+
+                if (!dateResponse.isStatus())
+                    continue;
+
+                driver.findElement(By.id("Run Report")).click();
+
+                driver.get(Constants.CONSUMPTION_TABLE_LINK);
+
+                List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+                if (rows.size() < 4)
+                    continue;
+
+                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
+
+                ArrayList<String> extensions  = new ArrayList<>();
+
+                for (int i = 6; i < rows.size(); i++) {
+
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+                    if (cols.size() != columns.size()) {
+                        continue;
+                    }
+
+                    String extension = cols.get(0).findElement(By.tagName("div")).getAttribute("onclick").substring(7);
+                    int index = extension.indexOf('\'');
+                    extension = extension.substring(0, index);
+                    extensions.add(extension);
+                }
+
+                String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+
+                journals = new ArrayList<>();
+
+                for (String extension : extensions) {
+                    try {
+                        driver.get(baseURL + extension);
+
+                        rows = driver.findElements(By.tagName("tr"));
+
+                        if (rows.size() <= 3)
+                            continue;
+
+                        columns = setupEnvironment.getTableColumns(rows, false, 3);
+
+                        for (int i = 6; i < rows.size(); i++) {
+                            HashMap<String, Object> transferDetails = new HashMap<>();
+                            WebElement row = rows.get(i);
+                            List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                            if (cols.size() != columns.size()) {
+                                continue;
+                            }
+
+                            // check if this Item group belong to selected Item groups
+                            WebElement td = cols.get(columns.indexOf("item_group"));
+
+                            ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+
+                            if (!oldItemData.getChecked()) {
+                                continue;
+                            }
+
+                            String overGroup = oldItemData.getOverGroup();
+
+
+                            for (int j = 0; j < cols.size(); j++) {
+                                transferDetails.put(columns.get(j), cols.get(j).getText().strip());
+                            }
+
+                            Journal journal = new Journal();
+                            float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
+
+                            journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                for (Journal journal : journals) {
+                    HashMap<String, Object> journalsEntry = new HashMap<>();
+
+                    journalsEntry.put("cost_center", costCenter);
+                    journalsEntry.put("journal", journal);
+
+                    journalsEntries.add(journalsEntry);
+                }
+            }
+
+            driver.quit();
+
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "");
+            response.put("journals", journalsEntries);
+            return response;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to get consumption entries from Oracle Hospitality.");
+            response.put("journals", journalsEntries);
+            return response;
+        }
+    }
+
 
     public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
                                                   ArrayList<OverGroup> overGroups){

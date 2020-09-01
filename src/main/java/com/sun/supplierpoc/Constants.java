@@ -42,6 +42,7 @@ public class Constants {
     ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
 
     public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
 
     public static String OHIM_LOGIN_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
     public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
@@ -54,10 +55,16 @@ public class Constants {
     // SALES LINKS
     public static String TENDERS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=19";
     public static String TAXES_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=18";
+
     // Menu Engineering/Sales Mix Summary
     public static String ITEM_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=46";
-    // Daily Detail/Sales Mix
+
+    // Daily Detail >> Sales Mix
     public static String OVER_GROUP_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=15";
+
+    // myInventory Reports >> COS by Cost Center
+    public static String CONSUMPTION_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=499";
+    public static String CONSUMPTION_TABLE_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
 
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
 

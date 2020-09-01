@@ -147,14 +147,41 @@ public class SupplierController {
                         }
                     }
                     else {
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("No new suppliers to add in middleware.");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
-                        syncJobRepo.save(syncJob);
+                        if (supplierResponse.getUpdatedSuppliers().size() > 0){
+                            data  = supplierService.sendSuppliersData(supplierResponse.getUpdatedSuppliers(), syncJob,
+                                    supplierSyncJobType, account, false);
 
-                        response.put("message", "No new suppliers to add in middleware.");
-                        response.put("success", true);
+                            if (data.get("status").equals(Constants.SUCCESS)){
+                                syncJob.setStatus(Constants.SUCCESS);
+                                syncJob.setReason("");
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                syncJobRepo.save(syncJob);
+
+                                response.put("message", data.get("message"));
+                                response.put("success", true);
+                            }else{
+                                syncJob.setStatus(Constants.FAILED);
+                                syncJob.setReason((String) data.get("message"));
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                syncJobRepo.save(syncJob);
+
+                                response.put("message", data.get("message"));
+                                response.put("success", false);
+                            }
+                        }
+
+                        else {
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("No new suppliers to add in middleware.");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", "No new suppliers to add in middleware.");
+                            response.put("success", true);
+                        }
                     }
                 }
                 else {

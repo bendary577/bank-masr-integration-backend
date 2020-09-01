@@ -537,7 +537,10 @@ public class SupplierService {
             //////////////////////////////////////  Set Order Settings  ////////////////////////////////////////////
 
             driver.findElement(By.id("tbtd1")).click();
-            driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL")).click();
+            WebElement PRAllItems = driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL"));
+            if(!PRAllItems.isSelected()){
+                PRAllItems.click();
+            }
 
             //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
 

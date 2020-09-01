@@ -250,10 +250,14 @@ public class SupplierService {
             // check existence of supplier in middleware (UNIQUE: supplierNumber)
             SyncJobData oldSupplier = conversions.checkSupplierExistence(savedSuppliers, supplier.getSupplierName());
             if (oldSupplier != null){
-                oldSupplier.setData(data);
-                syncJobDataRepo.save(oldSupplier);
                 if (!oldSupplier.getStatus().equals(Constants.FAILED)){
-                    updatedSuppliers.add(oldSupplier);
+                    // check if there is any change
+                    if (compareSupplier(data, oldSupplier.getData())){
+                        oldSupplier.setData(data);
+                        syncJobDataRepo.save(oldSupplier);
+
+                        updatedSuppliers.add(oldSupplier);
+                    }
                     continue;
                 }
                 else {
@@ -567,5 +571,26 @@ public class SupplierService {
             response.setMessage(message);
             return response;
         }
+    }
+
+    private boolean compareSupplier (HashMap<String, String> supplier, HashMap<String, String> oldSupplier){
+        if(!supplier.get("supplierId").equals(oldSupplier.get("supplierId"))
+                || !supplier.get("supplier").equals(oldSupplier.get("supplier"))
+                || !supplier.get("description").equals(oldSupplier.get("description"))
+                || !supplier.get("supplierNumber").equals(oldSupplier.get("supplierNumber"))
+                || !supplier.get("accountCode").equals(oldSupplier.get("accountCode"))
+                || !supplier.get("status").equals(oldSupplier.get("status"))
+                || !supplier.get("paymentTerms").equals(oldSupplier.get("paymentTerms"))
+                || !supplier.get("phoneNumber").equals(oldSupplier.get("phoneNumber"))
+                || !supplier.get("address").equals(oldSupplier.get("address"))
+                || !supplier.get("line1").equals(oldSupplier.get("line1"))
+                || !supplier.get("line2").equals(oldSupplier.get("line2"))
+                || !supplier.get("line3").equals(oldSupplier.get("line3"))
+                || !supplier.get("postalCode").equals(oldSupplier.get("postalCode"))){
+            return true;
+        }else {
+            return false;
+        }
+
     }
 }

@@ -33,7 +33,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -42,7 +42,7 @@ public class SetupEnvironment {
         else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -225,24 +225,6 @@ public class SetupEnvironment {
 
     public Response selectTimePeriodOHRA(String timePeriod, String location, WebDriver driver){
         Response response = new Response();
-
-        if (!location.equals("")){
-            Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-
-            try {
-                selectLocation.selectByVisibleText(location);
-            } catch (Exception e) {
-                response.setStatus(false);
-                response.setMessage(Constants.INVALID_LOCATION);
-                response.setEntries(new ArrayList<>());
-                return response;
-            }
-
-            String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-            while (!selectLocationOption.equals(location)) {
-                selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-            }
-        }
         try {
             if (timePeriod.equals("Most Recent") || timePeriod.equals("Financial Week to Date")
             || timePeriod.equals("Past 7 Days") || timePeriod.equals("Today")
@@ -299,6 +281,25 @@ public class SetupEnvironment {
             }
             response.setStatus(true);
             response.setMessage("");
+
+
+            if (!location.equals("")){
+                Select selectLocation = new Select(driver.findElement(By.id("locationData")));
+
+                try {
+                    selectLocation.selectByVisibleText(location);
+                } catch (Exception e) {
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_LOCATION);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+
+                String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                while (!selectLocationOption.equals(location)) {
+                    selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                }
+            }
         }catch (Exception e) {
             response.setStatus(false);
             response.setMessage(e.getMessage());

@@ -4,7 +4,11 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 
 import java.text.NumberFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 public class Conversions {
@@ -189,5 +193,52 @@ public class Conversions {
         String temp = nf.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);
+    }
+
+    public String getTransactionDate(String businessDate){
+        SimpleDateFormat inMonthFormatter = new SimpleDateFormat("M");
+        SimpleDateFormat outMonthFormatter = new SimpleDateFormat("MM");
+
+        String transactionDate = "";
+        String today = String.valueOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+        String lastMonth = String.valueOf(Calendar.getInstance().get(Calendar.MONTH));
+        String currentMonth = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
+        String currentYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+
+        Date date;
+        try {
+            date = inMonthFormatter.parse(today);
+            today = outMonthFormatter.format(date);
+
+            date = inMonthFormatter.parse(currentMonth);
+            currentMonth = outMonthFormatter.format(date);
+
+            date = inMonthFormatter.parse(lastMonth);
+            lastMonth = outMonthFormatter.format(date);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        if (businessDate.equals(Constants.TODAY) || businessDate.equals(Constants.YESTERDAY)){
+            transactionDate += today + currentMonth ;
+
+        }else if (businessDate.equals(Constants.PAST_7_DAYES)){
+            transactionDate += "01" + currentMonth ;
+
+        }else if (businessDate.equals(Constants.LAST_MONTH) || businessDate.equals(Constants.MONTH_TO_DATE)){
+            transactionDate += "01" + lastMonth ;
+
+        }else if(businessDate.equals(Constants.CURRENT_MONTH)){
+            transactionDate += "01" + currentMonth ;
+
+        }else{
+            transactionDate += today + currentMonth ;
+        }
+
+        transactionDate += currentYear;
+
+        return transactionDate;
+
     }
 }

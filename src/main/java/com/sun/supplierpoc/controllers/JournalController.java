@@ -118,6 +118,7 @@ public class JournalController {
         syncJobRepo.save(syncJob);
 
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
+        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
 
         try {
             HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters,
@@ -126,7 +127,7 @@ public class JournalController {
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
-                    addedJournals = journalService.saveJournalData(journals, syncJob, overGroups);
+                    addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, overGroups);
                     if (addedJournals.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){

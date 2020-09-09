@@ -12,10 +12,13 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import java.util.*;
 
@@ -53,7 +56,7 @@ public class JournalService {
         ArrayList<Journal> journals;
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
@@ -84,7 +87,7 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod,"", driver);
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate,"", driver);
 
             if (!dateResponse.isStatus()){
                 response.put("status", Constants.FAILED);
@@ -246,7 +249,7 @@ public class JournalService {
         ArrayList<Journal> journals;
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
@@ -286,7 +289,7 @@ public class JournalService {
                 if (!costCenterLocation.checked)
                     continue;
 
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod,
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate,
                         costCenterLocation.locationName, driver);
 
                 if (!dateResponse.isStatus())
@@ -399,6 +402,7 @@ public class JournalService {
 
 
     public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
+                                                  String businessDate,
                                                   ArrayList<OverGroup> overGroups){
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
@@ -410,53 +414,15 @@ public class JournalService {
             if (costCenter.costCenterReference.equals("")){
                 costCenter.costCenterReference = costCenter.costCenter;
             }
-/*
-
-            if(journalData.getTotalVariance() != 0){
-                HashMap<String, String> varianceData = new HashMap<>();
-
-                varianceData.put("transactionDate", "01072020");
-
-                varianceData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalVariance())));
-                varianceData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalVariance()) * -1));
-
-                varianceData.put("from_cost_center", costCenter.costCenter);
-                varianceData.put("from_account_code", costCenter.accountCode);
-
-                varianceData.put("to_cost_center", costCenter.costCenter);
-                varianceData.put("to_account_code", costCenter.accountCode);
-
-                varianceData.put("from_location", costCenter.accountCode);
-                varianceData.put("to_location", costCenter.accountCode);
-
-                String description =  "Variance F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
-                if (description.length() > 50){
-                    description = description.substring(0, 50);
-                }
-
-                varianceData.put("description", description);
-
-                varianceData.put("transactionReference", "Variance Transaction Reference");
-                varianceData.put("overGroup", journalData.getOverGroup());
-
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
-
-                varianceData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                varianceData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-
-                SyncJobData syncJobData = new SyncJobData(varianceData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
-
-                addedJournals.add(syncJobData);
-            }
-*/
 
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
 
                 // Example: 01062020
-                costData.put("transactionDate", "01072020");
+
+                String transactionDate = conversions.getTransactionDate(businessDate);
+
+                costData.put("transactionDate", transactionDate);
 
                 costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost())));
                 costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost()) * -1));

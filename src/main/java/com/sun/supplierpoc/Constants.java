@@ -71,6 +71,20 @@ public class Constants {
     public static String APPROVED_INVOICE = "Approved Invoices";
     public static String ACCOUNT_PAYABLE = "Account Payable";
 
+    ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////////////
+
+    public static String LAST_MONTH = "Last Month";
+    public static String PAST_7_DAYES = "Past 7 Days";
+    public static String MOST_RECENT = "Most Recent";
+    public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
+    public static String TODAY = "Today";
+    public static String YESTERDAY = "Yesterday";
+    public static String MONTH_TO_DATE = "Month to Date";
+    public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
+    public static String LAST_QUARTER = "Last Quarter";
+    public static String YEAR_TO_DATE = "Year to Date";
+    public static String LAST_YEAR_YTD = "Last Year YTD";
+    public static String CURRENT_MONTH = "Current Month";
 
     public Constants() {}
 }

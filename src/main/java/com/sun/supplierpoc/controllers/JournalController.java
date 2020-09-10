@@ -119,7 +119,7 @@ public class JournalController {
 
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
         String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
-        
+
         try {
             HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters,
                     costCentersLocation,itemGroups, account);

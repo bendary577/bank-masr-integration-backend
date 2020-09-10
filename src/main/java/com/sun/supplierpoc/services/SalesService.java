@@ -414,21 +414,8 @@ public class SalesService {
 
         ArrayList<SyncJobData> addedSales = new ArrayList<>();
 
-
-        int year = Calendar.getInstance().get(Calendar.YEAR);
-        int month = Calendar.getInstance().get(Calendar.MONTH);
-
-        String transactionDate;
-
-//        SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
-//        transactionDate = simpleformat.format(new Date());
-//
-//        // Need to test it later
-//        if (syncJobType.getConfiguration().getTimePeriod().equals("Month to Date")){
-//            transactionDate = "01" + String.valueOf(month - 1) + String.valueOf(year);
-//        }
-
-        transactionDate = "01072020";
+        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
+        String transactionDate = conversions.getTransactionDate(businessDate);
 
         // Save tenders {Debit}
         ArrayList<Tender> tenders = salesResponse.getSalesTender();
@@ -613,7 +600,8 @@ public class SalesService {
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob, SyncJobType syncJobType) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
 
-        String transactionDate = "01072020";
+        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
+        String transactionDate = conversions.getTransactionDate(businessDate);
 
         ArrayList<JournalBatch> journalBatches = salesResponse.getJournalBatches();
         for (JournalBatch journalBatch : journalBatches) {

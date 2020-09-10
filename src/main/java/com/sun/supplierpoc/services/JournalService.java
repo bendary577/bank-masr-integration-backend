@@ -419,7 +419,6 @@ public class JournalService {
                 HashMap<String, String> costData = new HashMap<>();
 
                 // Example: 01062020
-
                 String transactionDate = conversions.getTransactionDate(businessDate);
 
                 costData.put("transactionDate", transactionDate);

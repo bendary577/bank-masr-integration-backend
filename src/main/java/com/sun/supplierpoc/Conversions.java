@@ -3,6 +3,7 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 
+import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -200,19 +201,18 @@ public class Conversions {
         SimpleDateFormat outMonthFormatter = new SimpleDateFormat("MM");
 
         String transactionDate = "";
-        String today = String.valueOf(Calendar.getInstance().get(Calendar.DAY_OF_MONTH));
+        Calendar cal = Calendar.getInstance();
+        DateFormat dayFormat = new SimpleDateFormat("dd");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
+        DateFormat dayMonthFormat = new SimpleDateFormat("ddMM");
+
         String lastMonth = String.valueOf(Calendar.getInstance().get(Calendar.MONTH));
-        String currentMonth = String.valueOf(Calendar.getInstance().get(Calendar.MONTH) + 1);
-        String currentYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+        if (lastMonth.equals("0")){
+            lastMonth = "12";
+        }
 
         Date date;
         try {
-            date = inMonthFormatter.parse(today);
-            today = outMonthFormatter.format(date);
-
-            date = inMonthFormatter.parse(currentMonth);
-            currentMonth = outMonthFormatter.format(date);
-
             date = inMonthFormatter.parse(lastMonth);
             lastMonth = outMonthFormatter.format(date);
 
@@ -220,11 +220,25 @@ public class Conversions {
             e.printStackTrace();
         }
 
-        if (businessDate.equals(Constants.TODAY) || businessDate.equals(Constants.YESTERDAY)){
+        String today = dayFormat.format(cal.getTime());
+        String currentMonth = monthFormat.format(cal.getTime());
+        String currentYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+
+        if (businessDate.equals(Constants.TODAY)){
             transactionDate += today + currentMonth ;
 
+        }else if (businessDate.equals(Constants.YESTERDAY)){
+            cal.add(Calendar.DATE, -1);
+            String yesterday = dayMonthFormat.format(cal.getTime());
+            cal.add(Calendar.DATE, +1);
+
+            transactionDate += yesterday;
         }else if (businessDate.equals(Constants.PAST_7_DAYES)){
-            transactionDate += "01" + currentMonth ;
+            cal.add(Calendar.DATE, -7);
+            String last7Days = dayMonthFormat.format(cal.getTime());
+            cal.add(Calendar.DATE, +7);
+
+            transactionDate += last7Days;
 
         }else if (businessDate.equals(Constants.LAST_MONTH) || businessDate.equals(Constants.MONTH_TO_DATE)){
             transactionDate += "01" + lastMonth ;
@@ -239,6 +253,5 @@ public class Conversions {
         transactionDate += currentYear;
 
         return transactionDate;
-
     }
 }

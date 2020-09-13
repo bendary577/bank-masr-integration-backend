@@ -33,7 +33,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -42,7 +42,7 @@ public class SetupEnvironment {
         else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -226,10 +226,10 @@ public class SetupEnvironment {
     public Response selectTimePeriodOHRA(String timePeriod, String location, WebDriver driver){
         Response response = new Response();
         try {
-            if (timePeriod.equals("Most Recent") || timePeriod.equals("Financial Week to Date")
-            || timePeriod.equals("Past 7 Days") || timePeriod.equals("Today")
-            || timePeriod.equals("Yesterday") || timePeriod.equals("Month to Date")
-            || timePeriod.equals("Financial Period to Date") ){
+            if (timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
+            || timePeriod.equals(Constants.PAST_7_DAYES) || timePeriod.equals(Constants.TODAY)
+            || timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.MONTH_TO_DATE)
+            || timePeriod.equals(Constants.FINANCIAL_PERIOD_TO_DATE) ){
                 try {
                     Select businessDate = new Select(driver.findElement(By.id("calendarData")));
                     businessDate.selectByVisibleText(timePeriod);
@@ -241,8 +241,9 @@ public class SetupEnvironment {
                     response.setEntries(new ArrayList<>());
                     return response;
                 }
-            }else if (timePeriod.equals("Last Month") || timePeriod.equals("Last Quarter")
-            || timePeriod.equals("Year to Date") || timePeriod.equals("Last Year YTD")){
+            }
+            else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
+            || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)){
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
 

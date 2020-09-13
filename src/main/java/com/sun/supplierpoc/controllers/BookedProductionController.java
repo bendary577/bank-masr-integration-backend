@@ -106,7 +106,7 @@ public class BookedProductionController {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
         try {
             Response data;
-            ArrayList<HashMap<String, String>> bookedProduction ;
+            ArrayList<BookedProduction> bookedProduction ;
 
             data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType, costCenters, account);
             bookedProduction = data.getBookedProduction();

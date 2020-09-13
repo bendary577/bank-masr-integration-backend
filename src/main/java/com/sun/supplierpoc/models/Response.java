@@ -22,7 +22,7 @@ public class Response {
     private ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
 
     // Booked Production Variables
-    private ArrayList<HashMap<String, String>> bookedProduction = new ArrayList<>();
+    private ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
 
     public Response() {
     }
@@ -99,11 +99,11 @@ public class Response {
         this.updatedSuppliers = updatedSuppliers;
     }
 
-    public ArrayList<HashMap<String, String>> getBookedProduction() {
+    public ArrayList<BookedProduction> getBookedProduction() {
         return bookedProduction;
     }
 
-    public void setBookedProduction(ArrayList<HashMap<String, String>> bookedProduction) {
+    public void setBookedProduction(ArrayList<BookedProduction> bookedProduction) {
         this.bookedProduction = bookedProduction;
     }
 }

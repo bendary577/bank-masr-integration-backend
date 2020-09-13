@@ -21,6 +21,9 @@ public class Response {
     private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
     private ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
 
+    // Booked Production Variables
+    private ArrayList<HashMap<String, String>> bookedProduction = new ArrayList<>();
+
     public Response() {
     }
 
@@ -94,5 +97,13 @@ public class Response {
 
     public void setUpdatedSuppliers(ArrayList<SyncJobData> updatedSuppliers) {
         this.updatedSuppliers = updatedSuppliers;
+    }
+
+    public ArrayList<HashMap<String, String>> getBookedProduction() {
+        return bookedProduction;
+    }
+
+    public void setBookedProduction(ArrayList<HashMap<String, String>> bookedProduction) {
+        this.bookedProduction = bookedProduction;
     }
 }

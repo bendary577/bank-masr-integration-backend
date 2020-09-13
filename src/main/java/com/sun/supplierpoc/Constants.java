@@ -21,6 +21,7 @@ public class Constants {
     public static String CONSUMPTION = "Consumption";
     public static String SALES = "POS Sales";
     public static String WASTAGE = "Wastage";
+    public static String BOOKED_PRODUCTION = "Wastage";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";
@@ -36,7 +37,6 @@ public class Constants {
     ///////////////////////////////////////// Sun Server ///////////////////////////////////////////////////////////////
 
     public static int PORT = 8080;
-//    public static String HOST = "192.168.1.15";
     public static String HOST = "41.33.13.24";
 
     ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
@@ -44,19 +44,21 @@ public class Constants {
     public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
     public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
 
-    public static String OHIM_LOGIN_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+    public static String OHIM_LOGIN_LINK = OHIM_LINK + "/Webclient/FormLogin.aspx";
     public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
 
-    public static String APPROVED_INVOICES_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
-    public static String ACCOUNT_PAYABLE_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
+    public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+    public static String ACCOUNT_PAYABLE_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
-    public static String SUPPLIER_LINK =  "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
+    public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/Webclient/Production/ProductionD/PrView.aspx?type=20";
+
+    public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     // SALES LINKS
     public static String TENDERS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=19";
     public static String TAXES_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=18";
 
-    // Menu Engineering/Sales Mix Summary
+    // Menu Engineering >> Sales Mix Summary
     public static String ITEM_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=46";
 
     // Daily Detail >> Sales Mix
@@ -73,18 +75,18 @@ public class Constants {
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////////////
 
-    public static String LAST_MONTH = "Last Month";
-    public static String PAST_7_DAYES = "Past 7 Days";
     public static String MOST_RECENT = "Most Recent";
-    public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
+    public static String PAST_7_DAYES = "Past 7 Days";
     public static String TODAY = "Today";
     public static String YESTERDAY = "Yesterday";
+    public static String CURRENT_MONTH = "Current Month";
+    public static String LAST_MONTH = "Last Month";
     public static String MONTH_TO_DATE = "Month to Date";
-    public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
     public static String LAST_QUARTER = "Last Quarter";
     public static String YEAR_TO_DATE = "Year to Date";
     public static String LAST_YEAR_YTD = "Last Year YTD";
-    public static String CURRENT_MONTH = "Current Month";
+    public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
+    public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
 
     public Constants() {}
 }

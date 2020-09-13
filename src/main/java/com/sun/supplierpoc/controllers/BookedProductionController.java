@@ -11,6 +11,7 @@ import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.services.BookedProductionService;
 import com.sun.supplierpoc.services.InvoiceService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -28,9 +29,8 @@ import java.util.HashMap;
 import java.util.Optional;
 
 @RestController
-// @RequestMapping(path = "server")
+public class BookedProductionController {
 
-public class CreditNoteController {
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
@@ -41,7 +41,7 @@ public class CreditNoteController {
     private GeneralSettingsRepo generalSettingsRepo;
 
     @Autowired
-    private InvoiceService invoiceService;
+    private BookedProductionService bookedProductionService;
     @Autowired
     private TransferService transferService;
     @Autowired
@@ -51,111 +51,79 @@ public class CreditNoteController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @RequestMapping("/getCreditNotes")
+    @RequestMapping("/getBookedProductionRequest")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getCreditNotesRequest(Principal principal) {
+    public HashMap<String, Object> getBookedProductionRequest(Principal principal) {
         HashMap<String, Object> response = new HashMap<>();
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getCreditNotes(user.getId(), account);
+            response = getBookedProduction(user.getId(), account);
         }
 
         return response;
     }
 
-    public HashMap<String, Object> getCreditNotes(String userId, Account account) {
+    public HashMap<String, Object> getBookedProduction(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        SyncJobType creditNoteSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CREDIT_NOTES, account.getId(), false);
-        SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
-        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
+        SyncJobType bookedProductionSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.BOOKED_PRODUCTION, account.getId(), false);
 
-        String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().getInvoiceTypeIncluded();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-        ArrayList<Item> items =  generalSettings.getItems();
 
-        ArrayList<OverGroup> overGroups ;
-        if (!invoiceSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
-            overGroups =  generalSettings.getOverGroups();
-        }else{
-            overGroups =  invoiceSyncJobType.getConfiguration().getOverGroups();
-        }
-
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(bookedProductionSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }
 
-        if (invoiceTypeIncluded.equals("")){
-            String message = "Configure invoice types before sync credit notes.";
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
-
-        if (creditNoteSyncJobType.getConfiguration().getTimePeriod().equals("")){
-            String message = "Map time period before sync credit notes.";
+        if (bookedProductionSyncJobType.getConfiguration().getTimePeriod().equals("")){
+            String message = "Map time period before sync booked production.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (generalSettings.getCostCenterAccountMapping().size() == 0){
-            String message = "Map cost centers before sync credit notes.";
+            String message = "Map cost centers before sync booked production.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         if (generalSettings.getItems().size() == 0){
-            String message = "Map items before sync credit notes.";
+            String message = "Map items before sync booked production.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
-                account.getId(), creditNoteSyncJobType.getId(), 0);
+                account.getId(), bookedProductionSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
         try {
-            HashMap<String, Object> data;
-            ArrayList<HashMap<String, String>> invoices ;
+            Response data;
+            ArrayList<HashMap<String, String>> bookedProduction ;
 
-            if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
-                data = invoiceService.getInvoicesData(true,1, invoiceSyncJobType, supplierSyncJobType,
-                        costCenters,
-                        items, overGroups, account);
-            }
-            else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
-                data = invoiceService.getInvoicesData(true, 2, invoiceSyncJobType,
-                        supplierSyncJobType, costCenters,
-                        items, overGroups, account);
-            }
-            else{
-                data = invoiceService.getInvoicesData(true,3, invoiceSyncJobType,
-                        supplierSyncJobType, costCenters,
-                        items, overGroups, account);
-            }
-            invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
+            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType, costCenters, account);
+            bookedProduction = data.getBookedProduction();
 
-            if (data.get("status").equals(Constants.SUCCESS)){
-                if (invoices.size() > 0){
-                    addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, creditNoteSyncJobType, true);
+            if (data.isStatus()){
+                if (bookedProduction.size() > 0){
+                    addedInvoices = bookedProductionService.saveBookedProductionData(bookedProduction, syncJob, bookedProductionSyncJobType);
                     if (addedInvoices.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){
-                            invoiceController.handleSendJournal(invoiceSyncJobType, syncJob, addedInvoices, account, voucher);
+                            invoiceController.handleSendJournal(bookedProductionSyncJobType, syncJob, addedInvoices, account, voucher);
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
                             syncJob.setRowsFetched(addedInvoices.size());
                             syncJobRepo.save(syncJob);
 
-                            response.put("message", "Sync credit notes Successfully.");
+                            response.put("message", "Sync booked production Successfully.");
                         }
                         else {
                             syncJob.setStatus(Constants.FAILED);
@@ -171,34 +139,34 @@ public class CreditNoteController {
                     }
                     else {
                         syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("No new credit notes to add in middleware.");
+                        syncJob.setReason("No new booked production to add in middleware.");
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(addedInvoices.size());
                         syncJobRepo.save(syncJob);
 
-                        response.put("message", "No new credit notes to add in middleware.");
+                        response.put("message", "No new booked production to add in middleware.");
                     }
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
-                    syncJob.setReason("There is no credit notes to get from Oracle Hospitality.");
+                    syncJob.setReason("There is no booked production to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
                     syncJob.setRowsFetched(addedInvoices.size());
                     syncJobRepo.save(syncJob);
 
-                    response.put("message", "There is no credit notes to get from Oracle Hospitality.");
+                    response.put("message", "There is no booked production to get from Oracle Hospitality.");
 
                 }
                 response.put("success", true);
             }
             else {
                 syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason("Failed to get credit notes from Oracle hospitality.");
+                syncJob.setReason("Failed to get booked production from Oracle hospitality.");
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(addedInvoices.size());
                 syncJobRepo.save(syncJob);
 
-                response.put("message", "Failed to get credit notes from Oracle Hospitality.");
+                response.put("message", "Failed to get booked production from Oracle Hospitality.");
                 response.put("success", false);
             }
         }catch (Exception e) {

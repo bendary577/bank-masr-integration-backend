@@ -123,11 +123,13 @@ public class BookedProductionController {
 
             if (data.isStatus()){
                 if (bookedProduction.size() > 0){
-                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction, syncJob);
+                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction, syncJob,
+                            bookedProductionSyncJobType);
                     if (addedBookedProduction.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){
-                            invoiceController.handleSendJournal(bookedProductionSyncJobType, syncJob, addedBookedProduction, account, voucher);
+                            invoiceController.handleSendJournal(bookedProductionSyncJobType, syncJob,
+                                    addedBookedProduction, account, voucher);
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
                             syncJob.setRowsFetched(addedBookedProduction.size());

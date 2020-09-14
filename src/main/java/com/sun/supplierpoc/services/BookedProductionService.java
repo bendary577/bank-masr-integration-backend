@@ -253,7 +253,8 @@ public class BookedProductionService {
     }
 
 
-    public ArrayList<SyncJobData> saveBookedProductionData(ArrayList<BookedProduction> bookedProductions, SyncJob syncJob){
+    public ArrayList<SyncJobData> saveBookedProductionData(ArrayList<BookedProduction> bookedProductions,
+                                                           SyncJob syncJob, SyncJobType bookedProductionSyncJobType){
         ArrayList<SyncJobData> addedBookedProduction = new ArrayList<>();
 
         for (BookedProduction bookedProduction : bookedProductions) {
@@ -285,7 +286,7 @@ public class BookedProductionService {
             bookedProductionData.put("transactionReference", "Production Transaction Reference");
 
             bookedProductionData.put("inventoryAccount", bookedProduction.getOverGroup().getInventoryAccount());
-            bookedProductionData.put("expensesAccount", bookedProduction.getOverGroup().getExpensesAccount());
+            bookedProductionData.put("expensesAccount", bookedProductionSyncJobType.getConfiguration().getExpensesAccount());
 
             bookedProductionData.put("createdBy", bookedProduction.getCreatedBy());
             bookedProductionData.put("createdAt", bookedProduction.getCreatedAt());

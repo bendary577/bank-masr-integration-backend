@@ -428,14 +428,14 @@ public class SalesService {
 
             tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
 
-            tenderData.put("from_cost_center", tender.getCostCenter().costCenter);
-            tenderData.put("from_account_code", tender.getCostCenter().accountCode);
+            tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
+            tenderData.put("fromAccountCode", tender.getCostCenter().accountCode);
 
-            tenderData.put("to_cost_center", tender.getCostCenter().costCenter);
-            tenderData.put("to_account_code", tender.getCostCenter().accountCode);
+            tenderData.put("toCostCenter", tender.getCostCenter().costCenter);
+            tenderData.put("toAccountCode", tender.getCostCenter().accountCode);
 
-            tenderData.put("from_location", tender.getCostCenter().accountCode);
-            tenderData.put("to_location", tender.getCostCenter().accountCode);
+            tenderData.put("fromLocation", tender.getCostCenter().accountCode);
+            tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
             tenderData.put("transactionReference", "Tender Reference");
 
@@ -469,14 +469,14 @@ public class SalesService {
 
             taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
 
-            taxData.put("from_cost_center", tax.getCostCenter().costCenter);
-            taxData.put("from_account_code", tax.getCostCenter().accountCode);
+            taxData.put("fromCostCenter", tax.getCostCenter().costCenter);
+            taxData.put("fromAccountCode", tax.getCostCenter().accountCode);
 
-            taxData.put("to_cost_center", tax.getCostCenter().costCenter);
-            taxData.put("to_account_code", tax.getCostCenter().accountCode);
+            taxData.put("toCostCenter", tax.getCostCenter().costCenter);
+            taxData.put("toAccountCode", tax.getCostCenter().accountCode);
 
-            taxData.put("from_location", tax.getCostCenter().accountCode);
-            taxData.put("to_location", tax.getCostCenter().accountCode);
+            taxData.put("fromLocation", tax.getCostCenter().accountCode);
+            taxData.put("toLocation", tax.getCostCenter().accountCode);
 
             taxData.put("transactionReference", "Taxes Transaction Reference");
 
@@ -512,14 +512,14 @@ public class SalesService {
 
             majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
 
-            majorGroupData.put("from_cost_center", majorGroupJournal.getCostCenter().costCenter);
-            majorGroupData.put("from_account_code", majorGroupJournal.getCostCenter().accountCode);
+            majorGroupData.put("fromCostCenter", majorGroupJournal.getCostCenter().costCenter);
+            majorGroupData.put("fromAccountCode", majorGroupJournal.getCostCenter().accountCode);
 
-            majorGroupData.put("to_cost_center", majorGroupJournal.getCostCenter().costCenter);
-            majorGroupData.put("to_account_code", majorGroupJournal.getCostCenter().accountCode);
+            majorGroupData.put("toCostCenter", majorGroupJournal.getCostCenter().costCenter);
+            majorGroupData.put("toAccountCode", majorGroupJournal.getCostCenter().accountCode);
 
-            majorGroupData.put("from_location", majorGroupJournal.getCostCenter().accountCode);
-            majorGroupData.put("to_location", majorGroupJournal.getCostCenter().accountCode);
+            majorGroupData.put("fromLocation", majorGroupJournal.getCostCenter().accountCode);
+            majorGroupData.put("toLocation", majorGroupJournal.getCostCenter().accountCode);
 
             majorGroupData.put("transactionReference", "MG Transaction Reference");
 
@@ -570,14 +570,14 @@ public class SalesService {
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 
-                differentData.put("from_cost_center", differentCostCenter.getCostCenter().costCenter);
-                differentData.put("from_account_code", differentCostCenter.getCostCenter().accountCode);
+                differentData.put("fromCostCenter", differentCostCenter.getCostCenter().costCenter);
+                differentData.put("fromAccountCode", differentCostCenter.getCostCenter().accountCode);
 
-                differentData.put("to_cost_center", differentCostCenter.getCostCenter().costCenter);
-                differentData.put("to_account_code", differentCostCenter.getCostCenter().accountCode);
+                differentData.put("toCostCenter", differentCostCenter.getCostCenter().costCenter);
+                differentData.put("toAccountCode", differentCostCenter.getCostCenter().accountCode);
 
-                differentData.put("from_location", differentCostCenter.getCostCenter().accountCode);
-                differentData.put("to_location", differentCostCenter.getCostCenter().accountCode);
+                differentData.put("fromLocation", differentCostCenter.getCostCenter().accountCode);
+                differentData.put("toLocation", differentCostCenter.getCostCenter().accountCode);
 
                 differentData.put("transactionReference", "Taxes Transaction Reference");
 
@@ -620,14 +620,14 @@ public class SalesService {
 
                 tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
 
-                tenderData.put("from_cost_center", tender.getCostCenter().costCenter);
-                tenderData.put("from_account_code", tender.getCostCenter().accountCode);
+                tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
+                tenderData.put("fromAccountCode", tender.getCostCenter().accountCode);
 
-                tenderData.put("to_cost_center", tender.getCostCenter().costCenter);
-                tenderData.put("to_account_code", tender.getCostCenter().accountCode);
+                tenderData.put("toCostCenter", tender.getCostCenter().costCenter);
+                tenderData.put("toAccountCode", tender.getCostCenter().accountCode);
 
-                tenderData.put("from_location", tender.getCostCenter().accountCode);
-                tenderData.put("to_location", tender.getCostCenter().accountCode);
+                tenderData.put("fromLocation", tender.getCostCenter().accountCode);
+                tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
                 tenderData.put("transactionReference", "Tender Reference");
 
@@ -659,14 +659,14 @@ public class SalesService {
 
                 taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
 
-                taxData.put("from_cost_center", tax.getCostCenter().costCenter);
-                taxData.put("from_account_code", tax.getCostCenter().accountCode);
+                taxData.put("fromCostCenter", tax.getCostCenter().costCenter);
+                taxData.put("fromAccountCode", tax.getCostCenter().accountCode);
 
-                taxData.put("to_cost_center", tax.getCostCenter().costCenter);
-                taxData.put("to_account_code", tax.getCostCenter().accountCode);
+                taxData.put("toCostCenter", tax.getCostCenter().costCenter);
+                taxData.put("toAccountCode", tax.getCostCenter().accountCode);
 
-                taxData.put("from_location", tax.getCostCenter().accountCode);
-                taxData.put("to_location", tax.getCostCenter().accountCode);
+                taxData.put("fromLocation", tax.getCostCenter().accountCode);
+                taxData.put("toLocation", tax.getCostCenter().accountCode);
 
                 taxData.put("transactionReference", "Taxes Reference");
 
@@ -700,14 +700,14 @@ public class SalesService {
 
                 majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
 
-                majorGroupData.put("from_cost_center", majorGroupJournal.getCostCenter().costCenter);
-                majorGroupData.put("from_account_code", majorGroupJournal.getCostCenter().accountCode);
+                majorGroupData.put("fromCostCenter", majorGroupJournal.getCostCenter().costCenter);
+                majorGroupData.put("fromAccountCode", majorGroupJournal.getCostCenter().accountCode);
 
-                majorGroupData.put("to_cost_center", majorGroupJournal.getCostCenter().costCenter);
-                majorGroupData.put("to_account_code", majorGroupJournal.getCostCenter().accountCode);
+                majorGroupData.put("toCostCenter", majorGroupJournal.getCostCenter().costCenter);
+                majorGroupData.put("toAccountCode", majorGroupJournal.getCostCenter().accountCode);
 
-                majorGroupData.put("from_location", majorGroupJournal.getCostCenter().accountCode);
-                majorGroupData.put("to_location", majorGroupJournal.getCostCenter().accountCode);
+                majorGroupData.put("fromLocation", majorGroupJournal.getCostCenter().accountCode);
+                majorGroupData.put("toLocation", majorGroupJournal.getCostCenter().accountCode);
 
                 majorGroupData.put("transactionReference", "MajorGroup Reference");
 
@@ -748,14 +748,14 @@ public class SalesService {
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 
-                differentData.put("from_cost_center", journalBatch.getCostCenter().costCenter);
-                differentData.put("from_account_code", journalBatch.getCostCenter().accountCode);
+                differentData.put("fromCostCenter", journalBatch.getCostCenter().costCenter);
+                differentData.put("fromAccountCode", journalBatch.getCostCenter().accountCode);
 
-                differentData.put("to_cost_center", journalBatch.getCostCenter().costCenter);
-                differentData.put("to_account_code", journalBatch.getCostCenter().accountCode);
+                differentData.put("toCostCenter", journalBatch.getCostCenter().costCenter);
+                differentData.put("toAccountCode", journalBatch.getCostCenter().accountCode);
 
-                differentData.put("from_location", journalBatch.getCostCenter().accountCode);
-                differentData.put("to_location", journalBatch.getCostCenter().accountCode);
+                differentData.put("fromLocation", journalBatch.getCostCenter().accountCode);
+                differentData.put("toLocation", journalBatch.getCostCenter().accountCode);
 
                 // 30 Char only
                 differentData.put("transactionReference", "Different Reference");

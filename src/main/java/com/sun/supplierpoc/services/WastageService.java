@@ -272,14 +272,14 @@ public class WastageService {
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
                 journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
 
-                journalEntry.put("from_cost_center", costCenter.costCenter);
-                journalEntry.put("from_account_code", costCenter.accountCode);
+                journalEntry.put("fromCostCenter", costCenter.costCenter);
+                journalEntry.put("fromAccountCode", costCenter.accountCode);
 
-                journalEntry.put("to_cost_center", costCenter.costCenter);
-                journalEntry.put("to_account_code", costCenter.accountCode);
+                journalEntry.put("toCostCenter", costCenter.costCenter);
+                journalEntry.put("toAccountCode", costCenter.accountCode);
 
-                journalEntry.put("from_location", costCenter.accountCode);
-                journalEntry.put("to_location", costCenter.accountCode);
+                journalEntry.put("fromLocation", costCenter.accountCode);
+                journalEntry.put("toLocation", costCenter.accountCode);
 
                 String description =  "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup();
                 if (description.length() > 50){
@@ -529,14 +529,14 @@ public class WastageService {
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
                 journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
 
-                journalEntry.put("from_cost_center", costCenter.costCenter);
-                journalEntry.put("from_account_code", costCenter.accountCode);
+                journalEntry.put("fromCostCenter", costCenter.costCenter);
+                journalEntry.put("fromAccountCode", costCenter.accountCode);
 
-                journalEntry.put("to_cost_center", costCenter.costCenter);
-                journalEntry.put("to_account_code", costCenter.accountCode);
+                journalEntry.put("toCostCenter", costCenter.costCenter);
+                journalEntry.put("toAccountCode", costCenter.accountCode);
 
-                journalEntry.put("from_location", costCenter.accountCode);
-                journalEntry.put("to_location", costCenter.accountCode);
+                journalEntry.put("fromLocation", costCenter.accountCode);
+                journalEntry.put("toLocation", costCenter.accountCode);
 
                 String description = "W F " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup();
                 if (description.length() > 50){

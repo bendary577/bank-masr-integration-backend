@@ -361,21 +361,21 @@ public class InvoiceService {
             journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalCost()) * -1);
 
             if (!flag){
-                journalEntry.put("from_cost_center", supplier.getData().get("supplier"));
-                journalEntry.put("from_account_code", supplier.getData().get("accountCode"));
+                journalEntry.put("fromCostCenter", supplier.getData().get("supplier"));
+                journalEntry.put("fromAccountCode", supplier.getData().get("accountCode"));
 
-                journalEntry.put("to_cost_center", toCostCenter.costCenter);
-                journalEntry.put("to_account_code", toCostCenter.accountCode);
+                journalEntry.put("toCostCenter", toCostCenter.costCenter);
+                journalEntry.put("toAccountCode", toCostCenter.accountCode);
             }else{
-                journalEntry.put("to_cost_center", supplier.getData().get("supplier"));
-                journalEntry.put("to_account_code", supplier.getData().get("accountCode"));
+                journalEntry.put("toCostCenter", supplier.getData().get("supplier"));
+                journalEntry.put("toAccountCode", supplier.getData().get("accountCode"));
 
-                journalEntry.put("from_cost_center", toCostCenter.costCenter);
-                journalEntry.put("from_account_code", toCostCenter.accountCode);
+                journalEntry.put("fromCostCenter", toCostCenter.costCenter);
+                journalEntry.put("fromAccountCode", toCostCenter.accountCode);
             }
 
-            journalEntry.put("from_location", toCostCenter.accountCode);
-            journalEntry.put("to_location", toCostCenter.accountCode);
+            journalEntry.put("fromLocation", toCostCenter.accountCode);
+            journalEntry.put("toLocation", toCostCenter.accountCode);
 
             journalEntry.put("status", invoice.get("status"));
             journalEntry.put("invoiceDate", invoice.get("invoice_date"));

@@ -116,21 +116,21 @@ public class TransferService {
                         continue;
                     }
 
-                    WebElement td = cols.get(columns.indexOf("from_cost_center"));
+                    WebElement td = cols.get(columns.indexOf("fromCostCenter"));
                     CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
                     if (! oldCostCenterData.checked) {
                         continue;
                     }
-                    transfer.put("from_cost_center", oldCostCenterData);
+                    transfer.put("fromCostCenter", oldCostCenterData);
 
-                    td = cols.get(columns.indexOf("to_cost_center"));
+                    td = cols.get(columns.indexOf("toCostCenter"));
                     oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
                     if (! oldCostCenterData.checked) {
                         continue;
                     }
-                    transfer.put("to_cost_center", oldCostCenterData);
+                    transfer.put("toCostCenter", oldCostCenterData);
 
                     td = cols.get(columns.indexOf("document"));
                     transfer.put(columns.get(columns.indexOf("document")), td.getText().strip());
@@ -261,8 +261,8 @@ public class TransferService {
 
             for (Journal journal : journals) {
                 HashMap<String, Object> journalEntry = new HashMap<>();
-                CostCenter fromCostCenter = (CostCenter) transfer.get("from_cost_center");
-                CostCenter toCostCenter = (CostCenter) transfer.get("to_cost_center");
+                CostCenter fromCostCenter = (CostCenter) transfer.get("fromCostCenter");
+                CostCenter toCostCenter = (CostCenter) transfer.get("toCostCenter");
 
                 if (fromCostCenter.costCenterReference.equals("")){
                     fromCostCenter.costCenterReference = fromCostCenter.costCenter;
@@ -276,14 +276,14 @@ public class TransferService {
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalTransfer()));
                 journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalTransfer()) * -1);
 
-                journalEntry.put("from_cost_center", fromCostCenter.costCenter);
-                journalEntry.put("from_account_code", fromCostCenter.accountCode);
+                journalEntry.put("fromCostCenter", fromCostCenter.costCenter);
+                journalEntry.put("fromAccountCode", fromCostCenter.accountCode);
 
-                journalEntry.put("to_cost_center", toCostCenter.costCenter);
-                journalEntry.put("to_account_code", toCostCenter.accountCode);
+                journalEntry.put("toCostCenter", toCostCenter.costCenter);
+                journalEntry.put("toAccountCode", toCostCenter.accountCode);
 
-                journalEntry.put("from_location", fromCostCenter.accountCode);
-                journalEntry.put("to_location", toCostCenter.accountCode);
+                journalEntry.put("fromLocation", fromCostCenter.accountCode);
+                journalEntry.put("toLocation", toCostCenter.accountCode);
 
                 String description = "Tr F " + fromCostCenter.costCenterReference + " T "+
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup();
@@ -570,20 +570,20 @@ public class TransferService {
 
         if (creditDebitFlag){
             Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_location")));
+            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation")));
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
             Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_location")));
+            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation")));
             lineElement.appendChild(analysisCode2ElementT3);
         }
         else{
             Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_location")));
+            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation")));
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
             Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_location")));
+            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation")));
             lineElement.appendChild(analysisCode2ElementT3);
         }
 

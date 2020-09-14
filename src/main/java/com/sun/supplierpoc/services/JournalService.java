@@ -426,14 +426,14 @@ public class JournalService {
                 costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost())));
                 costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost()) * -1));
 
-                costData.put("from_cost_center", costCenter.costCenter);
-                costData.put("from_account_code", costCenter.accountCode);
+                costData.put("fromCostCenter", costCenter.costCenter);
+                costData.put("fromAccountCode", costCenter.accountCode);
 
-                costData.put("to_cost_center", costCenter.costCenter);
-                costData.put("to_account_code", costCenter.accountCode);
+                costData.put("toCostCenter", costCenter.costCenter);
+                costData.put("toAccountCode", costCenter.accountCode);
 
-                costData.put("from_location", costCenter.accountCode);
-                costData.put("to_location", costCenter.accountCode);
+                costData.put("fromLocation", costCenter.accountCode);
+                costData.put("toLocation", costCenter.accountCode);
 
                 String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
                 if (description.length() > 50){

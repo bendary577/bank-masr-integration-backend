@@ -21,7 +21,7 @@ public class Constants {
     public static String CONSUMPTION = "Consumption";
     public static String SALES = "POS Sales";
     public static String WASTAGE = "Wastage";
-    public static String BOOKED_PRODUCTION = "Wastage";
+    public static String BOOKED_PRODUCTION = "Booked Production";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";

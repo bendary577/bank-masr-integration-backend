@@ -51,7 +51,7 @@ public class BookedProductionController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @RequestMapping("/getBookedProductionRequest")
+    @RequestMapping("/getBookedProduction")
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getBookedProductionRequest(Principal principal) {
@@ -72,6 +72,8 @@ public class BookedProductionController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType bookedProductionSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.BOOKED_PRODUCTION, account.getId(), false);
 
+        ArrayList<Item> items = generalSettings.getItems();
+        ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(bookedProductionSyncJobType);
@@ -100,27 +102,35 @@ public class BookedProductionController {
             return response;
         }
 
+        if (generalSettings.getOverGroups().size() == 0){
+            String message = "Map over groups before sync booked production.";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "",  new Date(), null, userId,
                 account.getId(), bookedProductionSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
-        ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
+        ArrayList<SyncJobData> addedBookedProduction = new ArrayList<>();
         try {
             Response data;
             ArrayList<BookedProduction> bookedProduction ;
 
-            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType, costCenters, account);
+            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType, items, overGroups,
+                    costCenters, account);
             bookedProduction = data.getBookedProduction();
 
             if (data.isStatus()){
                 if (bookedProduction.size() > 0){
-                    addedInvoices = bookedProductionService.saveBookedProductionData(bookedProduction, syncJob, bookedProductionSyncJobType);
-                    if (addedInvoices.size() > 0){
+                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction, syncJob);
+                    if (addedBookedProduction.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){
-                            invoiceController.handleSendJournal(bookedProductionSyncJobType, syncJob, addedInvoices, account, voucher);
+                            invoiceController.handleSendJournal(bookedProductionSyncJobType, syncJob, addedBookedProduction, account, voucher);
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedInvoices.size());
+                            syncJob.setRowsFetched(addedBookedProduction.size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", "Sync booked production Successfully.");
@@ -129,7 +139,7 @@ public class BookedProductionController {
                             syncJob.setStatus(Constants.FAILED);
                             syncJob.setReason("Failed to connect to Sun System.");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedInvoices.size());
+                            syncJob.setRowsFetched(addedBookedProduction.size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", "Failed to connect to Sun System.");
@@ -141,7 +151,7 @@ public class BookedProductionController {
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("No new booked production to add in middleware.");
                         syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedInvoices.size());
+                        syncJob.setRowsFetched(addedBookedProduction.size());
                         syncJobRepo.save(syncJob);
 
                         response.put("message", "No new booked production to add in middleware.");
@@ -151,7 +161,7 @@ public class BookedProductionController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no booked production to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedInvoices.size());
+                    syncJob.setRowsFetched(addedBookedProduction.size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no booked production to get from Oracle Hospitality.");
@@ -163,7 +173,7 @@ public class BookedProductionController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason("Failed to get booked production from Oracle hospitality.");
                 syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedInvoices.size());
+                syncJob.setRowsFetched(addedBookedProduction.size());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "Failed to get booked production from Oracle Hospitality.");
@@ -173,7 +183,7 @@ public class BookedProductionController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
-            syncJob.setRowsFetched(addedInvoices.size());
+            syncJob.setRowsFetched(addedBookedProduction.size());
             syncJobRepo.save(syncJob);
 
             response.put("message", e);

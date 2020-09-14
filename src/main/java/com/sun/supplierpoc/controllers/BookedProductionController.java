@@ -117,14 +117,14 @@ public class BookedProductionController {
             Response data;
             ArrayList<BookedProduction> bookedProduction ;
 
-            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType, items, overGroups,
+            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType,
                     costCenters, account);
             bookedProduction = data.getBookedProduction();
 
             if (data.isStatus()){
                 if (bookedProduction.size() > 0){
-                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction, syncJob,
-                            bookedProductionSyncJobType);
+                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction,overGroups,
+                            syncJob, bookedProductionSyncJobType);
                     if (addedBookedProduction.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){

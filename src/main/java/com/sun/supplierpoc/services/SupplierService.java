@@ -542,7 +542,7 @@ public class SupplierService {
 
             //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
 
-//            driver.findElement(By.linkText("Save")).click();
+            driver.findElement(By.linkText("Save")).click();
             try {
                 Alert al = driver.switchTo().alert();
                 al.accept();

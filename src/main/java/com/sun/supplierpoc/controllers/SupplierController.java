@@ -93,6 +93,7 @@ public class SupplierController {
         Response supplierResponse = new Response();
 
         try {
+
             HashMap<String, Object> data = supplierService.getSuppliersData(supplierSyncJobType, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
@@ -101,16 +102,36 @@ public class SupplierController {
                 if (suppliers.size() > 0){
                     supplierResponse = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
 
+                    WebDriver driver;
+                    try{
+                        driver = setupEnvironment.setupSeleniumEnv(false);
+                    }
+                    catch (Exception ex){
+                        response.put("status", Constants.FAILED);
+                        response.put("message", "Failed to establish connection with firefox driver.");
+                        response.put("invoices", new ArrayList<>());
+                        return response;
+                    }
+
                     if (supplierResponse.getAddedSuppliers().size() != 0){
+                        boolean openDriverFlag = true;
+                        boolean closeDriverFlag = true;
+
+                        if (supplierResponse.getUpdatedSuppliers().size() > 0){
+                            closeDriverFlag = false;
+                        }
+
                         data  = supplierService.sendSuppliersData(supplierResponse.getAddedSuppliers(), syncJob,
-                                supplierSyncJobType, account, true);
+                                supplierSyncJobType, account, true, closeDriverFlag, openDriverFlag,
+                                driver);
                         if (data.get("status").equals(Constants.SUCCESS)){
                             // check if there is suppliers need update
                             ArrayList<SyncJobData> updatedSuppliers = (ArrayList<SyncJobData>) data.get("updatedSuppliers");
                             supplierResponse.getUpdatedSuppliers().addAll(updatedSuppliers);
                             if (supplierResponse.getUpdatedSuppliers().size() > 0){
                                 data  = supplierService.sendSuppliersData(supplierResponse.getUpdatedSuppliers(), syncJob,
-                                        supplierSyncJobType, account, false);
+                                        supplierSyncJobType, account, false, true,
+                                        false, driver);
 
                                 if (data.get("status").equals(Constants.SUCCESS)){
                                     syncJob.setStatus(Constants.SUCCESS);
@@ -149,7 +170,8 @@ public class SupplierController {
                     else {
                         if (supplierResponse.getUpdatedSuppliers().size() > 0){
                             data  = supplierService.sendSuppliersData(supplierResponse.getUpdatedSuppliers(), syncJob,
-                                    supplierSyncJobType, account, false);
+                                    supplierSyncJobType, account, false, true,
+                                    true, driver);
 
                             if (data.get("status").equals(Constants.SUCCESS)){
                                 syncJob.setStatus(Constants.SUCCESS);
@@ -182,6 +204,12 @@ public class SupplierController {
                             response.put("message", "No new suppliers to add in middleware.");
                             response.put("success", true);
                         }
+                    }
+                    try{
+                        driver.quit();
+                    }
+                    catch (Exception ex){
+                        System.out.println("Already Closed!!");
                     }
                 }
                 else {

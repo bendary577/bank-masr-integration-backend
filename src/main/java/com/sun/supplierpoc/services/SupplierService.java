@@ -278,38 +278,32 @@ public class SupplierService {
     }
 
     public HashMap<String, Object> sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob,
-                                                     SyncJobType syncJobType, Account account, boolean addUpdateFlag){
+                                                     SyncJobType syncJobType, Account account, boolean addUpdateFlag,
+                                                     boolean closeDriverFlag, boolean openDriverFlag, WebDriver driver){
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
         String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
-        WebDriver driver;
-        try{
-            driver = setupEnvironment.setupSeleniumEnv(false);
-        }
-        catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
-            return response;
-        }
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-            driver.get(url);
+            if(openDriverFlag){
+                String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
+                driver.get(url);
 
-            if (!setupEnvironment.loginOHIM(driver, url, account)){
-                driver.quit();
+                if (!setupEnvironment.loginOHIM(driver, url, account)){
+                    driver.quit();
 
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                return response;
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    return response;
+                }
             }
+
             Response addSupplierResponse;
             for (SyncJobData supplier : suppliers) {
-//                if(!driver.getCurrentUrl().equals(vendorPage)){
-                driver.get(vendorPage);
-                driver.findElement(By.name("filterPanel_btnRefresh")).click();
-//                }
+                if(!driver.getCurrentUrl().equals(vendorPage)){
+                    driver.get(vendorPage);
+                    driver.findElement(By.name("filterPanel_btnRefresh")).click();
+                }
 
                 // Adding new suppler
                 if (addUpdateFlag){
@@ -321,7 +315,6 @@ public class SupplierService {
                         }
                     } catch (Exception e) {
                         supplier.getData().put("supplierStatus", "NEW");
-                        System.out.println("Supplier not exists");
                     }
 
                     driver.findElement(By.linkText("New")).click();
@@ -332,7 +325,6 @@ public class SupplierService {
                         if (existSupplier != null){
                             existSupplier.click();
                             supplier.getData().put("supplierStatus", "UPDATED");
-                            System.out.println("Updating supplier data");
                         }
                     } catch (Exception e) {
                         System.out.println("Supplier not exists");
@@ -363,7 +355,9 @@ public class SupplierService {
                 }
             }
 
-            driver.quit();
+            if(closeDriverFlag && updatedSuppliers.size() == 0){
+                driver.quit();
+            }
 
             response.put("status", Constants.SUCCESS);
             response.put("updatedSuppliers", updatedSuppliers);
@@ -548,7 +542,7 @@ public class SupplierService {
 
             //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
 
-            driver.findElement(By.linkText("Save")).click();
+//            driver.findElement(By.linkText("Save")).click();
             try {
                 Alert al = driver.switchTo().alert();
                 al.accept();

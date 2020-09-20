@@ -233,7 +233,6 @@ public class BookedProductionService {
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
             addedBookedProduction.add(syncJobData);
-
         }
         return addedBookedProduction;
     }

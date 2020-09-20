@@ -157,7 +157,7 @@ public class WastageService {
 
                     td = cols.get(columns.indexOf("waste_date"));
                     String deliveryDate = td.getText().strip();
-                    // 7/11/2020 "Hospitality Format"
+
                     SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
                     Date deliveryDateFormatted =formatter1.parse(deliveryDate);
 

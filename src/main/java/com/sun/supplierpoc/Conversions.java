@@ -174,7 +174,7 @@ public class Conversions {
                 value = value.replace("(", "").replace(")", "");
                 value = "-" + value;
             }
-            
+
             DecimalFormat df = new DecimalFormat("###.###");
             String temp = df.format(Float.parseFloat(value));
             temp = temp.toLowerCase().replaceAll(",", "");

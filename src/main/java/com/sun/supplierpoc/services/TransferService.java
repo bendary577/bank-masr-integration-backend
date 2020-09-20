@@ -118,7 +118,7 @@ public class TransferService {
                         continue;
                     }
 
-                    WebElement td = cols.get(columns.indexOf("fromCostCenter"));
+                    WebElement td = cols.get(columns.indexOf("from_cost_center"));
                     CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
                     if (! oldCostCenterData.checked) {
@@ -126,7 +126,7 @@ public class TransferService {
                     }
                     transfer.put("fromCostCenter", oldCostCenterData);
 
-                    td = cols.get(columns.indexOf("toCostCenter"));
+                    td = cols.get(columns.indexOf("to_cost_center"));
                     oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
                     if (! oldCostCenterData.checked) {

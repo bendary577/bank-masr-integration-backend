@@ -95,7 +95,7 @@ public class InvoiceController {
             return sunConfigResponse;
         }
 
-        if (invoiceSyncJobType.equals("")){
+        if (invoiceTypeIncluded.equals("")){
             String message = "Configure invoice types before sync invoices.";
             response.put("message", message);
             response.put("success", false);

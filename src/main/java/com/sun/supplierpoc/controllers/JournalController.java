@@ -139,7 +139,7 @@ public class JournalController {
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
-                    addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, overGroups);
+                    addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, fromDate, overGroups);
                     if (addedJournals.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){

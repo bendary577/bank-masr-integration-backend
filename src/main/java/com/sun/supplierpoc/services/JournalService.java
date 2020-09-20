@@ -402,7 +402,7 @@ public class JournalService {
 
 
     public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
-                                                  String businessDate,
+                                                  String businessDate, String fromDate,
                                                   ArrayList<OverGroup> overGroups){
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
@@ -419,7 +419,7 @@ public class JournalService {
                 HashMap<String, String> costData = new HashMap<>();
 
                 // Example: 01062020
-                String transactionDate = conversions.getTransactionDate(businessDate);
+                String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
 
                 costData.put("transactionDate", transactionDate);
 

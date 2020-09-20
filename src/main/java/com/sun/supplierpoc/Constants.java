@@ -75,6 +75,7 @@ public class Constants {
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////////////
 
+    public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";
     public static String PAST_7_DAYES = "Past 7 Days";
     public static String TODAY = "Today";

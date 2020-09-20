@@ -415,7 +415,9 @@ public class SalesService {
         ArrayList<SyncJobData> addedSales = new ArrayList<>();
 
         String businessDate =  syncJobType.getConfiguration().getTimePeriod();
-        String transactionDate = conversions.getTransactionDate(businessDate);
+        String fromDate =  syncJobType.getConfiguration().getFromDate();
+
+        String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
 
         // Save tenders {Debit}
         ArrayList<Tender> tenders = salesResponse.getSalesTender();
@@ -601,7 +603,9 @@ public class SalesService {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
 
         String businessDate =  syncJobType.getConfiguration().getTimePeriod();
-        String transactionDate = conversions.getTransactionDate(businessDate);
+        String fromDate =  syncJobType.getConfiguration().getFromDate();
+
+        String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
 
         ArrayList<JournalBatch> journalBatches = salesResponse.getJournalBatches();
         for (JournalBatch journalBatch : journalBatches) {

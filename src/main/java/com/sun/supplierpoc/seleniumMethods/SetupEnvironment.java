@@ -229,7 +229,31 @@ public class SetupEnvironment {
     public Response selectTimePeriodOHRA(String timePeriod, String location, WebDriver driver){
         Response response = new Response();
         try {
-            if (timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
+            if (timePeriod.equals(Constants.USER_DEFINED)){
+                try {
+                    WebDriverWait wait = new WebDriverWait(driver, 20);
+
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
+                    driver.findElement(By.id("calendarBtn")).click();
+
+                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
+                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
+
+//                    driver.findElement(By.id("clear0")).click();
+//                    driver.findElement(By.id("altOutput0")).sendKeys("01/01/2020");
+//                    driver.findElement(By.id("altOutput0")).sendKeys("01/31/2020");
+//
+                    driver.switchTo().defaultContent();
+                } catch (Exception e) {
+                    driver.quit();
+
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+            }
+            else if (timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
             || timePeriod.equals(Constants.PAST_7_DAYES) || timePeriod.equals(Constants.TODAY)
             || timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.MONTH_TO_DATE)
             || timePeriod.equals(Constants.FINANCIAL_PERIOD_TO_DATE) ){
@@ -245,6 +269,7 @@ public class SetupEnvironment {
                     return response;
                 }
             }
+
             else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
             || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)){
                 try {
@@ -283,9 +308,6 @@ public class SetupEnvironment {
                     return response;
                 }
             }
-            response.setStatus(true);
-            response.setMessage("");
-
 
             if (!location.equals("")){
                 Select selectLocation = new Select(driver.findElement(By.id("locationData")));
@@ -304,6 +326,9 @@ public class SetupEnvironment {
                     selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
                 }
             }
+
+            response.setStatus(true);
+            response.setMessage("");
         }catch (Exception e) {
             response.setStatus(false);
             response.setMessage(e.getMessage());

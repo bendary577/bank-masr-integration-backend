@@ -192,7 +192,7 @@ public class Conversions {
         return Float.parseFloat(temp);
     }
 
-    public String getTransactionDate(String businessDate){
+    public String getTransactionDate(String businessDate, String fromDate){
         SimpleDateFormat inMonthFormatter = new SimpleDateFormat("M");
         SimpleDateFormat outMonthFormatter = new SimpleDateFormat("MM");
 
@@ -223,26 +223,35 @@ public class Conversions {
         if (businessDate.equals(Constants.TODAY)){
             transactionDate += today + currentMonth ;
 
-        }else if (businessDate.equals(Constants.YESTERDAY)){
+        }
+        else if (businessDate.equals(Constants.YESTERDAY)){
             cal.add(Calendar.DATE, -1);
             String yesterday = dayMonthFormat.format(cal.getTime());
             cal.add(Calendar.DATE, +1);
 
             transactionDate += yesterday;
-        }else if (businessDate.equals(Constants.PAST_7_DAYES)){
+        }
+        else if (businessDate.equals(Constants.PAST_7_DAYES)){
             cal.add(Calendar.DATE, -7);
             String last7Days = dayMonthFormat.format(cal.getTime());
             cal.add(Calendar.DATE, +7);
 
             transactionDate += last7Days;
 
-        }else if (businessDate.equals(Constants.LAST_MONTH) || businessDate.equals(Constants.MONTH_TO_DATE)){
+        }
+        else if (businessDate.equals(Constants.LAST_MONTH) || businessDate.equals(Constants.MONTH_TO_DATE)){
             transactionDate += "01" + lastMonth ;
 
-        }else if(businessDate.equals(Constants.CURRENT_MONTH)){
+        }
+        else if(businessDate.equals(Constants.CURRENT_MONTH)){
             transactionDate += "01" + currentMonth ;
 
-        }else{
+        }
+        else if(businessDate.equals(Constants.USER_DEFINED)){
+            String[] fromDateArr = fromDate.split("-");
+            transactionDate += fromDateArr[2] + fromDateArr[1] ;
+        }
+        else{
             transactionDate += today + currentMonth ;
         }
 

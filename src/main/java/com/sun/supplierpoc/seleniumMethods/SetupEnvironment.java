@@ -33,7 +33,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -42,7 +42,7 @@ public class SetupEnvironment {
         else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -123,11 +123,12 @@ public class SetupEnvironment {
         return columns;
     }
 
-    public HashMap<String, Object> selectTimePeriodOHIM(String timePeriod, Select select, WebDriver driver){
+    public HashMap<String, Object> selectTimePeriodOHIM(String timePeriod, String syncFromDate, String syncToDate,
+                                                        Select select, WebDriver driver){
         HashMap<String, Object> response = new HashMap<>();
 
         try {
-            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")) {
+            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday") || timePeriod.equals("UserDefined")) {
                 try {
                     select.selectByVisibleText("User-defined");
                 } catch (Exception e) {
@@ -140,23 +141,32 @@ public class SetupEnvironment {
                 }
 
                 DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                String targetDate = "";
+                String fromDateFormatted = "";
+                String toDateFormatted = "";
 
                 if (timePeriod.equals("Yesterday")) {
                     Calendar cal = Calendar.getInstance();
                     cal.add(Calendar.DATE, -1);
-                    targetDate = dateFormat.format(cal.getTime());
-                } else {
+                    toDateFormatted = dateFormat.format(cal.getTime());
+                    fromDateFormatted = dateFormat.format(cal.getTime());
+                } else if (timePeriod.equals("Today")){
                     Date date = new Date();
-                    targetDate = dateFormat.format(date);
+                    toDateFormatted = dateFormat.format(date);
+                    fromDateFormatted = dateFormat.format(date);
+                }else {
+                    Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
+                    Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+
+                    fromDateFormatted = dateFormat.format(fromDate);
+                    toDateFormatted = dateFormat.format(toDate);
                 }
 
                 driver.findElement(By.id("_ctl7_input")).clear();
-                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
+                driver.findElement(By.id("_ctl7_input")).sendKeys(fromDateFormatted);
                 driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
 
                 driver.findElement(By.id("_ctl9_input")).clear();
-                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
+                driver.findElement(By.id("_ctl9_input")).sendKeys(toDateFormatted);
                 driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
 
                 String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
@@ -165,8 +175,7 @@ public class SetupEnvironment {
                 String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
                 Date endDate = dateFormat.parse(endDateValue);
 
-                if (!dateFormat.format(startDate).equals(targetDate)) {
-
+                if (!dateFormat.format(startDate).equals(fromDateFormatted)) {
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
@@ -175,7 +184,7 @@ public class SetupEnvironment {
                     return response;
                 }
 
-                if (!dateFormat.format(endDate).equals(targetDate)) {
+                if (!dateFormat.format(endDate).equals(toDateFormatted)) {
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
@@ -189,7 +198,7 @@ public class SetupEnvironment {
                 response.put("invoices", new ArrayList<>());
                 return response;
 
-            } else {
+            }else {
                 try {
                     select.selectByVisibleText(timePeriod);
                 } catch (Exception e) {

@@ -79,6 +79,10 @@ public class InvoiceController {
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
 
+        String timePeriod = invoiceSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = invoiceSyncJobType.getConfiguration().getFromDate();
+        String toDate = invoiceSyncJobType.getConfiguration().getToDate();
+
         ArrayList<OverGroup> overGroups ;
         if (!invoiceSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
@@ -98,11 +102,19 @@ public class InvoiceController {
             return response;
         }
 
-        if (invoiceSyncJobType.getConfiguration().getTimePeriod().equals("")){
-            String message = "Configure time period before sync invoices.";
+        if (timePeriod.equals("")){
+            String message = "Map time period before sync credit notes.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Map time period before sync credit notes.";
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
         if (generalSettings.getCostCenterAccountMapping().size() == 0){
@@ -131,19 +143,22 @@ public class InvoiceController {
             ArrayList<HashMap<String, String>> invoices ;
 
             if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
-                data = invoiceService.getInvoicesData(false,1, invoiceSyncJobType, supplierSyncJobType,
+                data = invoiceService.getInvoicesData(false,1, supplierSyncJobType,
                         costCenters,
-                        items, overGroups, account);
+                        items, overGroups, account,
+                        timePeriod, fromDate, toDate);
             }
             else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
-                data = invoiceService.getInvoicesData(false, 2, invoiceSyncJobType, supplierSyncJobType,
+                data = invoiceService.getInvoicesData(false, 2, supplierSyncJobType,
                         costCenters,
-                        items, overGroups, account);
+                        items, overGroups, account,
+                        timePeriod, fromDate, toDate);
             }
             else{
-                data = invoiceService.getInvoicesData(false,3, invoiceSyncJobType, supplierSyncJobType,
+                data = invoiceService.getInvoicesData(false,3, supplierSyncJobType,
                         costCenters,
-                        items, overGroups, account);
+                        items, overGroups, account,
+                        timePeriod, fromDate, toDate);
             }
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 

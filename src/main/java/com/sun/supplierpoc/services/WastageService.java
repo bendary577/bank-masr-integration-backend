@@ -74,6 +74,8 @@ public class WastageService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+            String fromDate = syncJobType.getConfiguration().getFromDate();
+            String toDate = syncJobType.getConfiguration().getToDate();
 
             // Open filter search
             String filterStatus = driver.findElement(By.id("filterPanel_btnToggleFilter")).getAttribute("value");
@@ -82,7 +84,7 @@ public class WastageService {
                 driver.findElement(By.id("filterPanel_btnToggleFilter")).click();
             }
 
-            response = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
+            response = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
             if (!response.get("status").equals(Constants.SUCCESS)){
                 return response;

@@ -31,9 +31,10 @@ public class InvoiceService {
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, int typeFlag, SyncJobType syncJobType
+    public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, int typeFlag
                                                    , SyncJobType supplierSyncJobType, ArrayList<CostCenter> costCenters,
-                                                   ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account){
+                                                   ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account,
+                                                   String timePeriod, String fromDate, String toDate){
         HashMap<String, Object> response = new HashMap<>();
 
         WebDriver driver;
@@ -61,32 +62,34 @@ public class InvoiceService {
             }
 
             if (typeFlag == 1){
-                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
-                        supplierSyncJobType, costCenters, driver, Constants.APPROVED_INVOICES_LINK);
+                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
+                        supplierSyncJobType, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
+                        timePeriod, fromDate, toDate);
                 if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
                     return invoiceResponse;
                 }
                 invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
             }else if (typeFlag == 2){
-                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
-                        supplierSyncJobType, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK);
+                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
+                        supplierSyncJobType, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
+                        timePeriod, fromDate, toDate);
                 if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
                     return accountPayableResponse;
                 }
                 ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
                 invoices.addAll(accountPayable);
             }else{
-                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
-                        supplierSyncJobType,
-                        costCenters, driver, Constants.APPROVED_INVOICES_LINK);
+                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
+                        supplierSyncJobType, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
+                        timePeriod, fromDate, toDate);
                 if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
                     return invoiceResponse;
                 }
                 invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
 
-                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, syncJobType,
-                        supplierSyncJobType,
-                        costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK);
+                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
+                        supplierSyncJobType, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
+                        timePeriod, fromDate, toDate);
                 if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
                     return accountPayableResponse;
                 }
@@ -116,18 +119,18 @@ public class InvoiceService {
     }
 
 
-    private HashMap<String, Object> getAccountPayableData(Boolean creditNoteFlag, SyncJobType syncJobType,
-                                                         SyncJobType supplierSyncJobType,
-                                                   ArrayList<CostCenter> costCenters, WebDriver driver, String url){
-        HashMap<String, Object> response = new HashMap<>();
+    private HashMap<String, Object> getAccountPayableData(Boolean creditNoteFlag,
+                                                          SyncJobType supplierSyncJobType,
+                                                          ArrayList<CostCenter> costCenters, WebDriver driver,
+                                                          String url, String timePeriod, String fromDate, String toDate){
+        HashMap<String, Object> response;
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
 
         driver.get(url);
 
         Select select = new Select(driver.findElement(By.id("_ctl5")));
-        String timePeriod = syncJobType.getConfiguration().getTimePeriod();
 
-        response = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
+        response = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
         if (!response.get("status").equals(Constants.SUCCESS)){
             return response;

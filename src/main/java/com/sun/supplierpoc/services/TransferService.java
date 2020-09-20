@@ -73,6 +73,8 @@ public class TransferService {
 
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
         String timePeriod = syncJobTypeTransfer.getConfiguration().getTimePeriod();
+        String fromDate = syncJobTypeTransfer.getConfiguration().getFromDate();
+        String toDate = syncJobTypeTransfer.getConfiguration().getToDate();
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
@@ -93,7 +95,7 @@ public class TransferService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
 
-            data = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
+            data = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
             if (!data.get("status").equals(Constants.SUCCESS)){
                 return data;

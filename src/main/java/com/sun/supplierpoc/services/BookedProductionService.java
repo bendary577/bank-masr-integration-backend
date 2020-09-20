@@ -68,8 +68,10 @@ public class BookedProductionService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+            String fromDate = syncJobType.getConfiguration().getFromDate();
+            String toDate = syncJobType.getConfiguration().getToDate();
 
-            HashMap<String, Object> timePeriodResponse = setupEnvironment.selectTimePeriodOHIM(timePeriod, select, driver);
+            HashMap<String, Object> timePeriodResponse = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate,select, driver);
 
             if (!timePeriodResponse.get("status").equals(Constants.SUCCESS)){
                 response.setStatus(false);

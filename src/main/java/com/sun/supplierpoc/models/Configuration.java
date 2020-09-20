@@ -16,6 +16,8 @@ public class Configuration implements Serializable {
     private String currencyCode = "";
     private String postingType = "";
     private String timePeriod = "";
+    private String fromDate = "";
+    private String toDate = "";
     private String taxes = "";
     private String groups = "";
     private String suspenseAccount = "";
@@ -108,6 +110,22 @@ public class Configuration implements Serializable {
 
     public void setTimePeriod(String timePeriod) {
         this.timePeriod = timePeriod;
+    }
+
+    public String getFromDate() {
+        return fromDate;
+    }
+
+    public void setFromDate(String fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public String getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(String toDate) {
+        this.toDate = toDate;
     }
 
     public String getTaxes() {

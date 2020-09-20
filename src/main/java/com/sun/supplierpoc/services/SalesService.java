@@ -239,7 +239,7 @@ public class SalesService {
         } catch (Exception e) {
             driver.quit();
             response.setStatus(false);
-            response.setMessage(e.getMessage());
+            response.setMessage("Failed to get sales entries from Oracle Hospitality.");
         }
 
         return response;

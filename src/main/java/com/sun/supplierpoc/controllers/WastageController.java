@@ -75,6 +75,10 @@ public class WastageController {
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().getWasteGroups();
 
+        String timePeriod = wastageSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = wastageSyncJobType.getConfiguration().getFromDate();
+        String toDate = wastageSyncJobType.getConfiguration().getToDate();
+
         ArrayList<OverGroup> overGroups;
         if (!wastageSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
@@ -87,28 +91,37 @@ public class WastageController {
             return sunConfigResponse;
         }
 
-        if (wastageSyncJobType.getConfiguration().getTimePeriod().equals("")){
-            String message = "Configure business date before sync transfers.";
+        if (timePeriod.equals("")){
+            String message = "Configure business date before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Configure business date before sync wastage.";
+
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
-        if (generalSettings != null && generalSettings.getCostCenterAccountMapping().size() == 0){
+        if (generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Configure cost center before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (generalSettings != null && generalSettings.getItems().size() == 0){
+        if (generalSettings.getItems().size() == 0){
             String message = "Map items before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (generalSettings != null && generalSettings.getCostCenterLocationMapping().size() == 0){
+        if (generalSettings.getCostCenterLocationMapping().size() == 0){
             String message = "Map cost centers to location before sync wastage.";
             response.put("message", message);
             response.put("success", false);

@@ -75,6 +75,9 @@ public class SalesController {
             ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
             ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
 
+            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+            String fromDate = syncJobType.getConfiguration().getFromDate();
+            String toDate = syncJobType.getConfiguration().getToDate();
 
             //////////////////////////////////////// Validation ///////////////////////////////////////////////////////////
             HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(syncJobType);
@@ -84,11 +87,20 @@ public class SalesController {
                 return response;
             }
 
-            if (syncJobType.getConfiguration().getTimePeriod().equals("")){
-                String message = "Configure time period before sync sales.";
+            if (timePeriod.equals("")){
+                String message = "Map time period before sync credit notes.";
                 response.setMessage(message);
                 response.setStatus(false);
+
                 return response;
+            }else if (timePeriod.equals("UserDefined")){
+                if (fromDate.equals("") || toDate.equals("")){
+                    String message = "Map time period before sync credit notes.";
+                    response.setMessage(message);
+                    response.setStatus(false);
+
+                    return response;
+                }
             }
 
             if (syncJobType.getConfiguration().getRevenue().equals("")){

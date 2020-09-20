@@ -72,20 +72,31 @@ public class BookedProductionController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType bookedProductionSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.BOOKED_PRODUCTION, account.getId(), false);
 
-        ArrayList<Item> items = generalSettings.getItems();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+
+        String timePeriod = bookedProductionSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = bookedProductionSyncJobType.getConfiguration().getFromDate();
+        String toDate = bookedProductionSyncJobType.getConfiguration().getToDate();
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(bookedProductionSyncJobType);
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }
 
-        if (bookedProductionSyncJobType.getConfiguration().getTimePeriod().equals("")){
+        if (timePeriod.equals("")){
             String message = "Map time period before sync booked production.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Map time period before sync booked production.";
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
         if (generalSettings.getCostCenterAccountMapping().size() == 0){

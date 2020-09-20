@@ -69,6 +69,11 @@ public class TransferController {
         ArrayList<Item> items =  generalSettings.getItems();
         ArrayList<OverGroup> overGroups;
 
+        String timePeriod = transferSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = transferSyncJobType.getConfiguration().getFromDate();
+        String toDate = transferSyncJobType.getConfiguration().getToDate();
+
+
         if (!transferSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
         }else{
@@ -80,11 +85,20 @@ public class TransferController {
             return sunConfigResponse;
         }
 
-        if (transferSyncJobType.getConfiguration().getTimePeriod().equals("")){
+        if (timePeriod.equals("")){
             String message = "Configure business date before sync transfers.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Configure business date before sync transfers.";
+
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
         if (generalSettings.getCostCenterAccountMapping().size() == 0){

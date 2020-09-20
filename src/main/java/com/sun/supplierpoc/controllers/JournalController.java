@@ -72,6 +72,10 @@ public class JournalController {
         ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
+        String timePeriod = journalSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
+        String toDate = journalSyncJobType.getConfiguration().getToDate();
+
         ArrayList<OverGroup> overGroups;
         if (!journalSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
@@ -84,11 +88,19 @@ public class JournalController {
             return sunConfigResponse;
         }
 
-        if (journalSyncJobType.getConfiguration().getTimePeriod().equals("")){
+        if (timePeriod.equals("")){
             String message = "Map time period before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Map time period before sync consumption.";
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
         if (generalSettings.getCostCenterAccountMapping().size() == 0){

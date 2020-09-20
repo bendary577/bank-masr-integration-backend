@@ -3,14 +3,12 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 
-import java.text.DateFormat;
-import java.text.NumberFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.text.*;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.text.DecimalFormat;
 
 public class Conversions {
     public Conversions() {
@@ -176,12 +174,11 @@ public class Conversions {
                 value = value.replace("(", "").replace(")", "");
                 value = "-" + value;
             }
-
-            NumberFormat nf = NumberFormat.getInstance();
-            nf.setMaximumFractionDigits(3);
-            value = nf.format(Float.parseFloat(value));
-            value = value.toLowerCase().replaceAll(",", "");
-            return Float.parseFloat(value);
+            
+            DecimalFormat df = new DecimalFormat("###.###");
+            String temp = df.format(Float.parseFloat(value));
+            temp = temp.toLowerCase().replaceAll(",", "");
+            return Float.parseFloat(temp);
         } catch (NumberFormatException e) {
             System.out.println(e.getMessage());
             return 0;
@@ -189,9 +186,8 @@ public class Conversions {
     }
 
     public float roundUpFloat(float value){
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMaximumFractionDigits(3);
-        String temp = nf.format(value);
+        DecimalFormat df = new DecimalFormat("###.###");
+        String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);
     }

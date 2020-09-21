@@ -12,14 +12,17 @@ import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 
+import java.awt.*;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.List;
 
 public class SetupEnvironment {
 
@@ -226,7 +229,8 @@ public class SetupEnvironment {
         return response;
     }
 
-    public Response selectTimePeriodOHRA(String timePeriod, String location, WebDriver driver){
+    public Response selectTimePeriodOHRA(String timePeriod,  String syncFromDate, String syncToDate,
+                                         String location, WebDriver driver){
         Response response = new Response();
         try {
             if (timePeriod.equals(Constants.USER_DEFINED)){
@@ -239,11 +243,39 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-//                    driver.findElement(By.id("clear0")).click();
-//                    driver.findElement(By.id("altOutput0")).sendKeys("01/01/2020");
-//                    driver.findElement(By.id("altOutput0")).sendKeys("01/31/2020");
-//
+                    DateFormat Date = DateFormat.getDateInstance();
+                    Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+                    Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
+
+                    SimpleDateFormat format = new SimpleDateFormat("EEEE");
+                    Calendar cals = Calendar.getInstance();
+
+                    cals.setTime(fromDate);
+                    String fromDateFormatted = Date.format(cals.getTime());
+                    String fromDayName = format.format(fromDate);
+
+                    cals.setTime(toDate);
+                    String toDateFormatted = Date.format(cals.getTime());
+                    String toDayName = format.format(toDate);
+
+                    List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                            + fromDayName + ", " + fromDateFormatted + "']"));
+
+                    fromDateElements.get(0).click();
+
+                    if (!toDateFormatted.equals(fromDateFormatted)){
+                        List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                                + toDayName + ", " + toDateFormatted + "']"));
+                        Actions actions = new Actions(driver);
+                        actions.keyDown(Keys.LEFT_CONTROL)
+                                .click(toDateElements.get(0))
+                                .keyUp(Keys.LEFT_CONTROL)
+                                .build()
+                                .perform();
+                    }
+
                     driver.switchTo().defaultContent();
+
                 } catch (Exception e) {
                     driver.quit();
 

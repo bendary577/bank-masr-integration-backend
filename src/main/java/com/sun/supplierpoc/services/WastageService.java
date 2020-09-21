@@ -384,6 +384,8 @@ public class WastageService {
                 catch (Exception ex){ }
 
                 String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+                String fromDate = syncJobType.getConfiguration().getFromDate();
+                String toDate = syncJobType.getConfiguration().getToDate();
 
                 Select locationData = new Select(driver.findElement(By.id("locationData")));
                 try {
@@ -398,7 +400,7 @@ public class WastageService {
                     selectedOption = locationData.getFirstSelectedOption().getText().strip();
                 }
 
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, "", driver);
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, fromDate, toDate,"", driver);
 
                 if (!dateResponse.isStatus()){
                     response.put("status", Constants.FAILED);

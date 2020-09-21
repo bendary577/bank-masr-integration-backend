@@ -61,6 +61,8 @@ public class SalesService {
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
         String timePeriod = salesSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = salesSyncJobType.getConfiguration().getFromDate();
+        String toDate = salesSyncJobType.getConfiguration().getToDate();
 
         WebDriver driver = null;
         try {
@@ -104,8 +106,8 @@ public class SalesService {
                 JournalBatch journalBatch = new JournalBatch();
 
                 // Get tender
-                Response tenderResponse = getSalesTenders(costCenterLocation.locationName, timePeriod, costCenter,
-                        includedTenders, driver);
+                Response tenderResponse = getSalesTenders(costCenterLocation.locationName, timePeriod, fromDate, toDate,
+                        costCenter, includedTenders, driver);
                 if (!tenderResponse.isStatus()) {
                     if (tenderResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
                         continue;
@@ -116,7 +118,8 @@ public class SalesService {
                 }
 
                 // Get taxes
-                Response taxResponse = getSalesTaxes(costCenterLocation.locationName, timePeriod, costCenter, driver);
+                Response taxResponse = getSalesTaxes(costCenterLocation.locationName, timePeriod, fromDate, toDate,
+                        costCenter, driver);
                 if (!taxResponse.isStatus()) {
                     if (taxResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
                         continue;
@@ -128,7 +131,7 @@ public class SalesService {
 
                 // Get over group gross
                 Response overGroupGrossResponse = getSalesOverGroupGross(costCenterLocation.locationName, timePeriod,
-                        costCenter, majorGroups, driver);
+                        fromDate, toDate, costCenter, majorGroups, driver);
                 if (!overGroupGrossResponse.isStatus()) {
                     if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
                         continue;
@@ -166,8 +169,8 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesTenders(String location, String businessDate, CostCenter costCenter,
-                                    ArrayList<Tender> includedTenders, WebDriver driver) {
+    private Response getSalesTenders(String location, String businessDate, String fromDate, String toDate,
+                                     CostCenter costCenter, ArrayList<Tender> includedTenders, WebDriver driver) {
         Response response = new Response();
         ArrayList<Tender> tenders = new ArrayList<>();
 
@@ -182,7 +185,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
@@ -245,7 +248,8 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesTaxes(String location, String businessDate, CostCenter costCenter, WebDriver driver) {
+    private Response getSalesTaxes(String location, String businessDate, String fromDate, String toDate,
+                                   CostCenter costCenter, WebDriver driver) {
         Response response = new Response();
 
         ArrayList<Tax> salesTax = new ArrayList<>();
@@ -259,7 +263,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
@@ -321,7 +325,8 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesOverGroupGross(String location, String businessDate, CostCenter costCenter,
+    private Response getSalesOverGroupGross(String location, String businessDate, String fromDate, String toDate,
+                                            CostCenter costCenter,
                                            ArrayList<MajorGroup> majorGroups, WebDriver driver) {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
@@ -335,7 +340,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);

@@ -57,6 +57,8 @@ public class JournalService {
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
         String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
+        String toDate = journalSyncJobType.getConfiguration().getToDate();
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
@@ -87,7 +89,7 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate,"", driver);
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, "", driver);
 
             if (!dateResponse.isStatus()){
                 response.put("status", Constants.FAILED);
@@ -250,6 +252,8 @@ public class JournalService {
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
         String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
+        String toDate = journalSyncJobType.getConfiguration().getToDate();
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
@@ -289,7 +293,7 @@ public class JournalService {
                 if (!costCenterLocation.checked)
                     continue;
 
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate,
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                         costCenterLocation.locationName, driver);
 
                 if (!dateResponse.isStatus())

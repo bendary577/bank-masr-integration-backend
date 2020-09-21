@@ -18,8 +18,9 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 
-import java.awt.*;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
@@ -31,7 +32,7 @@ public class SetupEnvironment {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public WebDriver setupSeleniumEnv(boolean driverFlag) {
-        if (driverFlag){
+        if (driverFlag) {
             String chromePath = "chromedriver.exe";
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
@@ -41,8 +42,7 @@ public class SetupEnvironment {
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
             return new ChromeDriver(options);
-        }
-        else {
+        } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
 //            firefoxBinary.addCommandLineOptions("--headless");
@@ -54,7 +54,7 @@ public class SetupEnvironment {
         }
     }
 
-    public boolean loginOHIM(WebDriver driver, String url, Account account){
+    public boolean loginOHIM(WebDriver driver, String url, Account account) {
 
         ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
         AccountCredential hospitalityOHIMCredentials = account.getAccountCredentialByAccount("HospitalityOHIM", accountCredentials);
@@ -77,7 +77,7 @@ public class SetupEnvironment {
         return !driver.getCurrentUrl().equals(previous_url);
     }
 
-    public boolean loginOHRA(WebDriver driver, String url, Account account){
+    public boolean loginOHRA(WebDriver driver, String url, Account account) {
         ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
         AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
 
@@ -108,18 +108,17 @@ public class SetupEnvironment {
         return !driver.getCurrentUrl().equals(previous_url);
     }
 
-    public ArrayList<String> getTableColumns(List<WebElement> rows, boolean rowType, int rowNumber){
+    public ArrayList<String> getTableColumns(List<WebElement> rows, boolean rowType, int rowNumber) {
         ArrayList<String> columns = new ArrayList<>();
         WebElement row = rows.get(rowNumber);
         List<WebElement> cols;
-        if (rowType){
+        if (rowType) {
             cols = row.findElements(By.tagName("th"));
-        }
-        else {
+        } else {
             cols = row.findElements(By.tagName("td"));
         }
 
-        for (WebElement col : cols){
+        for (WebElement col : cols) {
             columns.add(conversions.transformColName(col.getText().strip()));
         }
 
@@ -127,7 +126,7 @@ public class SetupEnvironment {
     }
 
     public HashMap<String, Object> selectTimePeriodOHIM(String timePeriod, String syncFromDate, String syncToDate,
-                                                        Select select, WebDriver driver){
+                                                        Select select, WebDriver driver) {
         HashMap<String, Object> response = new HashMap<>();
 
         try {
@@ -152,11 +151,11 @@ public class SetupEnvironment {
                     cal.add(Calendar.DATE, -1);
                     toDateFormatted = dateFormat.format(cal.getTime());
                     fromDateFormatted = dateFormat.format(cal.getTime());
-                } else if (timePeriod.equals("Today")){
+                } else if (timePeriod.equals("Today")) {
                     Date date = new Date();
                     toDateFormatted = dateFormat.format(date);
                     fromDateFormatted = dateFormat.format(date);
-                }else {
+                } else {
                     Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
                     Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
 
@@ -201,7 +200,7 @@ public class SetupEnvironment {
                 response.put("invoices", new ArrayList<>());
                 return response;
 
-            }else {
+            } else {
                 try {
                     select.selectByVisibleText(timePeriod);
                 } catch (Exception e) {
@@ -213,7 +212,7 @@ public class SetupEnvironment {
                     return response;
                 }
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
 
@@ -229,11 +228,11 @@ public class SetupEnvironment {
         return response;
     }
 
-    public Response selectTimePeriodOHRA(String timePeriod,  String syncFromDate, String syncToDate,
-                                         String location, WebDriver driver){
+    public Response selectTimePeriodOHRA(String timePeriod, String syncFromDate, String syncToDate,
+                                         String location, WebDriver driver) {
         Response response = new Response();
         try {
-            if (timePeriod.equals(Constants.USER_DEFINED)){
+            if (timePeriod.equals(Constants.USER_DEFINED)) {
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
 
@@ -243,35 +242,9 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                    DateFormat Date = DateFormat.getDateInstance();
-                    Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
-                    Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
-
-                    SimpleDateFormat format = new SimpleDateFormat("EEEE");
-                    Calendar cals = Calendar.getInstance();
-
-                    cals.setTime(fromDate);
-                    String fromDateFormatted = Date.format(cals.getTime());
-                    String fromDayName = format.format(fromDate);
-
-                    cals.setTime(toDate);
-                    String toDateFormatted = Date.format(cals.getTime());
-                    String toDayName = format.format(toDate);
-
-                    List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
-                            + fromDayName + ", " + fromDateFormatted + "']"));
-
-                    fromDateElements.get(0).click();
-
-                    if (!toDateFormatted.equals(fromDateFormatted)){
-                        List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
-                                + toDayName + ", " + toDateFormatted + "']"));
-                        Actions actions = new Actions(driver);
-                        actions.keyDown(Keys.LEFT_CONTROL)
-                                .click(toDateElements.get(0))
-                                .keyUp(Keys.LEFT_CONTROL)
-                                .build()
-                                .perform();
+                    response = chooseMonthsDateOHRA(syncFromDate, syncToDate, driver);
+                    if (!response.isStatus()){
+                        return response;
                     }
 
                     driver.switchTo().defaultContent();
@@ -284,11 +257,10 @@ public class SetupEnvironment {
                     response.setEntries(new ArrayList<>());
                     return response;
                 }
-            }
-            else if (timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
-            || timePeriod.equals(Constants.PAST_7_DAYES) || timePeriod.equals(Constants.TODAY)
-            || timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.MONTH_TO_DATE)
-            || timePeriod.equals(Constants.FINANCIAL_PERIOD_TO_DATE) ){
+            } else if (timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
+                    || timePeriod.equals(Constants.PAST_7_DAYES) || timePeriod.equals(Constants.TODAY)
+                    || timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.MONTH_TO_DATE)
+                    || timePeriod.equals(Constants.FINANCIAL_PERIOD_TO_DATE)) {
                 try {
                     Select businessDate = new Select(driver.findElement(By.id("calendarData")));
                     businessDate.selectByVisibleText(timePeriod);
@@ -300,10 +272,8 @@ public class SetupEnvironment {
                     response.setEntries(new ArrayList<>());
                     return response;
                 }
-            }
-
-            else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
-            || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)){
+            } else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
+                    || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)) {
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
 
@@ -326,7 +296,7 @@ public class SetupEnvironment {
                     }
 
                     String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(timePeriod)){
+                    while (!selectedOption.equals(timePeriod)) {
                         selectedOption = businessDate.getFirstSelectedOption().getText().strip();
                     }
 
@@ -341,7 +311,7 @@ public class SetupEnvironment {
                 }
             }
 
-            if (!location.equals("")){
+            if (!location.equals("")) {
                 Select selectLocation = new Select(driver.findElement(By.id("locationData")));
 
                 try {
@@ -361,10 +331,84 @@ public class SetupEnvironment {
 
             response.setStatus(true);
             response.setMessage("");
-        }catch (Exception e) {
+        } catch (Exception e) {
             response.setStatus(false);
             response.setMessage(e.getMessage());
         }
         return response;
     }
+
+    private void chooseDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+        DateFormat Date = DateFormat.getDateInstance();
+        Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+        Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
+
+        SimpleDateFormat format = new SimpleDateFormat("EEEE");
+        Calendar cals = Calendar.getInstance();
+
+        cals.setTime(fromDate);
+        String fromDateFormatted = Date.format(cals.getTime());
+        String fromDayName = format.format(fromDate);
+
+        cals.setTime(toDate);
+        String toDateFormatted = Date.format(cals.getTime());
+        String toDayName = format.format(toDate);
+
+        List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                + fromDayName + ", " + fromDateFormatted + "']"));
+
+        fromDateElements.get(0).click();
+
+        if (!toDateFormatted.equals(fromDateFormatted)) {
+            List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                    + toDayName + ", " + toDateFormatted + "']"));
+            Actions actions = new Actions(driver);
+            actions.keyDown(Keys.LEFT_CONTROL)
+                    .click(toDateElements.get(0))
+                    .keyUp(Keys.LEFT_CONTROL)
+                    .build()
+                    .perform();
+        }
+    }
+
+    private Response chooseMonthsDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+        Response response = new Response();
+        try {
+            Select businessDate = new Select(driver.findElement(By.id("selectYear")));
+            businessDate.selectByVisibleText(syncFromDate.split("-")[0]);
+        } catch (Exception e) {
+            String message = "Chosen year out of range";
+            response.setStatus(false);
+            response.setMessage(message);
+        }
+
+        Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+        Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
+
+        Calendar cals = Calendar.getInstance();
+        cals.setTime(fromDate);
+
+        String fromMonthName = new SimpleDateFormat("MMMM").format(cals.getTime());
+        WebElement fromDateElement = driver.findElement(By.linkText(fromMonthName + " " +
+                syncFromDate.split("-")[0]));
+        fromDateElement.click();
+
+//        DateFormatSymbols dfs = new DateFormatSymbols();
+//        String[] months = dfs.getMonths();
+//        if (num >= 0 && num <= 11 ) {
+//            month = months[num];
+//        }
+
+
+
+        cals.setTime(toDate);
+        String toMonthName = new SimpleDateFormat("MMMM").format(cals.getTime());
+
+
+
+        response.setStatus(true);
+        return response;
+    }
 }
+
+

@@ -296,8 +296,14 @@ public class JournalService {
                 Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                         costCenterLocation.locationName, driver);
 
-                if (!dateResponse.isStatus())
-                    continue;
+                if (!dateResponse.isStatus()){
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", dateResponse.getMessage());
+                    response.put("journals", journalsEntries);
+                    return response;
+                }
 
                 driver.findElement(By.id("Run Report")).click();
 

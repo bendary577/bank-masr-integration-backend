@@ -296,13 +296,15 @@ public class JournalService {
                 Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                         costCenterLocation.locationName, driver);
 
-                if (!dateResponse.isStatus()){
+                if (!dateResponse.isStatus() && !dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
                     response.put("message", dateResponse.getMessage());
                     response.put("journals", journalsEntries);
                     return response;
+                }else if(!dateResponse.isStatus() && dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
+                    continue;
                 }
 
                 driver.findElement(By.id("Run Report")).click();

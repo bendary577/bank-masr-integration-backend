@@ -232,6 +232,24 @@ public class SetupEnvironment {
                                          String location, WebDriver driver) {
         Response response = new Response();
         try {
+            if (!location.equals("")) {
+                Select selectLocation = new Select(driver.findElement(By.id("locationData")));
+
+                try {
+                    selectLocation.selectByVisibleText(location);
+                } catch (Exception e) {
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_LOCATION);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+
+                String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                while (!selectLocationOption.equals(location)) {
+                    selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                }
+            }
+
             if (timePeriod.equals(Constants.USER_DEFINED)) {
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -311,24 +329,6 @@ public class SetupEnvironment {
                 }
             }
 
-            if (!location.equals("")) {
-                Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-
-                try {
-                    selectLocation.selectByVisibleText(location);
-                } catch (Exception e) {
-                    response.setStatus(false);
-                    response.setMessage(Constants.INVALID_LOCATION);
-                    response.setEntries(new ArrayList<>());
-                    return response;
-                }
-
-                String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-                while (!selectLocationOption.equals(location)) {
-                    selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-                }
-            }
-
             response.setStatus(true);
             response.setMessage("");
         } catch (Exception e) {
@@ -383,7 +383,9 @@ public class SetupEnvironment {
         }
 
         Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
-        Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
+
+        int startMonth = Integer.parseInt(syncFromDate.split("-")[1]);
+        int endMonth = Integer.parseInt(syncToDate.split("-")[1]);;
 
         Calendar cals = Calendar.getInstance();
         cals.setTime(fromDate);
@@ -393,18 +395,29 @@ public class SetupEnvironment {
                 syncFromDate.split("-")[0]));
         fromDateElement.click();
 
-//        DateFormatSymbols dfs = new DateFormatSymbols();
-//        String[] months = dfs.getMonths();
-//        if (num >= 0 && num <= 11 ) {
-//            month = months[num];
-//        }
+        DateFormatSymbols dfs = new DateFormatSymbols();
+        String[] months = dfs.getMonths();
+        String toMonthName;
 
+        while(startMonth != endMonth){
+            toMonthName = months[startMonth];
+            startMonth++;
 
+            WebElement toDateElements = driver.findElement(By.linkText(toMonthName + " " +
+                    syncToDate.split("-")[0]));
 
-        cals.setTime(toDate);
-        String toMonthName = new SimpleDateFormat("MMMM").format(cals.getTime());
-
-
+            if(toDateElements.isDisplayed()){
+                Actions actions = new Actions(driver);
+                actions.keyDown(Keys.LEFT_CONTROL)
+                        .click(toDateElements)
+                        .keyUp(Keys.LEFT_CONTROL)
+                        .build()
+                        .perform();
+            }else {
+                response.setStatus(false);
+                return response;
+            }
+        }
 
         response.setStatus(true);
         return response;

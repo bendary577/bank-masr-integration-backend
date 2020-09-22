@@ -163,6 +163,12 @@ public class SetupEnvironment {
                     Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
                     Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
 
+                    if(toDate.compareTo(fromDate) < 0){
+                        Date tempDate = toDate;
+                        toDate = fromDate;
+                        fromDate = tempDate;
+                    }
+
                     fromDateFormatted = dateFormat.format(fromDate);
                     toDateFormatted = dateFormat.format(toDate);
                 }
@@ -185,7 +191,7 @@ public class SetupEnvironment {
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
-                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    response.put("message", "Failed to get invoices of this time period, please try again or contact support team.");
                     response.put("invoices", new ArrayList<>());
                     return response;
                 }
@@ -194,7 +200,7 @@ public class SetupEnvironment {
                     driver.quit();
 
                     response.put("status", Constants.FAILED);
-                    response.put("message", "Failed to get invoices of today, please try again or contact support team.");
+                    response.put("message", "Failed to get invoices of this time period, please try again or contact support team.");
                     response.put("invoices", new ArrayList<>());
                     return response;
                 }
@@ -204,7 +210,8 @@ public class SetupEnvironment {
                 response.put("invoices", new ArrayList<>());
                 return response;
 
-            } else {
+            }
+            else {
                 try {
                     select.selectByVisibleText(timePeriod);
                 } catch (Exception e) {
@@ -376,6 +383,7 @@ public class SetupEnvironment {
     }
 
     private Response chooseMonthsDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+        driver.findElement(By.id("clear0")).click();
         Response response = new Response();
         try {
             Select businessDate = new Select(driver.findElement(By.id("selectYear")));

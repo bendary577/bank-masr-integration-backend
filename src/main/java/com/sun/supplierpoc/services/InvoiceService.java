@@ -216,13 +216,6 @@ public class InvoiceService {
                 }
                 invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData);
 
-                // Mock supplier of now
-//                HashMap<String, String> supplierData = new HashMap<>();
-//                supplierData.put("accountCode", "001");
-//                supplierData.put("supplier", "Golden greenz");
-//
-//                SyncJobData supplier = new SyncJobData(supplierData, Constants.RECEIVED, "", new Date(), "");
-//                invoice.put(columns.get(columns.indexOf("vendor")), supplier);
 
                 String link = cols.get(columns.indexOf("invoice_no.")).findElement(By.tagName("a")).getAttribute("href");
                 link = link.substring(link.indexOf('(') + 1, link.indexOf(','));
@@ -251,7 +244,6 @@ public class InvoiceService {
                     invoice.put(columns.get(j), cols.get(j).getText().strip());
                 }
                 invoices.add(invoice);
-//                break;
             }
 
             // check if there is other pages
@@ -350,11 +342,372 @@ public class InvoiceService {
             journalEntry.put("invoiceNo", invoice.get("invoice_no."));
 
             if (reference.equals("")){
-                journalEntry.put("reference", invoice.get("invoice_no."));
-                journalEntry.put("transactionReference", invoice.get("invoice_no."));
+                reference = (String) invoice.get("invoice_no.");
+
+                if (reference.length() > 30){
+                    reference = reference.substring(0, 30);
+                }
+                journalEntry.put("reference", reference);
+                journalEntry.put("transactionReference", reference);
             }
             else {
                 journalEntry.put("reference", reference);
+                if (reference.length() > 30){
+                    reference = reference.substring(0, 30);
+                }
+                journalEntry.put("transactionReference", reference);
+            }
+
+            journalEntry.put("transactionDate", invoice.get("invoice_date"));
+
+            journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalCost()));
+            journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalCost()) * -1);
+
+            if (!flag){
+                journalEntry.put("fromCostCenter", supplier.getData().get("supplier"));
+                journalEntry.put("fromAccountCode", supplier.getData().get("accountCode"));
+
+                journalEntry.put("toCostCenter", toCostCenter.costCenter);
+                journalEntry.put("toAccountCode", toCostCenter.accountCode);
+            }else{
+                journalEntry.put("toCostCenter", supplier.getData().get("supplier"));
+                journalEntry.put("toAccountCode", supplier.getData().get("accountCode"));
+
+                journalEntry.put("fromCostCenter", toCostCenter.costCenter);
+                journalEntry.put("fromAccountCode", toCostCenter.accountCode);
+            }
+
+            journalEntry.put("fromLocation", toCostCenter.accountCode);
+            journalEntry.put("toLocation", toCostCenter.accountCode);
+
+            journalEntry.put("status", invoice.get("status"));
+            journalEntry.put("invoiceDate", invoice.get("invoice_date"));
+
+            journalEntry.put("createdBy", invoice.get("created_by"));
+            journalEntry.put("createdAt", invoice.get("created_at"));
+
+            String description = "";
+            if (!flag){
+                description = "Invoice F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
+            }else{
+                description = "Credit Note F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
+            }
+
+            if (description.length() > 50){
+                description = description.substring(0, 50);
+            }
+
+            journalEntry.put("description", description);
+            journalEntry.put("overGroup", journal.getOverGroup());
+
+            OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+            if (!flag){ // Invoice from supplier to cost center
+                journalEntry.put("inventoryAccount", supplier.getData().get("accountCode"));
+                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+            }else{  // Credit Note from cost center to supplier
+                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                journalEntry.put("expensesAccount", supplier.getData().get("accountCode"));
+            }
+
+            journalEntries.add(journalEntry);
+        }
+
+    }
+
+    //////////////////////////////////////////////// Invoices Receipts //////////////////////////////////////////////////
+
+
+    public HashMap<String, Object> getInvoicesReceiptsData(Boolean creditNoteFlag, int typeFlag
+            , SyncJobType supplierSyncJobType, ArrayList<CostCenter> costCenters,
+                                                           ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account,
+                                                           String timePeriod, String fromDate, String toDate){
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
+
+        try {
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK , account)){
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("invoices", journalEntries);
+                return response;
+            }
+
+            driver.get(Constants.RECEIPTS_LINK);
+
+            Select select = new Select(driver.findElement(By.id("_ctl5")));
+
+            response = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
+
+            if (!response.get("status").equals(Constants.SUCCESS)){
+                return response;
+            }
+
+            if (creditNoteFlag){
+                driver.findElement(By.id("igtxttbxDocument")).sendKeys("RTV");
+            }
+
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+            try{
+                WebDriverWait wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("tableLoadingBar")));
+
+            } catch (Exception e) {
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
+                response.put("invoices", new ArrayList<>());
+                return response;
+            }
+
+            try {
+                Alert al = driver.switchTo().alert();
+                al.accept();
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", al.getText());
+                response.put("invoices", new ArrayList<>());
+                return response;
+            } catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+            try{
+                WebDriverWait wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("G_dg")));
+
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+
+            WebElement table= driver.findElement(By.id("G_dg"));
+            WebElement tableHeader= driver.findElement(By.xpath("/html/body/form/table/tbody/tr[5]/td/table/tbody/tr[1]/td/div/table"));
+
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
+            List<WebElement> headerRows = tableHeader.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+
+            ArrayList<SyncJobData> suppliers =  syncJobTypeController.getSyncJobData(supplierSyncJobType.getId());
+
+            while (true){
+                for (int i = 1; i < rows.size(); i++) {
+                    HashMap<String, Object> invoice = new HashMap<>();
+
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+                    if (cols.size() !=  columns.size()){
+                        continue;
+                    }
+
+                    WebElement status = cols.get(columns.indexOf("status"));
+
+                    if (typeFlag == 1){
+                        if(!status.getText().strip().equals(Constants.APPROVED_INVOICE_Status)){
+                            continue;
+                        }
+                    }else if (typeFlag == 2){
+                        if(!status.getText().strip().equals(Constants.ACCOUNT_PAYABLE_RTV_Status)
+                                && !status.getText().strip().equals(Constants.ACCOUNT_PAYABLE_Status)){
+                            continue;
+                        }
+                    }
+
+                    // check if cost center chosen
+                    WebElement td = cols.get(columns.indexOf("cost_center"));
+                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                    if (!oldCostCenterData.checked) {
+                        continue;
+                    }
+
+                    invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
+
+                    // check if vendor exits in middleware
+                    td = cols.get(columns.indexOf("vendor"));
+
+                    SyncJobData oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+
+                    if (oldSupplierData == null) {
+                        continue;
+                    }
+                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData);
+
+
+                    String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
+                    link = link.substring(link.indexOf("'") + 1, link.lastIndexOf("'"));
+
+                    String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Receiving/" + link;
+                    invoice.put("reference_link", fullLink);
+
+                    td = cols.get(columns.indexOf("delivery_date"));
+                    String deliveryDate = td.getText().strip();
+                    SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
+                    Date deliveryDateFormatted = null;
+                    try {
+                        deliveryDateFormatted = formatter1.parse(deliveryDate);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+
+                    SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+                    String date = simpleformat.format(deliveryDateFormatted);
+                    invoice.put("invoice_date", date);
+
+                    for (int j = 0; j < cols.size(); j++) {
+                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor")
+                                || j == columns.indexOf("delivery_date"))
+                            continue;
+                        invoice.put(columns.get(j), cols.get(j).getText().strip());
+                    }
+                    invoices.add(invoice);
+                }
+
+                // check if there is other pages
+                if (driver.findElements(By.linkText("Next")).size() == 0){
+                    break;
+                }
+                else {
+                    TransferService.checkPagination(driver, "dg_rc_0_1");
+                    table = driver.findElement(By.id("G_dg"));
+                    rows = table.findElements(By.tagName("tr"));
+                }
+            }
+
+            for (HashMap<String, Object> invoice:invoices) {
+                getInvoiceReceiptsDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
+            }
+
+            driver.quit();
+
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "");
+            response.put("invoices", journalEntries);
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            response.put("invoices", journalEntries);
+            return response;
+        }
+
+    }
+
+    private void getInvoiceReceiptsDetails(
+            ArrayList<Item> items, ArrayList<OverGroup> overGroups, HashMap<String, Object> invoice, WebDriver driver,
+            ArrayList<HashMap<String, Object>> journalEntries, boolean flag){
+        ArrayList<Journal> journals = new ArrayList<>();
+
+        // Get Receipt page
+        driver.get((String) invoice.get("reference_link"));
+
+        WebDriverWait wait = new WebDriverWait(driver, 20);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.id("igtxttbxReference")));
+        String reference = driver.findElement(By.id("igtxttbxReference")).getAttribute("value");
+
+        try {
+            Alert al = driver.switchTo().alert();
+            al.accept();
+        } catch (NoAlertPresentException Ex) {
+        }
+
+        // Fetch table rows
+
+        WebElement table= driver.findElement(By.id("G_dg"));
+        List<WebElement> rows = table.findElements(By.tagName("tr"));
+
+        WebElement tableHeader= driver.findElement(By.xpath("/html/body/form/table/tbody/tr[6]/td/table/tbody/tr[1]/td/div/table"));
+        List<WebElement> headerRows = tableHeader.findElements(By.tagName("tr"));
+        ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+
+        if (rows.size() < 1){ return; }
+
+        for (int i = 1; i < rows.size(); i++) {
+            HashMap<String, Object> invoiceDetails = new HashMap<>();
+            WebElement row = rows.get(i);
+            List<WebElement> cols = row.findElements(By.tagName("td"));
+
+            if (cols.size() != columns.size()) {
+                continue;
+            }
+
+            // check if this Item belong to selected items
+            WebElement td = cols.get(columns.indexOf("item"));
+
+            Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+
+            if (!oldItemData.isChecked()) {
+                continue;
+            }
+
+            String overGroup = oldItemData.getOverGroup();
+            if (overGroup.equals("")){
+                continue;
+            }
+
+            invoiceDetails.put("Item", td.getText().strip());
+
+            if(columns.indexOf("gross") != -1){
+                td = cols.get(columns.indexOf("gross"));
+                invoiceDetails.put("gross", td.getText().strip());
+            }
+
+            Journal journal = new Journal();
+            journals = journal.checkExistence(journals, overGroup, 0,
+                    conversions.convertStringToFloat((String) invoiceDetails.get("gross")),0, 0);
+
+        }
+
+        for (Journal journal : journals) {
+            HashMap<String, Object> journalEntry = new HashMap<>();
+
+            CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
+            SyncJobData supplier = (SyncJobData) invoice.get("vendor");
+
+            if (toCostCenter.costCenterReference.equals("")){
+                toCostCenter.costCenterReference = toCostCenter.costCenter;
+            }
+
+            journalEntry.put("invoiceNo", invoice.get("document"));
+
+            if (reference.equals("")){
+                reference = (String) invoice.get("invoice_no.");
+
+                if (reference.length() > 30){
+                    reference = reference.substring(0, 30);
+                }
+                journalEntry.put("reference", reference);
+                journalEntry.put("transactionReference", reference);
+            }
+            else {
+                journalEntry.put("reference", reference);
+                //  internal field length is 30).
+                if (reference.length() > 30){
+                    reference = reference.substring(0, 30);
+                }
                 journalEntry.put("transactionReference", reference);
             }
 
@@ -424,7 +777,11 @@ public class InvoiceService {
             // check existence of invoice in middleware (UNIQUE: invoiceNo with over group)
             SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
                     invoice.get("overGroup"));
-            if (oldInvoice != null){ continue; }
+            if (oldInvoice != null){
+                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
+                    continue;
+                }
+            }
 
             // Invoice Part
             if (!flag) {
@@ -442,7 +799,5 @@ public class InvoiceService {
 
         }
         return addedInvoices;
-
     }
-
 }

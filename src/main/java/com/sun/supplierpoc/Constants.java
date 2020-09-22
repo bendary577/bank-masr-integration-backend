@@ -50,6 +50,8 @@ public class Constants {
     public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
     public static String ACCOUNT_PAYABLE_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
+    public static String RECEIPTS_LINK = OHIM_LINK + "/Webclient/Purchase/Receiving/RcvOverviewView.aspx?type=2";
+
     public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/Webclient/Production/ProductionD/PrView.aspx?type=20";
 
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
@@ -73,6 +75,10 @@ public class Constants {
     public static String APPROVED_INVOICE = "Approved Invoices";
     public static String ACCOUNT_PAYABLE = "Account Payable";
 
+    public static String APPROVED_INVOICE_Status = "Approved Invoice";
+    public static String ACCOUNT_PAYABLE_RTV_Status = "Invoice sent to A/P (RTV)";
+    public static String ACCOUNT_PAYABLE_Status = "Invoice sent to A/P";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////////////
 
     public static String USER_DEFINED = "UserDefined";
@@ -88,6 +94,7 @@ public class Constants {
     public static String LAST_YEAR_YTD = "Last Year YTD";
     public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
     public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
+
 
     public Constants() {}
 }

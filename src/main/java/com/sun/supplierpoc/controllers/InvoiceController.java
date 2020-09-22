@@ -142,24 +142,20 @@ public class InvoiceController {
             HashMap<String, Object> data ;
             ArrayList<HashMap<String, String>> invoices ;
 
+            int invoiceType = 3; // BOTH
+
             if (invoiceTypeIncluded.equals(Constants.APPROVED_INVOICE)){
-                data = invoiceService.getInvoicesData(false,1, supplierSyncJobType,
-                        costCenters,
-                        items, overGroups, account,
-                        timePeriod, fromDate, toDate);
+                invoiceType = 1;
             }
             else if (invoiceTypeIncluded.equals(Constants.ACCOUNT_PAYABLE)){
-                data = invoiceService.getInvoicesData(false, 2, supplierSyncJobType,
-                        costCenters,
-                        items, overGroups, account,
-                        timePeriod, fromDate, toDate);
+                invoiceType = 2;
             }
-            else{
-                data = invoiceService.getInvoicesData(false,3, supplierSyncJobType,
-                        costCenters,
-                        items, overGroups, account,
-                        timePeriod, fromDate, toDate);
-            }
+
+            data = invoiceService.getInvoicesReceiptsData(false,invoiceType, supplierSyncJobType,
+                    costCenters,
+                    items, overGroups, account,
+                    timePeriod, fromDate, toDate);
+
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 
             if (data.get("status").equals(Constants.SUCCESS)){

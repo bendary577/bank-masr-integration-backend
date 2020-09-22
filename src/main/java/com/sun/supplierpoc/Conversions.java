@@ -91,7 +91,7 @@ public class Conversions {
 
     public SyncJobData checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
         for (SyncJobData supplier : suppliers) {
-            if (supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())
+            if (supplier.getData().containsKey("supplier") && supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())
             || supplier.getData().get("description").toLowerCase().equals(vendorName.toLowerCase())) {
                 return supplier;
             }
@@ -101,7 +101,8 @@ public class Conversions {
 
     public SyncJobData checkInvoiceExistence(ArrayList<SyncJobData> invoices, String invoiceNumber, String overGroup){
         for (SyncJobData invoice : invoices) {
-            if (invoice.getData().get("invoiceNo").equals(invoiceNumber) &&
+            if (invoice.getData().containsKey("invoiceNo") && invoice.getData().get("invoiceNo") != null
+                    && invoice.getData().get("invoiceNo").equals(invoiceNumber) &&
                     invoice.getData().get("overGroup").equals(overGroup)) {
                 return invoice;
             }

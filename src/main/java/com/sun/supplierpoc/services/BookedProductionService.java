@@ -38,6 +38,7 @@ public class BookedProductionService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response getBookedProductionData(SyncJobType syncJobType, ArrayList<CostCenter> costCenters,
+                                            ArrayList<Item> items, ArrayList<OverGroup> overGroups,
                                             Account account){
         Response response = new Response();
 
@@ -63,6 +64,7 @@ public class BookedProductionService {
             }
 
             ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
+            ArrayList<BookedProduction> detailedBookedProduction = new ArrayList<>();;
 
             driver.get(Constants.BOOKED_PRODUCTION_LINK);
 
@@ -150,8 +152,8 @@ public class BookedProductionService {
                     bookedProductionRow.setCreatedAt(cols.get(columns.indexOf("created_at")).getText().strip());
                     bookedProductionRow.setCreatedBy(cols.get(columns.indexOf("created_by")).getText().strip());
 
-//                    String link = cols.get(columns.indexOf("name")).findElement(By.tagName("a")).getAttribute("href");
-//                    bookedProductionRow.setDetailsLink(link);
+                    String link = cols.get(columns.indexOf("name")).findElement(By.tagName("a")).getAttribute("href");
+                    bookedProductionRow.setDetailsLink(link);
 
                     bookedProductionRow.setValue(conversions.convertStringToFloat(
                             cols.get(columns.indexOf("value")).getText().strip()));
@@ -169,11 +171,15 @@ public class BookedProductionService {
                 }
             }
 
+            for (BookedProduction productionRow:bookedProduction) {
+                getBookedProductionDetails(items, overGroups, productionRow, detailedBookedProduction, driver);
+            }
+
             driver.quit();
 
             response.setStatus(true);
             response.setMessage("");
-            response.setBookedProduction(bookedProduction);
+            response.setBookedProduction(detailedBookedProduction);
             return response;
 
         } catch (Exception e) {
@@ -186,58 +192,6 @@ public class BookedProductionService {
         }
     }
 
-    public ArrayList<SyncJobData> saveBookedProductionData(ArrayList<BookedProduction> bookedProductions,
-                                                           ArrayList<OverGroup> overGroups,
-                                                           SyncJob syncJob, SyncJobType bookedProductionSyncJobType){
-        ArrayList<SyncJobData> addedBookedProduction = new ArrayList<>();
-
-        OverGroup overGroup = conversions.checkOverGroupExistence(overGroups, "Food Production");
-
-        for (BookedProduction bookedProduction : bookedProductions) {
-            HashMap<String, String> bookedProductionData = new HashMap<>();
-
-            bookedProductionData.put("status", bookedProduction.getStatus());
-
-            bookedProductionData.put("transactionDate", bookedProduction.getDate());
-
-            bookedProductionData.put("totalCr", String.valueOf(conversions.roundUpFloat(bookedProduction.getValue())));
-            bookedProductionData.put("totalDr", String.valueOf(conversions.roundUpFloat(bookedProduction.getValue()) * -1));
-
-            bookedProductionData.put("fromCostCenter", bookedProduction.getCostCenter().costCenter);
-            bookedProductionData.put("toCostCenter", bookedProduction.getCostCenter().costCenter);
-
-            bookedProductionData.put("fromAccountCode", bookedProduction.getCostCenter().accountCode);
-            bookedProductionData.put("toAccountCode", bookedProduction.getCostCenter().accountCode);
-
-            bookedProductionData.put("fromLocation", bookedProduction.getCostCenter().accountCode);
-            bookedProductionData.put("toLocation", bookedProduction.getCostCenter().accountCode);
-
-            String description = "Booked Production F " + bookedProduction.getCostCenter().costCenterReference + " - " +
-                    overGroup.getOverGroup();
-            if (description.length() > 50){
-                description = description.substring(0, 50);
-            }
-
-            bookedProductionData.put("description", description);
-
-            bookedProductionData.put("transactionReference", "Booked Production");
-
-            bookedProductionData.put("inventoryAccount", overGroup.getInventoryAccount());
-            bookedProductionData.put("expensesAccount", bookedProductionSyncJobType.getConfiguration().getExpensesAccount());
-
-            bookedProductionData.put("createdBy", bookedProduction.getCreatedBy());
-            bookedProductionData.put("createdAt", bookedProduction.getCreatedAt());
-
-
-            SyncJobData syncJobData = new SyncJobData(bookedProductionData, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-            addedBookedProduction.add(syncJobData);
-        }
-        return addedBookedProduction;
-    }
-
-    @Deprecated
     private void getBookedProductionDetails(
             ArrayList<Item> items, ArrayList<OverGroup> overGroups, BookedProduction bookedProduction,
             ArrayList<BookedProduction> detailedBookedProductions, WebDriver driver){
@@ -298,5 +252,53 @@ public class BookedProductionService {
         }
     }
 
+    public ArrayList<SyncJobData> saveBookedProductionData(ArrayList<BookedProduction> bookedProductions,
+                                                           SyncJob syncJob, SyncJobType bookedProductionSyncJobType){
+        ArrayList<SyncJobData> addedBookedProduction = new ArrayList<>();
 
+//        OverGroup overGroup = conversions.checkOverGroupExistence(overGroups, "Food Production");
+
+        for (BookedProduction bookedProduction : bookedProductions) {
+            HashMap<String, String> bookedProductionData = new HashMap<>();
+
+            bookedProductionData.put("status", bookedProduction.getStatus());
+
+            bookedProductionData.put("transactionDate", bookedProduction.getDate());
+
+            bookedProductionData.put("totalCr", String.valueOf(conversions.roundUpFloat(bookedProduction.getValue())));
+            bookedProductionData.put("totalDr", String.valueOf(conversions.roundUpFloat(bookedProduction.getValue()) * -1));
+
+            bookedProductionData.put("fromCostCenter", bookedProduction.getCostCenter().costCenter);
+            bookedProductionData.put("toCostCenter", bookedProduction.getCostCenter().costCenter);
+
+            bookedProductionData.put("fromAccountCode", bookedProduction.getCostCenter().accountCode);
+            bookedProductionData.put("toAccountCode", bookedProduction.getCostCenter().accountCode);
+
+            bookedProductionData.put("fromLocation", bookedProduction.getCostCenter().accountCode);
+            bookedProductionData.put("toLocation", bookedProduction.getCostCenter().accountCode);
+
+            String description = "Booked Production F " + bookedProduction.getCostCenter().costCenterReference + " - " +
+                    bookedProduction.getOverGroup().getOverGroup();
+            if (description.length() > 50){
+                description = description.substring(0, 50);
+            }
+
+            bookedProductionData.put("description", description);
+
+            bookedProductionData.put("transactionReference", "Booked Production");
+
+            bookedProductionData.put("inventoryAccount", bookedProduction.getOverGroup().getInventoryAccount());
+            bookedProductionData.put("expensesAccount", bookedProductionSyncJobType.getConfiguration().getExpensesAccount());
+
+            bookedProductionData.put("createdBy", bookedProduction.getCreatedBy());
+            bookedProductionData.put("createdAt", bookedProduction.getCreatedAt());
+
+
+            SyncJobData syncJobData = new SyncJobData(bookedProductionData, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
+            addedBookedProduction.add(syncJobData);
+        }
+        return addedBookedProduction;
+    }
 }

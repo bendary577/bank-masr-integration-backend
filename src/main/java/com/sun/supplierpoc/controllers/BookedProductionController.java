@@ -72,6 +72,7 @@ public class BookedProductionController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType bookedProductionSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.BOOKED_PRODUCTION, account.getId(), false);
 
+        ArrayList<Item> items = generalSettings.getItems();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
 
@@ -128,13 +129,13 @@ public class BookedProductionController {
             Response data;
             ArrayList<BookedProduction> bookedProduction ;
 
-            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType,
-                    costCenters, account);
+            data = bookedProductionService.getBookedProductionData(bookedProductionSyncJobType, costCenters,
+                    items, overGroups,account);
             bookedProduction = data.getBookedProduction();
 
             if (data.isStatus()){
                 if (bookedProduction.size() > 0){
-                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction,overGroups,
+                    addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction,
                             syncJob, bookedProductionSyncJobType);
                     if (addedBookedProduction.size() > 0){
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);

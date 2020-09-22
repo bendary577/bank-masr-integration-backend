@@ -363,6 +363,15 @@ public class SalesService {
                 response.setMessage("There is no new entries");
                 response.setSalesMajorGroupGross(majorGroupsGross);
             }
+
+            if (rows.size() <= 5){
+                response.setStatus(true);
+                response.setMessage("There is no major groups entries in this location");
+                response.setSalesTender(new ArrayList<>());
+
+                return response;
+            }
+
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
             for (int i = 7; i < rows.size(); i++) {

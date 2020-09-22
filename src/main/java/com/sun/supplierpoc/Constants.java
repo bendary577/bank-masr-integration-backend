@@ -5,7 +5,7 @@ public class Constants {
     public static String SUCCESS = "Success";
     public static String FAILED = "Failed";
     public static String RECEIVED = "Received";
-
+    public static String RETRY_TO_SEND = "Retry to Send";
 
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";

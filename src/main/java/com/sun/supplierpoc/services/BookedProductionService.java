@@ -293,12 +293,21 @@ public class BookedProductionService {
             bookedProductionData.put("createdBy", bookedProduction.getCreatedBy());
             bookedProductionData.put("createdAt", bookedProduction.getCreatedAt());
 
-
             SyncJobData syncJobData = new SyncJobData(bookedProductionData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
             addedBookedProduction.add(syncJobData);
         }
+
+        // Get Failed entries
+        ArrayList<SyncJobData>  failedBookedProduction = syncJobTypeController.getFailedSyncJobData(bookedProductionSyncJobType.getId());
+        for (SyncJobData failedSyncJobData : failedBookedProduction ) {
+            failedSyncJobData.setStatus(Constants.RETRY_TO_SEND);
+            failedSyncJobData.setSyncJobId(syncJob.getId());
+            syncJobDataRepo.save(failedSyncJobData);
+        }
+        addedBookedProduction.addAll(failedBookedProduction);
+
         return addedBookedProduction;
     }
 }

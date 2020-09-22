@@ -185,7 +185,7 @@ public class BookedProductionController {
             }
             else {
                 syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason("Failed to get booked production from Oracle hospitality.");
+                syncJob.setReason(data.getMessage());
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(addedBookedProduction.size());
                 syncJobRepo.save(syncJob);

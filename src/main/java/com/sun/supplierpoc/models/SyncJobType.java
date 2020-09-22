@@ -9,6 +9,8 @@ import java.util.HashMap;
 public class SyncJobType implements Serializable {
     @Id
     private String id;
+
+    private int index;
     private String name;
     private String description;
     private String endPoint;
@@ -20,8 +22,9 @@ public class SyncJobType implements Serializable {
     public SyncJobType() {
     }
 
-    public SyncJobType(String name, String description, String endPoint, Date creationDate, Configuration configuration,
-                       String accountId) {
+    public SyncJobType(int index, String name, String description, String endPoint, Date creationDate,
+                       Configuration configuration, String accountId) {
+        this.index = index;
         this.name = name;
         this.description = description;
         this.endPoint = endPoint;
@@ -93,5 +96,13 @@ public class SyncJobType implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
     }
 }

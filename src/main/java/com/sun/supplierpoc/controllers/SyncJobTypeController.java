@@ -57,7 +57,7 @@ public class SyncJobTypeController {
 
     public ArrayList<SyncJobType> getSyncJobTypes(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        return (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
+        return (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);
     }
 
 

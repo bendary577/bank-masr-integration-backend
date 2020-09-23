@@ -37,7 +37,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -45,7 +45,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -397,7 +397,13 @@ public class SetupEnvironment {
         Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
 
         int startMonth = Integer.parseInt(syncFromDate.split("-")[1]);
-        int endMonth = Integer.parseInt(syncToDate.split("-")[1]);;
+        int endMonth = Integer.parseInt(syncToDate.split("-")[1]);
+
+        if(endMonth < startMonth){
+            int tempDate = startMonth;
+            startMonth = endMonth;
+            endMonth = tempDate;
+        }
 
         Calendar cals = Calendar.getInstance();
         cals.setTime(fromDate);

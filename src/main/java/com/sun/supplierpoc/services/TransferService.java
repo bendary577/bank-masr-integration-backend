@@ -440,7 +440,7 @@ public class TransferService {
 
             SoapComponent ssc = new SoapComponent(Constants.HOST, Constants.PORT);
             ssc.authenticate(voucher);
-            result = ssc.execute("Journal", "Import", sccXMLStringValue);
+//            result = ssc.execute("Journal", "Import", sccXMLStringValue);
         } catch (Exception ex) {
             System.out.print("An error occurred logging in to SunSystems:\r\n");
             ex.printStackTrace();

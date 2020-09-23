@@ -14,6 +14,8 @@ import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -51,14 +53,26 @@ public class JournalController {
     @RequestMapping("/getConsumption")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getJournalsRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) {
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
 
-        HashMap<String, Object> response = getJournals(user.getId(), account);
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = getJournals(user.getId(), account);
+            if(response.get("success").equals(false)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        }
+        String message = "Invalid Credentials";
+        response.put("message", message);
+        response.put("success", false);
 
-        return response;
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 
     }
 

@@ -17,6 +17,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,14 +57,26 @@ public class WastageController {
     @RequestMapping("/getWastage")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getWastageRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getWastageRequest(Principal principal) {
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
 
-        HashMap<String, Object> response = getWastage(user.getId(), account);
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = getWastage(user.getId(), account);
+            if(response.get("success").equals(false)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        }
+        String message = "Invalid Credentials";
+        response.put("message", message);
+        response.put("success", false);
 
-        return response;
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     public HashMap<String, Object> getWastage(String userId, Account account) {

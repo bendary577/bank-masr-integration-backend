@@ -51,16 +51,25 @@ public class SalesController {
     @RequestMapping("/getPOSSales")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public Response getPOSSalesRequest(Principal principal) {
+    public ResponseEntity<Response> getPOSSalesRequest(Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             response = getPOSSales(user.getId(), account);
+            if(!response.isStatus()){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
         }
 
-        return response;
+        String message = "Invalid Credentials";
+        response.setMessage(message);
+        response.setStatus(false);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     private Response getPOSSales(String userId, Account account) {

@@ -12,9 +12,12 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.InvoiceService;
+import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +50,9 @@ public class CreditNoteController {
     @Autowired
     private InvoiceController invoiceController;
 
+    @Autowired
+    private SyncJobService syncJobService;
+
     public Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -54,16 +60,26 @@ public class CreditNoteController {
     @RequestMapping("/getCreditNotes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getCreditNotesRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getCreditNotesRequest(Principal principal) {
         HashMap<String, Object> response = new HashMap<>();
+
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             response = getCreditNotes(user.getId(), account);
+            if(response.get("success").equals(false)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
         }
 
-        return response;
+        String message = "Invalid Credentials";
+        response.put("message", message);
+        response.put("success", false);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     public HashMap<String, Object> getCreditNotes(String userId, Account account) {
@@ -161,19 +177,15 @@ public class CreditNoteController {
                         IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                         if (voucher != null){
                             invoiceController.handleSendJournal(invoiceSyncJobType, syncJob, addedInvoices, account, voucher);
-                            syncJob.setReason("");
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedInvoices.size());
-                            syncJobRepo.save(syncJob);
+
+                            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                    "", syncJob.getStatus());
 
                             response.put("message", "Sync credit notes Successfully.");
                         }
                         else {
-                            syncJob.setStatus(Constants.FAILED);
-                            syncJob.setReason("Failed to connect to Sun System.");
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedInvoices.size());
-                            syncJobRepo.save(syncJob);
+                            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                    "Failed to connect to Sun System.", Constants.FAILED);
 
                             response.put("message", "Failed to connect to Sun System.");
                             response.put("success", false);
@@ -181,21 +193,15 @@ public class CreditNoteController {
                         }
                     }
                     else {
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("No new credit notes to add in middleware.");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedInvoices.size());
-                        syncJobRepo.save(syncJob);
+                        syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                "No new credit notes to add in middleware.", Constants.SUCCESS);
 
                         response.put("message", "No new credit notes to add in middleware.");
                     }
                 }
                 else {
-                    syncJob.setStatus(Constants.SUCCESS);
-                    syncJob.setReason("There is no credit notes to get from Oracle Hospitality.");
-                    syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedInvoices.size());
-                    syncJobRepo.save(syncJob);
+                    syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                            "There is no credit notes to get from Oracle Hospitality.", Constants.SUCCESS);
 
                     response.put("message", "There is no credit notes to get from Oracle Hospitality.");
 
@@ -203,21 +209,15 @@ public class CreditNoteController {
                 response.put("success", true);
             }
             else {
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason("Failed to get credit notes from Oracle hospitality.");
-                syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedInvoices.size());
-                syncJobRepo.save(syncJob);
+                syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                        "Failed to get credit notes from Oracle hospitality.", Constants.FAILED);
 
                 response.put("message", "Failed to get credit notes from Oracle Hospitality.");
                 response.put("success", false);
             }
         }catch (Exception e) {
-            syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason(e.getMessage());
-            syncJob.setEndDate(new Date());
-            syncJob.setRowsFetched(addedInvoices.size());
-            syncJobRepo.save(syncJob);
+            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                    e.getMessage(), Constants.FAILED);
 
             response.put("message", e);
             response.put("success", false);

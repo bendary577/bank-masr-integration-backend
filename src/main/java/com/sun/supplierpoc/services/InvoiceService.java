@@ -774,7 +774,7 @@ public class InvoiceService {
         ArrayList<SyncJobData> savedInvoices = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (HashMap<String, String> invoice : invoices) {
-            // check existence of invoice in middleware (UNIQUE: invoiceNo with over group)
+            // check existence of invoice in middleware (UNIQUE: receiptNo with over group)
             SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
                     invoice.get("overGroup"));
             if (oldInvoice != null){
@@ -796,8 +796,17 @@ public class InvoiceService {
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
             addedInvoices.add(syncJobData);
-
         }
+
+        // Get Failed entries
+        ArrayList<SyncJobData>  failedReceipts = syncJobTypeController.getFailedSyncJobData(syncJobType.getId());
+        for (SyncJobData failedSyncJobData : failedReceipts ) {
+            failedSyncJobData.setStatus(Constants.RETRY_TO_SEND);
+            failedSyncJobData.setSyncJobId(syncJob.getId());
+            syncJobDataRepo.save(failedSyncJobData);
+        }
+        addedInvoices.addAll(failedReceipts);
+        
         return addedInvoices;
     }
 }

@@ -11,7 +11,7 @@ public class JournalBatch {
     private ArrayList<Tender> salesTender = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
 
-    private SyncJobData salesDifferentData;
+    private SyncJobData salesDifferentData = new SyncJobData();
     private ArrayList<SyncJobData> salesTaxData = new ArrayList<>();
     private ArrayList<SyncJobData> salesTenderData = new ArrayList<>();
     private ArrayList<SyncJobData> salesMajorGroupGrossData = new ArrayList<>();

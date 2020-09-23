@@ -10,6 +10,7 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.SalesService;
+import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ public class SalesController {
     private TransferService transferService;
 
     @Autowired
-    private InvoiceController invoiceController;
+    private SyncJobService syncJobService;
 
     public Conversions conversions = new Conversions();
 
@@ -52,7 +53,7 @@ public class SalesController {
     @ResponseBody
     public Response getPOSSalesRequest(Principal principal) {
         Response response = new Response();
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
@@ -62,7 +63,7 @@ public class SalesController {
         return response;
     }
 
-    private Response getPOSSales(String userId, Account account){
+    private Response getPOSSales(String userId, Account account) {
         Response response = new Response();
         SyncJob syncJob = null;
         try {
@@ -81,20 +82,20 @@ public class SalesController {
 
             //////////////////////////////////////// Validation ///////////////////////////////////////////////////////////
             HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(syncJobType);
-            if (sunConfigResponse != null){
+            if (sunConfigResponse != null) {
                 response.setMessage((String) sunConfigResponse.get("message"));
                 response.setStatus(false);
                 return response;
             }
 
-            if (timePeriod.equals("")){
+            if (timePeriod.equals("")) {
                 String message = "Map time period before sync credit notes.";
                 response.setMessage(message);
                 response.setStatus(false);
 
                 return response;
-            }else if (timePeriod.equals("UserDefined")){
-                if (fromDate.equals("") || toDate.equals("")){
+            } else if (timePeriod.equals("UserDefined")) {
+                if (fromDate.equals("") || toDate.equals("")) {
                     String message = "Map time period before sync credit notes.";
                     response.setMessage(message);
                     response.setStatus(false);
@@ -103,49 +104,49 @@ public class SalesController {
                 }
             }
 
-            if (syncJobType.getConfiguration().getRevenue().equals("")){
+            if (syncJobType.getConfiguration().getRevenue().equals("")) {
                 String message = "Configure revenue before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (syncJobType.getConfiguration().getCashShortagePOS().equals("")){
+            if (syncJobType.getConfiguration().getCashShortagePOS().equals("")) {
                 String message = "Configure cash shortage account before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (syncJobType.getConfiguration().getCashSurplusPOS().equals("")){
+            if (syncJobType.getConfiguration().getCashSurplusPOS().equals("")) {
                 String message = "Configure Cash surplus account before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (tenders.size() == 0){
+            if (tenders.size() == 0) {
                 String message = "Configure tenders before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (majorGroups.size() == 0){
+            if (majorGroups.size() == 0) {
                 String message = "Map major groups before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (costCenters.size() == 0){
+            if (costCenters.size() == 0) {
                 String message = "Map cost centers before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (costCentersLocation.size() == 0){
+            if (costCentersLocation.size() == 0) {
                 String message = "Map cost centers to location before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
@@ -155,7 +156,6 @@ public class SalesController {
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
-            ArrayList<SyncJobData> failedSales = new ArrayList<>();
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                     account.getId(), syncJobType.getId(), 0);
@@ -166,88 +166,75 @@ public class SalesController {
                 Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,
                         majorGroups, tenders, account);
 
-                if (salesResponse.isStatus()){
+                if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
                         // Save Sales Entries
                         addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob, syncJobType);
 
-                        if (addedSalesBatches.size() > 0){
+                        if (addedSalesBatches.size() > 0) {
                             // Sent Sales Entries
                             IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
-                            if (voucher != null){
+                            if (voucher != null) {
                                 // Loop over batches
                                 HashMap<String, Object> data;
-
-                                for (JournalBatch salesJournalBatch : addedSalesBatches) {
-                                    if(salesJournalBatch.getSalesMajorGroupGrossData().size() > 0
-                                    || salesJournalBatch.getSalesTenderData().size() > 0
-                                    || salesJournalBatch.getSalesTaxData().size() > 0){
-                                        data  = salesService.sendJournalBatches(salesJournalBatch, syncJobType, account, voucher);
-                                        salesService.updateJournalBatchStatus(salesJournalBatch, data);
+                                try {
+                                    for (JournalBatch salesJournalBatch : addedSalesBatches) {
+                                        if (salesJournalBatch.getSalesMajorGroupGrossData().size() > 0
+                                                || salesJournalBatch.getSalesTenderData().size() > 0
+                                                || salesJournalBatch.getSalesTaxData().size() > 0) {
+                                            data = salesService.sendJournalBatches(salesJournalBatch, syncJobType, account, voucher);
+                                            salesService.updateJournalBatchStatus(salesJournalBatch, data);
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                            "Failed to send sales entries to Sun System.", Constants.FAILED);
+
+                                    response.setStatus(false);
+                                    response.setMessage("Failed to connect to Sun System.");
                                 }
 
-                                syncJob.setStatus(Constants.SUCCESS);
-                                syncJob.setReason("");
-                                syncJob.setEndDate(new Date());
-                                syncJob.setRowsFetched(addedSalesBatches.size());
-                                syncJobRepo.save(syncJob);
+                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                        "", Constants.SUCCESS);
 
                                 response.setStatus(true);
                                 response.setMessage("Sync journals Successfully.");
-                            }
-                            else {
-                                syncJob.setStatus(Constants.FAILED);
-                                syncJob.setReason("Failed to connect to Sun System.");
-                                syncJob.setEndDate(new Date());
-                                syncJob.setRowsFetched(addedSalesBatches.size());
-                                syncJobRepo.save(syncJob);
+                            } else {
+                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                        "Failed to connect to Sun System.", Constants.FAILED);
 
                                 response.setStatus(false);
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        }else {
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setReason("No sales to add in middleware.");
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(0);
-                            syncJobRepo.save(syncJob);
+                        } else {
+                            syncJobService.saveSyncJobStatus(syncJob, 0,
+                                    "No sales to add in middleware.", Constants.SUCCESS);
 
                             response.setStatus(true);
                             response.setMessage("No new sales to add in middleware.");
                         }
                     }
-                }else {
-                    syncJob.setStatus(Constants.FAILED);
-                    syncJob.setReason(salesResponse.getMessage());
-                    syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedSalesBatches.size());
-                    syncJobRepo.save(syncJob);
+                } else {
+                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                            salesResponse.getMessage(), Constants.FAILED);
 
                     response.setStatus(false);
                     response.setMessage(salesResponse.getMessage());
                 }
 
             } catch (Exception e) {
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason(e.getMessage());
-                syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedSalesBatches.size());
-                syncJobRepo.save(syncJob);
+                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                        e.getMessage(), Constants.FAILED);
 
                 response.setStatus(false);
                 response.setMessage(e.getMessage());
             }
 
         } catch (Exception e) {
-            // Database Error
-            if (syncJob != null){
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason(e.getMessage());
-                syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(0);
-                syncJobRepo.save(syncJob);
+            if (syncJob != null) {
+                syncJobService.saveSyncJobStatus(syncJob, 0,
+                        e.getMessage(), Constants.FAILED);
             }
 
             String message = "Failed to sync sales, Please try agian after few minutes.";
@@ -261,22 +248,22 @@ public class SalesController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> getTender(@RequestBody ArrayList<Tender> tenders,
-                              @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                              Principal principal) {
+                                              @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                              Principal principal) {
         Response response = new Response();
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
-            if (syncJobType != null){
+            if (syncJobType != null) {
                 syncJobType.getConfiguration().setTenders(tenders);
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
                 response.setSalesTender(tenders);
                 response.setMessage("Update sales tenders successfully.");
-            }else{
+            } else {
                 response.setStatus(false);
                 response.setMessage("Failed to update sales tenders.");
 
@@ -290,21 +277,21 @@ public class SalesController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> addMajorGroup(@RequestBody ArrayList<MajorGroup> majorGroups,
-                                              @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                              Principal principal) {
+                                                  @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                  Principal principal) {
         Response response = new Response();
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
-            if (syncJobType != null){
+            if (syncJobType != null) {
                 syncJobType.getConfiguration().setMajorGroups(majorGroups);
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
                 response.setMessage("Update sales major groups successfully.");
-            }else{
+            } else {
                 response.setStatus(false);
                 response.setMessage("Failed to update sales major groups.");
 

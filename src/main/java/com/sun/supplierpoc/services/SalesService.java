@@ -628,8 +628,9 @@ public class SalesService {
 
             // Save tenders {Debit}
             ArrayList<Tender> tenders = journalBatch.getSalesTender();
-            for (int i = 0; i < tenders.size(); i++) {
-                Tender tender = tenders.get(i);
+            for (Tender tender : tenders) {
+                if (tender.getTotal() == 0)
+                    continue;
 
                 HashMap<String, String> tenderData = new HashMap<>();
 
@@ -651,7 +652,7 @@ public class SalesService {
                 tenderData.put("expensesAccount", tender.getAccount());
 
                 String description = "Sales F " + tender.getCostCenter().costCenterReference + " " + tender.getTender();
-                if (description.length() > 50){
+                if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
 
@@ -668,8 +669,10 @@ public class SalesService {
 
             // Save taxes {Credit}
             ArrayList<Tax> taxes = journalBatch.getSalesTax();
-            for (int i = 0; i < taxes.size(); i++) {
-                Tax tax = taxes.get(i);
+            for (Tax tax : taxes) {
+                if (tax.getTotal() == 0)
+                    continue;
+
                 HashMap<String, String> taxData = new HashMap<>();
 
                 taxData.put("transactionDate", transactionDate);
@@ -692,7 +695,7 @@ public class SalesService {
                 taxData.put("inventoryAccount", vatOut);
 
                 String description = "Sales F " + tax.getCostCenter().costCenterReference + " " + tax.getTax();
-                if (description.length() > 50){
+                if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
 
@@ -709,8 +712,10 @@ public class SalesService {
 
             // Save majorGroup {Credit}
             ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
-            for (int i = 0; i < majorGroupsGross.size(); i++) {
-                Journal majorGroupJournal = majorGroupsGross.get(i);
+            for (Journal majorGroupJournal : majorGroupsGross) {
+                if (majorGroupJournal.getTotalCost() == 0)
+                    continue;
+
                 HashMap<String, String> majorGroupData = new HashMap<>();
 
                 majorGroupData.put("transactionDate", transactionDate);
@@ -732,7 +737,7 @@ public class SalesService {
                 majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
 
                 String description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
-                if (description.length() > 50){
+                if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
 

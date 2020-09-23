@@ -179,8 +179,12 @@ public class SalesController {
                                 HashMap<String, Object> data;
 
                                 for (JournalBatch salesJournalBatch : addedSalesBatches) {
-                                    data  = salesService.sendJournalBatches(salesJournalBatch, syncJobType, account, voucher);
-                                    salesService.updateJournalBatchStatus(salesJournalBatch, data);
+                                    if(salesJournalBatch.getSalesMajorGroupGrossData().size() > 0
+                                    || salesJournalBatch.getSalesTenderData().size() > 0
+                                    || salesJournalBatch.getSalesTaxData().size() > 0){
+                                        data  = salesService.sendJournalBatches(salesJournalBatch, syncJobType, account, voucher);
+                                        salesService.updateJournalBatchStatus(salesJournalBatch, data);
+                                    }
                                 }
 
                                 syncJob.setStatus(Constants.SUCCESS);

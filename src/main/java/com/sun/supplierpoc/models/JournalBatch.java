@@ -5,8 +5,8 @@ import com.sun.supplierpoc.models.configurations.*;
 import java.util.ArrayList;
 
 public class JournalBatch {
-    private CostCenter costCenter;
-    private double salesDifferent;
+    private CostCenter costCenter = new CostCenter();
+    private double salesDifferent = 0.0;
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();

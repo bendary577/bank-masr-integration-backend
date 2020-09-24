@@ -5,7 +5,6 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.SyncJobDataController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
-import com.sun.supplierpoc.models.data.Data;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.SSC;
@@ -398,7 +397,7 @@ public class SupplierService {
             js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
             js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
 
-            String tax = syncJobType.getConfiguration().getTaxes();
+            String tax = syncJobType.getConfiguration().getVendorTaxes();
             if (!tax.equals("")){
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).clear();
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);

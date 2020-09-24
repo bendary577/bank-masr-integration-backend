@@ -18,7 +18,7 @@ public class Configuration implements Serializable {
     private String timePeriod = "";
     private String fromDate = "";
     private String toDate = "";
-    private String taxes = "";
+    private String vendorTaxes = "";
     private String groups = "";
     private String suspenseAccount = "";
 
@@ -51,6 +51,7 @@ public class Configuration implements Serializable {
     private ArrayList<WasteGroup> wasteGroups = new ArrayList<>();
     private ArrayList<Analysis> analysis = new ArrayList<>();
     private ArrayList<Tender> tenders = new ArrayList<>();
+    private ArrayList<Tax> taxes = new ArrayList<>();
 
     private AccountSettings accountSettings;
 
@@ -128,12 +129,12 @@ public class Configuration implements Serializable {
         this.toDate = toDate;
     }
 
-    public String getTaxes() {
-        return taxes;
+    public String getVendorTaxes() {
+        return vendorTaxes;
     }
 
-    public void setTaxes(String taxes) {
-        this.taxes = taxes;
+    public void setVendorTaxes(String vendorTaxes) {
+        this.vendorTaxes = vendorTaxes;
     }
 
     public String getGroups() {
@@ -326,6 +327,14 @@ public class Configuration implements Serializable {
 
     public void setTenders(ArrayList<Tender> tenders) {
         this.tenders = tenders;
+    }
+
+    public ArrayList<Tax> getTaxes() {
+        return taxes;
+    }
+
+    public void setTaxes(ArrayList<Tax> taxes) {
+        this.taxes = taxes;
     }
 
     public AccountSettings getAccountSettings() {

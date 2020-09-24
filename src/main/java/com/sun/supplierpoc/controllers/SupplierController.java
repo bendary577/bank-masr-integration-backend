@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
-import java.util.stream.IntStream;
 
 
 @RestController
@@ -93,7 +91,7 @@ public class SupplierController {
             return response;
         }
 
-        if (supplierSyncJobType.getConfiguration().getTaxes().equals("")){
+        if (supplierSyncJobType.getConfiguration().getVendorTaxes().equals("")){
             String message = "Configure supplier tax before sync suppliers.";
             response.put("message", message);
             response.put("success", false);

@@ -80,6 +80,7 @@ public class SalesController {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
             ArrayList<Tender> tenders = syncJobType.getConfiguration().getTenders();
+            ArrayList<Tax> taxes = syncJobType.getConfiguration().getTaxes();
             ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
 
             ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
@@ -141,6 +142,13 @@ public class SalesController {
                 return response;
             }
 
+            if (taxes.size() == 0) {
+                String message = "Configure taxes before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
+
             if (majorGroups.size() == 0) {
                 String message = "Map major groups before sync sales.";
                 response.setMessage(message);
@@ -173,7 +181,7 @@ public class SalesController {
 
             try {
                 Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,
-                        majorGroups, tenders, account);
+                        majorGroups, tenders, taxes, account);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
@@ -256,7 +264,7 @@ public class SalesController {
     @RequestMapping("/addTender")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> getTender(@RequestBody ArrayList<Tender> tenders,
+    public ResponseEntity<Response> addTender(@RequestBody ArrayList<Tender> tenders,
                                               @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
                                               Principal principal) {
         Response response = new Response();
@@ -275,6 +283,36 @@ public class SalesController {
             } else {
                 response.setStatus(false);
                 response.setMessage("Failed to update sales tenders.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+
+    @RequestMapping("/addTax")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addTax(@RequestBody ArrayList<Tax> taxes,
+                                              @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                              Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().setTaxes(taxes);
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setSalesTax(taxes);
+                response.setMessage("Update sales taxes successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update sales taxes.");
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }

@@ -18,6 +18,15 @@ public class Conversions {
         return columnName.strip().toLowerCase().replace(' ', '_');
     }
 
+    public Tax checkTaxExistence(ArrayList<Tax> taxes, String taxName) {
+        for (Tax tax : taxes) {
+            if (tax.getTax().toLowerCase().equals(taxName.toLowerCase())) {
+                return tax;
+            }
+        }
+        return new Tax();
+    }
+
     public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName) {
         for (Tender tender : tenders) {
             if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())) {

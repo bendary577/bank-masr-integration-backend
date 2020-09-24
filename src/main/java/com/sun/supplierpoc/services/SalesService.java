@@ -54,7 +54,8 @@ public class SalesService {
 
     public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCenters,
                                  ArrayList<CostCenter> costCentersLocation, ArrayList<MajorGroup> majorGroups,
-                                 ArrayList<Tender> includedTenders, Account account) {
+                                 ArrayList<Tender> includedTenders,  ArrayList<Tax> includedTax,
+                                 Account account) {
 
         Response response = new Response();
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
@@ -118,7 +119,7 @@ public class SalesService {
 
                 // Get taxes
                 Response taxResponse = getSalesTaxes(costCenterLocation.locationName, timePeriod, fromDate, toDate,
-                        costCenter, driver);
+                        costCenter, false, includedTax, driver);
                 if (!taxResponse.isStatus()) {
                     if (taxResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
                         continue;
@@ -248,7 +249,8 @@ public class SalesService {
     }
 
     private Response getSalesTaxes(String location, String businessDate, String fromDate, String toDate,
-                                   CostCenter costCenter, WebDriver driver) {
+                                   CostCenter costCenter, boolean getTaxTotalFlag, ArrayList<Tax> includedTaxes,
+                                   WebDriver driver) {
         Response response = new Response();
 
         ArrayList<Tax> salesTax = new ArrayList<>();
@@ -297,14 +299,28 @@ public class SalesService {
                 if (cols.size() != columns.size()) {
                     continue;
                 }
-                WebElement td = cols.get(0);
-                if (td.getText().equals("Total Taxes:")) {
-                    Tax tax = new Tax();
-                    tax.setTax("Total Tax");
-                    tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
+
+                Tax tax = new Tax();
+
+                if(getTaxTotalFlag){
+                    WebElement td = cols.get(0);
+                    if (td.getText().equals("Total Taxes:")) {
+                        tax.setTax("Total Tax");
+                        tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
+                        tax.setCostCenter(costCenter);
+                        salesTax.add(tax);
+                        break;
+                    }
+                }else{
+                    // Check if tax exists
+                    Tax taxData = conversions.checkTaxExistence(includedTaxes, cols.get(0).getText().strip());
+                    if (!taxData.isStatus()) {
+                        continue;
+                    }
+
                     tax.setCostCenter(costCenter);
+                    tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
                     salesTax.add(tax);
-                    break;
                 }
             }
 
@@ -497,8 +513,8 @@ public class SalesService {
                 taxData.put("transactionReference", "Taxes Reference");
 
                 // Vat out account
-                String vatOut = syncJobType.getConfiguration().getVatOut();
-                taxData.put("inventoryAccount", vatOut);
+//                String vatOut = syncJobType.getConfiguration().getVatOut();
+                taxData.put("inventoryAccount", tax.getAccount());
 
                 String description = "Sales F " + tax.getCostCenter().costCenterReference + " " + tax.getTax();
                 if (description.length() > 50) {

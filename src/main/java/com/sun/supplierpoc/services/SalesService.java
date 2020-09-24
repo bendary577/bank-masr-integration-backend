@@ -418,200 +418,6 @@ public class SalesService {
         return response;
     }
 
-    public ArrayList<SyncJobData> saveSalesData(Response salesResponse, SyncJob syncJob, SyncJobType syncJobType) {
-        float totalTender = 0;
-        float totalTax = 0;
-        float totalOverGroupNet = 0;
-
-        ArrayList<DifferentCostCenter> differentCostCenters = new ArrayList<>();
-
-        ArrayList<SyncJobData> addedSales = new ArrayList<>();
-
-        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
-        String fromDate =  syncJobType.getConfiguration().getFromDate();
-
-        String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-
-        // Save tenders {Debit}
-        ArrayList<Tender> tenders = salesResponse.getSalesTender();
-        for (int i = 0; i < tenders.size(); i++) {
-            Tender tender = tenders.get(i);
-
-            HashMap<String, String> tenderData = new HashMap<>();
-
-            tenderData.put("transactionDate", transactionDate);
-
-            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
-
-            tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
-            tenderData.put("fromAccountCode", tender.getCostCenter().accountCode);
-
-            tenderData.put("toCostCenter", tender.getCostCenter().costCenter);
-            tenderData.put("toAccountCode", tender.getCostCenter().accountCode);
-
-            tenderData.put("fromLocation", tender.getCostCenter().accountCode);
-            tenderData.put("toLocation", tender.getCostCenter().accountCode);
-
-            tenderData.put("transactionReference", "Tender Reference");
-
-            tenderData.put("expensesAccount", tender.getAccount());
-
-            String description = "Sales F " + tender.getCostCenter().costCenterReference + " " + tender.getTender();
-            if (description.length() > 50){
-                description = description.substring(0, 50);
-            }
-
-            tenderData.put("description", description);
-
-            SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-            addedSales.add(syncJobData);
-
-            DifferentCostCenter differentCostCenter = new DifferentCostCenter();
-            float tenderTotal = tender.getTotal();
-            differentCostCenters = differentCostCenter.checkExistence(differentCostCenters, tender.getCostCenter(),
-                    tenderTotal, 0, 0);
-        }
-
-        // Save taxes {Credit}
-        ArrayList<Tax> taxes = salesResponse.getSalesTax();
-        for (int i = 0; i < taxes.size(); i++) {
-            Tax tax = taxes.get(i);
-            HashMap<String, String> taxData = new HashMap<>();
-
-            taxData.put("transactionDate", transactionDate);
-
-            taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
-
-            taxData.put("fromCostCenter", tax.getCostCenter().costCenter);
-            taxData.put("fromAccountCode", tax.getCostCenter().accountCode);
-
-            taxData.put("toCostCenter", tax.getCostCenter().costCenter);
-            taxData.put("toAccountCode", tax.getCostCenter().accountCode);
-
-            taxData.put("fromLocation", tax.getCostCenter().accountCode);
-            taxData.put("toLocation", tax.getCostCenter().accountCode);
-
-            taxData.put("transactionReference", "Taxes Transaction Reference");
-
-            // Vat out account
-            String vatOut = syncJobType.getConfiguration().getVatOut();
-            taxData.put("inventoryAccount", vatOut);
-
-            String description = "Sales F " + tax.getCostCenter().costCenterReference + " " + tax.getTax();
-            if (description.length() > 50){
-                description = description.substring(0, 50);
-            }
-
-            taxData.put("description", description);
-
-            SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-            addedSales.add(syncJobData);
-
-            DifferentCostCenter differentCostCenter = new DifferentCostCenter();
-            float tenderTotal = tax.getTotal();
-            differentCostCenters = differentCostCenter.checkExistence(differentCostCenters, tax.getCostCenter(), 0,
-                    tenderTotal, 0);
-        }
-
-        // Save majorGroup {Credit}
-        ArrayList<Journal> majorGroupsGross = salesResponse.getSalesMajorGroupGross();
-        for (int i = 0; i < majorGroupsGross.size(); i++) {
-            Journal majorGroupJournal = majorGroupsGross.get(i);
-            HashMap<String, String> majorGroupData = new HashMap<>();
-
-            majorGroupData.put("transactionDate", transactionDate);
-
-            majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
-
-            majorGroupData.put("fromCostCenter", majorGroupJournal.getCostCenter().costCenter);
-            majorGroupData.put("fromAccountCode", majorGroupJournal.getCostCenter().accountCode);
-
-            majorGroupData.put("toCostCenter", majorGroupJournal.getCostCenter().costCenter);
-            majorGroupData.put("toAccountCode", majorGroupJournal.getCostCenter().accountCode);
-
-            majorGroupData.put("fromLocation", majorGroupJournal.getCostCenter().accountCode);
-            majorGroupData.put("toLocation", majorGroupJournal.getCostCenter().accountCode);
-
-            majorGroupData.put("transactionReference", "MG Transaction Reference");
-
-            // Major Group account
-            majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
-
-            String description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
-            if (description.length() > 50){
-                description = description.substring(0, 50);
-            }
-
-            majorGroupData.put("description", description);
-
-            SyncJobData syncJobData = new SyncJobData(majorGroupData, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
-            addedSales.add(syncJobData);
-
-            DifferentCostCenter differentCostCenter = new DifferentCostCenter();
-            float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
-            differentCostCenters = differentCostCenter.checkExistence(differentCostCenters, majorGroupJournal.getCostCenter(),
-                    0, 0, majorGroupGrossTotal);
-        }
-
-        // Check if there is different {According to different result} per costCenter
-        for (int i = 0; i < differentCostCenters.size(); i++) {
-            DifferentCostCenter differentCostCenter = differentCostCenters.get(i);
-
-            totalTender = differentCostCenter.getTotalTender();
-            totalTax = differentCostCenter.getTotalTax();
-            totalOverGroupNet = differentCostCenter.getTotalOverGroupNet();
-
-            if ((totalOverGroupNet + totalTax) != totalTender) {
-                HashMap<String, String> differentData = new HashMap<>();
-
-                differentData.put("transactionDate", transactionDate);
-
-                // {Debit} - ShortagePOS
-                if ((totalOverGroupNet + totalTax) > totalTender) {
-                    String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
-                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalOverGroupNet + totalTax) - totalTender)));
-                    differentData.put("expensesAccount", cashShortagePOS);
-                }
-                // {Credit} - SurplusPOS
-                else {
-                    String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
-                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalTender - (totalOverGroupNet + totalTax))));
-                    differentData.put("inventoryAccount", cashSurplusPOS);
-                }
-
-                differentData.put("fromCostCenter", differentCostCenter.getCostCenter().costCenter);
-                differentData.put("fromAccountCode", differentCostCenter.getCostCenter().accountCode);
-
-                differentData.put("toCostCenter", differentCostCenter.getCostCenter().costCenter);
-                differentData.put("toAccountCode", differentCostCenter.getCostCenter().accountCode);
-
-                differentData.put("fromLocation", differentCostCenter.getCostCenter().accountCode);
-                differentData.put("toLocation", differentCostCenter.getCostCenter().accountCode);
-
-                differentData.put("transactionReference", "Taxes Transaction Reference");
-
-                String description = "Sales For " + differentCostCenter.getCostCenter().costCenterReference + " - different";
-                if (description.length() > 50){
-                    description = description.substring(0, 50);
-                }
-
-                differentData.put("description", description);
-
-                SyncJobData syncJobData = new SyncJobData(differentData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
-                addedSales.add(syncJobData);
-            }
-        }
-        return addedSales;
-    }
-
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob, SyncJobType syncJobType) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
 
@@ -798,10 +604,6 @@ public class SalesService {
 
         }
         return addedJournalBatches;
-    }
-
-    public ArrayList<SyncJobData> getFailedSalesData(SyncJobType syncJobType){
-       return syncJobTypeController.getFailedSyncJobData(syncJobType.getId());
     }
 
     public void updateJournalBatchStatus(JournalBatch journalBatch, HashMap<String, Object> response){
@@ -1005,5 +807,201 @@ public class SalesService {
         data.put("message", "");
         return data;
     }
+
+    @Deprecated
+    public ArrayList<SyncJobData> saveSalesData(Response salesResponse, SyncJob syncJob, SyncJobType syncJobType) {
+        float totalTender = 0;
+        float totalTax = 0;
+        float totalOverGroupNet = 0;
+
+        ArrayList<DifferentCostCenter> differentCostCenters = new ArrayList<>();
+
+        ArrayList<SyncJobData> addedSales = new ArrayList<>();
+
+        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
+        String fromDate =  syncJobType.getConfiguration().getFromDate();
+
+        String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
+
+        // Save tenders {Debit}
+        ArrayList<Tender> tenders = salesResponse.getSalesTender();
+        for (int i = 0; i < tenders.size(); i++) {
+            Tender tender = tenders.get(i);
+
+            HashMap<String, String> tenderData = new HashMap<>();
+
+            tenderData.put("transactionDate", transactionDate);
+
+            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
+
+            tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
+            tenderData.put("fromAccountCode", tender.getCostCenter().accountCode);
+
+            tenderData.put("toCostCenter", tender.getCostCenter().costCenter);
+            tenderData.put("toAccountCode", tender.getCostCenter().accountCode);
+
+            tenderData.put("fromLocation", tender.getCostCenter().accountCode);
+            tenderData.put("toLocation", tender.getCostCenter().accountCode);
+
+            tenderData.put("transactionReference", "Tender Reference");
+
+            tenderData.put("expensesAccount", tender.getAccount());
+
+            String description = "Sales F " + tender.getCostCenter().costCenterReference + " " + tender.getTender();
+            if (description.length() > 50){
+                description = description.substring(0, 50);
+            }
+
+            tenderData.put("description", description);
+
+            SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
+            addedSales.add(syncJobData);
+
+            DifferentCostCenter differentCostCenter = new DifferentCostCenter();
+            float tenderTotal = tender.getTotal();
+            differentCostCenters = differentCostCenter.checkExistence(differentCostCenters, tender.getCostCenter(),
+                    tenderTotal, 0, 0);
+        }
+
+        // Save taxes {Credit}
+        ArrayList<Tax> taxes = salesResponse.getSalesTax();
+        for (int i = 0; i < taxes.size(); i++) {
+            Tax tax = taxes.get(i);
+            HashMap<String, String> taxData = new HashMap<>();
+
+            taxData.put("transactionDate", transactionDate);
+
+            taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
+
+            taxData.put("fromCostCenter", tax.getCostCenter().costCenter);
+            taxData.put("fromAccountCode", tax.getCostCenter().accountCode);
+
+            taxData.put("toCostCenter", tax.getCostCenter().costCenter);
+            taxData.put("toAccountCode", tax.getCostCenter().accountCode);
+
+            taxData.put("fromLocation", tax.getCostCenter().accountCode);
+            taxData.put("toLocation", tax.getCostCenter().accountCode);
+
+            taxData.put("transactionReference", "Taxes Transaction Reference");
+
+            // Vat out account
+            String vatOut = syncJobType.getConfiguration().getVatOut();
+            taxData.put("inventoryAccount", vatOut);
+
+            String description = "Sales F " + tax.getCostCenter().costCenterReference + " " + tax.getTax();
+            if (description.length() > 50){
+                description = description.substring(0, 50);
+            }
+
+            taxData.put("description", description);
+
+            SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
+            addedSales.add(syncJobData);
+
+            DifferentCostCenter differentCostCenter = new DifferentCostCenter();
+            float tenderTotal = tax.getTotal();
+            differentCostCenters = differentCostCenter.checkExistence(differentCostCenters, tax.getCostCenter(), 0,
+                    tenderTotal, 0);
+        }
+
+        // Save majorGroup {Credit}
+        ArrayList<Journal> majorGroupsGross = salesResponse.getSalesMajorGroupGross();
+        for (int i = 0; i < majorGroupsGross.size(); i++) {
+            Journal majorGroupJournal = majorGroupsGross.get(i);
+            HashMap<String, String> majorGroupData = new HashMap<>();
+
+            majorGroupData.put("transactionDate", transactionDate);
+
+            majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
+
+            majorGroupData.put("fromCostCenter", majorGroupJournal.getCostCenter().costCenter);
+            majorGroupData.put("fromAccountCode", majorGroupJournal.getCostCenter().accountCode);
+
+            majorGroupData.put("toCostCenter", majorGroupJournal.getCostCenter().costCenter);
+            majorGroupData.put("toAccountCode", majorGroupJournal.getCostCenter().accountCode);
+
+            majorGroupData.put("fromLocation", majorGroupJournal.getCostCenter().accountCode);
+            majorGroupData.put("toLocation", majorGroupJournal.getCostCenter().accountCode);
+
+            majorGroupData.put("transactionReference", "MG Transaction Reference");
+
+            // Major Group account
+            majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
+
+            String description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
+            if (description.length() > 50){
+                description = description.substring(0, 50);
+            }
+
+            majorGroupData.put("description", description);
+
+            SyncJobData syncJobData = new SyncJobData(majorGroupData, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
+            addedSales.add(syncJobData);
+
+            DifferentCostCenter differentCostCenter = new DifferentCostCenter();
+            float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
+            differentCostCenters = differentCostCenter.checkExistence(differentCostCenters, majorGroupJournal.getCostCenter(),
+                    0, 0, majorGroupGrossTotal);
+        }
+
+        // Check if there is different {According to different result} per costCenter
+        for (int i = 0; i < differentCostCenters.size(); i++) {
+            DifferentCostCenter differentCostCenter = differentCostCenters.get(i);
+
+            totalTender = differentCostCenter.getTotalTender();
+            totalTax = differentCostCenter.getTotalTax();
+            totalOverGroupNet = differentCostCenter.getTotalOverGroupNet();
+
+            if ((totalOverGroupNet + totalTax) != totalTender) {
+                HashMap<String, String> differentData = new HashMap<>();
+
+                differentData.put("transactionDate", transactionDate);
+
+                // {Debit} - ShortagePOS
+                if ((totalOverGroupNet + totalTax) > totalTender) {
+                    String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalOverGroupNet + totalTax) - totalTender)));
+                    differentData.put("expensesAccount", cashShortagePOS);
+                }
+                // {Credit} - SurplusPOS
+                else {
+                    String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalTender - (totalOverGroupNet + totalTax))));
+                    differentData.put("inventoryAccount", cashSurplusPOS);
+                }
+
+                differentData.put("fromCostCenter", differentCostCenter.getCostCenter().costCenter);
+                differentData.put("fromAccountCode", differentCostCenter.getCostCenter().accountCode);
+
+                differentData.put("toCostCenter", differentCostCenter.getCostCenter().costCenter);
+                differentData.put("toAccountCode", differentCostCenter.getCostCenter().accountCode);
+
+                differentData.put("fromLocation", differentCostCenter.getCostCenter().accountCode);
+                differentData.put("toLocation", differentCostCenter.getCostCenter().accountCode);
+
+                differentData.put("transactionReference", "Taxes Transaction Reference");
+
+                String description = "Sales For " + differentCostCenter.getCostCenter().costCenterReference + " - different";
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                differentData.put("description", description);
+
+                SyncJobData syncJobData = new SyncJobData(differentData, Constants.RECEIVED, "", new Date(),
+                        syncJob.getId());
+                syncJobDataRepo.save(syncJobData);
+                addedSales.add(syncJobData);
+            }
+        }
+        return addedSales;
+    }
+
 
 }

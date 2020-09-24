@@ -344,7 +344,7 @@ public class SetupEnvironment {
             response.setMessage("");
         } catch (Exception e) {
             response.setStatus(false);
-            response.setMessage(e.getMessage());
+            response.setMessage("Failed to choose business date");
         }
         return response;
     }

@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.repositories;
 
 import com.sun.supplierpoc.models.SyncJob;
+import com.sun.supplierpoc.models.SyncJobData;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +13,5 @@ public interface SyncJobRepo extends MongoRepository<SyncJob, String>{
     List<SyncJob> findBySyncJobTypeIdAndStatusAndDeletedOrderByCreationDateDesc(String syncJobTypeId,String status,
                                                                                 boolean deleted);
 
+    List<SyncJob> deleteAllBySyncJobTypeId(String syncJobTypeId);
 }

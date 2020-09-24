@@ -6,6 +6,7 @@ public class Tax {
     private Float total;
     private CostCenter costCenter;
     private boolean status = false;
+    private boolean checked = false;
 
     public Tax() {
     }
@@ -48,5 +49,13 @@ public class Tax {
 
     public void setStatus(boolean status) {
         this.status = status;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
     }
 }

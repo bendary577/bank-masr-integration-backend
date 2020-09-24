@@ -314,7 +314,7 @@ public class SalesService {
                 }else{
                     // Check if tax exists
                     Tax taxData = conversions.checkTaxExistence(includedTaxes, cols.get(0).getText().strip());
-                    if (!taxData.isStatus()) {
+                    if (!taxData.isChecked()) {
                         continue;
                     }
 

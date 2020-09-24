@@ -317,7 +317,8 @@ public class SalesService {
                     if (!taxData.isChecked()) {
                         continue;
                     }
-
+                    tax.setTax(taxData.getTax());
+                    tax.setAccount(taxData.getAccount());
                     tax.setCostCenter(costCenter);
                     tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
                     salesTax.add(tax);
@@ -785,7 +786,7 @@ public class SalesService {
         try {
             SoapComponent ssc = new SoapComponent(Constants.HOST, Constants.PORT);
             ssc.authenticate(voucher);
-            result = ssc.execute("Journal", "Import", sccXMLStringValue);
+//            result = ssc.execute("Journal", "Import", sccXMLStringValue);
         } catch (Exception ex) {
             System.out.print("An error occurred logging in to SunSystems:\r\n");
             ex.printStackTrace();

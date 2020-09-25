@@ -608,7 +608,7 @@ public class InvoiceService {
             driver.quit();
 
             response.put("status", Constants.FAILED);
-            response.put("message", e.getMessage());
+            response.put("message", "Failed to get invoices from Oracle Hospitality.");
             response.put("invoices", journalEntries);
             return response;
         }
@@ -635,137 +635,139 @@ public class InvoiceService {
         }
 
         // Fetch table rows
+        try {
+            WebElement table= driver.findElement(By.id("G_dg"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-        WebElement table= driver.findElement(By.id("G_dg"));
-        List<WebElement> rows = table.findElements(By.tagName("tr"));
+            WebElement tableHeader= driver.findElement(By.xpath("/html/body/form/table/tbody/tr[6]/td/table/tbody/tr[1]/td/div/table"));
+            List<WebElement> headerRows = tableHeader.findElements(By.tagName("tr"));
+            ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
 
-        WebElement tableHeader= driver.findElement(By.xpath("/html/body/form/table/tbody/tr[6]/td/table/tbody/tr[1]/td/div/table"));
-        List<WebElement> headerRows = tableHeader.findElements(By.tagName("tr"));
-        ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
+            if (rows.size() < 1){ return; }
 
-        if (rows.size() < 1){ return; }
+            for (int i = 1; i < rows.size(); i++) {
+                HashMap<String, Object> invoiceDetails = new HashMap<>();
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
 
-        for (int i = 1; i < rows.size(); i++) {
-            HashMap<String, Object> invoiceDetails = new HashMap<>();
-            WebElement row = rows.get(i);
-            List<WebElement> cols = row.findElements(By.tagName("td"));
-
-            if (cols.size() != columns.size()) {
-                continue;
-            }
-
-            // check if this Item belong to selected items
-            WebElement td = cols.get(columns.indexOf("item"));
-
-            Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
-
-            if (!oldItemData.isChecked()) {
-                continue;
-            }
-
-            String overGroup = oldItemData.getOverGroup();
-            if (overGroup.equals("")){
-                continue;
-            }
-
-            invoiceDetails.put("Item", td.getText().strip());
-
-            if(columns.indexOf("gross") != -1){
-                td = cols.get(columns.indexOf("gross"));
-                invoiceDetails.put("gross", td.getText().strip());
-            }
-
-            Journal journal = new Journal();
-            journals = journal.checkExistence(journals, overGroup, 0,
-                    conversions.convertStringToFloat((String) invoiceDetails.get("gross")),0, 0);
-
-        }
-
-        for (Journal journal : journals) {
-            HashMap<String, Object> journalEntry = new HashMap<>();
-
-            CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
-            SyncJobData supplier = (SyncJobData) invoice.get("vendor");
-
-            if (toCostCenter.costCenterReference.equals("")){
-                toCostCenter.costCenterReference = toCostCenter.costCenter;
-            }
-
-            journalEntry.put("invoiceNo", invoice.get("document"));
-
-            if (reference.equals("")){
-                reference = (String) invoice.get("invoice_no.");
-
-                if (reference.length() > 30){
-                    reference = reference.substring(0, 30);
+                if (cols.size() != columns.size()) {
+                    continue;
                 }
-                journalEntry.put("reference", reference);
-                journalEntry.put("transactionReference", reference);
-            }
-            else {
-                journalEntry.put("reference", reference);
-                //  internal field length is 30).
-                if (reference.length() > 30){
-                    reference = reference.substring(0, 30);
+
+                // check if this Item belong to selected items
+                WebElement td = cols.get(columns.indexOf("item"));
+
+                Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+
+                if (!oldItemData.isChecked()) {
+                    continue;
                 }
-                journalEntry.put("transactionReference", reference);
+
+                String overGroup = oldItemData.getOverGroup();
+                if (overGroup.equals("")){
+                    continue;
+                }
+
+                invoiceDetails.put("Item", td.getText().strip());
+
+                if(columns.indexOf("gross") != -1){
+                    td = cols.get(columns.indexOf("gross"));
+                    invoiceDetails.put("gross", td.getText().strip());
+                }
+
+                Journal journal = new Journal();
+                journals = journal.checkExistence(journals, overGroup, 0,
+                        conversions.convertStringToFloat((String) invoiceDetails.get("gross")),0, 0);
+
             }
 
-            journalEntry.put("transactionDate", invoice.get("invoice_date"));
+            for (Journal journal : journals) {
+                HashMap<String, Object> journalEntry = new HashMap<>();
 
-            journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalCost()));
-            journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalCost()) * -1);
+                CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
+                SyncJobData supplier = (SyncJobData) invoice.get("vendor");
 
-            if (!flag){
-                journalEntry.put("fromCostCenter", supplier.getData().get("supplier"));
-                journalEntry.put("fromAccountCode", supplier.getData().get("accountCode"));
+                if (toCostCenter.costCenterReference.equals("")){
+                    toCostCenter.costCenterReference = toCostCenter.costCenter;
+                }
 
-                journalEntry.put("toCostCenter", toCostCenter.costCenter);
-                journalEntry.put("toAccountCode", toCostCenter.accountCode);
-            }else{
-                journalEntry.put("toCostCenter", supplier.getData().get("supplier"));
-                journalEntry.put("toAccountCode", supplier.getData().get("accountCode"));
+                journalEntry.put("invoiceNo", invoice.get("document"));
 
-                journalEntry.put("fromCostCenter", toCostCenter.costCenter);
-                journalEntry.put("fromAccountCode", toCostCenter.accountCode);
+                if (reference == null || reference.equals("")){
+                    reference = (String) invoice.get("document");
+                    //  internal field length is 30).
+                    if (reference.length() > 30){
+                        reference = reference.substring(0, 30);
+                    }
+                    journalEntry.put("reference", reference);
+                    journalEntry.put("transactionReference", reference);
+                }
+                else {
+                    journalEntry.put("reference", reference);
+                    //  internal field length is 30).
+                    if (reference.length() > 30){
+                        reference = reference.substring(0, 30);
+                    }
+                    journalEntry.put("transactionReference", reference);
+                }
+
+                journalEntry.put("transactionDate", invoice.get("invoice_date"));
+
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalCost()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalCost()) * -1);
+
+                if (!flag){
+                    journalEntry.put("fromCostCenter", supplier.getData().get("supplier"));
+                    journalEntry.put("fromAccountCode", supplier.getData().get("accountCode"));
+
+                    journalEntry.put("toCostCenter", toCostCenter.costCenter);
+                    journalEntry.put("toAccountCode", toCostCenter.accountCode);
+                }else{
+                    journalEntry.put("toCostCenter", supplier.getData().get("supplier"));
+                    journalEntry.put("toAccountCode", supplier.getData().get("accountCode"));
+
+                    journalEntry.put("fromCostCenter", toCostCenter.costCenter);
+                    journalEntry.put("fromAccountCode", toCostCenter.accountCode);
+                }
+
+                journalEntry.put("fromLocation", toCostCenter.accountCode);
+                journalEntry.put("toLocation", toCostCenter.accountCode);
+
+                journalEntry.put("status", invoice.get("status"));
+                journalEntry.put("invoiceDate", invoice.get("invoice_date"));
+
+                journalEntry.put("createdBy", invoice.get("created_by"));
+                journalEntry.put("createdAt", invoice.get("created_at"));
+
+                String description = "";
+                if (!flag){
+                    description = "Invoice F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
+                }else{
+                    description = "Credit Note F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
+                }
+
+                if (description.length() > 50){
+                    description = description.substring(0, 50);
+                }
+
+                journalEntry.put("description", description);
+                journalEntry.put("overGroup", journal.getOverGroup());
+
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                if (!flag){ // Invoice from supplier to cost center
+                    journalEntry.put("inventoryAccount", supplier.getData().get("accountCode"));
+                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                }else{  // Credit Note from cost center to supplier
+                    journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    journalEntry.put("expensesAccount", supplier.getData().get("accountCode"));
+                }
+
+                journalEntries.add(journalEntry);
             }
-
-            journalEntry.put("fromLocation", toCostCenter.accountCode);
-            journalEntry.put("toLocation", toCostCenter.accountCode);
-
-            journalEntry.put("status", invoice.get("status"));
-            journalEntry.put("invoiceDate", invoice.get("invoice_date"));
-
-            journalEntry.put("createdBy", invoice.get("created_by"));
-            journalEntry.put("createdAt", invoice.get("created_at"));
-
-            String description = "";
-            if (!flag){
-                description = "Invoice F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
-            }else{
-                description = "Credit Note F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
-            }
-
-            if (description.length() > 50){
-                description = description.substring(0, 50);
-            }
-
-            journalEntry.put("description", description);
-            journalEntry.put("overGroup", journal.getOverGroup());
-
-            OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-
-            if (!flag){ // Invoice from supplier to cost center
-                journalEntry.put("inventoryAccount", supplier.getData().get("accountCode"));
-                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-            }else{  // Credit Note from cost center to supplier
-                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                journalEntry.put("expensesAccount", supplier.getData().get("accountCode"));
-            }
-
-            journalEntries.add(journalEntry);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
     }
 
     public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob,

@@ -165,7 +165,16 @@ public class SupplierController {
                                     response.put("success", false);
                                 }
                             }
+                            else{
+                                syncJob.setStatus(Constants.SUCCESS);
+                                syncJob.setReason((String) data.get("message"));
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                syncJobRepo.save(syncJob);
 
+                                response.put("message", data.get("message"));
+                                response.put("success", false);
+                            }
                         }
                         else {
                             syncJob.setStatus(Constants.FAILED);

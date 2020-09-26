@@ -299,10 +299,10 @@ public class SupplierService {
 
             Response addSupplierResponse;
             for (SyncJobData supplier : suppliers) {
-                if(!driver.getCurrentUrl().equals(vendorPage)){
+//                if(!driver.getCurrentUrl().equals(vendorPage)){
                     driver.get(vendorPage);
                     driver.findElement(By.name("filterPanel_btnRefresh")).click();
-                }
+//                }
 
                 // Adding new suppler
                 if (addUpdateFlag){

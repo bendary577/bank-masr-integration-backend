@@ -78,7 +78,7 @@ public class AccountController {
         oauthClientDetails.setResourceIds(Sets.newHashSet("@ENTREPREWARE"));
         oauthClientDetails.setScope(Sets.newHashSet("all"));
         oauthClientDetails.setAuthorizedGrantTypes(Sets.newHashSet("authorization_code", "refresh_token","password"));
-        oauthClientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localConstants.HOST:8080"));
+        oauthClientDetails.setRegisteredRedirectUri(Sets.newHashSet("http://localhost:8080"));
         oauthClientDetails.setAuthorities(AuthorityUtils.createAuthorityList("ROLE_USER"));
         oauthClientDetails.setAccessTokenValiditySeconds(14400);
         oauthClientDetails.setRefreshTokenValiditySeconds(14400);

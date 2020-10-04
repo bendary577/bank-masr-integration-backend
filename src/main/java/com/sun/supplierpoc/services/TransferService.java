@@ -337,7 +337,7 @@ public class TransferService {
 
         IAuthenticationVoucher voucher;
         try {
-            SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
+            SecurityProvider securityProvider = new SecurityProvider(sunCredentials.getHost(), useEncryption);
             voucher = securityProvider.Authenticate(username, password);
         } catch (ComponentException | SoapFaultException e) {
             System.out.println(e.getMessage());
@@ -438,7 +438,7 @@ public class TransferService {
         String result = "";
         try {
 
-            SoapComponent ssc = new SoapComponent(Constants.HOST, Constants.PORT);
+            SoapComponent ssc = new SoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
             ssc.authenticate(voucher);
             result = ssc.execute("Journal", "Import", sccXMLStringValue);
         } catch (Exception ex) {

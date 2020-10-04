@@ -167,7 +167,7 @@ public class SupplierController {
                             }
                             else{
                                 syncJob.setStatus(Constants.SUCCESS);
-                                syncJob.setReason((String) data.get("message"));
+                                syncJob.setReason("Sync suppliers to Oracle hospitality successfully.");
                                 syncJob.setEndDate(new Date());
                                 syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                                 syncJobRepo.save(syncJob);

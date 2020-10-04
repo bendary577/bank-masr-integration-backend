@@ -6,6 +6,8 @@ public class AccountCredential {
     private String password = "";
     private String company = "";
     private String link = "";
+    private String host = "";
+    private int port = 8080;
 
     public AccountCredential() {
     }
@@ -48,5 +50,21 @@ public class AccountCredential {
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 }

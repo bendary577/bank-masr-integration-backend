@@ -62,7 +62,7 @@ public class SupplierService {
         String sccXMLStringValue = "";
 
         try {
-            SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
+            SecurityProvider securityProvider = new SecurityProvider(sunCredentials.getHost(), useEncryption);
             voucher = securityProvider.Authenticate(username, password);
         } catch (ComponentException | SoapFaultException e) {
             data.put("status", Constants.FAILED);
@@ -73,9 +73,9 @@ public class SupplierService {
 
         SoapComponent component = null;
         if (useEncryption) {
-            component = new SecureSoapComponent(Constants.HOST, Constants.PORT);
+            component = new SecureSoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
         } else {
-            component = new SoapComponent(Constants.HOST, Constants.PORT);
+            component = new SoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
         }
         component.authenticate(voucher);
 

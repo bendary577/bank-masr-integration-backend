@@ -784,7 +784,7 @@ public class SalesService {
 
         String result = "";
         try {
-            SoapComponent ssc = new SoapComponent(Constants.HOST, Constants.PORT);
+            SoapComponent ssc = new SoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
             ssc.authenticate(voucher);
             result = ssc.execute("Journal", "Import", sccXMLStringValue);
         } catch (Exception ex) {

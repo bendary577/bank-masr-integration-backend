@@ -225,6 +225,9 @@ public class TransferService {
         try {
             driver.get((String) transfer.get("details_url"));
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            if (rows.size() <= 22){ return; }
+
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 22);
 
             for (int i = 23; i < rows.size(); i++) {
@@ -295,7 +298,15 @@ public class TransferService {
 
                 journalEntry.put("description", description);
 
-                journalEntry.put("transactionReference", "Transfer Reference");
+                if (!transfer.get("reference").equals("")){
+                    String reference = (String)transfer.get("reference");
+                    if(reference.length() > 30){
+                        reference = reference.substring(0, 30);
+                    }
+                    journalEntry.put("transactionReference", reference);
+                }else {
+                    journalEntry.put("transactionReference", "Transfer Reference");
+                }
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());

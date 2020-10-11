@@ -2,6 +2,16 @@
     ==> sudo iptables -A INPUT -i eth0 -p tcp --dport 8081 -j ACCEPT
 
 2. Add sun system jars, before running your app
+	clientlib.jar: https://drive.google.com/file/d/1E3XGQZnPlQebkHMdiqGaS09L2rx2e0mA/view?usp=sharing
+	connect-client.jar: https://drive.google.com/file/d/1nUDJ20OE6tSI4npVVWC_8AfAdQut0NxJ/view?usp=sharing
+	xercesImpl.jar: https://drive.google.com/file/d/1ZIUCeUAgOF2tJ4k_wM_Gb8oObzc8eIPx/view?usp=sharing
+
+3. Add local jars to maven
+	link: https://maven.apache.org/guides/mini/guide-3rd-party-jars-local.html
+	
+	mvn install:install-file -Dfile="E:\MahmiudSaeed\xercesImpl.jar" -DgroupId="org.w3c" -DartifactId=xercesImpl -Dversion=1.0 -Dpackaging=1.0
+	
+	mvn install:install-file -Dfile="E:\MahmiudSaeed\connect-client.jar" -DgroupId="com.systemsunion" -DartifactId=clientlib -Dversion=1.0 -Dpackaging=1.0
 
 3. Upload new JAR
     -Generate new jar from terminal

@@ -37,7 +37,6 @@ public class JournalService {
     /*
     * Get consumptions entries based on cost center
     * */
-    @Deprecated
     public HashMap<String, Object> getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
                                                   ArrayList<ItemGroup> itemGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();
@@ -459,14 +458,17 @@ public class JournalService {
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
 
-                costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
+                    && !oldOverGroupData.getExpensesAccount().equals("")){
+                    costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
 
-                SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
+                    SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
+                            syncJob.getId());
+                    syncJobDataRepo.save(syncJobData);
 
-                addedJournals.add(syncJobData);
+                    addedJournals.add(syncJobData);
+                }
             }
 
         }

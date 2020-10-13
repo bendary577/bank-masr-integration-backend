@@ -34,6 +34,13 @@ public class Configuration implements Serializable {
     // Invoices/Credit Notes variables
     private String invoiceTypeIncluded = "";
 
+    // Consumption variables
+
+    /*
+    *  get consumption based of (Location/Cost Center)
+    * */
+    private String consumptionBasedOnType = "";
+
     // Sales variables
     private String revenue = "";
     private String vatOut = "";
@@ -215,6 +222,14 @@ public class Configuration implements Serializable {
 
     public void setInvoiceTypeIncluded(String invoiceTypeIncluded) {
         this.invoiceTypeIncluded = invoiceTypeIncluded;
+    }
+
+    public String getConsumptionBasedOnType() {
+        return consumptionBasedOnType;
+    }
+
+    public void setConsumptionBasedOnType(String consumptionBasedOnType) {
+        this.consumptionBasedOnType = consumptionBasedOnType;
     }
 
     public String getRevenue() {

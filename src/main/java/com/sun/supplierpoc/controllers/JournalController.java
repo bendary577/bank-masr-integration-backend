@@ -90,6 +90,8 @@ public class JournalController {
         String fromDate = journalSyncJobType.getConfiguration().getFromDate();
         String toDate = journalSyncJobType.getConfiguration().getToDate();
 
+        String consumptionBasedOnType = journalSyncJobType.getConfiguration().getConsumptionBasedOnType();
+
         ArrayList<OverGroup> overGroups;
         if (!journalSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
@@ -147,8 +149,14 @@ public class JournalController {
         String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
 
         try {
-            HashMap<String, Object> data = journalService.getJournalData(journalSyncJobType, costCenters,
-                    costCentersLocation,itemGroups, account);
+            HashMap<String, Object> data;
+            if (consumptionBasedOnType.equals("Cost Center")){
+                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters
+                        ,itemGroups, account);
+            }else {
+                data = journalService.getJournalData(journalSyncJobType, costCenters,
+                        costCentersLocation,itemGroups, account);
+            }
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
@@ -186,7 +194,6 @@ public class JournalController {
                         response.put("success", true);
                         response.put("message", "No new consumption to add in middleware.");
                     }
-
                     return response;
                 }
                 else {

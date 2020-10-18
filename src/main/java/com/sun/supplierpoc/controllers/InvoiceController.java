@@ -2,6 +2,7 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.excelExporters.InvoicesExcelExporter;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
@@ -23,7 +24,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.security.Principal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -394,5 +399,24 @@ public class InvoiceController {
             costCenters.add(costCenter);
         }
     }
+
+    @GetMapping("/invoices/export/excel")
+    public void exportToExcel(HttpServletResponse response) throws IOException {
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=ApprovedInvoices_" + currentDateTime + ".xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        List<SyncJobData> invoicesList = syncJobDataRepo.findBySyncJobIdAndDeletedAndStatus("5f8c1a8740522b7e5ba83a29",
+                false, Constants.FAILED);
+
+        InvoicesExcelExporter excelExporter = new InvoicesExcelExporter(invoicesList);
+
+        excelExporter.export(response);
+    }
+
 
 }

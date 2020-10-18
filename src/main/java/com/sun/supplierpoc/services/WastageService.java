@@ -190,7 +190,6 @@ public class WastageService {
                 getWasteDetails(items, overGroups, waste, driver, journalEntries);
             }
 
-
             driver.quit();
 
             response.put("status", Constants.SUCCESS);

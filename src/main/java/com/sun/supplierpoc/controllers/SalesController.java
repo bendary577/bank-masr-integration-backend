@@ -215,7 +215,7 @@ public class SalesController {
                                         "", Constants.SUCCESS);
 
                                 response.setStatus(true);
-                                response.setMessage("Sync journals Successfully.");
+                                response.setMessage("Sync sales Successfully.");
                             } else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Failed to connect to Sun System.", Constants.FAILED);

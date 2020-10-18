@@ -152,7 +152,7 @@ public class TransferController {
                         syncJob.setRowsFetched(addedTransfers.size());
                         syncJobRepo.save(syncJob);
 
-                        response.put("message", "Sync Invoices Successfully.");
+                        response.put("message", "Sync transfers Successfully.");
                     }
 
                 } else {

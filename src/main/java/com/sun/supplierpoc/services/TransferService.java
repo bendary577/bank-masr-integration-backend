@@ -174,7 +174,7 @@ public class TransferService {
             driver.quit();
 
             data.put("status", Constants.SUCCESS);
-            data.put("message", "");
+            data.put("message", "Get transfers Successfully.");
             data.put("transfers", journalEntries);
             return data;
 

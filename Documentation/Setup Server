@@ -24,3 +24,15 @@
     ==> kill -9 <current running process port>
     ==> java -jar <JAR_NAME>.jar &
 
+
+* How to Increase Request Timeout in NGINX *
+link: https://ubiq.co/tech-blog/increase-request-timeout-nginx/#:~:text=By%20default%2C%20NGINX%20request%20timeout,504%3A%20Gateway%20Timeout%E2%80%9D%20Error.
+
+1. Open NGINX configuration file
+    default location: sudo /etc/nginx/nginx.conf
+    our location: /etc/nginx/conf.d/timeout.conf
+2. Increase timeout
+    # 7200 --> 2hr
+    server{
+       proxy_request_timeout 7200;
+    }

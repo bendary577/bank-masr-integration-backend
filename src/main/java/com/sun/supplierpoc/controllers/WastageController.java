@@ -165,7 +165,7 @@ public class WastageController {
                         syncJob.setRowsFetched(addedWastes.size());
                         syncJobRepo.save(syncJob);
 
-                        response.put("message", "Sync Invoices Successfully.");
+                        response.put("message", "Sync Wastage Successfully.");
                         response.put("success", true);
                     }
                 }

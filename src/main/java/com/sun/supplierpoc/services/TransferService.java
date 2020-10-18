@@ -399,6 +399,13 @@ public class TransferService {
             Element LedgerPostingParametersElement = doc.createElement("LedgerPostingParameters");
             methodContextElement.appendChild(LedgerPostingParametersElement);
 
+            Element PostProvisionalElement = doc.createElement("PostProvisional");
+            /*
+            * Expected values (N/Y)
+            * */
+            PostProvisionalElement.appendChild(doc.createTextNode("Y"));
+            methodContextElement.appendChild(PostProvisionalElement);
+
             Element DescriptionElement = doc.createElement("Description");
             DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
             LedgerPostingParametersElement.appendChild(DescriptionElement);

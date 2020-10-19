@@ -2,13 +2,11 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
-import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.SalesService;
 import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
@@ -19,11 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Optional;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 public class SalesController {
@@ -31,6 +30,8 @@ public class SalesController {
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
+    @Autowired
+    private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private AccountRepo accountRepo;
     @Autowired
@@ -346,5 +347,24 @@ public class SalesController {
             }
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/sales/export/excel")
+    public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
+                              HttpServletResponse response) throws IOException {
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=Sales" + currentDateTime + ".xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        List<SyncJobData> bookedTransfersList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
+                false);
+
+        TransfersExcelExporter excelExporter = new TransfersExcelExporter(bookedTransfersList);
+
+        excelExporter.export(response);
     }
 }

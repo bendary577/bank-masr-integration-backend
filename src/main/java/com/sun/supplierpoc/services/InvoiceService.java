@@ -358,6 +358,7 @@ public class InvoiceService {
                 journalEntry.put("transactionReference", reference);
             }
 
+            journalEntry.put("accountingPeriod", ((String)invoice.get("invoice_date")).substring(2,6));
             journalEntry.put("transactionDate", invoice.get("invoice_date"));
 
             journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalCost()));
@@ -711,6 +712,7 @@ public class InvoiceService {
                     journalEntry.put("transactionReference", reference);
                 }
 
+                journalEntry.put("accountingPeriod", ((String)invoice.get("invoice_date")).substring(2,6));
                 journalEntry.put("transactionDate", invoice.get("invoice_date"));
 
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalCost()));

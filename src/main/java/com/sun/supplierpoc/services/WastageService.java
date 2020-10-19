@@ -268,6 +268,7 @@ public class WastageService {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
+                journalEntry.put("accountingPeriod", ((String)waste.get("waste_date")).substring(2,6));
                 journalEntry.put("transactionDate", waste.get("waste_date"));
 
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));

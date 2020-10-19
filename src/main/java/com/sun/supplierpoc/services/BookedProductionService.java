@@ -263,6 +263,7 @@ public class BookedProductionService {
 
             bookedProductionData.put("status", bookedProduction.getStatus());
 
+            bookedProductionData.put("accountingPeriod", bookedProduction.getDate().substring(2,6));
             bookedProductionData.put("transactionDate", bookedProduction.getDate());
 
             bookedProductionData.put("totalCr", String.valueOf(conversions.roundUpFloat(bookedProduction.getValue())));

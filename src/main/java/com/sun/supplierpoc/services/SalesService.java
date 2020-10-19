@@ -457,6 +457,7 @@ public class SalesService {
 
                 HashMap<String, String> tenderData = new HashMap<>();
 
+                tenderData.put("accountingPeriod", transactionDate.substring(2,6));
                 tenderData.put("transactionDate", transactionDate);
 
                 tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
@@ -498,6 +499,7 @@ public class SalesService {
 
                 HashMap<String, String> taxData = new HashMap<>();
 
+                taxData.put("accountingPeriod", transactionDate.substring(2,6));
                 taxData.put("transactionDate", transactionDate);
 
                 taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
@@ -541,6 +543,7 @@ public class SalesService {
 
                 HashMap<String, String> majorGroupData = new HashMap<>();
 
+                majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
                 majorGroupData.put("transactionDate", transactionDate);
 
                 majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
@@ -578,6 +581,7 @@ public class SalesService {
             if ((totalMajorGroupNet + totalTax) != totalTender) {
                 HashMap<String, String> differentData = new HashMap<>();
 
+                differentData.put("accountingPeriod", transactionDate.substring(2,6));
                 differentData.put("transactionDate", transactionDate);
 
                 // {Debit} - ShortagePOS
@@ -703,6 +707,13 @@ public class SalesService {
 
             Element LedgerPostingParametersElement = doc.createElement("LedgerPostingParameters");
             methodContextElement.appendChild(LedgerPostingParametersElement);
+
+            Element PostProvisionalElement = doc.createElement("PostProvisional");
+            /*
+             * Expected values (N/Y)
+             * */
+            PostProvisionalElement.appendChild(doc.createTextNode("Y"));
+            methodContextElement.appendChild(PostProvisionalElement);
 
             Element DescriptionElement = doc.createElement("Description");
             DescriptionElement.appendChild(doc.createTextNode("Journal batch"));
@@ -847,6 +858,7 @@ public class SalesService {
 
             HashMap<String, String> tenderData = new HashMap<>();
 
+            tenderData.put("accountingPeriod", transactionDate.substring(2,6));
             tenderData.put("transactionDate", transactionDate);
 
             tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
@@ -888,6 +900,7 @@ public class SalesService {
             Tax tax = taxes.get(i);
             HashMap<String, String> taxData = new HashMap<>();
 
+            taxData.put("accountingPeriod", transactionDate.substring(2,6));
             taxData.put("transactionDate", transactionDate);
 
             taxData.put("totalCr", String.valueOf(conversions.roundUpFloat(tax.getTotal())));
@@ -931,6 +944,7 @@ public class SalesService {
             Journal majorGroupJournal = majorGroupsGross.get(i);
             HashMap<String, String> majorGroupData = new HashMap<>();
 
+            majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
             majorGroupData.put("transactionDate", transactionDate);
 
             majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(majorGroupJournal.getTotalCost())));
@@ -978,6 +992,7 @@ public class SalesService {
             if ((totalOverGroupNet + totalTax) != totalTender) {
                 HashMap<String, String> differentData = new HashMap<>();
 
+                differentData.put("accountingPeriod", transactionDate.substring(2,6));
                 differentData.put("transactionDate", transactionDate);
 
                 // {Debit} - ShortagePOS

@@ -431,7 +431,7 @@ public class JournalService {
 
                 // Example: 01062020
                 String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-
+                costData.put("accountingPeriod", transactionDate.substring(2,6));
                 costData.put("transactionDate", transactionDate);
 
                 costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost())));

@@ -276,6 +276,7 @@ public class TransferService {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
 
+                journalEntry.put("accountingPeriod", ((String)transfer.get("delivery_date")).substring(2,6));
                 journalEntry.put("transactionDate", transfer.get("delivery_date"));
 
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalTransfer()));
@@ -503,6 +504,10 @@ public class TransferService {
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);
+
+//        Element AccountingPeriodElement = doc.createElement("AccountingPeriod");
+//        AccountingPeriodElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("accountingPeriod")));
+//        lineElement.appendChild(AccountingPeriodElement);
 
         Element DescriptionElement = doc.createElement("Description");
         DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));

@@ -159,7 +159,8 @@ public class TransferController {
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(addedTransfers.size());
                         syncJobRepo.save(syncJob);
-
+                        
+                        response.put("success", true);
                         response.put("message", "Sync transfers Successfully.");
                     }
 

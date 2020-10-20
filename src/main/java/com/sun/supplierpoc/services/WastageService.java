@@ -290,7 +290,16 @@ public class WastageService {
 
                 journalEntry.put("description", description);
 
-                journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                if (waste.containsKey("reference") && !waste.get("reference").equals("")){
+                    String reference = (String)waste.get("reference");
+                    if(reference.length() > 30){
+                        reference = reference.substring(0, 30);
+                    }
+                    journalEntry.put("transactionReference", reference);
+                }else {
+                    journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                }
+
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());

@@ -2,6 +2,7 @@ package com.sun.supplierpoc.excelExporters;
 
 import com.sun.supplierpoc.models.SyncJobData;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -36,18 +37,19 @@ public class WastageExcelExporter {
         font.setBold(true);
         font.setFontHeight(16);
         style.setFont(font);
-
+        style.setFillForegroundColor(IndexedColors.CORAL.getIndex());
+        
         commonFunctions.createCell(row, 0, "Status", style);
         commonFunctions.createCell(row, 1, "Reason", style);
         commonFunctions.createCell(row, 2, "Description", style);
-
-        commonFunctions.createCell(row, 3, "Wastage Total Credit", style);
-        commonFunctions.createCell(row, 4, "Wastage Total Debit", style);
-        commonFunctions.createCell(row, 5, "Cost Center", style);
-        commonFunctions.createCell(row, 6, "Account Code", style);
-        commonFunctions.createCell(row, 7, "Inventory Account", style);
-        commonFunctions.createCell(row, 8, "Expenses Account", style);
-        commonFunctions.createCell(row, 9, "Transaction Date", style);
+        commonFunctions.createCell(row, 3, "Reference", style);
+        commonFunctions.createCell(row, 4, "Wastage Total Credit", style);
+        commonFunctions.createCell(row, 5, "Wastage Total Debit", style);
+        commonFunctions.createCell(row, 6, "Cost Center", style);
+        commonFunctions.createCell(row, 7, "Account Code", style);
+        commonFunctions.createCell(row, 8, "Inventory Account", style);
+        commonFunctions.createCell(row, 9, "Expenses Account", style);
+        commonFunctions.createCell(row, 10, "Transaction Date", style);
     }
 
     private void writeDataLines() {
@@ -65,6 +67,7 @@ public class WastageExcelExporter {
             commonFunctions.createCell(row, columnCount++, syncJobData.getStatus(), style);
             commonFunctions.createCell(row, columnCount++, syncJobData.getReason(), style);
             commonFunctions.createCell(row, columnCount++, syncJobData.getData().get("description"), style);
+            commonFunctions.createCell(row, columnCount++, syncJobData.getData().get("transactionReference"), style);
             commonFunctions.createCell(row, columnCount++, syncJobData.getData().get("totalCr"), style);
             commonFunctions.createCell(row, columnCount++, syncJobData.getData().get("totalDr"), style);
             commonFunctions.createCell(row, columnCount++, syncJobData.getData().get("fromCostCenter"), style);

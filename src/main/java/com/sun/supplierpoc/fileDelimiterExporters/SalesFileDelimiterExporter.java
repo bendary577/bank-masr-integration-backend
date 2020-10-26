@@ -35,14 +35,14 @@ public class SalesFileDelimiterExporter {
             "conversionCode", "conversionRate", "otherAmount", "analysisCode0", "analysisCode1"};
             mapStrategy.setColumnMapping(columns);
 
-            StatefulBeanToCsv<SyncJobDataCSV> btcsv = new StatefulBeanToCsvBuilder<SyncJobDataCSV>(writer)
+            StatefulBeanToCsv<SyncJobDataCSV> csvWriter = new StatefulBeanToCsvBuilder<SyncJobDataCSV>(writer)
                     .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
                     .withMappingStrategy(mapStrategy)
                     .withSeparator('\t')
                     .build();
 
             this.extractSyncJobData();
-            btcsv.write(this.syncJobDataCSVList);
+            csvWriter.write(this.syncJobDataCSVList);
 
         } catch (CsvException ex) {
 

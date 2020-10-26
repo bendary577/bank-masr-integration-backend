@@ -757,6 +757,9 @@ public class InvoiceService {
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
 
+                if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
+                    continue;
+
                 if (!flag){ // Invoice from supplier to cost center
                     journalEntry.put("inventoryAccount", supplier.getData().get("accountCode"));
                     journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());

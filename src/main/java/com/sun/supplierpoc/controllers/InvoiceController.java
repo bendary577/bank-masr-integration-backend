@@ -388,12 +388,8 @@ public class InvoiceController {
 
             CostCenter oldCostCenterData = conversions.checkCostCenterExistence(oldCostCenters, cols.get(1).getText().strip(), true);
 
-            if (oldCostCenterData.checked){
-                costCenter.checked = true;
+            if (!oldCostCenterData.costCenter.equals("")){
                 costCenter = oldCostCenterData;
-            }
-            else {
-                costCenter.checked = false;
             }
 
             costCenters.add(costCenter);

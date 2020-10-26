@@ -14,7 +14,7 @@ public class Constants {
     public static String RUNNING = "Running";
 
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
-    public static String SUPPLIERS = "Suppliers";
+    public static String SUPPLIERS = "Supplids";
     public static String APPROVED_INVOICES = "Approved Invoices";
     public static String CREDIT_NOTES = "Credit Notes";
     public static String TRANSFERS = "Booked Transfers";
@@ -33,6 +33,12 @@ public class Constants {
     public static String FUSION = "Fusion";
     public static String ORACLE_OHIM = "HospitalityOHIM";
     public static String ORACLE_OHRA = "HospitalityOHRA";
+
+    //////////////////////////////////////////////// ERD //////////////////////////////////////////////
+
+    public static String EXPORT_TO_SUN_ERD = "ExportSun";
+    public static String SUN_ERD = "Sun";
+    public static String FUSION_ERD = "Fusion";
 
     ///////////////////////////////////////// Sun Server ///////////////////////////////////////////////////////////////
 

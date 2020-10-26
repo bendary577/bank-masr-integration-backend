@@ -2,7 +2,9 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.excelExporters.SalesExcelExporter;
 import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
@@ -12,6 +14,7 @@ import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -360,11 +363,38 @@ public class SalesController {
         String headerValue = "attachment; filename=Sales" + currentDateTime + ".xlsx";
         response.setHeader(headerKey, headerValue);
 
-        List<SyncJobData> bookedTransfersList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
+        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
                 false);
 
-        TransfersExcelExporter excelExporter = new TransfersExcelExporter(bookedTransfersList);
+        SalesExcelExporter excelExporter = new SalesExcelExporter(salesList);
 
         excelExporter.export(response);
+    }
+
+    @GetMapping("/sales/export/csv")
+    public void exportToText(Principal principal,
+                             @RequestParam(name = "syncJobId") String syncJobId,
+                              HttpServletResponse response) throws IOException {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=Sales" + currentDateTime + ".txt";
+        response.setHeader(headerKey, headerValue);
+        response.setContentType("text/csv");
+
+        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
+                false);
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
+
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+
+        excelExporter.writeSalesSyncData(response.getWriter());
     }
 }

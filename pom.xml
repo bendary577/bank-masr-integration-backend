@@ -161,6 +161,13 @@
             <version>4.1.0</version>
         </dependency>
 
+        <!-- CSV/TEXT Exporter -->
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>5.0</version>
+        </dependency>
+
     </dependencies>
 
 

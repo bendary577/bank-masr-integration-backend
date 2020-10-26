@@ -180,7 +180,7 @@ public class WastageService {
                     break;
                 }
                 else {
-                    TransferService.checkPagination(driver, "dg_rc_0_1");
+                    TransferService.checkPagination(driver, "dg_rc_0_0");
                     bodyTable = driver.findElement(By.id("G_dg"));
                     rows = bodyTable.findElements(By.tagName("tr"));
                 }

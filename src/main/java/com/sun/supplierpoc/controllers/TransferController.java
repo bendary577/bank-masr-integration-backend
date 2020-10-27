@@ -2,8 +2,8 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.excelExporters.InvoicesExcelExporter;
 import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
@@ -12,11 +12,8 @@ import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -424,6 +421,33 @@ public class TransferController {
         TransfersExcelExporter excelExporter = new TransfersExcelExporter(bookedTransfersList);
 
         excelExporter.export(response);
+    }
+
+    @GetMapping("/transfers/export/csv")
+    public void exportToText(Principal principal,
+                             @RequestParam(name = "syncJobId") String syncJobId,
+                             HttpServletResponse response) throws IOException {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=Transfers" + currentDateTime + ".txt";
+        response.setHeader(headerKey, headerValue);
+        response.setContentType("text/csv");
+
+        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
+                false);
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
+
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+
+        excelExporter.writeSyncData(response.getWriter());
     }
 
 }

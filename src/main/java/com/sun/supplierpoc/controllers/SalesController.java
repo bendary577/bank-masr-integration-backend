@@ -3,7 +3,6 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.SalesExcelExporter;
-import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
@@ -14,7 +13,6 @@ import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -395,6 +393,6 @@ public class SalesController {
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
 
-        excelExporter.writeSalesSyncData(response.getWriter());
+        excelExporter.writeSyncData(response.getWriter());
     }
 }

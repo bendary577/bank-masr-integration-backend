@@ -47,6 +47,10 @@ public class Configuration implements Serializable {
     private String cashShortagePOS = "";
     private String cashSurplusPOS = "";
 
+    private String recordType = "L";
+    private String conversionCode = "1";
+    private String conversionRate = "1.0";
+
     private Boolean uniqueOverGroupMapping = false;
 
     private ArrayList<Item> items = new ArrayList<>();
@@ -266,6 +270,30 @@ public class Configuration implements Serializable {
 
     public Boolean getUniqueOverGroupMapping() {
         return uniqueOverGroupMapping;
+    }
+
+    public String getRecordType() {
+        return recordType;
+    }
+
+    public void setRecordType(String recordType) {
+        this.recordType = recordType;
+    }
+
+    public String getConversionCode() {
+        return conversionCode;
+    }
+
+    public void setConversionCode(String conversionCode) {
+        this.conversionCode = conversionCode;
+    }
+
+    public String getConversionRate() {
+        return conversionRate;
+    }
+
+    public void setConversionRate(String conversionRate) {
+        this.conversionRate = conversionRate;
     }
 
     public void setUniqueOverGroupMapping(Boolean uniqueOverGroupMapping) {

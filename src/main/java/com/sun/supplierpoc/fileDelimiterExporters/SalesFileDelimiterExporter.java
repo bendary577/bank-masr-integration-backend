@@ -23,7 +23,7 @@ public class SalesFileDelimiterExporter {
         this.listSyncJobData = listSyncJobData;
     }
 
-    public void writeSalesSyncData(PrintWriter writer) {
+    public void writeSyncData(PrintWriter writer) {
         try {
             ColumnPositionMappingStrategy<SyncJobDataCSV> mapStrategy
                     = new ColumnPositionMappingStrategy<>();
@@ -69,7 +69,7 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.analysisCode0 = syncJobData.getData().get("analysisCode0");
             syncJobDataCSV.analysisCode1 = syncJobData.getData().get("analysisCode1");
 
-            syncJobDataCSV.recordType = "L";
+            syncJobDataCSV.recordType = syncJobType.getConfiguration().getRecordType();
 
             syncJobDataCSV.transactionDate = syncJobData.getData().get("transactionDate");
             if (!syncJobData.getData().containsKey("accountingPeriod") ||
@@ -90,8 +90,8 @@ public class SalesFileDelimiterExporter {
                 syncJobDataCSV.otherAmount = syncJobData.getData().get("totalCr");
                 syncJobDataCSV.accountCode = syncJobData.getData().get("inventoryAccount");
             }
-            syncJobDataCSV.conversionCode = "1";
-            syncJobDataCSV.conversionRate = "1.0";
+            syncJobDataCSV.conversionCode = syncJobType.getConfiguration().getConversionCode();
+            syncJobDataCSV.conversionRate = syncJobType.getConfiguration().getConversionRate();
 
             syncJobDataCSV.journalType = syncJobType.getConfiguration().getJournalType();
             syncJobDataCSV.analysisCode0 = syncJobType.getConfiguration().getAnalysis().get(0).getCodeElement();

@@ -95,22 +95,79 @@ public class SalesService {
                 System.out.println("No alert exits");
             }
 
-            for (CostCenter costCenter : costCenters) {
-                // check if cost center has location mapping
-                CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
+            if (costCenters.size() > 0){
+                for (CostCenter costCenter : costCenters) {
+                    // check if cost center has location mapping
+                    CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
 
-                if (!costCenterLocation.checked) {
-                    continue;
+                    if (!costCenterLocation.checked) {
+                        continue;
+                    }
+
+                    JournalBatch journalBatch = new JournalBatch();
+
+                    // Get tender
+                    Response tenderResponse = getSalesTenders(costCenterLocation.locationName, timePeriod, fromDate, toDate,
+                            costCenter, includedTenders, driver);
+                    if (!tenderResponse.isStatus()) {
+                        if (tenderResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            continue;
+                        }
+                        response.setStatus(false);
+                        response.setMessage(tenderResponse.getMessage());
+                        return response;
+                    }
+
+                    // Get taxes
+                    Response taxResponse = getSalesTaxes(costCenterLocation.locationName, timePeriod, fromDate, toDate,
+                            costCenter, false, includedTax, driver);
+                    if (!taxResponse.isStatus()) {
+                        if (taxResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            continue;
+                        }
+                        response.setStatus(false);
+                        response.setMessage(taxResponse.getMessage());
+                        return response;
+                    }
+
+                    // Get over group gross
+                    Response overGroupGrossResponse = getSalesOverGroupGross(costCenterLocation.locationName, timePeriod,
+                            fromDate, toDate, costCenter, majorGroups, driver);
+                    if (!overGroupGrossResponse.isStatus()) {
+                        if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            continue;
+                        }
+                        response.setStatus(false);
+                        response.setMessage(overGroupGrossResponse.getMessage());
+                        return response;
+                    }
+
+                    journalBatch.setCostCenter(costCenter);
+
+                    // Set Debit Entries (Tenders)
+                    journalBatch.setSalesTender(tenderResponse.getSalesTender());
+
+                    // Set Debit Entries (Taxes And overGroupsGross)
+                    journalBatch.setSalesTax(taxResponse.getSalesTax());
+                    journalBatch.setSalesMajorGroupGross(overGroupGrossResponse.getSalesMajorGroupGross());
+
+                    // Calculate different
+                    journalBatch.setSalesDifferent(0.0);
+                    journalBatches.add(journalBatch);
                 }
-
+            }else {
                 JournalBatch journalBatch = new JournalBatch();
 
                 // Get tender
-                Response tenderResponse = getSalesTenders(costCenterLocation.locationName, timePeriod, fromDate, toDate,
-                        costCenter, includedTenders, driver);
+                Response tenderResponse = getSalesTenders("", timePeriod, fromDate, toDate,
+                        new CostCenter(), includedTenders, driver);
                 if (!tenderResponse.isStatus()) {
                     if (tenderResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                        continue;
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_LOCATION);
+                        response.setEntries(new ArrayList<>());
                     }
                     response.setStatus(false);
                     response.setMessage(tenderResponse.getMessage());
@@ -118,11 +175,15 @@ public class SalesService {
                 }
 
                 // Get taxes
-                Response taxResponse = getSalesTaxes(costCenterLocation.locationName, timePeriod, fromDate, toDate,
-                        costCenter, false, includedTax, driver);
+                Response taxResponse = getSalesTaxes("", timePeriod, fromDate, toDate,
+                        new CostCenter(), false, includedTax, driver);
                 if (!taxResponse.isStatus()) {
                     if (taxResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                        continue;
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_LOCATION);
+                        response.setEntries(new ArrayList<>());
                     }
                     response.setStatus(false);
                     response.setMessage(taxResponse.getMessage());
@@ -130,18 +191,20 @@ public class SalesService {
                 }
 
                 // Get over group gross
-                Response overGroupGrossResponse = getSalesOverGroupGross(costCenterLocation.locationName, timePeriod,
-                        fromDate, toDate, costCenter, majorGroups, driver);
+                Response overGroupGrossResponse = getSalesOverGroupGross("", timePeriod,
+                        fromDate, toDate, new CostCenter(), majorGroups, driver);
                 if (!overGroupGrossResponse.isStatus()) {
                     if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                        continue;
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_LOCATION);
+                        response.setEntries(new ArrayList<>());
                     }
                     response.setStatus(false);
                     response.setMessage(overGroupGrossResponse.getMessage());
                     return response;
                 }
-
-                journalBatch.setCostCenter(costCenter);
 
                 // Set Debit Entries (Tenders)
                 journalBatch.setSalesTender(tenderResponse.getSalesTender());
@@ -154,6 +217,7 @@ public class SalesService {
                 journalBatch.setSalesDifferent(0.0);
                 journalBatches.add(journalBatch);
             }
+
             driver.quit();
 
             response.setStatus(true);

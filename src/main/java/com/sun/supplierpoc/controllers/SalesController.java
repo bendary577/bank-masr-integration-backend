@@ -13,6 +13,7 @@ import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -116,12 +117,12 @@ public class SalesController {
                 }
             }
 
-            if (syncJobType.getConfiguration().getRevenue().equals("")) {
-                String message = "Configure revenue before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
+//            if (syncJobType.getConfiguration().getRevenue().equals("")) {
+//                String message = "Configure revenue before sync sales.";
+//                response.setMessage(message);
+//                response.setStatus(false);
+//                return response;
+//            }
 
             if (syncJobType.getConfiguration().getCashShortagePOS().equals("")) {
                 String message = "Configure cash shortage account before sync sales.";
@@ -158,19 +159,19 @@ public class SalesController {
                 return response;
             }
 
-            if (costCenters.size() == 0) {
-                String message = "Map cost centers before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
-
-            if (costCentersLocation.size() == 0) {
-                String message = "Map cost centers to location before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
+//            if (costCenters.size() == 0) {
+//                String message = "Map cost centers before sync sales.";
+//                response.setMessage(message);
+//                response.setStatus(false);
+//                return response;
+//            }
+//
+//            if (costCentersLocation.size() == 0) {
+//                String message = "Map cost centers to location before sync sales.";
+//                response.setMessage(message);
+//                response.setStatus(false);
+//                return response;
+//            }
 
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
@@ -190,7 +191,7 @@ public class SalesController {
                         // Save Sales Entries
                         addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob, syncJobType);
 
-                        if (addedSalesBatches.size() > 0) {
+                        if (addedSalesBatches.size() > 0 && !account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             // Sent Sales Entries
                             IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
                             if (voucher != null) {
@@ -226,7 +227,14 @@ public class SalesController {
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        } else {
+                        }
+                        else if (account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                            syncJobService.saveSyncJobStatus(syncJob, 0,
+                                    "Save sales in middleware.", Constants.SUCCESS);
+
+                            response.setStatus(true);
+                            response.setMessage("Save sales in middleware.");
+                        }else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,
                                     "No sales to add in middleware.", Constants.SUCCESS);
 
@@ -376,22 +384,21 @@ public class SalesController {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
-
         response.setContentType("application/octet-stream");
-        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
-        String currentDateTime = dateFormatter.format(new Date());
 
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=Sales" + currentDateTime + ".txt";
-        response.setHeader(headerKey, headerValue);
-        response.setContentType("text/csv");
-
-        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
-                false);
+        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId, false);
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+
+        String transactionDate = salesList.get(0).getData().get("transactionDate");
+        String fileName = transactionDate.substring(4) + transactionDate.substring(2,4) + transactionDate.substring(0,2);
+
+        String headerKey = HttpHeaders.CONTENT_DISPOSITION;
+        String headerValue = "attachment; filename=" + fileName + ".txt";
+        response.setHeader(headerKey, headerValue);
+        response.setContentType("text/csv");
 
         excelExporter.writeSyncData(response.getWriter());
     }

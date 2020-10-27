@@ -6,7 +6,6 @@ public class SyncJobDataCSV implements Serializable {
 
     public String accountCode = "";
     public String amount = "";
-    public String otherAmount = "";
 
     public String fromCostCenter = "";
     public String fromAccountCode = "";

@@ -32,13 +32,14 @@ public class SalesFileDelimiterExporter {
 
             String[] columns = new String[]{"accountCode", "accountingPeriod", "transactionDate",
             "recordType", "amount", "DCMarker", "journalType", "transactionReference", "description",
-            "conversionCode", "conversionRate", "otherAmount", "analysisCode0", "analysisCode1"};
+            "conversionCode", "conversionRate", "analysisCode0", "analysisCode1"};
             mapStrategy.setColumnMapping(columns);
 
             StatefulBeanToCsv<SyncJobDataCSV> csvWriter = new StatefulBeanToCsvBuilder<SyncJobDataCSV>(writer)
                     .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
                     .withMappingStrategy(mapStrategy)
                     .withSeparator('\t')
+                    .withOrderedResults(false)
                     .build();
 
             this.extractSyncJobData();
@@ -81,13 +82,11 @@ public class SalesFileDelimiterExporter {
 
             if(syncJobData.getData().containsKey("totalDr")){
                 syncJobDataCSV.DCMarker = "D";
-                syncJobDataCSV.amount = syncJobData.getData().get("totalDr");
-                syncJobDataCSV.otherAmount = syncJobData.getData().get("totalDr");
+                syncJobDataCSV.amount = syncJobData.getData().get("totalDr").substring(1);
                 syncJobDataCSV.accountCode = syncJobData.getData().get("expensesAccount");
             }else {
                 syncJobDataCSV.DCMarker = "C";
                 syncJobDataCSV.amount = syncJobData.getData().get("totalCr");
-                syncJobDataCSV.otherAmount = syncJobData.getData().get("totalCr");
                 syncJobDataCSV.accountCode = syncJobData.getData().get("inventoryAccount");
             }
             syncJobDataCSV.conversionCode = syncJobType.getConfiguration().getConversionCode();

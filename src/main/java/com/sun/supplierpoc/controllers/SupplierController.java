@@ -77,6 +77,13 @@ public class SupplierController {
         HashMap<String, Object> response = new HashMap<>();
         SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
+        if (supplierSyncJobType == null){
+            String message = "You don't have the role to sync suppliers";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
+
         if (supplierSyncJobType.getConfiguration().getBusinessUnit().equals("")){
             String message = "Configure business unit before sync suppliers.";
             response.put("message", message);
@@ -173,7 +180,7 @@ public class SupplierController {
                                 syncJobRepo.save(syncJob);
 
                                 response.put("message", data.get("message"));
-                                response.put("success", false);
+                                response.put("success", true);
                             }
                         }
                         else {

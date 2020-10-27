@@ -14,7 +14,7 @@ public class Constants {
     public static String RUNNING = "Running";
 
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
-    public static String SUPPLIERS = "Supplids";
+    public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
     public static String CREDIT_NOTES = "Credit Notes";
     public static String TRANSFERS = "Booked Transfers";

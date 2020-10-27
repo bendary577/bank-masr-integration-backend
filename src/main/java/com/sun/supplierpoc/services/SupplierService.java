@@ -360,7 +360,7 @@ public class SupplierService {
 
             response.put("status", Constants.SUCCESS);
             response.put("updatedSuppliers", updatedSuppliers);
-            response.put("message", "Save Suppliers Successfully.");
+            response.put("message", "Sync Suppliers Successfully.");
             return response;
         } catch (Exception e) {
             e.printStackTrace();

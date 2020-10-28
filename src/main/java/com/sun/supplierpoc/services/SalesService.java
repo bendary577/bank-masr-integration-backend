@@ -539,7 +539,12 @@ public class SalesService {
 
                 tenderData.put("expensesAccount", tender.getAccount());
 
-                String description = "Sales F " + tender.getCostCenter().costCenterReference + " " + tender.getTender();
+                String description = "";
+                if (tender.getCostCenter().costCenter.equals("")){
+                    description = "Sales F " + tender.getTender();
+                }else {
+                    description = "Sales F " + tender.getCostCenter().costCenterReference + " " + tender.getTender();
+                }
                 if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
@@ -583,7 +588,13 @@ public class SalesService {
 //                String vatOut = syncJobType.getConfiguration().getVatOut();
                 taxData.put("inventoryAccount", tax.getAccount());
 
-                String description = "Sales F " + tax.getCostCenter().costCenterReference + " " + tax.getTax();
+                String description = "";
+                if (tax.getCostCenter().costCenter.equals("")){
+                    description = "Sales F " + tax.getTax();
+                }else {
+                    description = "Sales F " + tax.getCostCenter().costCenterReference + " " + tax.getTax();
+                }
+
                 if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
@@ -626,7 +637,13 @@ public class SalesService {
                 // Major Group account
                 majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
 
-                String description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
+                String description = "";
+                if (majorGroupJournal.getCostCenter().costCenter.equals("")){
+                    description = "Sales F " + majorGroupJournal.getMajorGroup().getMajorGroup();
+                }else {
+                    description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
+                }
+
                 if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
@@ -673,7 +690,13 @@ public class SalesService {
                 // 30 Char only
                 differentData.put("transactionReference", "Different Reference");
 
-                String description = "Sales For " + journalBatch.getCostCenter().costCenterReference + " - different";
+                String description = "";
+                if (journalBatch.getCostCenter().costCenter.equals("")){
+                    description = "Sales For " + "different";
+                }else {
+                    description = "Sales For " + journalBatch.getCostCenter().costCenterReference + " - different";
+                }
+
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }

@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models.util;
 import java.io.Serializable;
 
 public class SyncJobDataCSV implements Serializable {
+    public String versionCode = "";
 
     public String accountCode = "";
     public String amount = "";

@@ -50,6 +50,7 @@ public class Configuration implements Serializable {
     private String recordType = "L";
     private String conversionCode = "1";
     private String conversionRate = "1.0";
+    private String versionCode = "42601";
 
     private Boolean uniqueOverGroupMapping = false;
 
@@ -294,6 +295,14 @@ public class Configuration implements Serializable {
 
     public void setConversionRate(String conversionRate) {
         this.conversionRate = conversionRate;
+    }
+
+    public String getVersionCode() {
+        return versionCode;
+    }
+
+    public void setVersionCode(String versionCode) {
+        this.versionCode = versionCode;
     }
 
     public void setUniqueOverGroupMapping(Boolean uniqueOverGroupMapping) {

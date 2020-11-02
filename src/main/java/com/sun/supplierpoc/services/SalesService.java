@@ -206,11 +206,28 @@ public class SalesService {
                     return response;
                 }
 
+                // Get discounts
+                Response discountResponse = getSalesDiscount("", timePeriod,
+                        fromDate, toDate, new CostCenter(), driver);
+                if (!discountResponse.isStatus()) {
+                    if (discountResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_LOCATION);
+                        response.setEntries(new ArrayList<>());
+                    }
+                    response.setStatus(false);
+                    response.setMessage(discountResponse.getMessage());
+                    return response;
+                }
+
                 // Set Debit Entries (Tenders)
                 journalBatch.setSalesTender(tenderResponse.getSalesTender());
 
-                // Set Debit Entries (Taxes And overGroupsGross)
+                // Set Credit Entries (Taxes And overGroupsGross)
                 journalBatch.setSalesTax(taxResponse.getSalesTax());
+                journalBatch.setSalesDiscount(discountResponse.getSalesDiscount());
                 journalBatch.setSalesMajorGroupGross(overGroupGrossResponse.getSalesMajorGroupGross());
 
                 // Calculate different
@@ -439,12 +456,6 @@ public class SalesService {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            if (rows.size() <= 11){
-                response.setStatus(true);
-                response.setMessage("There is no new entries");
-                response.setSalesMajorGroupGross(majorGroupsGross);
-            }
-
             if (rows.size() <= 5){
                 response.setStatus(true);
                 response.setMessage("There is no major groups entries in this location");
@@ -487,6 +498,61 @@ public class SalesService {
             response.setStatus(true);
             response.setMessage("");
             response.setSalesMajorGroupGross(majorGroupsGross);
+
+        } catch (Exception e) {
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+            response.setEntries(new ArrayList<>());
+        }
+
+        return response;
+    }
+
+    private Response getSalesDiscount(String location, String businessDate, String fromDate, String toDate,
+                                            CostCenter costCenter, WebDriver driver) {
+        Response response = new Response();
+
+        driver.get(Constants.DISCOUNT_REPORT_LINK);
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+        } catch (Exception Ex) {
+            System.out.println("There is no loader");
+        }
+
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
+
+        if (!dateResponse.isStatus()){
+            response.setStatus(false);
+            response.setMessage( dateResponse.getMessage());
+            return response;
+        }
+
+        driver.findElement(By.id("Run Report")).click();
+
+        try {
+            driver.get(Constants.DISCOUNT_TABLE_LINK);
+
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            if (rows.size() <= 5){
+                response.setStatus(true);
+                response.setMessage("There is no major groups entries in this location");
+                response.setSalesTender(new ArrayList<>());
+
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+
+            for (int i = 7; i < rows.size(); i++) {
+
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
 
         } catch (Exception e) {
             driver.quit();

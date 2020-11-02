@@ -63,18 +63,22 @@ public class Constants {
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     // SALES LINKS
-    public static String TENDERS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=19";
-    public static String TAXES_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=18";
+    public static String TENDERS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=19";
+    public static String TAXES_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=18";
 
     // Menu Engineering >> Sales Mix Summary
-    public static String ITEM_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=46";
+    public static String ITEM_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=46";
 
     // Daily Detail >> Sales Mix
-    public static String OVER_GROUP_GROSS_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=15";
+    public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=15";
+
+    // Daily Detail >> Discount
+    public static String DISCOUNT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=13";
+    public static String DISCOUNT_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=13&reportID=DiscDailyDetail&method=run";
 
     // myInventory Reports >> COS by Cost Center
-    public static String CONSUMPTION_REPORT_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=499";
-    public static String CONSUMPTION_TABLE_LINK = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
+    public static String CONSUMPTION_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=499";
+    public static String CONSUMPTION_TABLE_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
 
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
 

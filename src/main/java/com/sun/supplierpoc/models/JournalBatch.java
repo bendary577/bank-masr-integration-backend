@@ -9,11 +9,13 @@ public class JournalBatch {
     private double salesDifferent = 0.0;
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
+    private ArrayList<Discount> salesDiscount= new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
 
     private SyncJobData salesDifferentData = new SyncJobData();
     private ArrayList<SyncJobData> salesTaxData = new ArrayList<>();
     private ArrayList<SyncJobData> salesTenderData = new ArrayList<>();
+    private ArrayList<SyncJobData> salesDiscountData = new ArrayList<>();
     private ArrayList<SyncJobData> salesMajorGroupGrossData = new ArrayList<>();
 
     public JournalBatch() {}
@@ -88,5 +90,21 @@ public class JournalBatch {
 
     public void setSalesMajorGroupGrossData(ArrayList<SyncJobData> salesMajorGroupGrossData) {
         this.salesMajorGroupGrossData = salesMajorGroupGrossData;
+    }
+
+    public ArrayList<Discount> getSalesDiscount() {
+        return salesDiscount;
+    }
+
+    public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
+        this.salesDiscount = salesDiscount;
+    }
+
+    public ArrayList<SyncJobData> getSalesDiscountData() {
+        return salesDiscountData;
+    }
+
+    public void setSalesDiscountData(ArrayList<SyncJobData> salesDiscountData) {
+        this.salesDiscountData = salesDiscountData;
     }
 }

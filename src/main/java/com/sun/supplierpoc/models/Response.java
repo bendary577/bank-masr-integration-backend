@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.configurations.Discount;
 import com.sun.supplierpoc.models.configurations.Tax;
 import com.sun.supplierpoc.models.configurations.Tender;
 
@@ -14,6 +15,7 @@ public class Response {
     // Sales Variables
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
+    private ArrayList<Discount> salesDiscount = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
@@ -105,5 +107,13 @@ public class Response {
 
     public void setBookedProduction(ArrayList<BookedProduction> bookedProduction) {
         this.bookedProduction = bookedProduction;
+    }
+
+    public ArrayList<Discount> getSalesDiscount() {
+        return salesDiscount;
+    }
+
+    public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
+        this.salesDiscount = salesDiscount;
     }
 }

@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.SalesService;
+import com.sun.supplierpoc.services.SyncJobDataService;
 import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -49,6 +50,8 @@ public class SalesController {
 
     @Autowired
     private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     public Conversions conversions = new Conversions();
 
@@ -217,19 +220,18 @@ public class SalesController {
                             }
 
                         }
-                        else if (account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                            if (addedSalesBatches.size() > 0){
-                                ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                                AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+                        else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                            ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                            AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
 
-                                String username = sunCredentials.getUsername();
-                                String password = sunCredentials.getPassword();
-                                String host = sunCredentials.getHost();
-                                int port = sunCredentials.getPort();
+                            String username = sunCredentials.getUsername();
+                            String password = sunCredentials.getPassword();
+                            String host = sunCredentials.getHost();
+                            int port = sunCredentials.getPort();
 
-                                FtpClient ftpClient = new FtpClient(host, port, username, password);
-                                ftpClient.open();
+                            FtpClient ftpClient = new FtpClient(host, port, username, password);
 
+                            if(ftpClient.open()){
                                 List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                                 SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
                                         syncJobType, salesList);
@@ -237,24 +239,36 @@ public class SalesController {
                                 DateFormatSymbols dfs = new DateFormatSymbols();
                                 String[] weekdays = dfs.getWeekdays();
 
-                                Calendar cal = Calendar.getInstance();
-                                int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                                String dayName = weekdays[day];
-                                String fileExtension = ".ndf";
                                 String transactionDate = salesList.get(0).getData().get("transactionDate");
+                                String dayName = weekdays[Integer.parseInt(transactionDate.substring(0,2))];
+                                String fileExtension = ".ndf";
                                 String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
 
                                 File file = excelExporter.createNDFFile();
-                                ftpClient.putFileToPath(file, fileName);
+                                if (ftpClient.putFileToPath(file, fileName)){
+                                    syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                            "Sync sales successfully.", Constants.SUCCESS);
 
+                                    response.setStatus(true);
+                                    response.setMessage("Sync sales successfully.");
+                                }else {
+                                    syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                            "Failed to sync sales to sun system via FTP.", Constants.FAILED);
+
+                                    response.setStatus(true);
+                                    response.setMessage("Failed to sync sales to sun system via FTP.");
+                                }
                                 ftpClient.close();
                             }
-                            syncJobService.saveSyncJobStatus(syncJob, 0,
-                                    "Save sales in middleware.", Constants.SUCCESS);
+                            else {
+                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
-                            response.setStatus(true);
-                            response.setMessage("Save sales in middleware.");
+                                response.setStatus(true);
+                                response.setMessage("Failed to connect to sun system via FTP.");
+                            }
                         }
                         else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,

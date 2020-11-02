@@ -42,8 +42,6 @@ public class SalesFileDelimiterExporter {
 
         this.createFileContent();
         writer.println(this.fileContent);
-
-        File file = createNDFFile();
     }
 
     public File createNDFFile(){
@@ -150,6 +148,10 @@ public class SalesFileDelimiterExporter {
 
                 String amountPart = amountArray[0];
                 String decimalPart = amountArray[1];
+                if (amountPart.equals(""))
+                    amountPart = "0";
+                if (decimalPart.equals(""))
+                    decimalPart = "0";
 
                 if(amountPart.length() < 15){
                     amountPart = String.format("%0"+ 15 + "d", Integer.parseInt(amountPart));

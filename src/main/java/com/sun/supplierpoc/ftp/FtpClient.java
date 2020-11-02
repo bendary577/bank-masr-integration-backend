@@ -27,7 +27,7 @@ public class FtpClient {
         this.password = password;
     }
 
-    public void open() throws IOException {
+    public boolean open() throws IOException {
         ftp = new FTPClient();
 
         ftp.addProtocolCommandListener(new PrintCommandListener(new PrintWriter(System.out)));
@@ -36,17 +36,18 @@ public class FtpClient {
         int reply = ftp.getReplyCode();
         if (!FTPReply.isPositiveCompletion(reply)) {
             ftp.disconnect();
-            throw new IOException("Exception in connecting to FTP Server");
+//            throw new IOException("Exception in connecting to FTP Server");
+            return false;
         }
 
-        ftp.login(user, password);
+        return ftp.login(user, password);
     }
 
     public void close() throws IOException {
         ftp.disconnect();
     }
 
-    public void putFileToPath(File file, String path) throws IOException {
-        ftp.storeFile(path, new FileInputStream(file));
+    public boolean putFileToPath(File file, String path) throws IOException {
+        return ftp.storeFile(path, new FileInputStream(file));
     }
 }

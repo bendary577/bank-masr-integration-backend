@@ -1,15 +1,11 @@
 package com.sun.supplierpoc.fileDelimiterExporters;
 
 import com.opencsv.bean.ColumnPositionMappingStrategy;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.exceptions.CsvException;
 import com.sun.supplierpoc.models.SyncJobData;
-import com.opencsv.CSVWriter;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.util.SyncJobDataCSV;
 
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,8 +13,10 @@ public class SalesFileDelimiterExporter {
     private SyncJobType syncJobType;
     private List<SyncJobData> listSyncJobData;
     private List<SyncJobDataCSV> syncJobDataCSVList = new ArrayList<>();
+    private String fileName = "";
+    private StringBuilder fileContent = new StringBuilder();
 
-    public SalesFileDelimiterExporter(SyncJobType syncJobType, List<SyncJobData> listSyncJobData) {
+    public SalesFileDelimiterExporter( SyncJobType syncJobType, List<SyncJobData> listSyncJobData) {
         this.syncJobType = syncJobType;
         this.listSyncJobData = listSyncJobData;
     }
@@ -34,14 +32,33 @@ public class SalesFileDelimiterExporter {
         "conversionCode", "conversionRate", "analysisCode0", "analysisCode1"};
         mapStrategy.setColumnMapping(columns);
 
-        StatefulBeanToCsv<SyncJobDataCSV> csvWriter = new StatefulBeanToCsvBuilder<SyncJobDataCSV>(writer)
-                .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-                .withMappingStrategy(mapStrategy)
-                .withSeparator('\t')
-                .withOrderedResults(false)
-                .build();
+//        StatefulBeanToCsv<SyncJobDataCSV> csvWriter = new StatefulBeanToCsvBuilder<SyncJobDataCSV>(writer)
+//                .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
+//                .withMappingStrategy(mapStrategy)
+//                .withSeparator('\t')
+//                .withOrderedResults(false)
+//                .build();
 //            csvWriter.write(this.syncJobDataCSVList);
 
+        this.createFileContent();
+        writer.println(this.fileContent);
+
+        File file = createNDFFile();
+    }
+
+    public File createNDFFile(){
+        this.createFileContent();
+        File file = new File("sales.ndf");
+        try (Writer writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(String.valueOf(this.fileContent));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return file;
+    }
+
+    private void createFileContent(){
         this.extractSyncJobData();
         String journalNumberSpaces = "       "; // 7 Length
         String lineSpaces = "       "; // 7 Length
@@ -68,23 +85,22 @@ public class SalesFileDelimiterExporter {
         String roughBookFlag = " "; // 1 Length
         String inUseFlag  = " "; // 1 Length
 
-
-        writer.println("VERSION                         " + this.syncJobDataCSVList.get(0).versionCode);
+        fileContent.append("VERSION                         ").append(this.syncJobDataCSVList.get(0).versionCode).append("\n");
         for (SyncJobDataCSV syncJobDataCSV : this.syncJobDataCSVList) {
-            writer.println(syncJobDataCSV.accountCode + "     " + syncJobDataCSV.accountingPeriod +
-                    syncJobDataCSV.transactionDate + "  " + syncJobDataCSV.recordType +
-                    journalNumberSpaces + lineSpaces +
-                    syncJobDataCSV.amount + syncJobDataCSV.DCMarker +
-                    allocationIndicatorSpace + syncJobDataCSV.journalType +
-                    journalSource + syncJobDataCSV.transactionReference +
-                    syncJobDataCSV.description + entryDate + entryPeriod + dueDate + filler6 + paymentRef +
-                    paymentDate + paymentPeriod + asssetIndicator + asssetCode +
-                    assetSubCode + conversionCode + conversionRate + otherAmount + amountDec + cleardown +
-                            filler4 + nextPeriodReversal + textLinked + roughBookFlag + inUseFlag +
-                            syncJobDataCSV.analysisCode0 + syncJobDataCSV.analysisCode1 + syncJobDataCSV.analysisCode2
-                    );
+            fileContent.append(syncJobDataCSV.accountCode).append("     ")
+                    .append(syncJobDataCSV.accountingPeriod).append(syncJobDataCSV.transactionDate).append("  ")
+                    .append(syncJobDataCSV.recordType).append(journalNumberSpaces).append(lineSpaces)
+                    .append(syncJobDataCSV.amount).append(syncJobDataCSV.DCMarker).append(allocationIndicatorSpace)
+                    .append(syncJobDataCSV.journalType).append(journalSource).append(syncJobDataCSV.transactionReference)
+                    .append(syncJobDataCSV.description).append(entryDate).append(entryPeriod).append(dueDate)
+                    .append(filler6).append(paymentRef).append(paymentDate).append(paymentPeriod).append(asssetIndicator)
+                    .append(asssetCode).append(assetSubCode).append(conversionCode).append(conversionRate)
+                    .append(otherAmount).append(amountDec).append(cleardown).append(filler4).append(nextPeriodReversal)
+                    .append(textLinked).append(roughBookFlag).append(inUseFlag).append(syncJobDataCSV.analysisCode0)
+                    .append(syncJobDataCSV.analysisCode1).append(syncJobDataCSV.analysisCode2)
+                    .append(syncJobDataCSV.analysisCode3).append(syncJobDataCSV.analysisCode4)
+                    .append(syncJobDataCSV.analysisCode5).append("\n");
         }
-
     }
 
     private void extractSyncJobData(){
@@ -207,6 +223,27 @@ public class SalesFileDelimiterExporter {
                 syncJobDataCSV.analysisCode2 = syncJobDataCSV.analysisCode2.substring(0, 15);
             }else if(syncJobDataCSV.analysisCode2.length() < 15) {
                 syncJobDataCSV.analysisCode2 = String.format("%-15s", syncJobDataCSV.analysisCode2);
+            }
+
+            syncJobDataCSV.analysisCode3 = syncJobType.getConfiguration().getAnalysis().get(3).getCodeElement();
+            if(syncJobDataCSV.analysisCode3.length() > 15){
+                syncJobDataCSV.analysisCode3 = syncJobDataCSV.analysisCode3.substring(0, 15);
+            }else if(syncJobDataCSV.analysisCode3.length() < 15) {
+                syncJobDataCSV.analysisCode3 = String.format("%-15s", syncJobDataCSV.analysisCode3);
+            }
+
+            syncJobDataCSV.analysisCode4 = syncJobType.getConfiguration().getAnalysis().get(4).getCodeElement();
+            if(syncJobDataCSV.analysisCode4.length() > 15){
+                syncJobDataCSV.analysisCode4 = syncJobDataCSV.analysisCode4.substring(0, 15);
+            }else if(syncJobDataCSV.analysisCode4.length() < 15) {
+                syncJobDataCSV.analysisCode4 = String.format("%-15s", syncJobDataCSV.analysisCode4);
+            }
+
+            syncJobDataCSV.analysisCode5 = syncJobType.getConfiguration().getAnalysis().get(5).getCodeElement();
+            if(syncJobDataCSV.analysisCode5.length() > 15){
+                syncJobDataCSV.analysisCode5 = syncJobDataCSV.analysisCode5.substring(0, 15);
+            }else if(syncJobDataCSV.analysisCode5.length() < 15) {
+                syncJobDataCSV.analysisCode5 = String.format("%-15s", syncJobDataCSV.analysisCode5);
             }
 
             this.syncJobDataCSVList.add(syncJobDataCSV);

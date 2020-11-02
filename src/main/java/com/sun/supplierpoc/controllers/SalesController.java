@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.SalesExcelExporter;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
+import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
@@ -20,9 +21,11 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -159,20 +162,6 @@ public class SalesController {
                 return response;
             }
 
-//            if (costCenters.size() == 0) {
-//                String message = "Map cost centers before sync sales.";
-//                response.setMessage(message);
-//                response.setStatus(false);
-//                return response;
-//            }
-//
-//            if (costCentersLocation.size() == 0) {
-//                String message = "Map cost centers to location before sync sales.";
-//                response.setMessage(message);
-//                response.setStatus(false);
-//                return response;
-//            }
-
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
@@ -229,12 +218,45 @@ public class SalesController {
 
                         }
                         else if (account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                            if (addedSalesBatches.size() > 0){
+                                ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                                AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+                                String username = sunCredentials.getUsername();
+                                String password = sunCredentials.getPassword();
+                                String host = sunCredentials.getHost();
+                                int port = sunCredentials.getPort();
+
+                                FtpClient ftpClient = new FtpClient(host, port, username, password);
+                                ftpClient.open();
+
+                                List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                                SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                        syncJobType, salesList);
+
+                                DateFormatSymbols dfs = new DateFormatSymbols();
+                                String[] weekdays = dfs.getWeekdays();
+
+                                Calendar cal = Calendar.getInstance();
+                                int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                                String dayName = weekdays[day];
+                                String fileExtension = ".ndf";
+                                String transactionDate = salesList.get(0).getData().get("transactionDate");
+                                String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+
+                                File file = excelExporter.createNDFFile();
+                                ftpClient.putFileToPath(file, fileName);
+
+                                ftpClient.close();
+                            }
                             syncJobService.saveSyncJobStatus(syncJob, 0,
                                     "Save sales in middleware.", Constants.SUCCESS);
 
                             response.setStatus(true);
                             response.setMessage("Save sales in middleware.");
-                        }else {
+                        }
+                        else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,
                                     "No sales to add in middleware.", Constants.SUCCESS);
 
@@ -390,7 +412,6 @@ public class SalesController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
 
         String transactionDate = salesList.get(0).getData().get("transactionDate");
         String fileName = transactionDate.substring(4) + transactionDate.substring(2,4) + transactionDate.substring(0,2);
@@ -400,6 +421,7 @@ public class SalesController {
         response.setHeader(headerKey, headerValue);
         response.setContentType("text/csv");
 
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter( syncJobType, salesList);
         excelExporter.writeSyncData(response.getWriter());
     }
 }

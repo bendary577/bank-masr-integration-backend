@@ -81,7 +81,7 @@ public class SalesFileDelimiterExporter {
                     paymentDate + paymentPeriod + asssetIndicator + asssetCode +
                     assetSubCode + conversionCode + conversionRate + otherAmount + amountDec + cleardown +
                             filler4 + nextPeriodReversal + textLinked + roughBookFlag + inUseFlag +
-                            syncJobDataCSV.analysisCode0 + syncJobDataCSV.analysisCode1
+                            syncJobDataCSV.analysisCode0 + syncJobDataCSV.analysisCode1 + syncJobDataCSV.analysisCode2
                     );
         }
 
@@ -200,6 +200,13 @@ public class SalesFileDelimiterExporter {
                 syncJobDataCSV.analysisCode1 = syncJobDataCSV.analysisCode1.substring(0, 15);
             }else if(syncJobDataCSV.analysisCode1.length() < 15) {
                 syncJobDataCSV.analysisCode1 = String.format("%-15s", syncJobDataCSV.analysisCode1);
+            }
+
+            syncJobDataCSV.analysisCode2 = syncJobType.getConfiguration().getAnalysis().get(2).getCodeElement();
+            if(syncJobDataCSV.analysisCode2.length() > 15){
+                syncJobDataCSV.analysisCode2 = syncJobDataCSV.analysisCode2.substring(0, 15);
+            }else if(syncJobDataCSV.analysisCode2.length() < 15) {
+                syncJobDataCSV.analysisCode2 = String.format("%-15s", syncJobDataCSV.analysisCode2);
             }
 
             this.syncJobDataCSVList.add(syncJobDataCSV);

@@ -595,7 +595,11 @@ public class TransferService {
 
         if (creditDebitFlag){
             Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation")));
+            if (addedJournalEntry.getData().get("fromLocation").equals("")){
+                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(analysis.get(Integer.parseInt(locationAnalysis)).getCodeElement()));
+            }else {
+                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation")));
+            }
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
             Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
@@ -604,7 +608,11 @@ public class TransferService {
         }
         else{
             Element vAcntCatAnalysis_AnlCodeElement1 = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation")));
+            if (addedJournalEntry.getData().get("fromLocation").equals("")){
+                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(analysis.get(Integer.parseInt(locationAnalysis)).getCodeElement()));
+            }else {
+                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation")));
+            }
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
             Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);

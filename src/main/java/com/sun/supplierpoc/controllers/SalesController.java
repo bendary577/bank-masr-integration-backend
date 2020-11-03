@@ -240,7 +240,12 @@ public class SalesController {
                                 String[] weekdays = dfs.getWeekdays();
 
                                 String transactionDate = salesList.get(0).getData().get("transactionDate");
-                                String dayName = weekdays[Integer.parseInt(transactionDate.substring(0,2))];
+                                Calendar cal = Calendar.getInstance();
+                                Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                                cal.setTime(date);
+                                int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                                String dayName = weekdays[day];
                                 String fileExtension = ".ndf";
                                 String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
 

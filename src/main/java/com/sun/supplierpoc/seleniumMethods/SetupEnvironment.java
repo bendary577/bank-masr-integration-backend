@@ -37,7 +37,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -45,7 +45,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -271,7 +271,12 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                    response = chooseMonthsDateOHRA(syncFromDate, syncToDate, driver);
+                    if (syncFromDate.equals(syncToDate)){
+                        response = chooseDaysDateOHRA(syncFromDate, syncToDate, driver);
+                    }else {
+                        response = chooseMonthsDateOHRA(syncFromDate, syncToDate, driver);
+                    }
+
                     if (!response.isStatus()){
                         return response;
                     }
@@ -349,7 +354,10 @@ public class SetupEnvironment {
         return response;
     }
 
-    private void chooseDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+    private Response chooseDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+        driver.findElement(By.id("clear0")).click();
+        Response response = new Response();
+
         DateFormat Date = DateFormat.getDateInstance();
         Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
         Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
@@ -380,6 +388,9 @@ public class SetupEnvironment {
                     .build()
                     .perform();
         }
+
+        response.setStatus(true);
+        return response;
     }
 
     private Response chooseMonthsDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {

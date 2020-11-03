@@ -55,7 +55,7 @@ public class SalesService {
     public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCenters,
                                  ArrayList<CostCenter> costCentersLocation, ArrayList<MajorGroup> majorGroups,
                                  ArrayList<Tender> includedTenders,  ArrayList<Tax> includedTax,
-                                 Account account) {
+                                 ArrayList<Discount> includedDiscount, Account account) {
 
         Response response = new Response();
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
@@ -208,7 +208,7 @@ public class SalesService {
 
                 // Get discounts
                 Response discountResponse = getSalesDiscount("", timePeriod,
-                        fromDate, toDate, new CostCenter(), driver);
+                        fromDate, toDate, new CostCenter(), true, includedDiscount, driver);
                 if (!discountResponse.isStatus()) {
                     if (discountResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
                         driver.quit();
@@ -224,10 +224,10 @@ public class SalesService {
 
                 // Set Debit Entries (Tenders)
                 journalBatch.setSalesTender(tenderResponse.getSalesTender());
+                journalBatch.setSalesDiscount(discountResponse.getSalesDiscount());
 
                 // Set Credit Entries (Taxes And overGroupsGross)
                 journalBatch.setSalesTax(taxResponse.getSalesTax());
-                journalBatch.setSalesDiscount(discountResponse.getSalesDiscount());
                 journalBatch.setSalesMajorGroupGross(overGroupGrossResponse.getSalesMajorGroupGross());
 
                 // Calculate different
@@ -511,8 +511,10 @@ public class SalesService {
     }
 
     private Response getSalesDiscount(String location, String businessDate, String fromDate, String toDate,
-                                            CostCenter costCenter, WebDriver driver) {
+                                            CostCenter costCenter, boolean getDiscountTotalFlag, ArrayList<Discount> discounts,
+                                      WebDriver driver) {
         Response response = new Response();
+        ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         driver.get(Constants.DISCOUNT_REPORT_LINK);
         try{
@@ -526,7 +528,7 @@ public class SalesService {
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
-            response.setMessage( dateResponse.getMessage());
+            response.setMessage(dateResponse.getMessage());
             return response;
         }
 
@@ -539,7 +541,7 @@ public class SalesService {
 
             if (rows.size() <= 5){
                 response.setStatus(true);
-                response.setMessage("There is no major groups entries in this location");
+                response.setMessage("There is no discount entries in this location");
                 response.setSalesTender(new ArrayList<>());
 
                 return response;
@@ -547,21 +549,57 @@ public class SalesService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 6; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
 
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+                Discount discount = new Discount();
+
+                if(getDiscountTotalFlag){
+                    WebElement td = cols.get(0);
+                    if (td.getText().equals("Total Discounts:")) {
+                        discount = conversions.checkDiscountExistence(discounts, "discount cost");
+
+                        float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+
+                        discount.setTotal(discountTotal);
+                        discount.setCostCenter(costCenter);
+                        salesDiscount.add(discount);
+                        break;
+                    }
+                }else{
+                    if (columns.indexOf("discount_type") != -1){
+                        WebElement td = cols.get(columns.indexOf("discount_type"));
+                        discount = conversions.checkDiscountExistence(discounts, td.getText().strip().toLowerCase());
+
+                        if (!discount.isChecked()) {
+                            continue;
+                        }
+
+                        float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+
+                        discount.setTotal(discountTotal);
+                        discount.setCostCenter(costCenter);
+                        salesDiscount.add(discount);
+                    }else{
+                        driver.quit();
+                        response.setStatus(false);
+                        response.setMessage("Failed to get discount entries, Please contact support team.");
+                    }
+                }
             }
-
             response.setStatus(true);
             response.setMessage("");
-
+            response.setSalesDiscount(salesDiscount);
         } catch (Exception e) {
             driver.quit();
 
             response.setStatus(false);
             response.setMessage(e.getMessage());
-            response.setEntries(new ArrayList<>());
         }
-
         return response;
     }
 
@@ -576,6 +614,7 @@ public class SalesService {
         ArrayList<JournalBatch> journalBatches = salesResponse.getJournalBatches();
         for (JournalBatch journalBatch : journalBatches) {
             float totalTender = 0;
+            float totalDiscount = 0;
             float totalTax = 0;
             float totalMajorGroupNet = 0;
 
@@ -590,7 +629,11 @@ public class SalesService {
                 tenderData.put("accountingPeriod", transactionDate.substring(2,6));
                 tenderData.put("transactionDate", transactionDate);
 
-                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
+                if (tender.getTotal() < 0){
+                    tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal())));
+                }else {
+                    tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
+                }
 
                 tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
                 tenderData.put("fromAccountCode", tender.getCostCenter().accountCode);
@@ -624,6 +667,56 @@ public class SalesService {
 
                 float tenderTotal = tender.getTotal();
                 totalTender += tenderTotal;
+            }
+
+            ArrayList<Discount> discounts = journalBatch.getSalesDiscount();
+            for (Discount discount : discounts) {
+                if (discount.getTotal() == 0)
+                    continue;
+
+                HashMap<String, String> discountData = new HashMap<>();
+
+                discountData.put("accountingPeriod", transactionDate.substring(2,6));
+                discountData.put("transactionDate", transactionDate);
+
+                if (discount.getTotal() < 0){
+                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
+                }else {
+                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal()) * -1));
+                }
+
+                discountData.put("fromCostCenter", discount.getCostCenter().costCenter);
+                discountData.put("fromAccountCode", discount.getCostCenter().accountCode);
+
+                discountData.put("toCostCenter", discount.getCostCenter().costCenter);
+                discountData.put("toAccountCode", discount.getCostCenter().accountCode);
+
+                discountData.put("fromLocation", discount.getCostCenter().accountCode);
+                discountData.put("toLocation", discount.getCostCenter().accountCode);
+
+                discountData.put("transactionReference", "Discount Cost");
+
+                discountData.put("expensesAccount", discount.getAccount());
+
+                String description = "";
+                if (discount.getCostCenter().costCenter.equals("")){
+                    description = "Discount Cost";
+                }else {
+                    description = "Discount Cost F " + discount.getCostCenter().costCenterReference + " " + discount.getDiscount();
+                }
+                if (description.length() > 50) {
+                    description = description.substring(0, 50);
+                }
+
+                discountData.put("description", description);
+
+                SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
+                        syncJob.getId());
+                syncJobDataRepo.save(syncJobData);
+                journalBatch.getSalesDiscountData().add(syncJobData);
+
+                float discountTotal = discount.getTotal();
+                totalDiscount += discountTotal;
             }
 
             // Save taxes {Credit}
@@ -725,22 +818,22 @@ public class SalesService {
                 totalMajorGroupNet += majorGroupGrossTotal;
             }
 
-            if ((totalMajorGroupNet + totalTax) != totalTender) {
+            if ((totalMajorGroupNet + totalTax) != (totalDiscount + totalTender)) {
                 HashMap<String, String> differentData = new HashMap<>();
 
                 differentData.put("accountingPeriod", transactionDate.substring(2,6));
                 differentData.put("transactionDate", transactionDate);
 
                 // {Debit} - ShortagePOS
-                if ((totalMajorGroupNet + totalTax) > totalTender) {
+                if ((totalMajorGroupNet + totalTax) > (totalDiscount + totalTender)) {
                     String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
-                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalMajorGroupNet + totalTax) - totalTender)));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalMajorGroupNet + totalTax) - (totalDiscount + totalTender))));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
-                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalTender - (totalMajorGroupNet + totalTax))));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat((totalDiscount + totalTender) - (totalMajorGroupNet + totalTax))));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 
@@ -900,11 +993,13 @@ public class SalesService {
             SyncJobData salesDifferentData;
             ArrayList<SyncJobData> salesTaxData;
             ArrayList<SyncJobData> salesTenderData;
+            ArrayList<SyncJobData> salesDiscountData;
             ArrayList<SyncJobData> salesMajorGroupGrossData;
 
             salesDifferentData = addedJournalBatch.getSalesDifferentData();
             salesTaxData = addedJournalBatch.getSalesTaxData();
             salesTenderData = addedJournalBatch.getSalesTenderData();
+            salesDiscountData = addedJournalBatch.getSalesDiscountData();
             salesMajorGroupGrossData = addedJournalBatch.getSalesMajorGroupGrossData();
 
             ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
@@ -924,6 +1019,12 @@ public class SalesService {
             for (SyncJobData tenderData : salesTenderData) {
                 if (tenderData.getData().containsKey("totalDr")){
                     transferService.createJournalLine(false, doc, ledgerElement, syncJobType, tenderData);
+                }
+            }
+
+            for (SyncJobData discountData : salesDiscountData) {
+                if (discountData.getData().containsKey("totalDr")){
+                    transferService.createJournalLine(false, doc, ledgerElement, syncJobType, discountData);
                 }
             }
 

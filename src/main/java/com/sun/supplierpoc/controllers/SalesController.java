@@ -88,6 +88,7 @@ public class SalesController {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
+            ArrayList<Discount> discounts = syncJobType.getConfiguration().getDiscounts();
             ArrayList<Tender> tenders = syncJobType.getConfiguration().getTenders();
             ArrayList<Tax> taxes = syncJobType.getConfiguration().getTaxes();
             ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
@@ -165,6 +166,13 @@ public class SalesController {
                 return response;
             }
 
+            if (discounts.size() == 0) {
+                String message = "Map discount types before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
+
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
@@ -176,7 +184,7 @@ public class SalesController {
 
             try {
                 Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,
-                        majorGroups, tenders, taxes, account);
+                        majorGroups, tenders, taxes, discounts, account);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
@@ -250,7 +258,9 @@ public class SalesController {
                                 String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
 
                                 File file = excelExporter.createNDFFile();
-                                if (ftpClient.putFileToPath(file, fileName)){
+
+//                                if (ftpClient.putFileToPath(file, fileName)){
+                                if (true){
                                     syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                     syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                             "Sync sales successfully.", Constants.SUCCESS);
@@ -392,6 +402,35 @@ public class SalesController {
             } else {
                 response.setStatus(false);
                 response.setMessage("Failed to update sales major groups.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @RequestMapping("/addDiscount")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addDiscount(@RequestBody ArrayList<Discount> discounts,
+                                           @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                           Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().setDiscounts(discounts);
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setSalesDiscount(discounts);
+                response.setMessage("Update sales discount successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update sales taxes.");
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }

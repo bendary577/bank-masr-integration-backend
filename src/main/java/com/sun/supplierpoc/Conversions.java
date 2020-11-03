@@ -55,6 +55,16 @@ public class Conversions {
         return new MajorGroup();
     }
 
+    public Discount checkDiscountExistence(ArrayList<Discount> discounts, String discountName){
+        for (Discount discount : discounts) {
+            if (discount.getDiscount().toLowerCase().equals(discountName.toLowerCase())) {
+                return discount;
+            }
+        }
+
+        return new Discount();
+    }
+
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
         for (ItemGroup itemGroup : itemGroups) {
             if (itemGroup.getItemGroup().toLowerCase().equals(itemGroupName.toLowerCase())) {

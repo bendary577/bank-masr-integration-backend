@@ -37,7 +37,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -45,7 +45,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -240,9 +240,27 @@ public class SetupEnvironment {
     }
 
     public Response selectTimePeriodOHRA(String timePeriod, String syncFromDate, String syncToDate,
-                                         String location, WebDriver driver) {
+                                         String location, String revenueCenter, WebDriver driver) {
         Response response = new Response();
         try {
+            if (!revenueCenter.equals("")) {
+                Select selectLocation = new Select(driver.findElement(By.id("revenueCenterData")));
+
+                try {
+                    selectLocation.selectByVisibleText(revenueCenter);
+                } catch (Exception e) {
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_REVENUE_CENTER);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+
+                String selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                while (!selectLocationOption.equals(revenueCenter)) {
+                    selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                }
+            }
+
             if (!location.equals("")) {
                 Select selectLocation = new Select(driver.findElement(By.id("locationData")));
 

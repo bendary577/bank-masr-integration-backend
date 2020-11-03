@@ -88,7 +88,8 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, "", driver);
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
+                    "", "", driver);
 
             if (!dateResponse.isStatus()){
                 response.put("status", Constants.FAILED);
@@ -293,7 +294,7 @@ public class JournalService {
                     continue;
 
                 Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
-                        costCenterLocation.locationName, driver);
+                        costCenterLocation.locationName, "", driver);
 
                 if (!dateResponse.isStatus() && !dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
                     driver.quit();

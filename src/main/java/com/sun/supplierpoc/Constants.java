@@ -8,6 +8,7 @@ public class Constants {
     public static String RETRY_TO_SEND = "Retry to Send";
 
     public static String INVALID_LOCATION = "Invalid location";
+    public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
 
     ///////////////////////////////////////// Sync Job Status///////////////////////////////////////////////////////////
@@ -88,6 +89,11 @@ public class Constants {
     public static String APPROVED_INVOICE_Status = "Approved Invoice";
     public static String ACCOUNT_PAYABLE_RTV_Status = "Invoice sent to A/P (RTV)";
     public static String ACCOUNT_PAYABLE_Status = "Invoice sent to A/P";
+
+    ///////////////////////////////////////// Sales over group gross types ////////////////////////////////////////////////////////////////////
+
+    public static String SALES_GROSS = "Gross";
+    public static String SALES_GROSS_LESS_DISCOUNT = "Gross Less Discount";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////////////
 

@@ -46,6 +46,7 @@ public class Configuration implements Serializable {
     private String vatOut = "";
     private String cashShortagePOS = "";
     private String cashSurplusPOS = "";
+    private String grossDiscountSales = "";
 
     private String recordType = "L";
     private String conversionCode = "1";
@@ -65,6 +66,7 @@ public class Configuration implements Serializable {
     private ArrayList<Tender> tenders = new ArrayList<>();
     private ArrayList<Tax> taxes = new ArrayList<>();
     private ArrayList<Discount> discounts = new ArrayList<>();
+    private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
 
     private AccountSettings accountSettings;
 
@@ -270,6 +272,14 @@ public class Configuration implements Serializable {
         this.cashSurplusPOS = cashSurplusPOS;
     }
 
+    public String getGrossDiscountSales() {
+        return grossDiscountSales;
+    }
+
+    public void setGrossDiscountSales(String grossDiscountSales) {
+        this.grossDiscountSales = grossDiscountSales;
+    }
+
     public Boolean getUniqueOverGroupMapping() {
         return uniqueOverGroupMapping;
     }
@@ -396,6 +406,14 @@ public class Configuration implements Serializable {
 
     public void setDiscounts(ArrayList<Discount> discounts) {
         this.discounts = discounts;
+    }
+
+    public ArrayList<RevenueCenter> getRevenueCenters() {
+        return revenueCenters;
+    }
+
+    public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
+        this.revenueCenters = revenueCenters;
     }
 
     public AccountSettings getAccountSettings() {

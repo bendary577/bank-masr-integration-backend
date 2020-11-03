@@ -409,7 +409,8 @@ public class WastageService {
                     selectedOption = locationData.getFirstSelectedOption().getText().strip();
                 }
 
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, fromDate, toDate,"", driver);
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, fromDate, toDate,
+                        "", "", driver);
 
                 if (!dateResponse.isStatus()){
                     response.put("status", Constants.FAILED);

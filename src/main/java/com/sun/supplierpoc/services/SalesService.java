@@ -55,7 +55,8 @@ public class SalesService {
     public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCenters,
                                  ArrayList<CostCenter> costCentersLocation, ArrayList<MajorGroup> majorGroups,
                                  ArrayList<Tender> includedTenders,  ArrayList<Tax> includedTax,
-                                 ArrayList<Discount> includedDiscount, Account account) {
+                                 ArrayList<Discount> includedDiscount, ArrayList<RevenueCenter> revenueCenters,
+                                 Account account) {
 
         Response response = new Response();
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
@@ -63,6 +64,7 @@ public class SalesService {
         String timePeriod = salesSyncJobType.getConfiguration().getTimePeriod();
         String fromDate = salesSyncJobType.getConfiguration().getFromDate();
         String toDate = salesSyncJobType.getConfiguration().getToDate();
+        String grossDiscountSales = salesSyncJobType.getConfiguration().getGrossDiscountSales();
 
         WebDriver driver = null;
         try {
@@ -131,14 +133,55 @@ public class SalesService {
                     }
 
                     // Get over group gross
-                    Response overGroupGrossResponse = getSalesOverGroupGross(costCenterLocation.locationName, timePeriod,
-                            fromDate, toDate, costCenter, majorGroups, driver);
-                    if (!overGroupGrossResponse.isStatus()) {
-                        if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                            continue;
+                    ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
+                    if (revenueCenters.size() > 0 ){
+                        for (RevenueCenter rc : revenueCenters)
+                        {
+                            Response overGroupGrossResponse = getSalesOverGroupGross(rc, "",
+                                    timePeriod, fromDate, toDate, new CostCenter(), majorGroups, grossDiscountSales, driver);
+                            if (!overGroupGrossResponse.isStatus()) {
+                                if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                                    continue;
+                                }
+                                response.setStatus(false);
+                                response.setMessage(overGroupGrossResponse.getMessage());
+                                return response;
+                            }
+
+                            salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+                        }
+                    }else {
+                        Response overGroupGrossResponse = getSalesOverGroupGross(new RevenueCenter(), "",
+                                timePeriod, fromDate, toDate, new CostCenter(), majorGroups, grossDiscountSales, driver);
+                        if (!overGroupGrossResponse.isStatus()) {
+                            if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                                driver.quit();
+
+                                response.setStatus(false);
+                                response.setMessage(Constants.INVALID_LOCATION);
+                                response.setEntries(new ArrayList<>());
+                            }
+                            response.setStatus(false);
+                            response.setMessage(overGroupGrossResponse.getMessage());
+                            return response;
+                        }
+
+                        salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+                    }
+
+                    // Get discounts
+                    Response discountResponse = getSalesDiscount("", timePeriod,
+                            fromDate, toDate, costCenter, true, includedDiscount, driver);
+                    if (!discountResponse.isStatus()) {
+                        if (discountResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            driver.quit();
+
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_LOCATION);
+                            response.setEntries(new ArrayList<>());
                         }
                         response.setStatus(false);
-                        response.setMessage(overGroupGrossResponse.getMessage());
+                        response.setMessage(discountResponse.getMessage());
                         return response;
                     }
 
@@ -146,16 +189,18 @@ public class SalesService {
 
                     // Set Debit Entries (Tenders)
                     journalBatch.setSalesTender(tenderResponse.getSalesTender());
+                    journalBatch.setSalesDiscount(discountResponse.getSalesDiscount());
 
                     // Set Debit Entries (Taxes And overGroupsGross)
                     journalBatch.setSalesTax(taxResponse.getSalesTax());
-                    journalBatch.setSalesMajorGroupGross(overGroupGrossResponse.getSalesMajorGroupGross());
+                    journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
 
                     // Calculate different
                     journalBatch.setSalesDifferent(0.0);
                     journalBatches.add(journalBatch);
                 }
-            }else {
+            }
+            else {
                 JournalBatch journalBatch = new JournalBatch();
 
                 // Get tender
@@ -191,19 +236,40 @@ public class SalesService {
                 }
 
                 // Get over group gross
-                Response overGroupGrossResponse = getSalesOverGroupGross("", timePeriod,
-                        fromDate, toDate, new CostCenter(), majorGroups, driver);
-                if (!overGroupGrossResponse.isStatus()) {
-                    if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                        driver.quit();
+                ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
+                if (revenueCenters.size() > 0 ){
+                    for (RevenueCenter rc : revenueCenters)
+                    {
+                        Response overGroupGrossResponse = getSalesOverGroupGross(rc, "",
+                                timePeriod, fromDate, toDate, new CostCenter(), majorGroups, grossDiscountSales, driver);
+                        if (!overGroupGrossResponse.isStatus()) {
+                            if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                                continue;
+                            }
+                            response.setStatus(false);
+                            response.setMessage(overGroupGrossResponse.getMessage());
+                            return response;
+                        }
 
-                        response.setStatus(false);
-                        response.setMessage(Constants.INVALID_LOCATION);
-                        response.setEntries(new ArrayList<>());
+                        salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
                     }
-                    response.setStatus(false);
-                    response.setMessage(overGroupGrossResponse.getMessage());
-                    return response;
+                }else {
+                    Response overGroupGrossResponse = getSalesOverGroupGross(new RevenueCenter(), "",
+                            timePeriod, fromDate, toDate, new CostCenter(), majorGroups, grossDiscountSales, driver);
+                    if (!overGroupGrossResponse.isStatus()) {
+                        if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            driver.quit();
+
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_LOCATION);
+                            response.setEntries(new ArrayList<>());
+                        }
+                        response.setStatus(false);
+                        response.setMessage(overGroupGrossResponse.getMessage());
+                        return response;
+                    }
+
+                    salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
                 }
 
                 // Get discounts
@@ -228,7 +294,7 @@ public class SalesService {
 
                 // Set Credit Entries (Taxes And overGroupsGross)
                 journalBatch.setSalesTax(taxResponse.getSalesTax());
-                journalBatch.setSalesMajorGroupGross(overGroupGrossResponse.getSalesMajorGroupGross());
+                journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
 
                 // Calculate different
                 journalBatch.setSalesDifferent(0.0);
@@ -266,7 +332,8 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+                "", driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
@@ -345,7 +412,8 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+                "", driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
@@ -422,9 +490,10 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesOverGroupGross(String location, String businessDate, String fromDate, String toDate,
-                                            CostCenter costCenter,
-                                           ArrayList<MajorGroup> majorGroups, WebDriver driver) {
+    private Response getSalesOverGroupGross(RevenueCenter revenueCenter, String location, String businessDate,
+                                            String fromDate, String toDate,
+                                            CostCenter costCenter, ArrayList<MajorGroup> majorGroups,
+                                            String grossDiscountSales, WebDriver driver) {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
 
@@ -437,7 +506,8 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+                revenueCenter.getRevenueCenter(), driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
@@ -483,10 +553,16 @@ public class SalesService {
                     }
 
                     Journal journal = new Journal();
-                    float majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
+                    float majorGroupGross;
+                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
+                        majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
+                    }else {
+                        majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales")).getText().strip());
+                    }
+//                    majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales")).getText().strip());
 
                     majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
-                            , 0, majorGroupGross, 0, 0, costCenter);
+                            , 0, majorGroupGross, 0, 0, costCenter, revenueCenter);
                 }else{
                     driver.quit();
                     response.setStatus(false);
@@ -524,7 +600,8 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location, driver);
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+                "", driver);
 
         if (!dateResponse.isStatus()){
             response.setStatus(false);
@@ -798,9 +875,9 @@ public class SalesService {
 
                 String description = "";
                 if (majorGroupJournal.getCostCenter().costCenter.equals("")){
-                    description = "Sales F " + majorGroupJournal.getMajorGroup().getMajorGroup();
+                    description = "Sales F " + majorGroupJournal.getMajorGroup().getMajorGroup() + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
                 }else {
-                    description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
+                    description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup() + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
                 }
 
                 if (description.length() > 50) {

@@ -92,6 +92,7 @@ public class SalesController {
             ArrayList<Tender> tenders = syncJobType.getConfiguration().getTenders();
             ArrayList<Tax> taxes = syncJobType.getConfiguration().getTaxes();
             ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
+            ArrayList<RevenueCenter> revenueCenters = syncJobType.getConfiguration().getRevenueCenters();
 
             ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
             ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
@@ -145,6 +146,13 @@ public class SalesController {
                 return response;
             }
 
+            if (syncJobType.getConfiguration().getGrossDiscountSales().equals("")) {
+                String message = "Configure sales gross/gross less discount before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
+
             if (tenders.size() == 0) {
                 String message = "Configure tenders before sync sales.";
                 response.setMessage(message);
@@ -173,6 +181,13 @@ public class SalesController {
                 return response;
             }
 
+            if (revenueCenters.size() == 0) {
+                String message = "Map revenue centers before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
+
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
@@ -184,7 +199,7 @@ public class SalesController {
 
             try {
                 Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,
-                        majorGroups, tenders, taxes, discounts, account);
+                        majorGroups, tenders, taxes, discounts, revenueCenters, account);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
@@ -259,8 +274,8 @@ public class SalesController {
 
                                 File file = excelExporter.createNDFFile();
 
-//                                if (ftpClient.putFileToPath(file, fileName)){
-                                if (true){
+                                if (ftpClient.putFileToPath(file, fileName)){
+//                                if (true){
                                     syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                     syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                             "Sync sales successfully.", Constants.SUCCESS);
@@ -430,7 +445,35 @@ public class SalesController {
                 response.setMessage("Update sales discount successfully.");
             } else {
                 response.setStatus(false);
-                response.setMessage("Failed to update sales taxes.");
+                response.setMessage("Failed to update sales discount.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @RequestMapping("/addRevenueCenter")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addRevenueCenter(@RequestBody ArrayList<RevenueCenter> revenueCenters,
+                                                @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().setRevenueCenters(revenueCenters);
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update sales revenue center successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update sales revenue center.");
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }

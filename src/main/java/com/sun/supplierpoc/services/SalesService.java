@@ -762,11 +762,13 @@ public class SalesService {
                 discountData.put("accountingPeriod", transactionDate.substring(2,6));
                 discountData.put("transactionDate", transactionDate);
 
-                if (discount.getTotal() < 0){
-                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
-                }else {
-                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal()) * -1));
-                }
+//                if (discount.getTotal() < 0){
+//                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
+//                }else {
+//                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal()) * -1));
+//                }
+
+                discountData.put("totalCr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
 
                 discountData.put("fromCostCenter", discount.getCostCenter().costCenter);
                 discountData.put("fromAccountCode", discount.getCostCenter().accountCode);
@@ -779,7 +781,7 @@ public class SalesService {
 
                 discountData.put("transactionReference", "Discount Cost");
 
-                discountData.put("expensesAccount", discount.getAccount());
+                discountData.put("inventoryAccount", discount.getAccount());
 
                 String description = "";
                 if (discount.getCostCenter().costCenter.equals("")){
@@ -902,22 +904,22 @@ public class SalesService {
                 totalMajorGroupNet += majorGroupGrossTotal;
             }
 
-            if ((totalMajorGroupNet + totalTax) != (totalDiscount + totalTender)) {
+            if ((totalMajorGroupNet + totalTax + totalDiscount) != totalTender) {
                 HashMap<String, String> differentData = new HashMap<>();
 
                 differentData.put("accountingPeriod", transactionDate.substring(2,6));
                 differentData.put("transactionDate", transactionDate);
 
                 // {Debit} - ShortagePOS
-                if ((totalMajorGroupNet + totalTax) > (totalDiscount + totalTender)) {
+                if ((totalMajorGroupNet + totalTax + totalDiscount) > totalTender ) {
                     String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
-                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalMajorGroupNet + totalTax) - (totalDiscount + totalTender))));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat((totalMajorGroupNet + totalTax + totalDiscount) - (totalTender))));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
-                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat((totalDiscount + totalTender) - (totalMajorGroupNet + totalTax))));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat((totalTender) - ( totalDiscount + totalMajorGroupNet + totalTax))));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 

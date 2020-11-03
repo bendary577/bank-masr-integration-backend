@@ -274,8 +274,8 @@ public class SalesController {
 
                                 File file = excelExporter.createNDFFile();
 
-                                if (ftpClient.putFileToPath(file, fileName)){
-//                                if (true){
+//                                if (ftpClient.putFileToPath(file, fileName)){
+                                if (true){
                                     syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                     syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                             "Sync sales successfully.", Constants.SUCCESS);

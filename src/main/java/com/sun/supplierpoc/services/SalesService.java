@@ -546,10 +546,16 @@ public class SalesService {
 
                 if (columns.indexOf("group") != -1){
                     WebElement td = cols.get(columns.indexOf("group"));
-                    MajorGroup majorGroup = conversions.checkMajorGroupExistence(majorGroups, td.getText().strip().toLowerCase());
+                    MajorGroup majorGroup = conversions.checkMajorGroupExistence(majorGroups,
+                            td.getText().strip().toLowerCase());
 
                     if (!majorGroup.getChecked()) {
-                        continue;
+                        majorGroup = conversions.checkMajorGroupExistence(majorGroups,
+                                td.getText().strip().toLowerCase() + " "+ revenueCenter.getRevenueCenter().toLowerCase());
+
+                        if (!majorGroup.getChecked()) {
+                            continue;
+                        }
                     }
 
                     Journal journal = new Journal();
@@ -875,7 +881,8 @@ public class SalesService {
 
                 String description = "";
                 if (majorGroupJournal.getCostCenter().costCenter.equals("")){
-                    description = "Sales F " + majorGroupJournal.getMajorGroup().getMajorGroup() + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
+                    description = "Sales F " + majorGroupJournal.getMajorGroup().getMajorGroup() ;
+//                            + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
                 }else {
                     description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup() + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
                 }

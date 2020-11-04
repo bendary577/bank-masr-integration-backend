@@ -165,7 +165,7 @@ public class SalesService {
                 || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
             // Get discounts
             discountResponse = getSalesDiscount(location, timePeriod,
-                    fromDate, toDate, costCenter, true, includedDiscount, driver);
+                    fromDate, toDate, costCenter, false, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
         }
 

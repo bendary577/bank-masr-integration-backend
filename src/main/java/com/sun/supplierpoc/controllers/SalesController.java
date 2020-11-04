@@ -93,6 +93,7 @@ public class SalesController {
             ArrayList<Tax> taxes = syncJobType.getConfiguration().getTaxes();
             ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
             ArrayList<RevenueCenter> revenueCenters = syncJobType.getConfiguration().getRevenueCenters();
+            ArrayList<ServiceCharge> serviceCharges = syncJobType.getConfiguration().getServiceCharges();
 
             ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
             ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
@@ -174,20 +175,6 @@ public class SalesController {
                 return response;
             }
 
-            if (discounts.size() == 0) {
-                String message = "Map discount types before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
-
-            if (revenueCenters.size() == 0) {
-                String message = "Map revenue centers before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
-
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
@@ -199,12 +186,13 @@ public class SalesController {
 
             try {
                 Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,
-                        majorGroups, tenders, taxes, discounts, revenueCenters, account);
+                        majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, account);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
                         // Save Sales Entries
-                        addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob, syncJobType);
+                        addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob,
+                                syncJobType, account);
 
                         if (addedSalesBatches.size() > 0 && !account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             // Sent Sales Entries
@@ -446,6 +434,34 @@ public class SalesController {
             } else {
                 response.setStatus(false);
                 response.setMessage("Failed to update sales discount.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @RequestMapping("/addServiceCharge")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addServiceCharge(@RequestBody ArrayList<ServiceCharge> serviceCharges,
+                                                @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().setServiceCharges(serviceCharges);
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update sales service charge successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update sales service charge.");
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }

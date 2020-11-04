@@ -65,6 +65,16 @@ public class Conversions {
         return new Discount();
     }
 
+    public ServiceCharge checkServiceChargeExistence(ArrayList<ServiceCharge> serviceCharges, String serviceChargeName){
+        for (ServiceCharge serviceCharge : serviceCharges) {
+            if (serviceCharge.getServiceCharge().toLowerCase().equals(serviceChargeName.toLowerCase())) {
+                return serviceCharge;
+            }
+        }
+
+        return new ServiceCharge();
+    }
+
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
         for (ItemGroup itemGroup : itemGroups) {
             if (itemGroup.getItemGroup().toLowerCase().equals(itemGroupName.toLowerCase())) {

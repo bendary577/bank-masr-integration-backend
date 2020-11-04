@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.Discount;
+import com.sun.supplierpoc.models.configurations.ServiceCharge;
 import com.sun.supplierpoc.models.configurations.Tax;
 import com.sun.supplierpoc.models.configurations.Tender;
 
@@ -18,6 +19,7 @@ public class Response {
     private ArrayList<Discount> salesDiscount = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
+    private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
 
     // Supplier Variables
     private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
@@ -83,6 +85,14 @@ public class Response {
 
     public void setJournalBatches(ArrayList<JournalBatch> journalBatches) {
         this.journalBatches = journalBatches;
+    }
+
+    public ArrayList<ServiceCharge> getSalesServiceCharge() {
+        return salesServiceCharge;
+    }
+
+    public void setSalesServiceCharge(ArrayList<ServiceCharge> salesServiceCharge) {
+        this.salesServiceCharge = salesServiceCharge;
     }
 
     public ArrayList<SyncJobData> getAddedSuppliers() {

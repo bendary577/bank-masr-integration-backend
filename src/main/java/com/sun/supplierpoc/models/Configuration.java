@@ -67,6 +67,7 @@ public class Configuration implements Serializable {
     private ArrayList<Tax> taxes = new ArrayList<>();
     private ArrayList<Discount> discounts = new ArrayList<>();
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
+    private ArrayList<ServiceCharge> serviceCharges = new ArrayList<>();
 
     private AccountSettings accountSettings;
 
@@ -414,6 +415,14 @@ public class Configuration implements Serializable {
 
     public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
         this.revenueCenters = revenueCenters;
+    }
+
+    public ArrayList<ServiceCharge> getServiceCharges() {
+        return serviceCharges;
+    }
+
+    public void setServiceCharges(ArrayList<ServiceCharge> serviceCharges) {
+        this.serviceCharges = serviceCharges;
     }
 
     public AccountSettings getAccountSettings() {

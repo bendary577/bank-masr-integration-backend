@@ -64,7 +64,11 @@ public class Constants {
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     // SALES LINKS
+    // Daily Detail >> Tenders
     public static String TENDERS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=19";
+    public static String TENDERS_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=19&reportID=TendersDailyDetail&method=run";
+
+    // Daily Detail >> Tax
     public static String TAXES_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=18";
 
     // Menu Engineering >> Sales Mix Summary
@@ -76,6 +80,10 @@ public class Constants {
     // Daily Detail >> Discount
     public static String DISCOUNT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=13";
     public static String DISCOUNT_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=13&reportID=DiscDailyDetail&method=run";
+
+    // Daily Detail >> Service Charge
+    public static String SERVICE_CHARGE_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=16";
+    public static String SERVICE_CHARGE_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=16&reportID=SrvcChrgDailyDetail&method=run";
 
     // myInventory Reports >> COS by Cost Center
     public static String CONSUMPTION_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=499";

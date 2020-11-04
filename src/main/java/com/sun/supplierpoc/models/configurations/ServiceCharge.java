@@ -1,30 +1,21 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class Discount {
-    private boolean checked = false;
-    private String discount = "";
+public class ServiceCharge {
+    private String serviceCharge = "";
     private String account = "";
     private Float total;
     private CostCenter costCenter;
+    private boolean checked = false;
 
-    public Discount() {
-        costCenter = new CostCenter();
+    public ServiceCharge() {
     }
 
-    public boolean isChecked() {
-        return checked;
+    public String getServiceCharge() {
+        return serviceCharge;
     }
 
-    public void setChecked(boolean checked) {
-        this.checked = checked;
-    }
-
-    public String getDiscount() {
-        return discount;
-    }
-
-    public void setDiscount(String discount) {
-        this.discount = discount;
+    public void setServiceCharge(String serviceCharge) {
+        this.serviceCharge = serviceCharge;
     }
 
     public String getAccount() {
@@ -49,5 +40,13 @@ public class Discount {
 
     public void setCostCenter(CostCenter costCenter) {
         this.costCenter = costCenter;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public void setChecked(boolean checked) {
+        this.checked = checked;
     }
 }

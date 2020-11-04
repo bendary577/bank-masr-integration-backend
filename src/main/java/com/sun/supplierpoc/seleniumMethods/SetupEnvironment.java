@@ -363,6 +363,14 @@ public class SetupEnvironment {
                 }
             }
 
+            // Check if there is any alert message
+            try {
+                Alert al = driver.switchTo().alert();
+                al.accept();
+            } catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
             response.setStatus(true);
             response.setMessage("");
         } catch (Exception e) {

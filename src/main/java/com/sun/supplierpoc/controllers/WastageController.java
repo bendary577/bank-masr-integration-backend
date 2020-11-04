@@ -12,6 +12,7 @@ import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.models.configurations.WasteGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.TransferService;
 import com.sun.supplierpoc.services.WastageService;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -51,6 +52,8 @@ public class WastageController {
     private TransferService transferService;
     @Autowired
     private WastageService wastageService;
+    @Autowired
+    private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
 
@@ -162,7 +165,7 @@ public class WastageController {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
                 if (wastes.size() > 0) {
                     addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
-                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                    IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                     if (voucher != null){
                         invoiceController.handleSendJournal(wastageSyncJobType, syncJob, addedWastes, account, voucher);
                         syncJob.setReason("");

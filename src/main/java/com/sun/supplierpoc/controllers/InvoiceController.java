@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.InvoiceService;
+import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
@@ -51,6 +52,8 @@ public class InvoiceController {
     private InvoiceService invoiceService;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private SunService sunService;
 
     public Conversions conversions = new Conversions();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -177,7 +180,7 @@ public class InvoiceController {
                 if (invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, invoiceSyncJobType, false);
                     if (addedInvoices.size() > 0){
-                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                        IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             handleSendJournal(invoiceSyncJobType, syncJob, addedInvoices, account, voucher);
                             syncJob.setReason("");
@@ -250,7 +253,7 @@ public class InvoiceController {
         HashMap<String, Object> data;
         for (SyncJobData addedJournal : addedJournals) {
             try {
-                data  = transferService.sendJournalData(addedJournal, syncJobType, account, voucher);
+                data  = sunService.sendJournalData(addedJournal, null, syncJobType, account, voucher);
                 if ((Boolean) data.get("status")){
                     addedJournal.setStatus(Constants.SUCCESS);
                     addedJournal.setReason("");

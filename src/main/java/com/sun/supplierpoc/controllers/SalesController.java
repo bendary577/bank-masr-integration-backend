@@ -9,10 +9,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
-import com.sun.supplierpoc.services.SalesService;
-import com.sun.supplierpoc.services.SyncJobDataService;
-import com.sun.supplierpoc.services.SyncJobService;
-import com.sun.supplierpoc.services.TransferService;
+import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -42,16 +39,14 @@ public class SalesController {
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @Autowired
     private SalesService salesService;
-    @Autowired
-    private TransferService transferService;
-
     @Autowired
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
+    @Autowired
+    private SunService sunService;
 
     public Conversions conversions = new Conversions();
 
@@ -196,7 +191,7 @@ public class SalesController {
 
                         if (addedSalesBatches.size() > 0 && !account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             // Sent Sales Entries
-                            IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                            IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                             if (voucher != null) {
                                 // Loop over batches
                                 HashMap<String, Object> data;
@@ -205,7 +200,8 @@ public class SalesController {
                                         if (salesJournalBatch.getSalesMajorGroupGrossData().size() > 0
                                                 || salesJournalBatch.getSalesTenderData().size() > 0
                                                 || salesJournalBatch.getSalesTaxData().size() > 0) {
-                                            data = salesService.sendJournalBatches(salesJournalBatch, syncJobType, account, voucher);
+                                            data = sunService.sendJournalData(null, salesJournalBatch,
+                                                    syncJobType, account, voucher);
                                             salesService.updateJournalBatchStatus(salesJournalBatch, data);
                                         }
                                     }
@@ -422,7 +418,6 @@ public class SalesController {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
                 syncJobType.getConfiguration().setDiscounts(discounts);
@@ -451,7 +446,6 @@ public class SalesController {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
                 syncJobType.getConfiguration().setServiceCharges(serviceCharges);
@@ -479,7 +473,6 @@ public class SalesController {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
                 syncJobType.getConfiguration().setRevenueCenters(revenueCenters);

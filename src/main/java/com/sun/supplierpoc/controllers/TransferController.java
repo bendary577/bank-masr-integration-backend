@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
@@ -45,6 +46,8 @@ public class TransferController {
     private GeneralSettingsRepo generalSettingsRepo;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
 
@@ -149,7 +152,7 @@ public class TransferController {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
-                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                    IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                     if (voucher != null){
                         invoiceController.handleSendJournal(transferSyncJobType, syncJob, addedTransfers, account, voucher);
                         syncJob.setReason("");

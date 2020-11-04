@@ -13,6 +13,7 @@ import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.BookedProductionService;
 import com.sun.supplierpoc.services.InvoiceService;
+import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,8 @@ public class BookedProductionController {
     private BookedProductionService bookedProductionService;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
 
@@ -138,7 +141,7 @@ public class BookedProductionController {
                     addedBookedProduction = bookedProductionService.saveBookedProductionData(bookedProduction,
                             syncJob, bookedProductionSyncJobType);
                     if (addedBookedProduction.size() > 0){
-                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                        IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             invoiceController.handleSendJournal(bookedProductionSyncJobType, syncJob,
                                     addedBookedProduction, account, voucher);

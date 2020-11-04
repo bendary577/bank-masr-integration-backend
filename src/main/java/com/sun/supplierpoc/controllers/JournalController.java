@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.JournalService;
+import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
@@ -47,6 +48,8 @@ public class JournalController {
     private JournalService journalService;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
 
@@ -165,7 +168,7 @@ public class JournalController {
                 if (journals.size() > 0) {
                     addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, fromDate, overGroups);
                     if (addedJournals.size() > 0){
-                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                        IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             invoiceController.handleSendJournal(journalSyncJobType, syncJob, addedJournals, account, voucher);
                             syncJob.setReason("");

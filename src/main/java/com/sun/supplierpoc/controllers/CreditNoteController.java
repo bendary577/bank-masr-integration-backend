@@ -12,6 +12,7 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.InvoiceService;
+import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -52,6 +53,8 @@ public class CreditNoteController {
 
     @Autowired
     private SyncJobService syncJobService;
+    @Autowired
+    private SunService sunService;
 
     public Conversions conversions = new Conversions();
 
@@ -174,7 +177,7 @@ public class CreditNoteController {
                 if (invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, creditNoteSyncJobType, true);
                     if (addedInvoices.size() > 0){
-                        IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
+                        IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             invoiceController.handleSendJournal(invoiceSyncJobType, syncJob, addedInvoices, account, voucher);
 

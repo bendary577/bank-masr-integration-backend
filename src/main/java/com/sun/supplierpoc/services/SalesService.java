@@ -3,36 +3,15 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
-import com.sun.supplierpoc.controllers.SyncJobDataController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.soapModels.JournalSSC;
-import com.sun.supplierpoc.soapModels.Message;
-import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.SoapComponent;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.*;
 
 @Service
@@ -43,8 +22,6 @@ public class SalesService {
     TransferService transferService;
     @Autowired
     InvoiceController invoiceController;
-    @Autowired
-    private SyncJobDataController syncJobTypeController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -211,6 +188,7 @@ public class SalesService {
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
+        journalBatch.setCostCenter(costCenter);
         journalBatches.add(journalBatch);
 
         response.setStatus(true);
@@ -829,9 +807,8 @@ public class SalesService {
                 String description = "";
                 if (majorGroupJournal.getCostCenter().costCenter.equals("")){
                     description = "Sales F " + majorGroupJournal.getMajorGroup().getMajorGroup() ;
-//                            + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
                 }else {
-                    description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup() + " - " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
+                    description = "Sales F " + majorGroupJournal.getCostCenter().costCenterReference + " " + majorGroupJournal.getMajorGroup().getMajorGroup();
                 }
 
                 if (description.length() > 50) {
@@ -1127,183 +1104,5 @@ public class SalesService {
             data.setReason(reason);
             syncJobDataRepo.save(data);
         }
-    }
-
-    public HashMap<String, Object> sendJournalBatches(JournalBatch addedJournalBatch, SyncJobType syncJobType,
-                                                   Account account, IAuthenticationVoucher voucher){
-        HashMap<String, Object> data = new HashMap<>();
-
-        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-        AccountCredential sunCredentials = account.getAccountCredentialByAccount("Sun", accountCredentials);
-
-        String username = sunCredentials.getUsername();
-        String sccXMLStringValue = "";
-
-        try {
-            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-
-            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-            Document doc = docBuilder.newDocument();
-            ///////////////////////////////////////////  Create SSC root element ///////////////////////////////////////
-            Element SSCRootElement = doc.createElement("SSC");
-            doc.appendChild(SSCRootElement);
-
-            ///////////////////////////////////////////  User //////////////////////////////////////////////////////////
-            Element userElement = doc.createElement("User");
-            SSCRootElement.appendChild(userElement);
-
-            Element nameElement = doc.createElement("Name");
-            nameElement.appendChild(doc.createTextNode(username));
-            userElement.appendChild(nameElement);
-
-            ///////////////////////////////////////////  SunSystemsContext /////////////////////////////////////////////
-            Element sunSystemContextElement = doc.createElement("SunSystemsContext");
-            SSCRootElement.appendChild(sunSystemContextElement);
-
-            Element businessUnitElement = doc.createElement("BusinessUnit");
-            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getBusinessUnit()));
-            sunSystemContextElement.appendChild(businessUnitElement);
-
-            ///////////////////////////////////////////  MethodContext /////////////////////////////////////////////////
-            Element methodContextElement = doc.createElement("MethodContext");
-            SSCRootElement.appendChild(methodContextElement);
-
-            Element LedgerPostingParametersElement = doc.createElement("LedgerPostingParameters");
-            methodContextElement.appendChild(LedgerPostingParametersElement);
-
-            Element PostProvisionalElement = doc.createElement("PostProvisional");
-            /*
-             * Expected values (N/Y)
-             * */
-            PostProvisionalElement.appendChild(doc.createTextNode("Y"));
-            methodContextElement.appendChild(PostProvisionalElement);
-
-            Element DescriptionElement = doc.createElement("Description");
-            DescriptionElement.appendChild(doc.createTextNode("Journal batch"));
-            LedgerPostingParametersElement.appendChild(DescriptionElement);
-
-            Element journalTypeElement = doc.createElement("JournalType");
-            journalTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalType()));
-            LedgerPostingParametersElement.appendChild(journalTypeElement);
-
-            Element postingTypeElement = doc.createElement("PostingType");
-            postingTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getPostingType()));
-            LedgerPostingParametersElement.appendChild(postingTypeElement);
-
-            Element SuspenseAccount = doc.createElement("SuspenseAccount");
-            SuspenseAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
-            LedgerPostingParametersElement.appendChild(SuspenseAccount);
-
-            Element TransactionAmountAccount = doc.createElement("TransactionAmountAccount");
-            TransactionAmountAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
-            LedgerPostingParametersElement.appendChild(TransactionAmountAccount);
-
-
-            ///////////////////////////////////////////  Payload ///////////////////////////////////////////////////////
-
-            Element payloadElement = doc.createElement("Payload");
-            SSCRootElement.appendChild(payloadElement);
-
-            Element ledgerElement = doc.createElement("Ledger");
-            payloadElement.appendChild(ledgerElement);
-
-            SyncJobData salesDifferentData;
-            ArrayList<SyncJobData> salesTaxData;
-            ArrayList<SyncJobData> salesTenderData;
-            ArrayList<SyncJobData> salesDiscountData;
-            ArrayList<SyncJobData> salesMajorGroupGrossData;
-
-            salesDifferentData = addedJournalBatch.getSalesDifferentData();
-            salesTaxData = addedJournalBatch.getSalesTaxData();
-            salesTenderData = addedJournalBatch.getSalesTenderData();
-            salesDiscountData = addedJournalBatch.getSalesDiscountData();
-            salesMajorGroupGrossData = addedJournalBatch.getSalesMajorGroupGrossData();
-
-            ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            for (SyncJobData taxData : salesTaxData) {
-                if (taxData.getData().containsKey("totalCr")){
-                    transferService.createJournalLine(true, doc, ledgerElement, syncJobType, taxData);
-                }
-            }
-
-            for (SyncJobData salesData : salesMajorGroupGrossData) {
-                if (salesData.getData().containsKey("totalCr")){
-                    transferService.createJournalLine(true, doc, ledgerElement, syncJobType, salesData);
-                }
-            }
-
-            ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-            for (SyncJobData tenderData : salesTenderData) {
-                if (tenderData.getData().containsKey("totalDr")){
-                    transferService.createJournalLine(false, doc, ledgerElement, syncJobType, tenderData);
-                }
-            }
-
-            for (SyncJobData discountData : salesDiscountData) {
-                if (discountData.getData().containsKey("totalDr")){
-                    transferService.createJournalLine(false, doc, ledgerElement, syncJobType, discountData);
-                }
-            }
-
-            ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            if (salesDifferentData.getData().containsKey("totalCr")){
-                transferService.createJournalLine(true, doc, ledgerElement, syncJobType, salesDifferentData);
-            }else{
-                ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-                transferService.createJournalLine(false, doc, ledgerElement, syncJobType, salesDifferentData);
-            }
-
-
-            ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(writer));
-            sccXMLStringValue = writer.getBuffer().toString();
-        } catch (ParserConfigurationException | TransformerException e) {
-            e.printStackTrace();
-        }
-
-        String result = "";
-        try {
-            SoapComponent ssc = new SoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
-            ssc.authenticate(voucher);
-            result = ssc.execute("Journal", "Import", sccXMLStringValue);
-        } catch (Exception ex) {
-            System.out.print("An error occurred logging in to SunSystems:\r\n");
-            ex.printStackTrace();
-
-            data.put("status", Constants.FAILED);
-            data.put("message", "An error occurred logging in to Sun System.");
-            return data;
-        }
-
-        ///////////////////////////////////////////  Convert XML to Object /////////////////////////////////////////////
-        JAXBContext jaxbContext;
-        try {
-            jaxbContext = JAXBContext.newInstance(JournalSSC.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            JournalSSC query = (JournalSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
-
-            boolean status = query.getPayload().get(0).getLine().getStatus().equals("success");
-            ArrayList<Message> messages = query.getPayload().get(0).getLine().getMessages().getMessage();
-            String message = "";
-            for (Message msg : messages) {
-                if (msg.getLevel().equals("error")){
-                    message += " * ";
-                    message  +=  msg.getUserText();
-                }
-            }
-
-            data.put("status", status);
-            data.put("message", message);
-            return data;
-
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-        data.put("status", Constants.FAILED);
-        data.put("message", "");
-        return data;
     }
 }

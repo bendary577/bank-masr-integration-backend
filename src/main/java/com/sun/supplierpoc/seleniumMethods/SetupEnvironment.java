@@ -324,7 +324,8 @@ public class SetupEnvironment {
                     response.setEntries(new ArrayList<>());
                     return response;
                 }
-            } else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
+            }
+            else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
                     || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)) {
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -381,101 +382,112 @@ public class SetupEnvironment {
     }
 
     private Response chooseDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
-        driver.findElement(By.id("clear0")).click();
-        Response response = new Response();
-
-        DateFormat Date = DateFormat.getDateInstance();
-        Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
-        Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
-
-        SimpleDateFormat format = new SimpleDateFormat("EEEE");
-        Calendar cals = Calendar.getInstance();
-
-        cals.setTime(fromDate);
-        String fromDateFormatted = Date.format(cals.getTime());
-        String fromDayName = format.format(fromDate);
-
-        cals.setTime(toDate);
-        String toDateFormatted = Date.format(cals.getTime());
-        String toDayName = format.format(toDate);
-
-        List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
-                + fromDayName + ", " + fromDateFormatted + "']"));
-
-        fromDateElements.get(0).click();
-
-        if (!toDateFormatted.equals(fromDateFormatted)) {
-            List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
-                    + toDayName + ", " + toDateFormatted + "']"));
-            Actions actions = new Actions(driver);
-            actions.keyDown(Keys.LEFT_CONTROL)
-                    .click(toDateElements.get(0))
-                    .keyUp(Keys.LEFT_CONTROL)
-                    .build()
-                    .perform();
-        }
-
-        response.setStatus(true);
-        return response;
-    }
-
-    private Response chooseMonthsDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
-        driver.findElement(By.id("clear0")).click();
         Response response = new Response();
         try {
-            Select businessDate = new Select(driver.findElement(By.id("selectYear")));
-            businessDate.selectByVisibleText(syncFromDate.split("-")[0]);
-        } catch (Exception e) {
-            String message = "Chosen year out of range";
-            response.setStatus(false);
-            response.setMessage(message);
-        }
+            driver.findElement(By.id("clear0")).click();
 
-        Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+            DateFormat Date = DateFormat.getDateInstance();
+            Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+            Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
 
-        int startMonth = Integer.parseInt(syncFromDate.split("-")[1]);
-        int endMonth = Integer.parseInt(syncToDate.split("-")[1]);
+            SimpleDateFormat format = new SimpleDateFormat("EEEE");
+            Calendar cals = Calendar.getInstance();
 
-        if(endMonth < startMonth){
-            int tempDate = startMonth;
-            startMonth = endMonth;
-            endMonth = tempDate;
-        }
+            cals.setTime(fromDate);
+            String fromDateFormatted = Date.format(cals.getTime());
+            String fromDayName = format.format(fromDate);
 
-        Calendar cals = Calendar.getInstance();
-        cals.setTime(fromDate);
+            cals.setTime(toDate);
+            String toDateFormatted = Date.format(cals.getTime());
+            String toDayName = format.format(toDate);
 
-        String fromMonthName = new SimpleDateFormat("MMMM").format(cals.getTime());
-        WebElement fromDateElement = driver.findElement(By.linkText(fromMonthName + " " +
-                syncFromDate.split("-")[0]));
-        fromDateElement.click();
+            List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                    + fromDayName + ", " + fromDateFormatted + "']"));
 
-        DateFormatSymbols dfs = new DateFormatSymbols();
-        String[] months = dfs.getMonths();
-        String toMonthName;
+            fromDateElements.get(0).click();
 
-        while(startMonth != endMonth){
-            toMonthName = months[startMonth];
-            startMonth++;
-
-            WebElement toDateElements = driver.findElement(By.linkText(toMonthName + " " +
-                    syncToDate.split("-")[0]));
-
-            if(toDateElements.isDisplayed()){
+            if (!toDateFormatted.equals(fromDateFormatted)) {
+                List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                        + toDayName + ", " + toDateFormatted + "']"));
                 Actions actions = new Actions(driver);
                 actions.keyDown(Keys.LEFT_CONTROL)
-                        .click(toDateElements)
+                        .click(toDateElements.get(0))
                         .keyUp(Keys.LEFT_CONTROL)
                         .build()
                         .perform();
-            }else {
-                response.setStatus(false);
-                return response;
             }
-        }
 
-        response.setStatus(true);
-        return response;
+            response.setStatus(true);
+            return response;
+        } catch (ParseException e) {
+            response.setStatus(false);
+            return response;
+        }
+    }
+
+    private Response chooseMonthsDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+        Response response = new Response();
+
+        try {
+            driver.findElement(By.id("clear0")).click();
+            try {
+                Select businessDate = new Select(driver.findElement(By.id("selectYear")));
+                businessDate.selectByVisibleText(syncFromDate.split("-")[0]);
+            } catch (Exception e) {
+                String message = "Chosen year out of range";
+                response.setStatus(false);
+                response.setMessage(message);
+            }
+
+            Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+
+            int startMonth = Integer.parseInt(syncFromDate.split("-")[1]);
+            int endMonth = Integer.parseInt(syncToDate.split("-")[1]);
+
+            if(endMonth < startMonth){
+                int tempDate = startMonth;
+                startMonth = endMonth;
+                endMonth = tempDate;
+            }
+
+            Calendar cals = Calendar.getInstance();
+            cals.setTime(fromDate);
+
+            String fromMonthName = new SimpleDateFormat("MMMM").format(cals.getTime());
+            WebElement fromDateElement = driver.findElement(By.linkText(fromMonthName + " " +
+                    syncFromDate.split("-")[0]));
+            fromDateElement.click();
+
+            DateFormatSymbols dfs = new DateFormatSymbols();
+            String[] months = dfs.getMonths();
+            String toMonthName;
+
+            while(startMonth != endMonth){
+                toMonthName = months[startMonth];
+                startMonth++;
+
+                WebElement toDateElements = driver.findElement(By.linkText(toMonthName + " " +
+                        syncToDate.split("-")[0]));
+
+                if(toDateElements.isDisplayed()){
+                    Actions actions = new Actions(driver);
+                    actions.keyDown(Keys.LEFT_CONTROL)
+                            .click(toDateElements)
+                            .keyUp(Keys.LEFT_CONTROL)
+                            .build()
+                            .perform();
+                }else {
+                    response.setStatus(false);
+                    return response;
+                }
+            }
+
+            response.setStatus(true);
+            return response;
+        } catch (ParseException e) {
+            response.setStatus(false);
+            return response;
+        }
     }
 }
 

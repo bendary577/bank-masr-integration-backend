@@ -622,7 +622,7 @@ public class SalesService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
-            ServiceCharge serviceCharge = new ServiceCharge();
+            ServiceCharge serviceCharge;
             for (int i = 6; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));

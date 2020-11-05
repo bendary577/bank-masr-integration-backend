@@ -61,7 +61,7 @@ public class SalesController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = syncPOSSalesInDayRange(user.getId(), account);
+            response = getPOSSales(user.getId(), account);
             if(!response.isStatus()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -329,8 +329,11 @@ public class SalesController {
 //                ,"2020-10-11","2020-10-12","2020-10-13","2020-10-14","2020-10-15","2020-10-16","2020-10-17","2020-10-18"
 //                ,"2020-10-19","2020-10-20","2020-10-21","2020-10-22"," 2020-10-23","2020-10-24","2020-10-25","2020-10-26"
 //                ,"2020-10-27","2020-10-28","2020-10-29","2020-10-30","2020-10-31"
-        String[] datesArray = {"2020-10-18","2020-10-19","2020-10-20","2020-10-21","2020-10-22"," 2020-10-23",
-                "2020-10-24","2020-10-25","2020-10-26","2020-10-27","2020-10-28","2020-10-29","2020-10-30","2020-10-31"};
+        String[] datesArray = {"2020-10-03","2020-10-04","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"
+                ,"2020-10-11","2020-10-12","2020-10-13","2020-10-14","2020-10-15","2020-10-16","2020-10-17","2020-10-18"
+                ,"2020-10-19","2020-10-20","2020-10-21","2020-10-22"," 2020-10-23","2020-10-24","2020-10-25","2020-10-26"
+                ,"2020-10-27","2020-10-28","2020-10-29","2020-10-30","2020-10-31"
+                };
 
         for (String date : datesArray) {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
@@ -345,7 +348,7 @@ public class SalesController {
             }
         }
 
-        String message = "Sync sales from 3-10-2020 to 2-10-2020";
+        String message = "Sync sales from 3-10-2020 to 31-10-2020";
         response.setStatus(true);
         response.setMessage(message);
         return response;

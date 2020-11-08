@@ -20,9 +20,8 @@ public class FtpClient {
     public FtpClient() {
     }
 
-    public FtpClient(String server, int port, String user, String password) {
+    public FtpClient(String server, String user, String password) {
         this.server = server;
-        this.port = port;
         this.user = user;
         this.password = password;
     }
@@ -44,10 +43,12 @@ public class FtpClient {
     }
 
     public void close() throws IOException {
+        ftp.logout();
         ftp.disconnect();
     }
 
     public boolean putFileToPath(File file, String path) throws IOException {
+        ftp.setControlKeepAliveTimeout(120);
         return ftp.storeFile(path, new FileInputStream(file));
     }
 }

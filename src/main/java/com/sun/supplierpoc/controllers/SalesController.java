@@ -236,7 +236,7 @@ public class SalesController {
                             String host = sunCredentials.getHost();
                             int port = sunCredentials.getPort();
 
-                            FtpClient ftpClient = new FtpClient(host, port, username, password);
+                            FtpClient ftpClient = new FtpClient(host, username, password);
 
                             if(ftpClient.open()){
                                 List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
@@ -257,6 +257,7 @@ public class SalesController {
                                 String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
 
                                 File file = excelExporter.createNDFFile();
+                                System.out.println(fileName);
 
                                 if (ftpClient.putFileToPath(file, fileName)){
 //                                if (true){

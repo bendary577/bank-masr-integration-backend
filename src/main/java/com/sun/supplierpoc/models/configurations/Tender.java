@@ -10,10 +10,13 @@ public class Tender implements Serializable {
     private boolean checked = false;
     private String tender = "";
     private String account = "";
+    private String analysisCode = "";
+    private double communicationRate;
     private Float total;
     private CostCenter costCenter;
 
     public Tender() {
+        communicationRate = 0.0;
     }
 
     public String getId() {
@@ -46,6 +49,22 @@ public class Tender implements Serializable {
 
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    public String getAnalysisCode() {
+        return analysisCode;
+    }
+
+    public void setAnalysisCode(String analysisCode) {
+        this.analysisCode = analysisCode;
+    }
+
+    public double getCommunicationRate() {
+        return communicationRate;
+    }
+
+    public void setCommunicationRate(double communicationRate) {
+        this.communicationRate = communicationRate;
     }
 
     public Float getTotal() {

@@ -378,7 +378,13 @@ public class SunService {
             }
             if (analysisObject.getChecked()){
                 Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.getNumber());
-                analysisCode2Element.appendChild(doc.createTextNode((String) analysisObject.getCodeElement()));
+
+                if (addedJournalEntry.getData().containsKey("analysisCodeT" + analysisObject.getNumber())){
+                    String analysisCode = addedJournalEntry.getData().get("analysisCodeT" + analysisObject.getNumber());
+                    analysisCode2Element.appendChild(doc.createTextNode(analysisCode));
+                }else {
+                    analysisCode2Element.appendChild(doc.createTextNode(analysisObject.getCodeElement()));
+                }
                 lineElement.appendChild(analysisCode2Element);
 
                 Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.getNumber());

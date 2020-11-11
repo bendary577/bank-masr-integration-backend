@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models.configurations;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Tender implements Serializable {
     @Id
@@ -10,13 +11,18 @@ public class Tender implements Serializable {
     private boolean checked = false;
     private String tender = "";
     private String account = "";
-    private String analysisCode = "";
-    private double communicationRate;
+
+    private String communicationTender = "";
+    private String communicationAccount = "";
+    private float communicationRate;
+
+    private String analysisCodeT5 = "";
+
     private Float total;
     private CostCenter costCenter;
 
     public Tender() {
-        communicationRate = 0.0;
+        communicationRate = 0;
     }
 
     public String getId() {
@@ -51,20 +57,36 @@ public class Tender implements Serializable {
         this.account = account;
     }
 
-    public String getAnalysisCode() {
-        return analysisCode;
+    public String getCommunicationTender() {
+        return communicationTender;
     }
 
-    public void setAnalysisCode(String analysisCode) {
-        this.analysisCode = analysisCode;
+    public void setCommunicationTender(String communicationTender) {
+        this.communicationTender = communicationTender;
     }
 
-    public double getCommunicationRate() {
+    public String getCommunicationAccount() {
+        return communicationAccount;
+    }
+
+    public void setCommunicationAccount(String communicationAccount) {
+        this.communicationAccount = communicationAccount;
+    }
+
+    public float getCommunicationRate() {
         return communicationRate;
     }
 
-    public void setCommunicationRate(double communicationRate) {
+    public void setCommunicationRate(float communicationRate) {
         this.communicationRate = communicationRate;
+    }
+
+    public String getAnalysisCodeT5() {
+        return analysisCodeT5;
+    }
+
+    public void setAnalysisCodeT5(String analysisCodeT5) {
+        this.analysisCodeT5 = analysisCodeT5;
     }
 
     public Float getTotal() {

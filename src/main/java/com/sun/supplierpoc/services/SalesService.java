@@ -682,15 +682,69 @@ public class SalesService {
                 if (tender.getTotal() == 0)
                     continue;
 
+                float subTenderTotal = tender.getTotal();
+                float tenderCommunicationTotal;
+
+                if (tender.getCommunicationRate() > 0){
+                    tenderCommunicationTotal = (subTenderTotal * tender.getCommunicationRate())/100;
+                    subTenderTotal = subTenderTotal - tenderCommunicationTotal;
+
+                    // Create two entries for tender
+                    HashMap<String, String> tenderData = new HashMap<>();
+
+                    tenderData.put("accountingPeriod", transactionDate.substring(2,6));
+                    tenderData.put("transactionDate", transactionDate);
+
+                    if (tender.getTotal() < 0){
+                        tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tenderCommunicationTotal)));
+                    }else {
+                        tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tenderCommunicationTotal) * -1));
+                    }
+
+                    tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
+                    tenderData.put("fromAccountCode", tender.getCostCenter().accountCode);
+
+                    tenderData.put("toCostCenter", tender.getCostCenter().costCenter);
+                    tenderData.put("toAccountCode", tender.getCostCenter().accountCode);
+
+                    tenderData.put("fromLocation", tender.getCostCenter().accountCode);
+                    tenderData.put("toLocation", tender.getCostCenter().accountCode);
+
+                    tenderData.put("transactionReference", "Tender Reference");
+
+                    tenderData.put("expensesAccount", tender.getCommunicationAccount());
+
+                    String description = "";
+                    if (tender.getCostCenter().costCenter.equals("")){
+                        description = "Sales F " + tender.getCommunicationTender();
+                    }else {
+                        description = "Sales F " + tender.getCostCenter().costCenterReference + " " + tender.getCommunicationTender();
+                    }
+                    if (description.length() > 50) {
+                        description = description.substring(0, 50);
+                    }
+
+                    tenderData.put("description", description);
+
+                    if(!tender.getAnalysisCodeT5().equals("")){
+                        tenderData.put("analysisCodeT5", tender.getAnalysisCodeT5());
+                    }
+
+                    SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
+                            syncJob.getId());
+                    syncJobDataRepo.save(syncJobData);
+                    journalBatch.getSalesTenderData().add(syncJobData);
+                }
+
                 HashMap<String, String> tenderData = new HashMap<>();
 
                 tenderData.put("accountingPeriod", transactionDate.substring(2,6));
                 tenderData.put("transactionDate", transactionDate);
 
                 if (tender.getTotal() < 0){
-                    tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal())));
+                    tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(subTenderTotal)));
                 }else {
-                    tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(tender.getTotal()) * -1));
+                    tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat(subTenderTotal) * -1));
                 }
 
                 tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);

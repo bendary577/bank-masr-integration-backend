@@ -54,6 +54,7 @@ public class Configuration implements Serializable {
     private String versionCode = "42601";
 
     private Boolean uniqueOverGroupMapping = false;
+    private Boolean uniqueAnalysisMapping = false;
 
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
@@ -283,6 +284,14 @@ public class Configuration implements Serializable {
 
     public Boolean getUniqueOverGroupMapping() {
         return uniqueOverGroupMapping;
+    }
+
+    public Boolean getUniqueAnalysisMapping() {
+        return uniqueAnalysisMapping;
+    }
+
+    public void setUniqueAnalysisMapping(Boolean uniqueAnalysisMapping) {
+        this.uniqueAnalysisMapping = uniqueAnalysisMapping;
     }
 
     public String getRecordType() {

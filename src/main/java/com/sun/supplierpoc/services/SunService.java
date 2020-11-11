@@ -206,7 +206,7 @@ public class SunService {
             e.printStackTrace();
         }
 
-        String result = "";
+        String result;
         try {
 
             SoapComponent ssc = new SoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
@@ -230,16 +230,16 @@ public class SunService {
 
             boolean status = query.getPayload().get(0).getLine().getStatus().equals("success");
             ArrayList<Message> messages = query.getPayload().get(0).getLine().getMessages().getMessage();
-            String message = "";
+            StringBuilder message = new StringBuilder();
             for (Message msg : messages) {
                 if (msg.getLevel().equals("error")){
-                    message += " * ";
-                    message  +=  msg.getUserText();
+                    message.append(" * ");
+                    message.append(msg.getUserText());
                 }
             }
 
             data.put("status", status);
-            data.put("message", message);
+            data.put("message", message.toString());
             return data;
 
         } catch (JAXBException e) {
@@ -395,7 +395,7 @@ public class SunService {
                 accountsElement.appendChild(analysis2Element);
 
                 Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-                vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode((String) analysisObject.getCodeElement()));
+                vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(analysisObject.getCodeElement()));
                 analysis2Element.appendChild(vAcntCatAnalysis_AnlCodeElement);
 
             }

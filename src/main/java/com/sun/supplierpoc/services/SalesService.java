@@ -266,11 +266,9 @@ public class SalesService {
                     continue;
                 }
 
-                tender.setTender(tenderData.getTender());
+                tender = tenderData;
                 tender.setCostCenter(costCenter);
-                tender.setAccount(tenderData.getAccount());
                 tender.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
-
                 tenders.add(tender);
             }
 
@@ -771,6 +769,10 @@ public class SalesService {
                 }
 
                 tenderData.put("description", description);
+
+                if(!tender.getAnalysisCodeT5().equals("")){
+                    tenderData.put("analysisCodeT5", tender.getAnalysisCodeT5());
+                }
 
                 SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());

@@ -246,14 +246,22 @@ public class SalesFileDelimiterExporter {
                 syncJobDataCSV.analysisCode3 = String.format("%-15s", syncJobDataCSV.analysisCode3);
             }
 
-            syncJobDataCSV.analysisCode4 = syncJobType.getConfiguration().getAnalysis().get(4).getCodeElement();
+            if (syncJobData.getData().containsKey("analysisCodeT5")){
+                syncJobDataCSV.analysisCode4 = syncJobData.getData().get("analysisCodeT5");
+            }else {
+                syncJobDataCSV.analysisCode4 = syncJobType.getConfiguration().getAnalysis().get(4).getCodeElement();
+            }
             if(syncJobDataCSV.analysisCode4.length() > 15){
                 syncJobDataCSV.analysisCode4 = syncJobDataCSV.analysisCode4.substring(0, 15);
             }else if(syncJobDataCSV.analysisCode4.length() < 15) {
                 syncJobDataCSV.analysisCode4 = String.format("%-15s", syncJobDataCSV.analysisCode4);
             }
 
-            syncJobDataCSV.analysisCode5 = syncJobType.getConfiguration().getAnalysis().get(5).getCodeElement();
+            if (syncJobData.getData().containsKey("analysisCodeT6")){
+                syncJobDataCSV.analysisCode5 = syncJobData.getData().get("analysisCodeT6");
+            }else {
+                syncJobDataCSV.analysisCode5 = syncJobType.getConfiguration().getAnalysis().get(5).getCodeElement();
+            }
             if(syncJobDataCSV.analysisCode5.length() > 15){
                 syncJobDataCSV.analysisCode5 = syncJobDataCSV.analysisCode5.substring(0, 15);
             }else if(syncJobDataCSV.analysisCode5.length() < 15) {

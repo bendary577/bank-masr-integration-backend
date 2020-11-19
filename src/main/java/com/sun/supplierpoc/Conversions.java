@@ -27,9 +27,11 @@ public class Conversions {
         return new Tax();
     }
 
-    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName) {
+    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName, float amount) {
         for (Tender tender : tenders) {
-            if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())) {
+            if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())
+            || tender.getChildren().contains(tenderName)) {
+                tender.setTotal(tender.getTotal() + amount);
                 return tender;
             }
         }

@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Tender implements Serializable {
     @Id
@@ -18,7 +19,9 @@ public class Tender implements Serializable {
 
     private String analysisCodeT5 = "";
 
-    private Float total;
+    private List<String> children = new ArrayList<>();
+
+    private float total = 0;
     private CostCenter costCenter;
 
     public Tender() {
@@ -89,11 +92,19 @@ public class Tender implements Serializable {
         this.analysisCodeT5 = analysisCodeT5;
     }
 
-    public Float getTotal() {
+    public List<String> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<String> children) {
+        this.children = children;
+    }
+
+    public float getTotal() {
         return total;
     }
 
-    public void setTotal(Float total) {
+    public void setTotal(float total) {
         this.total = total;
     }
 

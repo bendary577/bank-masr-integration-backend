@@ -252,7 +252,7 @@ public class SalesService {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
             for (int i = 7; i < rows.size(); i++) {
-                Tender tender = new Tender();
+                Tender tender;
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -261,15 +261,26 @@ public class SalesService {
                 }
 
                 // Check if tender exists
-                Tender tenderData = conversions.checkTenderExistence(includedTenders, cols.get(0).getText().strip());
+                Tender tenderData = conversions.checkTenderExistence(includedTenders, cols.get(0).getText().strip(), 0);
                 if (!tenderData.isChecked()) {
                     continue;
                 }
 
-                tender = tenderData;
+                tender = new Tender();
+                tender.setTender(tenderData.getTender());
+                tender.setAccount(tenderData.getAccount());
+                tender.setAnalysisCodeT5(tenderData.getAnalysisCodeT5());
+                tender.setCommunicationAccount(tenderData.getCommunicationAccount());
+                tender.setCommunicationRate(tenderData.getCommunicationRate());
+                tender.setCommunicationTender(tenderData.getCommunicationTender());
                 tender.setCostCenter(costCenter);
                 tender.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
-                tenders.add(tender);
+
+                // Check if it already exist, increment its value
+                tenderData = conversions.checkTenderExistence(tenders, tender.getTender(), tender.getTotal());
+                if (tenderData.getTender().equals("")) {
+                    tenders.add(tender);
+                }
             }
 
             response.setStatus(true);

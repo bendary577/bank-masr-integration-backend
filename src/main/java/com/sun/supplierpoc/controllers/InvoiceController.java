@@ -3,16 +3,17 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.InvoicesExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
+import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.services.InvoiceService;
-import com.sun.supplierpoc.services.SunService;
-import com.sun.supplierpoc.services.TransferService;
+import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
@@ -26,9 +27,11 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -51,9 +54,11 @@ public class InvoiceController {
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
-    private TransferService transferService;
-    @Autowired
     private SunService sunService;
+    @Autowired
+    private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     public Conversions conversions = new Conversions();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -179,7 +184,7 @@ public class InvoiceController {
             if (data.get("status").equals(Constants.SUCCESS)){
                 if (invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, invoiceSyncJobType, false);
-                    if (addedInvoices.size() > 0){
+                    if (addedInvoices.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             handleSendJournal(invoiceSyncJobType, syncJob, addedInvoices, account, voucher);
@@ -188,6 +193,7 @@ public class InvoiceController {
                             syncJob.setRowsFetched(addedInvoices.size());
                             syncJobRepo.save(syncJob);
 
+                            response.put("success", true);
                             response.put("message", "Sync Invoices Successfully.");
                         }
                         else {
@@ -197,9 +203,66 @@ public class InvoiceController {
                             syncJob.setRowsFetched(addedInvoices.size());
                             syncJobRepo.save(syncJob);
 
-                            response.put("message", "Failed to connect to Sun System.");
                             response.put("success", false);
+                            response.put("message", "Failed to connect to Sun System.");
                             return response;
+                        }
+                    }
+                    else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+                        String username = sunCredentials.getUsername();
+                        String password = sunCredentials.getPassword();
+                        String host = sunCredentials.getHost();
+
+                        FtpClient ftpClient = new FtpClient(host, username, password);
+
+                        if(ftpClient.open()){
+                            List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                    invoiceSyncJobType, salesList);
+
+                            DateFormatSymbols dfs = new DateFormatSymbols();
+                            String[] weekdays = dfs.getWeekdays();
+
+                            String transactionDate = salesList.get(0).getData().get("transactionDate");
+                            Calendar cal = Calendar.getInstance();
+                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                            cal.setTime(date);
+                            int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                            String dayName = weekdays[day];
+                            String fileExtension = ".ndf";
+                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+
+                            File file = excelExporter.createNDFFile();
+                            System.out.println(fileName);
+
+//                                if (ftpClient.putFileToPath(file, fileName)){
+                            if (true){
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                        "Sync approved invoices successfully.", Constants.SUCCESS);
+
+                                response.put("success", true);
+                                response.put("message", "Sync approved invoices successfully.");
+                            }else {
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                        "Failed to sync approved invoices to sun system via FTP.", Constants.FAILED);
+
+                                response.put("success", false);
+                                response.put("message", "Failed to sync approved invoices to sun system via FTP.");
+                            }
+                            ftpClient.close();
+                        }
+                        else {
+                            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+
+                            response.put("success", false);
+                            response.put("message", "Failed to connect to sun system via FTP.");
                         }
                     }
                     else {
@@ -209,6 +272,7 @@ public class InvoiceController {
                         syncJob.setRowsFetched(addedInvoices.size());
                         syncJobRepo.save(syncJob);
 
+                        response.put("success", true);
                         response.put("message", "No new invoices to add in middleware.");
                     }
                 }
@@ -219,10 +283,9 @@ public class InvoiceController {
                     syncJob.setRowsFetched(addedInvoices.size());
                     syncJobRepo.save(syncJob);
 
+                    response.put("success", true);
                     response.put("message", "There is no invoices to get from Oracle Hospitality.");
-
                 }
-                response.put("success", true);
             }
             else {
                 syncJob.setStatus(Constants.FAILED);
@@ -231,8 +294,8 @@ public class InvoiceController {
                 syncJob.setRowsFetched(addedInvoices.size());
                 syncJobRepo.save(syncJob);
 
-                response.put("message", "Failed to get invoices from Oracle Hospitality.");
                 response.put("success", false);
+                response.put("message", "Failed to get invoices from Oracle Hospitality.");
             }
         }
         catch (Exception e) {

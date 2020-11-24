@@ -189,7 +189,7 @@ public class SalesController {
                         addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob,
                                 syncJobType, account);
 
-                        if (addedSalesBatches.size() > 0 && !account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
+                        if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
                             // Sent Sales Entries
                             IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                             if (voucher != null) {
@@ -281,7 +281,7 @@ public class SalesController {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Failed to connect to sun system via FTP.", Constants.FAILED);
 
-                                response.setStatus(true);
+                                response.setStatus(false);
                                 response.setMessage("Failed to connect to sun system via FTP.");
                             }
                         }

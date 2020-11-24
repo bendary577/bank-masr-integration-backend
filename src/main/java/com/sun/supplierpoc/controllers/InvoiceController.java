@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -219,14 +220,14 @@ public class InvoiceController {
                         FtpClient ftpClient = new FtpClient(host, username, password);
 
                         if(ftpClient.open()){
-                            List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                            List<SyncJobData> approvedInvoicesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    invoiceSyncJobType, salesList);
+                                    invoiceSyncJobType, approvedInvoicesList);
 
                             DateFormatSymbols dfs = new DateFormatSymbols();
                             String[] weekdays = dfs.getWeekdays();
 
-                            String transactionDate = salesList.get(0).getData().get("transactionDate");
+                            String transactionDate = approvedInvoicesList.get(0).getData().get("transactionDate");
                             Calendar cal = Calendar.getInstance();
                             Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
                             cal.setTime(date);
@@ -235,27 +236,32 @@ public class InvoiceController {
                             String dayName = weekdays[day];
                             String fileExtension = ".ndf";
                             String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-
                             File file = excelExporter.createNDFFile();
-                            System.out.println(fileName);
 
-//                                if (ftpClient.putFileToPath(file, fileName)){
-                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+                            boolean sendFileFlag = false;
+                            try {
+                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                                ftpClient.close();
+                            } catch (IOException e) {
+                                ftpClient.close();
+                            }
+
+                            if (sendFileFlag){
+//                            if (true){
+                                syncJobDataService.updateSyncJobDataStatus(approvedInvoicesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                         "Sync approved invoices successfully.", Constants.SUCCESS);
 
                                 response.put("success", true);
                                 response.put("message", "Sync approved invoices successfully.");
                             }else {
-                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                syncJobDataService.updateSyncJobDataStatus(approvedInvoicesList, Constants.FAILED);
                                 syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                         "Failed to sync approved invoices to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
                                 response.put("message", "Failed to sync approved invoices to sun system via FTP.");
                             }
-                            ftpClient.close();
                         }
                         else {
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),

@@ -2,19 +2,16 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
+import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
-import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import com.sun.supplierpoc.services.InvoiceService;
-import com.sun.supplierpoc.services.SunService;
-import com.sun.supplierpoc.services.SyncJobService;
-import com.sun.supplierpoc.services.TransferService;
+import com.sun.supplierpoc.repositories.*;
+import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,11 +22,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Optional;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @RestController
 // @RequestMapping(path = "server")
@@ -40,19 +38,19 @@ public class CreditNoteController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
+    private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
-    private TransferService transferService;
-    @Autowired
     private InvoiceController invoiceController;
-
     @Autowired
     private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
     @Autowired
     private SunService sunService;
 
@@ -174,7 +172,7 @@ public class CreditNoteController {
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 
             if (data.get("status").equals(Constants.SUCCESS)){
-                if (invoices.size() > 0){
+                if (invoices.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, creditNoteSyncJobType, true);
                     if (addedInvoices.size() > 0){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
@@ -184,32 +182,94 @@ public class CreditNoteController {
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                     "", syncJob.getStatus());
 
+                            response.put("success", true);
                             response.put("message", "Sync credit notes Successfully.");
                         }
                         else {
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                     "Failed to connect to Sun System.", Constants.FAILED);
 
-                            response.put("message", "Failed to connect to Sun System.");
                             response.put("success", false);
-                            return response;
+                            response.put("message", "Failed to connect to Sun System.");
                         }
                     }
                     else {
                         syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                 "No new credit notes to add in middleware.", Constants.SUCCESS);
 
+                        response.put("success", true);
                         response.put("message", "No new credit notes to add in middleware.");
+                    }
+                }
+                else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                    ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                    AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+                    String username = sunCredentials.getUsername();
+                    String password = sunCredentials.getPassword();
+                    String host = sunCredentials.getHost();
+
+                    FtpClient ftpClient = new FtpClient(host, username, password);
+
+                    if(ftpClient.open()){
+                        List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                invoiceSyncJobType, creditNotesList);
+
+                        DateFormatSymbols dfs = new DateFormatSymbols();
+                        String[] weekdays = dfs.getWeekdays();
+
+                        String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
+                        Calendar cal = Calendar.getInstance();
+                        Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                        cal.setTime(date);
+                        int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                        String dayName = weekdays[day];
+                        String fileExtension = ".ndf";
+                        String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+                        File file = excelExporter.createNDFFile();
+
+                        boolean sendFileFlag = false;
+                        try {
+                            sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                            ftpClient.close();
+                        } catch (IOException e) {
+                            ftpClient.close();
+                        }
+
+                        if (sendFileFlag){
+//                            if (true){
+                            syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                    "Sync credit notes successfully.", Constants.SUCCESS);
+
+                            response.put("success", true);
+                            response.put("message", "Sync credit notes successfully.");
+                        }else {
+                            syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                    "Failed to sync credit notes to sun system via FTP.", Constants.FAILED);
+
+                            response.put("success", false);
+                            response.put("message", "Failed to sync credit notes to sun system via FTP.");
+                        }
+                    }
+                    else {
+                        syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                "Failed to connect to sun system via FTP.", Constants.FAILED);
+
+                        response.put("success", false);
+                        response.put("message", "Failed to connect to sun system via FTP.");
                     }
                 }
                 else {
                     syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                             "There is no credit notes to get from Oracle Hospitality.", Constants.SUCCESS);
 
+                    response.put("success", true);
                     response.put("message", "There is no credit notes to get from Oracle Hospitality.");
-
                 }
-                response.put("success", true);
             }
             else {
                 syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),

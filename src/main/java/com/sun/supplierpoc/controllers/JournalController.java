@@ -4,15 +4,16 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.ConsumptionExcelExporter;
 import com.sun.supplierpoc.excelExporters.WastageExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
+import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
-import com.sun.supplierpoc.services.JournalService;
-import com.sun.supplierpoc.services.SunService;
-import com.sun.supplierpoc.services.TransferService;
+import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
@@ -23,9 +24,11 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -43,11 +46,12 @@ public class JournalController {
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @Autowired
     private JournalService journalService;
     @Autowired
-    private TransferService transferService;
+    private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
     @Autowired
     private SunService sunService;
     @Autowired
@@ -167,7 +171,7 @@ public class JournalController {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
                     addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, fromDate, overGroups);
-                    if (addedJournals.size() > 0){
+                    if (addedJournals.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             invoiceController.handleSendJournal(journalSyncJobType, syncJob, addedJournals, account, voucher);
@@ -189,7 +193,70 @@ public class JournalController {
                             response.put("message", "Failed to connect to Sun System.");
                             response.put("success", false);
                         }
-                    }else {
+                    }
+                    else if (addedJournals.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+                        String username = sunCredentials.getUsername();
+                        String password = sunCredentials.getPassword();
+                        String host = sunCredentials.getHost();
+
+                        FtpClient ftpClient = new FtpClient(host, username, password);
+
+                        if(ftpClient.open()){
+                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                    journalSyncJobType, creditNotesList);
+
+                            DateFormatSymbols dfs = new DateFormatSymbols();
+                            String[] weekdays = dfs.getWeekdays();
+
+                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
+                            Calendar cal = Calendar.getInstance();
+                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                            cal.setTime(date);
+                            int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                            String dayName = weekdays[day];
+                            String fileExtension = ".ndf";
+                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+                            File file = excelExporter.createNDFFile();
+
+                            boolean sendFileFlag = false;
+                            try {
+                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                                ftpClient.close();
+                            } catch (IOException e) {
+                                ftpClient.close();
+                            }
+
+                            if (sendFileFlag){
+//                            if (true){
+                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
+                                        "Sync consumption successfully.", Constants.SUCCESS);
+
+                                response.put("success", true);
+                                response.put("message", "Sync consumption successfully.");
+                            }else {
+                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
+                                        "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
+
+                                response.put("success", false);
+                                response.put("message", "Failed to sync consumption to sun system via FTP.");
+                            }
+                        }
+                        else {
+                            syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
+                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+
+                            response.put("success", false);
+                            response.put("message", "Failed to connect to sun system via FTP.");
+                        }
+                    }
+                    else {
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("No consumption to add in middleware.");
                         syncJob.setEndDate(new Date());

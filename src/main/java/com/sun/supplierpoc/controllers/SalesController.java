@@ -76,7 +76,7 @@ public class SalesController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    private Response getPOSSales(String userId, Account account) {
+    public Response getPOSSales(String userId, Account account) {
         Response response = new Response();
         SyncJob syncJob = null;
         try {

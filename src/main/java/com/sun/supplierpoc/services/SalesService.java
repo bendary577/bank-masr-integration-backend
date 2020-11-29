@@ -202,6 +202,12 @@ public class SalesService {
                 response.setStatus(false);
                 response.setMessage(Constants.INVALID_LOCATION);
                 response.setEntries(new ArrayList<>());
+            } else if(overGroupGrossResponse.getMessage().equals(Constants.INVALID_BUSINESS_DATE)){
+                driver.quit();
+
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_LOCATION);
+                response.setEntries(new ArrayList<>());
             }
             response.setStatus(false);
             response.setMessage(overGroupGrossResponse.getMessage());

@@ -301,9 +301,7 @@ public class SupplierController {
         ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)){
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -381,9 +379,7 @@ public class SupplierController {
 
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)){
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);

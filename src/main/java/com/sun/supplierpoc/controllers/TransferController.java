@@ -299,9 +299,7 @@ public class TransferController {
         }
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (checkLogin(items, driver, response, url, account)) return response;
+            if (checkLogin(items, driver, response, Constants.OHIM_LOGIN_LINK, account)) return response;
 
             String majorGroupsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/MajorGroups/OverviewMajorGroup.aspx";
             driver.get(majorGroupsURL);

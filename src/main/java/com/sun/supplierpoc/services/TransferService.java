@@ -79,9 +79,7 @@ public class TransferService {
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)) {
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();
 
                 data.put("status", Constants.FAILED);

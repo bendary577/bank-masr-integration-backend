@@ -285,10 +285,7 @@ public class SupplierService {
 
         try {
             if(openDriverFlag){
-                String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-                driver.get(url);
-
-                if (!setupEnvironment.loginOHIM(driver, url, account)){
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
                     driver.quit();
 
                     response.put("status", Constants.FAILED);

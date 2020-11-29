@@ -78,34 +78,39 @@ public class SetupEnvironment {
     }
 
     public boolean loginOHRA(WebDriver driver, String url, Account account) {
-        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-        AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
-
-        driver.get(url);
         try {
-            Alert al = driver.switchTo().alert();
-            al.accept();
-        } catch (NoAlertPresentException Ex) {
-            System.out.println("No alert exits");
-        }
-        driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
-        driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
-        driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
+            ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+            AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
 
-        String previous_url = driver.getCurrentUrl();
-        driver.findElement(By.id("Login")).click();
+            driver.get(url);
+            try {
+                Alert al = driver.switchTo().alert();
+                al.accept();
+            } catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+            driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
+            driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
+            driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
 
-        try {
-            // card is wrong
-            Alert al = driver.switchTo().alert();
-            al.accept();
+            String previous_url = driver.getCurrentUrl();
+            driver.findElement(By.id("Login")).click();
 
+            try {
+                // card is wrong
+                Alert al = driver.switchTo().alert();
+                al.accept();
+
+                return false;
+            } catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+            return !driver.getCurrentUrl().equals(previous_url);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
             return false;
-        } catch (NoAlertPresentException Ex) {
-            System.out.println("No alert exits");
         }
-
-        return !driver.getCurrentUrl().equals(previous_url);
     }
 
     public ArrayList<String> getTableColumns(List<WebElement> rows, boolean rowType, int rowNumber) {
@@ -290,8 +295,13 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
                     if (syncFromDate.equals(syncToDate)){
-                        response = chooseDaysDateOHRA(syncFromDate, syncToDate, driver);
-                    }else {
+                        response = chooseDayDateOHRA(syncFromDate,driver);
+                    }
+                    // check if they are in same month or not
+                    else if(syncFromDate.substring(5,7).equals(syncToDate.substring(5,7))){
+                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
+                    }
+                    else {
                         response = chooseMonthsDateOHRA(syncFromDate, syncToDate, driver);
                     }
 
@@ -309,24 +319,14 @@ public class SetupEnvironment {
                     response.setEntries(new ArrayList<>());
                     return response;
                 }
-            } else if (timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
-                    || timePeriod.equals(Constants.PAST_7_DAYES) || timePeriod.equals(Constants.TODAY)
-                    || timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.MONTH_TO_DATE)
-                    || timePeriod.equals(Constants.FINANCIAL_PERIOD_TO_DATE)) {
-                try {
-                    Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                    businessDate.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    driver.quit();
-
-                    response.setStatus(false);
-                    response.setMessage(Constants.INVALID_BUSINESS_DATE);
-                    response.setEntries(new ArrayList<>());
-                    return response;
-                }
             }
-            else if (timePeriod.equals(Constants.LAST_MONTH) || timePeriod.equals(Constants.LAST_QUARTER)
-                    || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)) {
+            else if (timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.LAST_MONTH)
+                    || timePeriod.equals(Constants.LAST_QUARTER)
+                    || timePeriod.equals(Constants.YEAR_TO_DATE) || timePeriod.equals(Constants.LAST_YEAR_YTD)
+                    || timePeriod.equals(Constants.MOST_RECENT) || timePeriod.equals(Constants.FINANCIAL_WEEK_TO_DATE)
+                    || timePeriod.equals(Constants.PAST_7_DAYES) || timePeriod.equals(Constants.TODAY)
+                    || timePeriod.equals(Constants.MONTH_TO_DATE)
+                    || timePeriod.equals(Constants.FINANCIAL_PERIOD_TO_DATE)) {
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
 
@@ -381,7 +381,36 @@ public class SetupEnvironment {
         return response;
     }
 
-    private Response chooseDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) throws ParseException {
+    private Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
+        Response response = new Response();
+        try {
+            driver.findElement(By.id("clear0")).click();
+
+            DateFormat Date = DateFormat.getDateInstance();
+            Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
+
+            SimpleDateFormat format = new SimpleDateFormat("EEEE");
+            Calendar calendar = Calendar.getInstance();
+
+            calendar.setTime(fromDate);
+            String fromDateFormatted = Date.format(calendar.getTime());
+            String fromDayName = format.format(fromDate);
+
+            List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                    + fromDayName + ", " + fromDateFormatted + "']"));
+
+            fromDateElements.get(0).click();
+
+            response.setStatus(true);
+            return response;
+        } catch (ParseException e) {
+            response.setMessage(Constants.INVALID_BUSINESS_DATE);
+            response.setStatus(false);
+            return response;
+        }
+    }
+
+    private Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {
         Response response = new Response();
         try {
             driver.findElement(By.id("clear0")).click();
@@ -404,22 +433,31 @@ public class SetupEnvironment {
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
-            fromDateElements.get(0).click();
+            Actions actions = new Actions(driver);
+            actions.keyDown(Keys.LEFT_SHIFT)
+                    .click(fromDateElements.get(0))
+                    .build()
+                    .perform();
 
             if (!toDateFormatted.equals(fromDateFormatted)) {
                 List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + toDayName + ", " + toDateFormatted + "']"));
-                Actions actions = new Actions(driver);
-                actions.keyDown(Keys.LEFT_CONTROL)
-                        .click(toDateElements.get(0))
-                        .keyUp(Keys.LEFT_CONTROL)
+                actions.click(toDateElements.get(0))
+                        .keyUp(Keys.LEFT_SHIFT)
                         .build()
                         .perform();
             }
+            Select dateSelected = new Select(driver.findElement(By.id("altOutput0")));
+            String value =  dateSelected.getOptions().get(0).getAttribute("value");
+            if(value.equals(syncFromDate + "*" + syncToDate))
+                response.setStatus(true);
+            else
+                response.setStatus(false);
 
             response.setStatus(true);
             return response;
         } catch (ParseException e) {
+            response.setMessage(Constants.INVALID_BUSINESS_DATE);
             response.setStatus(false);
             return response;
         }
@@ -485,6 +523,7 @@ public class SetupEnvironment {
             response.setStatus(true);
             return response;
         } catch (ParseException e) {
+            response.setMessage(Constants.INVALID_BUSINESS_DATE);
             response.setStatus(false);
             return response;
         }

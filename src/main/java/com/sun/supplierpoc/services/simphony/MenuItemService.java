@@ -1,7 +1,15 @@
 package com.sun.supplierpoc.services.simphony;
 
+import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.Discount;
+import com.sun.supplierpoc.models.configurations.ServiceCharge;
+import com.sun.supplierpoc.models.configurations.Tax;
+import com.sun.supplierpoc.models.configurations.Tender;
 import com.sun.supplierpoc.models.simphony.*;
 
+import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -23,10 +31,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
 public class MenuItemService {
+    @Autowired
+    private SyncJobDataRepo syncJobDataRepo;
+
     public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter){
         com.sun.supplierpoc.models.Response response = new com.sun.supplierpoc.models.Response();
         Client client = ClientBuilder.newClient();
@@ -87,33 +100,40 @@ public class MenuItemService {
                     .header("SOAPAction", "http://micros-hosting.com/EGateway/GetConfigurationInfoEx")
                     .post(payload);
 
-            Document responseDoc = responseToDocument(configInfoExResponse.toString());
-            if(responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")){
-                String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
-                response.setMessage(errorMessage);
+            Document responseDoc = responseToDocument(configInfoExResponse.readEntity(String.class));
+
+            if (responseDoc != null){
+                if(responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")){
+                    String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
+                    response.setMessage(errorMessage);
+                    response.setStatus(false);
+                    return response;
+                }
+
+                if (responseDoc.getElementsByTagName("MenuItemPrice").item(0)!=null &&
+                        responseDoc.getElementsByTagName("MenuItemDefinitions").item(0)!=null
+                ){
+                    String xmlMenuItemPrice =responseDoc.getElementsByTagName("MenuItemPrice").item(0).getFirstChild().getNodeValue();
+                    String xmlMenuItem =responseDoc.getElementsByTagName("MenuItemDefinitions").item(0).getFirstChild().getNodeValue();
+
+                    jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemDefinition.class);
+                    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                    ArrayOfDbMenuItemDefinition MenuItem = (ArrayOfDbMenuItemDefinition) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItem));
+
+                    jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemPrice.class);
+                    jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                    ArrayOfDbMenuItemPrice MenuItemPrice = (ArrayOfDbMenuItemPrice) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItemPrice));
+
+                    mergeMenuItemWithPrice(MenuItem, MenuItemPrice);
+
+                    response.setMessage("Sync menu item successfully.");
+                    response.setStatus(true);
+                    response.setMenuItems(MenuItem.getDbMenuItemDefinition());
+                    return response;
+                }
+            }else {
+                response.setMessage("Failed to sync menu items.");
                 response.setStatus(false);
-                return response;
-            }
-
-            if (responseDoc.getElementsByTagName("MenuItemPrice").item(0)!=null &&
-                    responseDoc.getElementsByTagName("MenuItemDefinitions").item(0)!=null
-            ){
-                String xmlMenuItemPrice =responseDoc.getElementsByTagName("MenuItemPrice").item(0).getFirstChild().getNodeValue();
-                String xmlMenuItem =responseDoc.getElementsByTagName("MenuItemDefinitions").item(0).getFirstChild().getNodeValue();
-
-                jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemDefinition.class);
-                Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-                ArrayOfDbMenuItemDefinition MenuItem = (ArrayOfDbMenuItemDefinition) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItem));
-
-                jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemPrice.class);
-                jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-                ArrayOfDbMenuItemPrice MenuItemPrice = (ArrayOfDbMenuItemPrice) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItemPrice));
-
-                mergeMenuItemWithPrice(MenuItem, MenuItemPrice);
-
-                response.setMessage("Sync menu item successfully.");
-                response.setStatus(true);
-                response.setMenuItems(MenuItem.getDbMenuItemDefinition());
                 return response;
             }
 
@@ -199,4 +219,18 @@ public class MenuItemService {
         return null;
     }
 
+
+    public void saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob) {
+        for (DbMenuItemDefinition menuItem : menuItems) {
+            HashMap<String, String> menuItemData = new HashMap<>();
+
+            menuItemData.put("menuName", menuItem.getNameOptions());
+            menuItemData.put("menuItemDefID", menuItem.getMenuItemDefID());
+            menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());
+
+            SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
+                    syncJob.getId());
+            syncJobDataRepo.save(syncJobData);
+        }
+    }
 }

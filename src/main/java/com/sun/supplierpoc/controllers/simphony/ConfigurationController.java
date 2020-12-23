@@ -6,43 +6,18 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.simphony.*;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.XML;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.MediaType;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.soap.*;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
-import java.io.*;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 @RestController()
@@ -103,6 +78,8 @@ public class ConfigurationController {
 
             response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenter);
             if(response.isStatus()){
+                // Save menu items
+                this.menuItemService.saveMenuItemData(response.getMenuItems(), syncJob);
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(response.getMenuItems().size());

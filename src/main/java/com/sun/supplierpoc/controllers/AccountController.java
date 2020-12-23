@@ -184,6 +184,12 @@ public class AccountController {
                     new Date(), new Configuration(), account.getId());
             syncJobTypeRepo.save(consumptionSyncType);
 
+            // Menu Items
+            syncDescription = "Used to sync simphony menu items.";
+            SyncJobType menuItemsSyncType = new SyncJobType(9, Constants.MENU_ITEMS, syncDescription, "/menuItems",
+                    new Date(), new Configuration(), account.getId());
+            syncJobTypeRepo.save(menuItemsSyncType);
+
             return true;
         } catch (Exception e) {
             return false;

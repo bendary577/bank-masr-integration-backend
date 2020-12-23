@@ -23,6 +23,7 @@ public class Constants {
     public static String SALES = "POS Sales";
     public static String WASTAGE = "Wastage";
     public static String BOOKED_PRODUCTION = "Booked Production";
+    public static String MENU_ITEMS = "Menu Items";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";

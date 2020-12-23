@@ -1,258 +1,292 @@
 package com.sun.supplierpoc.models.simphony;
 
+import javax.xml.bind.annotation.XmlElement;
+
 public class DbMenuItemDefinition {
-    private Number NameOptions ;
-    private Number MenuItemDefID ;
-    private Number HierStrucID ;
-    private Number MenuItemMasterID ;
-    private Number SequenceNum ;
-    private Number SluSort ;
-    private Number NluNumber ;
-    private Number Tare ;
-    private Number Surcharge ;
-    private Number IconNumber ;
-    private Number OptionBits ;
-    private Number SpecialCount ;
-    private Number PrepTime ;
-    private Number MenuItemClassObjNum ;
-    private Number NluGroupIndex ;
-    private Number SluIndex ;
-    private Number HhtSluIndex ;
-    private Number MainLevels ;
-    private Number SubLevels ;
-    private Number PosRef ;
-    private Number PrintClassObjNum ;
-    private Number PrefixLevelOverride ;
-    private Number GuestCount ;
-    private Number Quantity ;
-    private Number MenuLevelEntries ;
-    private Number DefaultCondiments ;
-    private Number NextScreen ;
-    private Number MiMasterObjNum ;
+    @XmlElement(name = "NameOptions")
+    private String NameOptions ;
+    @XmlElement(name = "MenuItemDefID")
+    private String MenuItemDefID ;
+    @XmlElement(name = "HierStrucID")
+    private String HierStrucID ;
+    @XmlElement(name = "MenuItemMasterID")
+    private String MenuItemMasterID ;
+    @XmlElement(name = "SequenceNum")
+    private String SequenceNum ;
+    @XmlElement(name = "SluSort")
+    private String SluSort ;
+    @XmlElement(name = "NluNumber")
+    private String NluNumber ;
+    @XmlElement(name = "Tare")
+    private String Tare ;
+    @XmlElement(name = "Surcharge")
+    private String Surcharge ;
+    @XmlElement(name = "IconNumber")
+    private String IconNumber ;
+    @XmlElement(name = "OptionBits")
+    private String OptionBits ;
+    @XmlElement(name = "SpecialCount")
+    private String SpecialCount ;
+    @XmlElement(name = "PrepTime")
+    private String PrepTime ;
+    @XmlElement(name = "MenuItemClassObjNum")
+    private String MenuItemClassObjNum;
+    @XmlElement(name = "NluGroupIndex")
+    private String NluGroupIndex ;
+    @XmlElement(name = "SluIndex")
+    private String SluIndex ;
+    @XmlElement(name = "HhtSluIndex")
+    private String HhtSluIndex ;
+    @XmlElement(name = "MainLevels")
+    private String MainLevels ;
+    @XmlElement(name = "SubLevels")
+    private String SubLevels ;
+    @XmlElement(name = "PosRef")
+    private String PosRef ;
+    @XmlElement(name = "PrintClassObjNum")
+    private String PrintClassObjNum ;
+    @XmlElement(name = "PrefixLevelOverride")
+    private String PrefixLevelOverride;
+    @XmlElement(name = "GuestCount")
+    private String GuestCount ;
+    @XmlElement(name = "Quantity")
+    private String Quantity ;
+    @XmlElement(name = "MenuLevelEntries")
+    private String MenuLevelEntries ;
+    @XmlElement(name = "DefaultCondiments")
+    private String DefaultCondiments ;
+    @XmlElement(name = "NextScreen")
+    private String NextScreen ;
+    @XmlElement(name = "MiMasterObjNum")
+    private String MiMasterObjNum ;
+    @XmlElement(name = "CheckAvailability")
     private Boolean CheckAvailability ;
+    @XmlElement(name = "OutOfMenuItem")
     private Boolean OutOfMenuItem ;
 
-    public Number getNameOptions() {
+    private DbMenuItemPrice menuItemPrice;
+
+    public String getNameOptions() {
         return NameOptions;
     }
 
-    public void setNameOptions(Number nameOptions) {
+    public void setNameOptions(String nameOptions) {
         NameOptions = nameOptions;
     }
 
-    public Number getMenuItemDefID() {
+    public String getMenuItemDefID() {
         return MenuItemDefID;
     }
 
-    public void setMenuItemDefID(Number menuItemDefID) {
+    public void setMenuItemDefID(String menuItemDefID) {
         MenuItemDefID = menuItemDefID;
     }
 
-    public Number getHierStrucID() {
+    public String getHierStrucID() {
         return HierStrucID;
     }
 
-    public void setHierStrucID(Number hierStrucID) {
+    public void setHierStrucID(String hierStrucID) {
         HierStrucID = hierStrucID;
     }
 
-    public Number getMenuItemMasterID() {
+    public String getMenuItemMasterID() {
         return MenuItemMasterID;
     }
 
-    public void setMenuItemMasterID(Number menuItemMasterID) {
+    public void setMenuItemMasterID(String menuItemMasterID) {
         MenuItemMasterID = menuItemMasterID;
     }
 
-    public Number getSequenceNum() {
+    public String getSequenceNum() {
         return SequenceNum;
     }
 
-    public void setSequenceNum(Number sequenceNum) {
+    public void setSequenceNum(String sequenceNum) {
         SequenceNum = sequenceNum;
     }
 
-    public Number getSluSort() {
+    public String getSluSort() {
         return SluSort;
     }
 
-    public void setSluSort(Number sluSort) {
+    public void setSluSort(String sluSort) {
         SluSort = sluSort;
     }
 
-    public Number getNluNumber() {
+    public String getNluNumber() {
         return NluNumber;
     }
 
-    public void setNluNumber(Number nluNumber) {
+    public void setNluNumber(String nluNumber) {
         NluNumber = nluNumber;
     }
 
-    public Number getTare() {
+    public String getTare() {
         return Tare;
     }
 
-    public void setTare(Number tare) {
+    public void setTare(String tare) {
         Tare = tare;
     }
 
-    public Number getSurcharge() {
+    public String getSurcharge() {
         return Surcharge;
     }
 
-    public void setSurcharge(Number surcharge) {
+    public void setSurcharge(String surcharge) {
         Surcharge = surcharge;
     }
 
-    public Number getIconNumber() {
+    public String getIconNumber() {
         return IconNumber;
     }
 
-    public void setIconNumber(Number iconNumber) {
+    public void setIconNumber(String iconNumber) {
         IconNumber = iconNumber;
     }
 
-    public Number getOptionBits() {
+    public String getOptionBits() {
         return OptionBits;
     }
 
-    public void setOptionBits(Number optionBits) {
+    public void setOptionBits(String optionBits) {
         OptionBits = optionBits;
     }
 
-    public Number getSpecialCount() {
+    public String getSpecialCount() {
         return SpecialCount;
     }
 
-    public void setSpecialCount(Number specialCount) {
+    public void setSpecialCount(String specialCount) {
         SpecialCount = specialCount;
     }
 
-    public Number getPrepTime() {
+    public String getPrepTime() {
         return PrepTime;
     }
 
-    public void setPrepTime(Number prepTime) {
+    public void setPrepTime(String prepTime) {
         PrepTime = prepTime;
     }
 
-    public Number getMenuItemClassObjNum() {
+    public String getMenuItemClassObjNum() {
         return MenuItemClassObjNum;
     }
 
-    public void setMenuItemClassObjNum(Number menuItemClassObjNum) {
+    public void setMenuItemClassObjNum(String menuItemClassObjNum) {
         MenuItemClassObjNum = menuItemClassObjNum;
     }
 
-    public Number getNluGroupIndex() {
+    public String getNluGroupIndex() {
         return NluGroupIndex;
     }
 
-    public void setNluGroupIndex(Number nluGroupIndex) {
+    public void setNluGroupIndex(String nluGroupIndex) {
         NluGroupIndex = nluGroupIndex;
     }
 
-    public Number getSluIndex() {
+    public String getSluIndex() {
         return SluIndex;
     }
 
-    public void setSluIndex(Number sluIndex) {
+    public void setSluIndex(String sluIndex) {
         SluIndex = sluIndex;
     }
 
-    public Number getHhtSluIndex() {
+    public String getHhtSluIndex() {
         return HhtSluIndex;
     }
 
-    public void setHhtSluIndex(Number hhtSluIndex) {
+    public void setHhtSluIndex(String hhtSluIndex) {
         HhtSluIndex = hhtSluIndex;
     }
 
-    public Number getMainLevels() {
+    public String getMainLevels() {
         return MainLevels;
     }
 
-    public void setMainLevels(Number mainLevels) {
+    public void setMainLevels(String mainLevels) {
         MainLevels = mainLevels;
     }
 
-    public Number getSubLevels() {
+    public String getSubLevels() {
         return SubLevels;
     }
 
-    public void setSubLevels(Number subLevels) {
+    public void setSubLevels(String subLevels) {
         SubLevels = subLevels;
     }
 
-    public Number getPosRef() {
+    public String getPosRef() {
         return PosRef;
     }
 
-    public void setPosRef(Number posRef) {
+    public void setPosRef(String posRef) {
         PosRef = posRef;
     }
 
-    public Number getPrintClassObjNum() {
+    public String getPrintClassObjNum() {
         return PrintClassObjNum;
     }
 
-    public void setPrintClassObjNum(Number printClassObjNum) {
+    public void setPrintClassObjNum(String printClassObjNum) {
         PrintClassObjNum = printClassObjNum;
     }
 
-    public Number getPrefixLevelOverride() {
+    public String getPrefixLevelOverride() {
         return PrefixLevelOverride;
     }
 
-    public void setPrefixLevelOverride(Number prefixLevelOverride) {
+    public void setPrefixLevelOverride(String prefixLevelOverride) {
         PrefixLevelOverride = prefixLevelOverride;
     }
 
-    public Number getGuestCount() {
+    public String getGuestCount() {
         return GuestCount;
     }
 
-    public void setGuestCount(Number guestCount) {
+    public void setGuestCount(String guestCount) {
         GuestCount = guestCount;
     }
 
-    public Number getQuantity() {
+    public String getQuantity() {
         return Quantity;
     }
 
-    public void setQuantity(Number quantity) {
+    public void setQuantity(String quantity) {
         Quantity = quantity;
     }
 
-    public Number getMenuLevelEntries() {
+    public String getMenuLevelEntries() {
         return MenuLevelEntries;
     }
 
-    public void setMenuLevelEntries(Number menuLevelEntries) {
+    public void setMenuLevelEntries(String menuLevelEntries) {
         MenuLevelEntries = menuLevelEntries;
     }
 
-    public Number getDefaultCondiments() {
+    public String getDefaultCondiments() {
         return DefaultCondiments;
     }
 
-    public void setDefaultCondiments(Number defaultCondiments) {
+    public void setDefaultCondiments(String defaultCondiments) {
         DefaultCondiments = defaultCondiments;
     }
 
-    public Number getNextScreen() {
+    public String getNextScreen() {
         return NextScreen;
     }
 
-    public void setNextScreen(Number nextScreen) {
+    public void setNextScreen(String nextScreen) {
         NextScreen = nextScreen;
     }
 
-    public Number getMiMasterObjNum() {
+    public String getMiMasterObjNum() {
         return MiMasterObjNum;
     }
 
-    public void setMiMasterObjNum(Number miMasterObjNum) {
+    public void setMiMasterObjNum(String miMasterObjNum) {
         MiMasterObjNum = miMasterObjNum;
     }
 
@@ -270,5 +304,13 @@ public class DbMenuItemDefinition {
 
     public void setOutOfMenuItem(Boolean outOfMenuItem) {
         OutOfMenuItem = outOfMenuItem;
+    }
+
+    public DbMenuItemPrice getMenuItemPrice() {
+        return menuItemPrice;
+    }
+
+    public void setMenuItemPrice(DbMenuItemPrice menuItemPrice) {
+        this.menuItemPrice = menuItemPrice;
     }
 }

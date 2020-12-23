@@ -14,3 +14,6 @@
     ==> kill -9 <current running process port>
     ==> java -jar <JAR_NAME>.jar &
 
+5. execute those two commands after changing Dfile to The Files location
+ mvnw install:install-file -Dfile="E:\DOWNLOAD\xercesImpl.jar" -DgroupId=org.w3c -DartifactId=xercesImpl -Dversion=1.0 -Dpackaging=jar -DgeneratePom=true
+ mvnw install:install-file -Dfile="E:\DOWNLOAD\clientlib.jar" -DgroupId=com.systemsunion -DartifactId=clientlib -Dversion=1.0 -Dpackaging=jar -DgeneratePom=true

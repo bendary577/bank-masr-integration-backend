@@ -35,6 +35,10 @@ public class ScheduledTasks {
     private JournalController journalController;
     @Autowired
     private WastageController wastageController;
+    @Autowired
+    private SalesController salesController;
+    @Autowired
+    private BookedProductionController bookedProductionController;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -46,7 +50,8 @@ public class ScheduledTasks {
     }
 
     // run every 60 min
-    @Scheduled(cron="0 0/60 * * * SUN-THU")
+//    @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
+    @Scheduled(cron="0 0/60 * * * SUN-SAT")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
@@ -54,6 +59,19 @@ public class ScheduledTasks {
         ArrayList<Account> accounts = accountController.getAccounts();
 
         HashMap<String, Object> response;
+
+        //////////////////////////////////////  Get Current date //////////////////////////////////////
+        String[] weekdays = new DateFormatSymbols(Locale.ENGLISH).getWeekdays();
+
+        Calendar myCalendar = Calendar.getInstance();
+        Date date = new Date();
+        myCalendar.setTime(date);
+
+        int hour = myCalendar.get(Calendar.HOUR_OF_DAY);
+        int dayOfWeek = myCalendar.get(Calendar.DAY_OF_WEEK);
+        int dayOfMonth = myCalendar.get(Calendar.DAY_OF_MONTH);
+        String dayOfWeekName = weekdays[dayOfWeek];
+        ///////////////////////////////////////////////////////////////////////////////////////////////
 
         for (Account account : accounts) {
             ArrayList<SyncJobType> syncJobsQueue = new ArrayList<>();
@@ -65,18 +83,7 @@ public class ScheduledTasks {
             for (SyncJobType syncJobType : syncJobTypes) {
                 if (syncJobType.getConfiguration().getHour().equals("")) continue;
 
-                String[] weekdays = new DateFormatSymbols(Locale.ENGLISH).getWeekdays();
-
-                Calendar myCalendar = Calendar.getInstance();
-                Date date = new Date();
-                myCalendar.setTime(date);
-
-                int hour = myCalendar.get(Calendar.HOUR_OF_DAY);
-                int dayOfWeek = myCalendar.get(Calendar.DAY_OF_WEEK);
-                int dayOfMonth = myCalendar.get(Calendar.DAY_OF_MONTH);
-                String dayOfWeekName = weekdays[dayOfWeek];
-
-                String schedulerHour = (String) syncJobType.getConfiguration().getHour();
+                String schedulerHour = syncJobType.getConfiguration().getHour();
                 String[] arrOfStr = schedulerHour.split(":");
 
                 // check hours
@@ -117,28 +124,28 @@ public class ScheduledTasks {
 
             for (SyncJobType syncJobType : syncJobsQueue){
                 if (syncJobType.getName().equals(Constants.SUPPLIERS)){
-                    response = supplierController.getSuppliers("Automated User", account);
-                    System.out.println(response.get("message"));
+                    supplierController.getSuppliers("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES)){
-                    response = invoiceController.getApprovedInvoices("Automated User", account);
-                    System.out.println(response.get("message"));
+                    invoiceController.getApprovedInvoices("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)){
-                    response = creditNoteController.getCreditNotes("Automated User", account);
-                    System.out.println(response.get("message"));
+                    creditNoteController.getCreditNotes("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.TRANSFERS)){
-                    response = transferController.getBookedTransfer("Automated User", account);
-                    System.out.println(response.get("message"));
+                    transferController.getBookedTransfer("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.CONSUMPTION)){
-                    response = journalController.getJournals("Automated User", account);
-                    System.out.println(response.get("message"));
+                    journalController.getJournals("Automated User", account);
+                }
+                else if (syncJobType.getName().equals(Constants.SALES)){
+                    salesController.getPOSSales("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.WASTAGE)){
-                    response = wastageController.getWastage("Automated User", account);
-                    System.out.println(response.get("message"));
+                    wastageController.getWastage("Automated User", account);
+                }
+                else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)){
+                    bookedProductionController.getBookedProduction("Automated User", account);
                 }
             }
         }

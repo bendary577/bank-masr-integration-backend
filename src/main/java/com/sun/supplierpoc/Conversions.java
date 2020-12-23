@@ -3,8 +3,12 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 
+import java.text.*;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.text.DecimalFormat;
 
 public class Conversions {
     public Conversions() {
@@ -14,9 +18,20 @@ public class Conversions {
         return columnName.strip().toLowerCase().replace(' ', '_');
     }
 
-    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName) {
+    public Tax checkTaxExistence(ArrayList<Tax> taxes, String taxName) {
+        for (Tax tax : taxes) {
+            if (tax.getTax().toLowerCase().equals(taxName.toLowerCase())) {
+                return tax;
+            }
+        }
+        return new Tax();
+    }
+
+    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName, float amount) {
         for (Tender tender : tenders) {
-            if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())) {
+            if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())
+            || tender.getChildren().contains(tenderName)) {
+                tender.setTotal(tender.getTotal() + amount);
                 return tender;
             }
         }
@@ -40,6 +55,26 @@ public class Conversions {
         }
 
         return new MajorGroup();
+    }
+
+    public Discount checkDiscountExistence(ArrayList<Discount> discounts, String discountName){
+        for (Discount discount : discounts) {
+            if (discount.getDiscount().toLowerCase().equals(discountName.toLowerCase())) {
+                return discount;
+            }
+        }
+
+        return new Discount();
+    }
+
+    public ServiceCharge checkServiceChargeExistence(ArrayList<ServiceCharge> serviceCharges, String serviceChargeName){
+        for (ServiceCharge serviceCharge : serviceCharges) {
+            if (serviceCharge.getServiceCharge().toLowerCase().equals(serviceChargeName.toLowerCase())) {
+                return serviceCharge;
+            }
+        }
+
+        return new ServiceCharge();
     }
 
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
@@ -87,7 +122,8 @@ public class Conversions {
 
     public SyncJobData checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
         for (SyncJobData supplier : suppliers) {
-            if (supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())) {
+            if (supplier.getData().containsKey("supplier") && supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())
+            || supplier.getData().get("description").toLowerCase().equals(vendorName.toLowerCase())) {
                 return supplier;
             }
         }
@@ -96,7 +132,8 @@ public class Conversions {
 
     public SyncJobData checkInvoiceExistence(ArrayList<SyncJobData> invoices, String invoiceNumber, String overGroup){
         for (SyncJobData invoice : invoices) {
-            if (invoice.getData().get("invoiceNo").equals(invoiceNumber) &&
+            if (invoice.getData().containsKey("invoiceNo") && invoice.getData().get("invoiceNo") != null
+                    && invoice.getData().get("invoiceNo").equals(invoiceNumber) &&
                     invoice.getData().get("overGroup").equals(overGroup)) {
                 return invoice;
             }
@@ -160,11 +197,98 @@ public class Conversions {
     }
 
     public float convertStringToFloat(String value){
-        value = value.toLowerCase().replaceAll(",", "");
-        if (value.contains("(")){
-            value = value.replace("(", "").replace(")", "");
-            value = "-" + value;
+        if (value == null){
+            return 0;
         }
-        return Math.round(Float.parseFloat(value));
+        try{
+            value = value.toLowerCase().replaceAll(",", "");
+            if (value.contains("(")){
+                value = value.replace("(", "").replace(")", "");
+                value = "-" + value;
+            }
+
+            DecimalFormat df = new DecimalFormat("###.###");
+            String temp = df.format(Float.parseFloat(value));
+            temp = temp.toLowerCase().replaceAll(",", "");
+            return Float.parseFloat(temp);
+        } catch (NumberFormatException e) {
+            System.out.println(e.getMessage());
+            return 0;
+        }
+    }
+
+    public float roundUpFloat(float value){
+        DecimalFormat df = new DecimalFormat("###.###");
+        String temp = df.format(value);
+        temp = temp.toLowerCase().replaceAll(",", "");
+        return Float.parseFloat(temp);
+    }
+
+    public String getTransactionDate(String businessDate, String fromDate){
+        SimpleDateFormat inMonthFormatter = new SimpleDateFormat("M");
+        SimpleDateFormat outMonthFormatter = new SimpleDateFormat("MM");
+
+        String transactionDate = "";
+        Calendar cal = Calendar.getInstance();
+        DateFormat dayFormat = new SimpleDateFormat("dd");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
+        DateFormat dayMonthFormat = new SimpleDateFormat("ddMM");
+
+        String lastMonth = String.valueOf(Calendar.getInstance().get(Calendar.MONTH));
+        if (lastMonth.equals("0")){
+            lastMonth = "12";
+        }
+
+        Date date;
+        try {
+            date = inMonthFormatter.parse(lastMonth);
+            lastMonth = outMonthFormatter.format(date);
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        String today = dayFormat.format(cal.getTime());
+        String currentMonth = monthFormat.format(cal.getTime());
+        String currentYear = String.valueOf(Calendar.getInstance().get(Calendar.YEAR));
+
+        if (businessDate.equals(Constants.TODAY)){
+            transactionDate += today + currentMonth ;
+
+        }
+        else if (businessDate.equals(Constants.YESTERDAY)){
+            cal.add(Calendar.DATE, -1);
+            String yesterday = dayMonthFormat.format(cal.getTime());
+            cal.add(Calendar.DATE, +1);
+
+            transactionDate += yesterday;
+        }
+        else if (businessDate.equals(Constants.PAST_7_DAYES)){
+            cal.add(Calendar.DATE, -7);
+            String last7Days = dayMonthFormat.format(cal.getTime());
+            cal.add(Calendar.DATE, +7);
+
+            transactionDate += last7Days;
+
+        }
+        else if (businessDate.equals(Constants.LAST_MONTH) || businessDate.equals(Constants.MONTH_TO_DATE)){
+            transactionDate += "01" + lastMonth ;
+
+        }
+        else if(businessDate.equals(Constants.CURRENT_MONTH)){
+            transactionDate += "01" + currentMonth ;
+
+        }
+        else if(businessDate.equals(Constants.USER_DEFINED)){
+            String[] fromDateArr = fromDate.split("-");
+            transactionDate += fromDateArr[2] + fromDateArr[1] ;
+        }
+        else{
+            transactionDate += today + currentMonth ;
+        }
+
+        transactionDate += currentYear;
+
+        return transactionDate;
     }
 }

@@ -13,5 +13,6 @@ public interface SyncJobTypeRepo extends MongoRepository<SyncJobType, String>{
     SyncJobType findByIdAndDeleted(String id,boolean deleted);
     SyncJobType findByNameAndAccountIdAndDeleted(String name, String accountId, boolean deleted);
     List<SyncJobType> findByAccountIdAndDeleted(String accountId, boolean deleted);
+    List<SyncJobType> findByAccountIdAndDeletedOrderByIndexAsc(String accountId, boolean deleted);
 
 }

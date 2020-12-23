@@ -74,6 +74,8 @@ public class WastageService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+            String fromDate = syncJobType.getConfiguration().getFromDate();
+            String toDate = syncJobType.getConfiguration().getToDate();
 
             // Open filter search
             String filterStatus = driver.findElement(By.id("filterPanel_btnToggleFilter")).getAttribute("value");
@@ -82,7 +84,7 @@ public class WastageService {
                 driver.findElement(By.id("filterPanel_btnToggleFilter")).click();
             }
 
-            response = setupEnvironment.selectTimePeriod(timePeriod, select, driver);
+            response = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
             if (!response.get("status").equals(Constants.SUCCESS)){
                 return response;
@@ -155,7 +157,7 @@ public class WastageService {
 
                     td = cols.get(columns.indexOf("waste_date"));
                     String deliveryDate = td.getText().strip();
-                    // 7/11/2020 "Hospitality Format"
+
                     SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
                     Date deliveryDateFormatted =formatter1.parse(deliveryDate);
 
@@ -178,7 +180,7 @@ public class WastageService {
                     break;
                 }
                 else {
-                    TransferService.checkPagination(driver, "dg_rc_0_1");
+                    TransferService.checkPagination(driver, "dg_rc_0_0");
                     bodyTable = driver.findElement(By.id("G_dg"));
                     rows = bodyTable.findElements(By.tagName("tr"));
                 }
@@ -187,7 +189,6 @@ public class WastageService {
             for (HashMap<String, Object> waste:wastes) {
                 getWasteDetails(items, overGroups, waste, driver, journalEntries);
             }
-
 
             driver.quit();
 
@@ -267,18 +268,20 @@ public class WastageService {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
+                journalEntry.put("accountingPeriod", ((String)waste.get("waste_date")).substring(2,6));
                 journalEntry.put("transactionDate", waste.get("waste_date"));
 
-                journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
-                journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
 
-                journalEntry.put("from_cost_center", costCenter.costCenter);
-//                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
-                journalEntry.put("from_account_code", costCenter.accountCode);
+                journalEntry.put("fromCostCenter", costCenter.costCenter);
+                journalEntry.put("fromAccountCode", costCenter.accountCode);
 
-                journalEntry.put("to_cost_center", costCenter.costCenter);
-//                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
-                journalEntry.put("to_account_code", costCenter.accountCode);
+                journalEntry.put("toCostCenter", costCenter.costCenter);
+                journalEntry.put("toAccountCode", costCenter.accountCode);
+
+                journalEntry.put("fromLocation", costCenter.accountCode);
+                journalEntry.put("toLocation", costCenter.accountCode);
 
                 String description =  "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup();
                 if (description.length() > 50){
@@ -287,7 +290,16 @@ public class WastageService {
 
                 journalEntry.put("description", description);
 
-                journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                if (waste.containsKey("reference") && !waste.get("reference").equals("")){
+                    String reference = (String)waste.get("reference");
+                    if(reference.length() > 30){
+                        reference = reference.substring(0, 30);
+                    }
+                    journalEntry.put("transactionReference", reference);
+                }else {
+                    journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                }
+
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
@@ -381,71 +393,32 @@ public class WastageService {
                 catch (Exception ex){ }
 
                 String timePeriod = syncJobType.getConfiguration().getTimePeriod();
+                String fromDate = syncJobType.getConfiguration().getFromDate();
+                String toDate = syncJobType.getConfiguration().getToDate();
 
-                WebDriverWait wait = new WebDriverWait(driver, 20);
-                if (timePeriod.equals("Last Month")){
-                    wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
-                    driver.findElement(By.id("calendarBtn")).click();
-
-                    Select locationData = new Select(driver.findElement(By.id("locationData")));
-                    try {
-                        locationData.selectByVisibleText(locationName);
-                    } catch (Exception e) {
-                        System.out.println("Invalid location");
-                        continue;
-                    }
-
-                    String selectedOption = locationData.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(locationName)){}
-
-                    wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
-                    wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
-
-                    Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                    try{
-                        businessDate.selectByVisibleText(timePeriod);
-                    } catch (Exception e) {
-                        System.out.println("Invalid business date.");
-                        driver.quit();
-                        response.put("status", Constants.FAILED);
-                        response.put("message", "Invalid business date.");
-                        response.put("wastes", journalEntries);
-                        return response;
-                    }
-
-                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(timePeriod)){}
-
-                    driver.switchTo().defaultContent();
+                Select locationData = new Select(driver.findElement(By.id("locationData")));
+                try {
+                    locationData.selectByVisibleText(locationName);
+                } catch (Exception e) {
+                    System.out.println("Invalid location");
+                    continue;
                 }
-                else {
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("loadingFrame")));
 
-                    Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                    try {
-                        businessDate.selectByVisibleText(timePeriod);
-                    } catch (Exception e) {
-                        driver.quit();
-                        response.put("status", Constants.FAILED);
-                        response.put("message", "Invalid business date.");
-                        response.put("wastes", journalEntries);
-                        return response;
-                    }
-
-                    String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(timePeriod)){}
-
-                    Select locationDate= new Select(driver.findElement(By.id("locationData")));
-                    try {
-                        locationDate.selectByVisibleText(locationName);
-                    } catch (Exception e) {
-                        continue;
-                    }
-
-                    selectedOption = locationDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(locationName)){}
-
+                String selectedOption = locationData.getFirstSelectedOption().getText().strip();
+                while (!selectedOption.equals(locationName)){
+                    selectedOption = locationData.getFirstSelectedOption().getText().strip();
                 }
+
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, fromDate, toDate,
+                        "", "", driver);
+
+                if (!dateResponse.isStatus()){
+                    response.put("status", Constants.FAILED);
+                    response.put("message", dateResponse.getMessage());
+                    response.put("wastes", journalEntries);
+                    return response;
+                }
+
                 driver.findElement(By.id("Run Report")).click();
 
                 String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";
@@ -567,16 +540,17 @@ public class WastageService {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
-                journalEntry.put("totalCr", Math.round(journal.getTotalWaste()));
-                journalEntry.put("totalDr", Math.round(journal.getTotalWaste()) * -1);
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
 
-                journalEntry.put("from_cost_center", costCenter.costCenter);
-//                journalEntry.put("from_account_code", oldOverGroupData.getWasteAccountCredit());
-                journalEntry.put("from_account_code", costCenter.accountCode);
+                journalEntry.put("fromCostCenter", costCenter.costCenter);
+                journalEntry.put("fromAccountCode", costCenter.accountCode);
 
-                journalEntry.put("to_cost_center", costCenter.costCenter);
-//                journalEntry.put("to_account_code", oldOverGroupData.getWasteAccountDebit());
-                journalEntry.put("to_account_code", costCenter.accountCode);
+                journalEntry.put("toCostCenter", costCenter.costCenter);
+                journalEntry.put("toAccountCode", costCenter.accountCode);
+
+                journalEntry.put("fromLocation", costCenter.accountCode);
+                journalEntry.put("toLocation", costCenter.accountCode);
 
                 String description = "W F " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup();
                 if (description.length() > 50){

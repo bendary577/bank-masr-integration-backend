@@ -12,10 +12,13 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import java.util.*;
 
@@ -31,7 +34,10 @@ public class JournalService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+    /*
+    * Get consumptions entries based on cost center
+    * */
+    public HashMap<String, Object> getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
                                                   ArrayList<ItemGroup> itemGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();
 
@@ -49,7 +55,9 @@ public class JournalService {
         ArrayList<Journal> journals;
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        String timePeriod =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
+        String toDate = journalSyncJobType.getConfiguration().getToDate();
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
@@ -80,58 +88,32 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            if (timePeriod.equals("Last Month")){
-                wait.until(ExpectedConditions.elementToBeClickable(By.id("calendarBtn")));
-                driver.findElement(By.id("calendarBtn")).click();
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
+                    "", "", driver);
 
-                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
-
-                Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                try {
-                    businessDate.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Invalid business date.");
-                    response.put("journals", journalsEntries);
-                    return response;
-                }
-
-                String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(timePeriod)){
-                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                }
-
-                driver.switchTo().defaultContent();
+            if (!dateResponse.isStatus()){
+                response.put("status", Constants.FAILED);
+                response.put("message", dateResponse.getMessage());
+                response.put("journals", journalsEntries);
+                return response;
             }
-            else {
-                Select businessDate = new Select(driver.findElement(By.id("calendarData")));
-                try{
-                    businessDate.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    driver.quit();
 
-                    response.put("status", Constants.FAILED);
-                    response.put("message", "Invalid business date.");
-                    response.put("journals", journalsEntries);
-                    return response;
-                }
-
-                String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(timePeriod)){
-                    selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                }
-
-            }
             driver.findElement(By.id("Run Report")).click();
 
             journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
             driver.get(journalUrl);
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+
+            if (rows.size() < 4){
+                driver.quit();
+
+                response.put("status", Constants.SUCCESS);
+                response.put("message", "There is no journals in selected range");
+                response.put("journals", journalsEntries);
+                return response;
+            }
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
@@ -172,6 +154,10 @@ public class JournalService {
                     driver.get(baseURL + costCenter.get("extensions"));
 
                     rows = driver.findElements(By.tagName("tr"));
+
+                    if (rows.size() <= 3){
+                        continue;
+                    }
 
                     columns = setupEnvironment.getTableColumns(rows, false, 3);
 
@@ -242,7 +228,193 @@ public class JournalService {
         }
     }
 
+
+    /*
+     * Get consumptions entries based on location
+     * */
+    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+                                                  ArrayList<CostCenter> costCentersLocation,
+                                                  ArrayList<ItemGroup> itemGroups, Account account){
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+
+        ArrayList<Journal> journals;
+        ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
+
+        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
+        String toDate = journalSyncJobType.getConfiguration().getToDate();
+
+        try {
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
+                driver.quit();
+
+                response.put("status", Constants.FAILED);
+                response.put("message", "Invalid username and password.");
+                response.put("journals", journalsEntries);
+                return response;
+            }
+            // just wait to make sure credentials of user saved to be able to move to another pages.
+            try {
+                WebDriverWait wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            }
+            catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
+
+            for (CostCenter costCenter : costCenters) {
+                if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)){
+                    driver.get(Constants.CONSUMPTION_REPORT_LINK);
+
+                    try {
+                        WebDriverWait wait = new WebDriverWait(driver, 60);
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                    }
+                    catch (Exception ex){
+                        System.out.println(ex.getMessage());
+                    }
+                }
+
+                // check if cost center has location mapping
+                CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
+
+                if (!costCenterLocation.checked)
+                    continue;
+
+                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
+                        costCenterLocation.locationName, "", driver);
+
+                if (!dateResponse.isStatus() && !dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", dateResponse.getMessage());
+                    response.put("journals", journalsEntries);
+                    return response;
+                }else if(!dateResponse.isStatus() && dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
+                    continue;
+                }
+
+                driver.findElement(By.id("Run Report")).click();
+
+                driver.get(Constants.CONSUMPTION_TABLE_LINK);
+
+                List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+                if (rows.size() < 4)
+                    continue;
+
+                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
+
+                ArrayList<String> extensions  = new ArrayList<>();
+
+                for (int i = 6; i < rows.size(); i++) {
+
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+                    if (cols.size() != columns.size()) {
+                        continue;
+                    }
+
+                    String extension = cols.get(0).findElement(By.tagName("div")).getAttribute("onclick").substring(7);
+                    int index = extension.indexOf('\'');
+                    extension = extension.substring(0, index);
+                    extensions.add(extension);
+                }
+
+                String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+
+                journals = new ArrayList<>();
+
+                for (String extension : extensions) {
+                    try {
+                        driver.get(baseURL + extension);
+
+                        rows = driver.findElements(By.tagName("tr"));
+
+                        if (rows.size() <= 3)
+                            continue;
+
+                        columns = setupEnvironment.getTableColumns(rows, false, 3);
+
+                        for (int i = 6; i < rows.size(); i++) {
+                            HashMap<String, Object> transferDetails = new HashMap<>();
+                            WebElement row = rows.get(i);
+                            List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                            if (cols.size() != columns.size()) {
+                                continue;
+                            }
+
+                            // check if this Item group belong to selected Item groups
+                            WebElement td = cols.get(columns.indexOf("item_group"));
+
+                            ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+
+                            if (!oldItemData.getChecked()) {
+                                continue;
+                            }
+
+                            String overGroup = oldItemData.getOverGroup();
+
+
+                            for (int j = 0; j < cols.size(); j++) {
+                                transferDetails.put(columns.get(j), cols.get(j).getText().strip());
+                            }
+
+                            Journal journal = new Journal();
+                            float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
+
+                            journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                for (Journal journal : journals) {
+                    HashMap<String, Object> journalsEntry = new HashMap<>();
+
+                    journalsEntry.put("cost_center", costCenter);
+                    journalsEntry.put("journal", journal);
+
+                    journalsEntries.add(journalsEntry);
+                }
+            }
+
+            driver.quit();
+
+            response.put("status", Constants.SUCCESS);
+            response.put("message", "");
+            response.put("journals", journalsEntries);
+            return response;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to get consumption entries from Oracle Hospitality.");
+            response.put("journals", journalsEntries);
+            return response;
+        }
+    }
+
+
     public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
+                                                  String businessDate, String fromDate,
                                                   ArrayList<OverGroup> overGroups){
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
 
@@ -255,58 +427,27 @@ public class JournalService {
                 costCenter.costCenterReference = costCenter.costCenter;
             }
 
-            if(journalData.getTotalVariance() != 0){
-                HashMap<String, String> varianceData = new HashMap<>();
-
-                varianceData.put("transactionDate", "01072020");
-
-                varianceData.put("totalCr", String.valueOf(Math.round(journalData.getTotalVariance())));
-                varianceData.put("totalDr", String.valueOf(Math.round(journalData.getTotalVariance()) * -1));
-
-                varianceData.put("from_cost_center", costCenter.costCenter);
-                varianceData.put("from_account_code", costCenter.accountCode);
-
-                varianceData.put("to_cost_center", costCenter.costCenter);
-                varianceData.put("to_account_code", costCenter.accountCode);
-
-                String description =  "Variance F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
-                if (description.length() > 50){
-                    description = description.substring(0, 50);
-                }
-
-                varianceData.put("description", description);
-
-                varianceData.put("transactionReference", "Variance Transaction Reference");
-                varianceData.put("overGroup", journalData.getOverGroup());
-
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
-
-                varianceData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                varianceData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-
-                SyncJobData syncJobData = new SyncJobData(varianceData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
-
-                addedJournals.add(syncJobData);
-            }
-
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
 
                 // Example: 01062020
-                costData.put("transactionDate", "01072020");
+                String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
+                costData.put("accountingPeriod", transactionDate.substring(2,6));
+                costData.put("transactionDate", transactionDate);
 
-                costData.put("totalCr", String.valueOf(Math.round(journalData.getTotalCost())));
-                costData.put("totalDr", String.valueOf(Math.round(journalData.getTotalCost()) * -1));
+                costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost())));
+                costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost()) * -1));
 
-                costData.put("from_cost_center", costCenter.costCenter);
-                costData.put("from_account_code", costCenter.accountCode);
+                costData.put("fromCostCenter", costCenter.costCenter);
+                costData.put("fromAccountCode", costCenter.accountCode);
 
-                costData.put("to_cost_center", costCenter.costCenter);
-                costData.put("to_account_code", costCenter.accountCode);
+                costData.put("toCostCenter", costCenter.costCenter);
+                costData.put("toAccountCode", costCenter.accountCode);
 
-                String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getMajorGroup();
+                costData.put("fromLocation", costCenter.accountCode);
+                costData.put("toLocation", costCenter.accountCode);
+
+                String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }
@@ -318,14 +459,17 @@ public class JournalService {
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
 
-                costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
+                    && !oldOverGroupData.getExpensesAccount().equals("")){
+                    costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
 
-                SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
+                    SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
+                            syncJob.getId());
+                    syncJobDataRepo.save(syncJobData);
 
-                addedJournals.add(syncJobData);
+                    addedJournals.add(syncJobData);
+                }
             }
 
         }

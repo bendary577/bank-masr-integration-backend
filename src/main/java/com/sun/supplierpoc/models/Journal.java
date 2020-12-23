@@ -2,6 +2,7 @@ package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.MajorGroup;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 
 import java.util.ArrayList;
 
@@ -13,6 +14,7 @@ public class Journal {
     private float totalCost;
     private float totalVariance;
     private float totalTransfer;
+    private RevenueCenter revenueCenter;
     private CostCenter costCenter;
 
     public Journal() {
@@ -27,17 +29,18 @@ public class Journal {
     }
 
     private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
-                    CostCenter costCenter) {
+                    CostCenter costCenter, RevenueCenter revenueCenter) {
         this.majorGroup = majorGroup;
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
         this.totalVariance = totalVariance;
         this.totalTransfer = totalTransfer;
         this.costCenter = costCenter;
+        this.revenueCenter = revenueCenter;
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup, float waste, float cost,
-                                             float variance, float transfer, CostCenter costCenter){
+                                             float variance, float transfer, CostCenter costCenter, RevenueCenter revenueCenter){
 
         for (Journal journal:journals) {
             if(journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())){
@@ -45,7 +48,7 @@ public class Journal {
             }
         }
 
-        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter));
+        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter, revenueCenter));
         return journals;
 
     }
@@ -122,5 +125,13 @@ public class Journal {
 
     public void setCostCenter(CostCenter costCenter) {
         this.costCenter = costCenter;
+    }
+
+    public RevenueCenter getRevenueCenter() {
+        return revenueCenter;
+    }
+
+    public void setRevenueCenter(RevenueCenter revenueCenter) {
+        this.revenueCenter = revenueCenter;
     }
 }

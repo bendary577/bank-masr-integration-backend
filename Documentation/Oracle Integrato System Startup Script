@@ -1,0 +1,5 @@
+#! /bin/bash
+sudo iptables -A INPUT -i eth0 -p tcp --dport 8081 -j ACCEPT
+cd ../../root/sunJar/
+java -jar root-2020-10-18.jar &
+EOF

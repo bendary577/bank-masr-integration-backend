@@ -2,6 +2,16 @@
     ==> sudo iptables -A INPUT -i eth0 -p tcp --dport 8081 -j ACCEPT
 
 2. Add sun system jars, before running your app
+	clientlib.jar: https://drive.google.com/file/d/1E3XGQZnPlQebkHMdiqGaS09L2rx2e0mA/view?usp=sharing
+	connect-client.jar: https://drive.google.com/file/d/1nUDJ20OE6tSI4npVVWC_8AfAdQut0NxJ/view?usp=sharing
+	xercesImpl.jar: https://drive.google.com/file/d/1ZIUCeUAgOF2tJ4k_wM_Gb8oObzc8eIPx/view?usp=sharing
+
+3. Add local jars to maven
+	link: https://maven.apache.org/guides/mini/guide-3rd-party-jars-local.html
+
+	mvn install:install-file -Dfile="E:\MahmiudSaeed\xercesImpl.jar" -DgroupId="org.w3c" -DartifactId=xercesImpl -Dversion=1.0 -Dpackaging=1.0
+
+	mvn install:install-file -Dfile="E:\MahmiudSaeed\connect-client.jar" -DgroupId="com.systemsunion" -DartifactId=clientlib -Dversion=1.0 -Dpackaging=1.0
 
 3. Upload new JAR
     -Generate new jar from terminal
@@ -17,3 +27,15 @@
 5. execute those two commands after changing Dfile to The Files location
  mvnw install:install-file -Dfile="E:\DOWNLOAD\xercesImpl.jar" -DgroupId=org.w3c -DartifactId=xercesImpl -Dversion=1.0 -Dpackaging=jar -DgeneratePom=true
  mvnw install:install-file -Dfile="E:\DOWNLOAD\clientlib.jar" -DgroupId=com.systemsunion -DartifactId=clientlib -Dversion=1.0 -Dpackaging=jar -DgeneratePom=true
+
+* How to Increase Request Timeout in NGINX *
+link: https://ubiq.co/tech-blog/increase-request-timeout-nginx/#:~:text=By%20default%2C%20NGINX%20request%20timeout,504%3A%20Gateway%20Timeout%E2%80%9D%20Error.
+
+1. Open NGINX configuration file
+    default location: sudo /etc/nginx/nginx.conf
+    our location: /etc/nginx/conf.d/timeout.conf
+2. Increase timeout
+    # 7200 --> 2hr
+    server{
+       proxy_request_timeout 7200;
+    }

@@ -5,16 +5,20 @@ import com.sun.supplierpoc.models.configurations.*;
 import java.util.ArrayList;
 
 public class JournalBatch {
-    private CostCenter costCenter;
-    private double salesDifferent;
+    private CostCenter costCenter = new CostCenter();
+    private double salesDifferent = 0.0;
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
+    private ArrayList<Discount> salesDiscount= new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
+    private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
 
-    private SyncJobData salesDifferentData;
+    private SyncJobData salesDifferentData = new SyncJobData();
     private ArrayList<SyncJobData> salesTaxData = new ArrayList<>();
     private ArrayList<SyncJobData> salesTenderData = new ArrayList<>();
+    private ArrayList<SyncJobData> salesDiscountData = new ArrayList<>();
     private ArrayList<SyncJobData> salesMajorGroupGrossData = new ArrayList<>();
+    private ArrayList<SyncJobData> salesServiceChargeData = new ArrayList<>();
 
     public JournalBatch() {}
 
@@ -88,5 +92,37 @@ public class JournalBatch {
 
     public void setSalesMajorGroupGrossData(ArrayList<SyncJobData> salesMajorGroupGrossData) {
         this.salesMajorGroupGrossData = salesMajorGroupGrossData;
+    }
+
+    public ArrayList<Discount> getSalesDiscount() {
+        return salesDiscount;
+    }
+
+    public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
+        this.salesDiscount = salesDiscount;
+    }
+
+    public ArrayList<SyncJobData> getSalesDiscountData() {
+        return salesDiscountData;
+    }
+
+    public void setSalesDiscountData(ArrayList<SyncJobData> salesDiscountData) {
+        this.salesDiscountData = salesDiscountData;
+    }
+
+    public ArrayList<ServiceCharge> getSalesServiceCharge() {
+        return salesServiceCharge;
+    }
+
+    public void setSalesServiceCharge(ArrayList<ServiceCharge> salesServiceCharge) {
+        this.salesServiceCharge = salesServiceCharge;
+    }
+
+    public ArrayList<SyncJobData> getSalesServiceChargeData() {
+        return salesServiceChargeData;
+    }
+
+    public void setSalesServiceChargeData(ArrayList<SyncJobData> salesServiceChargeData) {
+        this.salesServiceChargeData = salesServiceChargeData;
     }
 }

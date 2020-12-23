@@ -2,24 +2,35 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
+import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.services.SunService;
+import com.sun.supplierpoc.services.SyncJobDataService;
+import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.TransferService;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
+import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -33,11 +44,19 @@ public class TransferController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
+    private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
     @Autowired
     private TransferService transferService;
+    @Autowired
+    private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
+    @Autowired
+    private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
 
@@ -49,14 +68,26 @@ public class TransferController {
     @RequestMapping("/getBookedTransfer")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getBookedTransferRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getBookedTransferRequest(Principal principal) {
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
 
-        HashMap<String, Object> response = getBookedTransfer(user.getId(), account);
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = getBookedTransfer(user.getId(), account);
+            if(response.get("success").equals(false)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        }
+        String message = "Invalid Credentials";
+        response.put("message", message);
+        response.put("success", false);
 
-        return response;
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     public HashMap<String, Object> getBookedTransfer(String userId, Account account) {
@@ -69,6 +100,11 @@ public class TransferController {
         ArrayList<Item> items =  generalSettings.getItems();
         ArrayList<OverGroup> overGroups;
 
+        String timePeriod = transferSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = transferSyncJobType.getConfiguration().getFromDate();
+        String toDate = transferSyncJobType.getConfiguration().getToDate();
+
+
         if (!transferSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
             overGroups =  generalSettings.getOverGroups();
         }else{
@@ -80,11 +116,20 @@ public class TransferController {
             return sunConfigResponse;
         }
 
-        if (transferSyncJobType.getConfiguration().getTimePeriod().equals("")){
+        if (timePeriod.equals("")){
             String message = "Configure business date before sync transfers.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Configure business date before sync transfers.";
+
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
         if (generalSettings.getCostCenterAccountMapping().size() == 0){
@@ -116,17 +161,81 @@ public class TransferController {
                 ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
-                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
-                    if (voucher != null){
-                        invoiceController.handleSendJournal(transferSyncJobType, syncJob, addedTransfers, account, voucher);
-                        syncJob.setReason("");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedTransfers.size());
-                        syncJobRepo.save(syncJob);
+                    if(addedTransfers.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
+                        IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
+                        if (voucher != null){
+                            invoiceController.handleSendJournal(transferSyncJobType, syncJob, addedTransfers, account, voucher);
+                            syncJob.setReason("");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedTransfers.size());
+                            syncJobRepo.save(syncJob);
 
-                        response.put("message", "Sync Invoices Successfully.");
+                            response.put("success", true);
+                            response.put("message", "Sync transfers Successfully.");
+                        }
+                    } 
+                    else if (addedTransfers.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+                        String username = sunCredentials.getUsername();
+                        String password = sunCredentials.getPassword();
+                        String host = sunCredentials.getHost();
+
+                        FtpClient ftpClient = new FtpClient(host, username, password);
+
+                        if(ftpClient.open()){
+                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                    transferSyncJobType, creditNotesList);
+
+                            DateFormatSymbols dfs = new DateFormatSymbols();
+                            String[] weekdays = dfs.getWeekdays();
+
+                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
+                            Calendar cal = Calendar.getInstance();
+                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                            cal.setTime(date);
+                            int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                            String dayName = weekdays[day];
+                            String fileExtension = ".ndf";
+                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+                            File file = excelExporter.createNDFFile();
+
+                            boolean sendFileFlag = false;
+                            try {
+                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                                ftpClient.close();
+                            } catch (IOException e) {
+                                ftpClient.close();
+                            }
+
+                            if (sendFileFlag){
+//                            if (true){
+                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                        "Sync transfers successfully.", Constants.SUCCESS);
+
+                                response.put("success", true);
+                                response.put("message", "Sync transfers successfully.");
+                            }else {
+                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                        "Failed to sync transfers to sun system via FTP.", Constants.FAILED);
+
+                                response.put("success", false);
+                                response.put("message", "Failed to sync transfers to sun system via FTP.");
+                            }
+                        }
+                        else {
+                            syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+
+                            response.put("success", false);
+                            response.put("message", "Failed to connect to sun system via FTP.");
+                        }
                     }
-
                 } else {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no transfers to get from Oracle Hospitality.");
@@ -136,7 +245,6 @@ public class TransferController {
 
                     response.put("message", "There is no transfers to get from Oracle Hospitality.");
                     response.put("success", true);
-
                 }
             } else {
                 syncJob.setStatus(Constants.FAILED);
@@ -191,9 +299,7 @@ public class TransferController {
         }
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (checkLogin(items, driver, response, url, account)) return response;
+            if (checkLogin(items, driver, response, Constants.OHIM_LOGIN_LINK, account)) return response;
 
             String majorGroupsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/MajorGroups/OverviewMajorGroup.aspx";
             driver.get(majorGroupsURL);
@@ -368,6 +474,52 @@ public class TransferController {
             return true;
         }
         return false;
+    }
+
+    @GetMapping("/transfers/export/excel")
+    public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
+                              HttpServletResponse response) throws IOException {
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=BookedTransfers_" + currentDateTime + ".xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        List<SyncJobData> bookedTransfersList = syncJobDataRepo.findBySyncJobIdAndDeleted("5f8c2525bba1d80a32d30c1b",
+                false);
+
+        TransfersExcelExporter excelExporter = new TransfersExcelExporter(bookedTransfersList);
+
+        excelExporter.export(response);
+    }
+
+    @GetMapping("/transfers/export/csv")
+    public void exportToText(Principal principal,
+                             @RequestParam(name = "syncJobId") String syncJobId,
+                             HttpServletResponse response) throws IOException {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=Transfers" + currentDateTime + ".txt";
+        response.setHeader(headerKey, headerValue);
+        response.setContentType("text/csv");
+
+        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
+                false);
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
+
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+
+        excelExporter.writeSyncData(response.getWriter());
     }
 
 }

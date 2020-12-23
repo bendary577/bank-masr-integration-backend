@@ -1,11 +1,7 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -19,12 +15,13 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.*;
-import java.util.stream.IntStream;
 
 
 @RestController
@@ -53,20 +50,39 @@ public class SupplierController {
     @RequestMapping("/getSuppliers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getSuppliersRequest(Principal principal) throws SoapFaultException, ComponentException{
+    public ResponseEntity<HashMap<String, Object>> getSuppliersRequest(Principal principal) throws SoapFaultException, ComponentException{
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
 
-        HashMap<String, Object> response = getSuppliers(user.getId(), account);
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = getSuppliers(user.getId(), account);
+            if(response.get("success").equals(false)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        }
+        String message = "Invalid Credentials";
+        response.put("message", message);
+        response.put("success", false);
 
-        return response;
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     public HashMap<String, Object> getSuppliers(String userId, Account account) throws SoapFaultException, ComponentException{
         HashMap<String, Object> response = new HashMap<>();
         SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
+
+        if (supplierSyncJobType == null){
+            String message = "You don't have the role to sync suppliers";
+            response.put("message", message);
+            response.put("success", false);
+            return response;
+        }
 
         if (supplierSyncJobType.getConfiguration().getBusinessUnit().equals("")){
             String message = "Configure business unit before sync suppliers.";
@@ -82,7 +98,7 @@ public class SupplierController {
             return response;
         }
 
-        if (supplierSyncJobType.getConfiguration().getTaxes().equals("")){
+        if (supplierSyncJobType.getConfiguration().getVendorTaxes().equals("")){
             String message = "Configure supplier tax before sync suppliers.";
             response.put("message", message);
             response.put("success", false);
@@ -93,35 +109,85 @@ public class SupplierController {
                 account.getId(), supplierSyncJobType.getId(), 0);
         syncJobRepo.save(syncJob);
 
-        ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
+        Response supplierResponse = new Response();
 
         try {
+
             HashMap<String, Object> data = supplierService.getSuppliersData(supplierSyncJobType, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<Supplier> suppliers = (ArrayList<Supplier>) data.get("suppliers");
 
                 if (suppliers.size() > 0){
-                    addedSuppliers = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
+                    supplierResponse = supplierService.saveSuppliersData(suppliers, syncJob, supplierSyncJobType);
 
-                    if (addedSuppliers.size() != 0){
-                        data  = supplierService.sendSuppliersData(addedSuppliers, syncJob, supplierSyncJobType, account);
+                    WebDriver driver;
+                    try{
+                        driver = setupEnvironment.setupSeleniumEnv(false);
+                    }
+                    catch (Exception ex){
+                        response.put("status", Constants.FAILED);
+                        response.put("message", "Failed to establish connection with firefox driver.");
+                        response.put("invoices", new ArrayList<>());
+                        return response;
+                    }
+
+                    if (supplierResponse.getAddedSuppliers().size() != 0){
+                        boolean openDriverFlag = true;
+                        boolean closeDriverFlag = true;
+
+                        if (supplierResponse.getUpdatedSuppliers().size() > 0){
+                            closeDriverFlag = false;
+                        }
+
+                        data  = supplierService.sendSuppliersData(supplierResponse.getAddedSuppliers(), syncJob,
+                                supplierSyncJobType, account, true, closeDriverFlag, openDriverFlag,
+                                driver);
                         if (data.get("status").equals(Constants.SUCCESS)){
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setReason("");
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedSuppliers.size());
-                            syncJobRepo.save(syncJob);
+                            // check if there is suppliers need update
+                            ArrayList<SyncJobData> updatedSuppliers = (ArrayList<SyncJobData>) data.get("updatedSuppliers");
+                            supplierResponse.getUpdatedSuppliers().addAll(updatedSuppliers);
+                            if (supplierResponse.getUpdatedSuppliers().size() > 0){
+                                data  = supplierService.sendSuppliersData(supplierResponse.getUpdatedSuppliers(), syncJob,
+                                        supplierSyncJobType, account, false, true,
+                                        false, driver);
 
-                            response.put("message", data.get("message"));
-                            response.put("success", true);
+                                if (data.get("status").equals(Constants.SUCCESS)){
+                                    syncJob.setStatus(Constants.SUCCESS);
+                                    syncJob.setReason("");
+                                    syncJob.setEndDate(new Date());
+                                    syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                    syncJobRepo.save(syncJob);
 
+                                    response.put("message", data.get("message"));
+                                    response.put("success", true);
+                                }else{
+                                    syncJob.setStatus(Constants.FAILED);
+                                    syncJob.setReason((String) data.get("message"));
+                                    syncJob.setEndDate(new Date());
+                                    syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                    syncJobRepo.save(syncJob);
+
+                                    response.put("message", data.get("message"));
+                                    response.put("success", false);
+                                }
+                            }
+                            else{
+                                syncJob.setStatus(Constants.SUCCESS);
+                                syncJob.setReason("Sync suppliers to Oracle hospitality successfully.");
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                syncJobRepo.save(syncJob);
+
+                                response.put("message", data.get("message"));
+                                response.put("success", true);
+                            }
                         }
                         else {
                             syncJob.setStatus(Constants.FAILED);
                             syncJob.setReason((String) data.get("message"));
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedSuppliers.size());
+                            syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", data.get("message"));
@@ -130,21 +196,55 @@ public class SupplierController {
                         }
                     }
                     else {
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJob.setReason("No new suppliers to add in middleware.");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedSuppliers.size());
-                        syncJobRepo.save(syncJob);
+                        if (supplierResponse.getUpdatedSuppliers().size() > 0){
+                            data  = supplierService.sendSuppliersData(supplierResponse.getUpdatedSuppliers(), syncJob,
+                                    supplierSyncJobType, account, false, true,
+                                    true, driver);
 
-                        response.put("message", "No new suppliers to add in middleware.");
-                        response.put("success", true);
+                            if (data.get("status").equals(Constants.SUCCESS)){
+                                syncJob.setStatus(Constants.SUCCESS);
+                                syncJob.setReason("");
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                syncJobRepo.save(syncJob);
+
+                                response.put("message", data.get("message"));
+                                response.put("success", true);
+                            }else{
+                                syncJob.setStatus(Constants.FAILED);
+                                syncJob.setReason((String) data.get("message"));
+                                syncJob.setEndDate(new Date());
+                                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                                syncJobRepo.save(syncJob);
+
+                                response.put("message", data.get("message"));
+                                response.put("success", false);
+                            }
+                        }
+
+                        else {
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("No new suppliers to add in middleware.");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", "No new suppliers to add in middleware.");
+                            response.put("success", true);
+                        }
+                    }
+                    try{
+                        driver.quit();
+                    }
+                    catch (Exception ex){
+                        System.out.println("Already Closed!!");
                     }
                 }
                 else {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no suppliers to get from Sun System.");
                     syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedSuppliers.size());
+                    syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no suppliers to get from Sun System.");
@@ -157,7 +257,7 @@ public class SupplierController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason((String) data.get("message"));
                 syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedSuppliers.size());
+                syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
                 syncJobRepo.save(syncJob);
 
                 response.put("message", "Failed to get suppliers from Sun System.");
@@ -168,7 +268,7 @@ public class SupplierController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
-            syncJob.setRowsFetched(addedSuppliers.size());
+            syncJob.setRowsFetched(supplierResponse.getAddedSuppliers().size());
             syncJobRepo.save(syncJob);
 
             response.put("message", e);
@@ -201,9 +301,7 @@ public class SupplierController {
         ArrayList<HashMap<String, Object>> taxes = new ArrayList<>();
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)){
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -281,9 +379,7 @@ public class SupplierController {
 
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)){
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);

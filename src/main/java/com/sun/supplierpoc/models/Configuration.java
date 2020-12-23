@@ -16,7 +16,9 @@ public class Configuration implements Serializable {
     private String currencyCode = "";
     private String postingType = "";
     private String timePeriod = "";
-    private String taxes = "";
+    private String fromDate = "";
+    private String toDate = "";
+    private String vendorTaxes = "";
     private String groups = "";
     private String suspenseAccount = "";
 
@@ -32,13 +34,27 @@ public class Configuration implements Serializable {
     // Invoices/Credit Notes variables
     private String invoiceTypeIncluded = "";
 
+    // Consumption variables
+
+    /*
+    *  get consumption based of (Location/Cost Center)
+    * */
+    private String consumptionBasedOnType = "";
+
     // Sales variables
     private String revenue = "";
     private String vatOut = "";
     private String cashShortagePOS = "";
     private String cashSurplusPOS = "";
+    private String grossDiscountSales = "";
+
+    private String recordType = "L";
+    private String conversionCode = "1";
+    private String conversionRate = "1.0";
+    private String versionCode = "42601";
 
     private Boolean uniqueOverGroupMapping = false;
+    private Boolean uniqueAnalysisMapping = false;
 
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
@@ -49,6 +65,10 @@ public class Configuration implements Serializable {
     private ArrayList<WasteGroup> wasteGroups = new ArrayList<>();
     private ArrayList<Analysis> analysis = new ArrayList<>();
     private ArrayList<Tender> tenders = new ArrayList<>();
+    private ArrayList<Tax> taxes = new ArrayList<>();
+    private ArrayList<Discount> discounts = new ArrayList<>();
+    private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
+    private ArrayList<ServiceCharge> serviceCharges = new ArrayList<>();
 
     private AccountSettings accountSettings;
 
@@ -110,12 +130,28 @@ public class Configuration implements Serializable {
         this.timePeriod = timePeriod;
     }
 
-    public String getTaxes() {
-        return taxes;
+    public String getFromDate() {
+        return fromDate;
     }
 
-    public void setTaxes(String taxes) {
-        this.taxes = taxes;
+    public void setFromDate(String fromDate) {
+        this.fromDate = fromDate;
+    }
+
+    public String getToDate() {
+        return toDate;
+    }
+
+    public void setToDate(String toDate) {
+        this.toDate = toDate;
+    }
+
+    public String getVendorTaxes() {
+        return vendorTaxes;
+    }
+
+    public void setVendorTaxes(String vendorTaxes) {
+        this.vendorTaxes = vendorTaxes;
     }
 
     public String getGroups() {
@@ -198,6 +234,14 @@ public class Configuration implements Serializable {
         this.invoiceTypeIncluded = invoiceTypeIncluded;
     }
 
+    public String getConsumptionBasedOnType() {
+        return consumptionBasedOnType;
+    }
+
+    public void setConsumptionBasedOnType(String consumptionBasedOnType) {
+        this.consumptionBasedOnType = consumptionBasedOnType;
+    }
+
     public String getRevenue() {
         return revenue;
     }
@@ -230,8 +274,56 @@ public class Configuration implements Serializable {
         this.cashSurplusPOS = cashSurplusPOS;
     }
 
+    public String getGrossDiscountSales() {
+        return grossDiscountSales;
+    }
+
+    public void setGrossDiscountSales(String grossDiscountSales) {
+        this.grossDiscountSales = grossDiscountSales;
+    }
+
     public Boolean getUniqueOverGroupMapping() {
         return uniqueOverGroupMapping;
+    }
+
+    public Boolean getUniqueAnalysisMapping() {
+        return uniqueAnalysisMapping;
+    }
+
+    public void setUniqueAnalysisMapping(Boolean uniqueAnalysisMapping) {
+        this.uniqueAnalysisMapping = uniqueAnalysisMapping;
+    }
+
+    public String getRecordType() {
+        return recordType;
+    }
+
+    public void setRecordType(String recordType) {
+        this.recordType = recordType;
+    }
+
+    public String getConversionCode() {
+        return conversionCode;
+    }
+
+    public void setConversionCode(String conversionCode) {
+        this.conversionCode = conversionCode;
+    }
+
+    public String getConversionRate() {
+        return conversionRate;
+    }
+
+    public void setConversionRate(String conversionRate) {
+        this.conversionRate = conversionRate;
+    }
+
+    public String getVersionCode() {
+        return versionCode;
+    }
+
+    public void setVersionCode(String versionCode) {
+        this.versionCode = versionCode;
     }
 
     public void setUniqueOverGroupMapping(Boolean uniqueOverGroupMapping) {
@@ -308,6 +400,38 @@ public class Configuration implements Serializable {
 
     public void setTenders(ArrayList<Tender> tenders) {
         this.tenders = tenders;
+    }
+
+    public ArrayList<Tax> getTaxes() {
+        return taxes;
+    }
+
+    public void setTaxes(ArrayList<Tax> taxes) {
+        this.taxes = taxes;
+    }
+
+    public ArrayList<Discount> getDiscounts() {
+        return discounts;
+    }
+
+    public void setDiscounts(ArrayList<Discount> discounts) {
+        this.discounts = discounts;
+    }
+
+    public ArrayList<RevenueCenter> getRevenueCenters() {
+        return revenueCenters;
+    }
+
+    public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
+        this.revenueCenters = revenueCenters;
+    }
+
+    public ArrayList<ServiceCharge> getServiceCharges() {
+        return serviceCharges;
+    }
+
+    public void setServiceCharges(ArrayList<ServiceCharge> serviceCharges) {
+        this.serviceCharges = serviceCharges;
     }
 
     public AccountSettings getAccountSettings() {

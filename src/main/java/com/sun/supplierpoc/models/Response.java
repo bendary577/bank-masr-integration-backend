@@ -1,7 +1,10 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.configurations.Discount;
+import com.sun.supplierpoc.models.configurations.ServiceCharge;
 import com.sun.supplierpoc.models.configurations.Tax;
 import com.sun.supplierpoc.models.configurations.Tender;
+import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,8 +17,18 @@ public class Response {
     // Sales Variables
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
+    private ArrayList<Discount> salesDiscount = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
+    private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
+    private ArrayList<DbMenuItemDefinition> menuItems = new ArrayList<>();
+
+    // Supplier Variables
+    private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
+    private ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
+
+    // Booked Production Variables
+    private ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
 
     public Response() {
     }
@@ -74,5 +87,53 @@ public class Response {
 
     public void setJournalBatches(ArrayList<JournalBatch> journalBatches) {
         this.journalBatches = journalBatches;
+    }
+
+    public ArrayList<ServiceCharge> getSalesServiceCharge() {
+        return salesServiceCharge;
+    }
+
+    public void setSalesServiceCharge(ArrayList<ServiceCharge> salesServiceCharge) {
+        this.salesServiceCharge = salesServiceCharge;
+    }
+
+    public ArrayList<SyncJobData> getAddedSuppliers() {
+        return addedSuppliers;
+    }
+
+    public void setAddedSuppliers(ArrayList<SyncJobData> addedSuppliers) {
+        this.addedSuppliers = addedSuppliers;
+    }
+
+    public ArrayList<SyncJobData> getUpdatedSuppliers() {
+        return updatedSuppliers;
+    }
+
+    public void setUpdatedSuppliers(ArrayList<SyncJobData> updatedSuppliers) {
+        this.updatedSuppliers = updatedSuppliers;
+    }
+
+    public ArrayList<BookedProduction> getBookedProduction() {
+        return bookedProduction;
+    }
+
+    public void setBookedProduction(ArrayList<BookedProduction> bookedProduction) {
+        this.bookedProduction = bookedProduction;
+    }
+
+    public ArrayList<Discount> getSalesDiscount() {
+        return salesDiscount;
+    }
+
+    public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
+        this.salesDiscount = salesDiscount;
+    }
+
+    public ArrayList<DbMenuItemDefinition> getMenuItems() {
+        return menuItems;
+    }
+
+    public void setMenuItems(ArrayList<DbMenuItemDefinition> menuItems) {
+        this.menuItems = menuItems;
     }
 }

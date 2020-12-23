@@ -73,13 +73,13 @@ public class TransferService {
 
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
         String timePeriod = syncJobTypeTransfer.getConfiguration().getTimePeriod();
+        String fromDate = syncJobTypeTransfer.getConfiguration().getFromDate();
+        String toDate = syncJobTypeTransfer.getConfiguration().getToDate();
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)) {
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();
 
                 data.put("status", Constants.FAILED);
@@ -93,77 +93,10 @@ public class TransferService {
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
 
-            if (timePeriod.equals("Today") || timePeriod.equals("Yesterday")){
-                try {
-                    select.selectByVisibleText("User-defined");
-                } catch (Exception e) {
-                    System.out.println("Invalid Business Date");
-                    driver.quit();
+            data = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Invalid business date.");
-                    data.put("transfers", transfers);
-                    return data;
-                }
-
-                DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                String targetDate = "";
-
-                if (timePeriod.equals("Yesterday")){
-                    Calendar cal = Calendar.getInstance();
-                    cal.add(Calendar.DATE, -1);
-                    targetDate = dateFormat.format(cal.getTime());
-                }
-                else {
-                    Date date = new Date();
-                    targetDate = dateFormat.format(date);
-                }
-
-                driver.findElement(By.id("_ctl7_input")).clear();
-                driver.findElement(By.id("_ctl7_input")).sendKeys(targetDate);
-                driver.findElement(By.id("_ctl7_input")).sendKeys(Keys.ENTER);
-
-                driver.findElement(By.id("_ctl9_input")).clear();
-                driver.findElement(By.id("_ctl9_input")).sendKeys(targetDate);
-                driver.findElement(By.id("_ctl9_input")).sendKeys(Keys.ENTER);
-
-                String startDateValue = driver.findElement(By.id("_ctl7_input")).getAttribute("value");
-                Date startDate = dateFormat.parse(startDateValue);
-
-                String endDateValue = driver.findElement(By.id("_ctl9_input")).getAttribute("value");
-                Date endDate = dateFormat.parse(endDateValue);
-
-                if (!dateFormat.format(startDate).equals(targetDate)){
-                    driver.quit();
-
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Failed to get transfers of selected date, please try again or contact support team.");
-                    data.put("invoices", transfers);
-                    return data;
-                }
-
-                if (!dateFormat.format(endDate).equals(targetDate)){
-                    driver.quit();
-
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Failed to get transfers of selected date, please try again or contact support team.");
-                    data.put("invoices", transfers);
-                    return data;
-                }
-
-            }
-            else{
-                try {
-                    select.selectByVisibleText(timePeriod);
-                } catch (Exception e) {
-                    System.out.println("Invalid Business Date");
-                    driver.quit();
-
-                    data.put("status", Constants.FAILED);
-                    data.put("message", "Invalid business date.");
-                    data.put("transfers", transfers);
-                    return data;
-                }
+            if (!data.get("status").equals(Constants.SUCCESS)){
+                return data;
             }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
@@ -189,7 +122,7 @@ public class TransferService {
                     if (! oldCostCenterData.checked) {
                         continue;
                     }
-                    transfer.put("from_cost_center", oldCostCenterData);
+                    transfer.put("fromCostCenter", oldCostCenterData);
 
                     td = cols.get(columns.indexOf("to_cost_center"));
                     oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
@@ -197,7 +130,7 @@ public class TransferService {
                     if (! oldCostCenterData.checked) {
                         continue;
                     }
-                    transfer.put("to_cost_center", oldCostCenterData);
+                    transfer.put("toCostCenter", oldCostCenterData);
 
                     td = cols.get(columns.indexOf("document"));
                     transfer.put(columns.get(columns.indexOf("document")), td.getText().strip());
@@ -239,7 +172,7 @@ public class TransferService {
             driver.quit();
 
             data.put("status", Constants.SUCCESS);
-            data.put("message", "");
+            data.put("message", "Get transfers Successfully.");
             data.put("transfers", journalEntries);
             return data;
 
@@ -290,6 +223,9 @@ public class TransferService {
         try {
             driver.get((String) transfer.get("details_url"));
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            if (rows.size() <= 22){ return; }
+
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 22);
 
             for (int i = 23; i < rows.size(); i++) {
@@ -328,8 +264,8 @@ public class TransferService {
 
             for (Journal journal : journals) {
                 HashMap<String, Object> journalEntry = new HashMap<>();
-                CostCenter fromCostCenter = (CostCenter) transfer.get("from_cost_center");
-                CostCenter toCostCenter = (CostCenter) transfer.get("to_cost_center");
+                CostCenter fromCostCenter = (CostCenter) transfer.get("fromCostCenter");
+                CostCenter toCostCenter = (CostCenter) transfer.get("toCostCenter");
 
                 if (fromCostCenter.costCenterReference.equals("")){
                     fromCostCenter.costCenterReference = fromCostCenter.costCenter;
@@ -338,16 +274,20 @@ public class TransferService {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
 
+                journalEntry.put("accountingPeriod", ((String)transfer.get("delivery_date")).substring(2,6));
                 journalEntry.put("transactionDate", transfer.get("delivery_date"));
 
-                journalEntry.put("totalCr", Math.round(journal.getTotalTransfer()));
-                journalEntry.put("totalDr", Math.round(journal.getTotalTransfer()) * -1);
+                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalTransfer()));
+                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalTransfer()) * -1);
 
-                journalEntry.put("from_cost_center", fromCostCenter.costCenter);
-                journalEntry.put("from_account_code", fromCostCenter.accountCode);
+                journalEntry.put("fromCostCenter", fromCostCenter.costCenter);
+                journalEntry.put("fromAccountCode", fromCostCenter.accountCode);
 
-                journalEntry.put("to_cost_center", toCostCenter.costCenter);
-                journalEntry.put("to_account_code", toCostCenter.accountCode);
+                journalEntry.put("toCostCenter", toCostCenter.costCenter);
+                journalEntry.put("toAccountCode", toCostCenter.accountCode);
+
+                journalEntry.put("fromLocation", fromCostCenter.accountCode);
+                journalEntry.put("toLocation", toCostCenter.accountCode);
 
                 String description = "Tr F " + fromCostCenter.costCenterReference + " T "+
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup();
@@ -357,7 +297,15 @@ public class TransferService {
 
                 journalEntry.put("description", description);
 
-                journalEntry.put("transactionReference", "");
+                if (!transfer.get("reference").equals("")){
+                    String reference = (String)transfer.get("reference");
+                    if(reference.length() > 30){
+                        reference = reference.substring(0, 30);
+                    }
+                    journalEntry.put("transactionReference", reference);
+                }else {
+                    journalEntry.put("transactionReference", "Transfer Reference");
+                }
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
@@ -388,297 +336,4 @@ public class TransferService {
         return addedTransfers;
 
     }
-
-    public IAuthenticationVoucher connectToSunSystem(Account account){
-        boolean useEncryption = false;
-        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
-
-        String username = sunCredentials.getUsername();
-        String password = sunCredentials.getPassword();
-
-        IAuthenticationVoucher voucher;
-        try {
-            SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
-            voucher = securityProvider.Authenticate(username, password);
-        } catch (ComponentException | SoapFaultException e) {
-            System.out.println(e.getMessage());
-            return null;
-        }
-        return voucher;
-    }
-
-    public HashMap<String, Object> sendJournalData(SyncJobData addedJournalEntry, SyncJobType syncJobType,
-                                                    Account account, IAuthenticationVoucher voucher){
-        HashMap<String, Object> data = new HashMap<>();
-
-        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-        AccountCredential sunCredentials = account.getAccountCredentialByAccount("Sun", accountCredentials);
-
-        String username = sunCredentials.getUsername();
-        String sccXMLStringValue = "";
-
-        try {
-            DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
-
-            DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
-            Document doc = docBuilder.newDocument();
-            ///////////////////////////////////////////  Create SSC root element ///////////////////////////////////////
-            Element SSCRootElement = doc.createElement("SSC");
-            doc.appendChild(SSCRootElement);
-
-            ///////////////////////////////////////////  User //////////////////////////////////////////////////////////
-            Element userElement = doc.createElement("User");
-            SSCRootElement.appendChild(userElement);
-
-            Element nameElement = doc.createElement("Name");
-            nameElement.appendChild(doc.createTextNode(username));
-            userElement.appendChild(nameElement);
-
-            ///////////////////////////////////////////  SunSystemsContext /////////////////////////////////////////////
-            Element sunSystemContextElement = doc.createElement("SunSystemsContext");
-            SSCRootElement.appendChild(sunSystemContextElement);
-
-            Element businessUnitElement = doc.createElement("BusinessUnit");
-            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getBusinessUnit()));
-            sunSystemContextElement.appendChild(businessUnitElement);
-
-            ///////////////////////////////////////////  MethodContext /////////////////////////////////////////////////
-            Element methodContextElement = doc.createElement("MethodContext");
-            SSCRootElement.appendChild(methodContextElement);
-
-            Element LedgerPostingParametersElement = doc.createElement("LedgerPostingParameters");
-            methodContextElement.appendChild(LedgerPostingParametersElement);
-
-            Element DescriptionElement = doc.createElement("Description");
-            DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
-            LedgerPostingParametersElement.appendChild(DescriptionElement);
-
-            Element journalTypeElement = doc.createElement("JournalType");
-            journalTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalType()));
-            LedgerPostingParametersElement.appendChild(journalTypeElement);
-
-            Element postingTypeElement = doc.createElement("PostingType");
-            postingTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getPostingType()));
-            LedgerPostingParametersElement.appendChild(postingTypeElement);
-
-            Element SuspenseAccount = doc.createElement("SuspenseAccount");
-            SuspenseAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
-            LedgerPostingParametersElement.appendChild(SuspenseAccount);
-
-            Element TransactionAmountAccount = doc.createElement("TransactionAmountAccount");
-            TransactionAmountAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
-            LedgerPostingParametersElement.appendChild(TransactionAmountAccount);
-
-
-            ///////////////////////////////////////////  Payload ///////////////////////////////////////////////////////
-
-            Element payloadElement = doc.createElement("Payload");
-            SSCRootElement.appendChild(payloadElement);
-
-            Element ledgerElement = doc.createElement("Ledger");
-            payloadElement.appendChild(ledgerElement);
-
-            ///////////////////////////////////////////  line Debit ////////////////////////////////////////////////////
-            if (addedJournalEntry.getData().containsKey("totalDr")){
-                createJournalLine(false, doc, ledgerElement, syncJobType, addedJournalEntry);
-            }
-            ///////////////////////////////////////////  line Credit ///////////////////////////////////////////////////
-            if (addedJournalEntry.getData().containsKey("totalCr")){
-                createJournalLine(true, doc, ledgerElement, syncJobType, addedJournalEntry);
-            }
-            ///////////////////////////////////////////  Transform Document to XML String //////////////////////////////
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            StringWriter writer = new StringWriter();
-            transformer.transform(new DOMSource(doc), new StreamResult(writer));
-            sccXMLStringValue = writer.getBuffer().toString();
-        } catch (ParserConfigurationException | TransformerException e) {
-            e.printStackTrace();
-        }
-
-        String result = "";
-        try {
-
-            SoapComponent ssc = new SoapComponent(Constants.HOST, Constants.PORT);
-            ssc.authenticate(voucher);
-            result = ssc.execute("Journal", "Import", sccXMLStringValue);
-        } catch (Exception ex) {
-            System.out.print("An error occurred logging in to SunSystems:\r\n");
-            ex.printStackTrace();
-
-            data.put("status", Constants.FAILED);
-            data.put("message", "An error occurred logging in to Sun System.");
-            return data;
-        }
-
-        ///////////////////////////////////////////  Convert XML to Object /////////////////////////////////////////////
-        JAXBContext jaxbContext;
-        try {
-            jaxbContext = JAXBContext.newInstance(JournalSSC.class);
-            Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-            JournalSSC query = (JournalSSC) jaxbUnmarshaller.unmarshal(new StringReader(result));
-
-            boolean status = query.getPayload().get(0).getLine().getStatus().equals("success");
-            ArrayList<Message> messages = query.getPayload().get(0).getLine().getMessages().getMessage();
-            String message = "";
-            for (Message msg : messages) {
-                if (msg.getLevel().equals("error")){
-                    message += " * ";
-                    message  +=  msg.getUserText();
-                }
-            }
-
-            data.put("status", status);
-            data.put("message", message);
-            return data;
-
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-        data.put("status", Constants.FAILED);
-        data.put("message", "");
-        return data;
-    }
-
-    public void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
-                                   SyncJobData addedJournalEntry) {
-        ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
-
-        Element lineElement = doc.createElement("Line");
-        ledgerElement.appendChild(lineElement);
-
-        Element DescriptionElement = doc.createElement("Description");
-        DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
-        lineElement.appendChild(DescriptionElement);
-
-        Element accountCodeElement = doc.createElement("AccountCode");
-        if (creditDebitFlag) // Credit
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("inventoryAccount")));
-        else // Debit
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("expensesAccount")));
-        lineElement.appendChild(accountCodeElement);
-
-        Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
-        if (creditDebitFlag)
-            base2ReportingAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalCr"))));
-        else
-            base2ReportingAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalDr"))));
-        lineElement.appendChild(base2ReportingAmountElement);
-
-        Element baseAmountElement = doc.createElement("BaseAmount");
-        if (creditDebitFlag)
-            baseAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalCr"))));
-        else
-            baseAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalDr"))));
-        lineElement.appendChild(baseAmountElement);
-
-        Element currencyCodeElement = doc.createElement("CurrencyCode");
-        currencyCodeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getCurrencyCode()));
-        lineElement.appendChild(currencyCodeElement);
-
-        Element debitCreditElement = doc.createElement("DebitCredit");
-        if (creditDebitFlag)
-            debitCreditElement.appendChild(doc.createTextNode("C"));
-        else
-            debitCreditElement.appendChild(doc.createTextNode("D"));
-        lineElement.appendChild(debitCreditElement);
-
-        Element journalLineNumberElement = doc.createElement("JournalLineNumber");
-        if (creditDebitFlag)
-            journalLineNumberElement.appendChild(doc.createTextNode("1"));
-        else
-            journalLineNumberElement.appendChild(doc.createTextNode("2"));
-        lineElement.appendChild(journalLineNumberElement);
-
-//        Element journalSourceElement = doc.createElement("JournalSource");
-//        journalSourceElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalSource()));
-//        lineElement.appendChild(journalSourceElement);
-
-        SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
-        String date = simpleformat.format(new Date());
-
-        Element TransactionDate = doc.createElement("TransactionDate");
-
-        if(addedJournalEntry.getData().containsKey("transactionDate")){
-            TransactionDate.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("transactionDate"))));
-        }else{
-            TransactionDate.appendChild(doc.createTextNode(date));
-        }
-        lineElement.appendChild(TransactionDate);
-
-        Element transactionAmountElement = doc.createElement("TransactionAmount");
-        if (creditDebitFlag)
-            transactionAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalCr"))));
-        else
-            transactionAmountElement.appendChild(doc.createTextNode(String.valueOf(addedJournalEntry.getData().get("totalDr"))));
-        lineElement.appendChild(transactionAmountElement);
-
-        Element transactionReferenceElement = doc.createElement("TransactionReference");
-        transactionReferenceElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("transactionReference")));
-        lineElement.appendChild(transactionReferenceElement);
-
-        Element accountsElement = doc.createElement("Accounts");
-        lineElement.appendChild(accountsElement);
-
-        lineElement.appendChild(accountCodeElement);
-
-        // T#loctionAnalysis
-        String locationAnalysis = syncJobType.getConfiguration().getLocationAnalysis();
-
-        Element enterAnalysis1ElementT3 = doc.createElement("EnterAnalysis"+ locationAnalysis);
-        enterAnalysis1ElementT3.appendChild(doc.createTextNode("1"));
-        accountsElement.appendChild(enterAnalysis1ElementT3);
-
-        Element analysis2ElementT3 = doc.createElement("Analysis" + locationAnalysis);
-        accountsElement.appendChild(analysis2ElementT3);
-
-        if (creditDebitFlag){
-            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
-
-            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("from_account_code")));
-            lineElement.appendChild(analysisCode2ElementT3);
-        }
-        else{
-            Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-            vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-            analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement);
-
-            Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("to_account_code")));
-            lineElement.appendChild(analysisCode2ElementT3);
-        }
-
-        for (Analysis analysisObject: analysis) {
-            if (analysisObject.getNumber().equals(locationAnalysis)){
-                continue;
-            }
-            if (analysisObject.getChecked()){
-                Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.getNumber());
-                analysisCode2Element.appendChild(doc.createTextNode((String) analysisObject.getCodeElement()));
-                lineElement.appendChild(analysisCode2Element);
-
-                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.getNumber());
-                enterAnalysis1Element.appendChild(doc.createTextNode("1"));
-                accountsElement.appendChild(enterAnalysis1Element);
-
-                Element analysis2Element = doc.createElement("Analysis" + analysisObject.getNumber());
-                accountsElement.appendChild(analysis2Element);
-
-                Element vAcntCatAnalysis_AnlCodeElement = doc.createElement("VAcntCatAnalysis_AnlCode");
-                vAcntCatAnalysis_AnlCodeElement.appendChild(doc.createTextNode((String) analysisObject.getCodeElement()));
-                analysis2Element.appendChild(vAcntCatAnalysis_AnlCodeElement);
-
-            }
-            else{
-                Element enterAnalysis1Element = doc.createElement("EnterAnalysis" + analysisObject.getNumber());
-                enterAnalysis1Element.appendChild(doc.createTextNode("3"));
-                accountsElement.appendChild(enterAnalysis1Element);
-            }
-        }
-    }
-
 }

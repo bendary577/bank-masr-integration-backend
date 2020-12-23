@@ -2,28 +2,33 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
+import com.sun.supplierpoc.excelExporters.WastageExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
+import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.Item;
-import com.sun.supplierpoc.models.configurations.OverGroup;
-import com.sun.supplierpoc.models.configurations.WasteGroup;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.services.TransferService;
-import com.sun.supplierpoc.services.WastageService;
+import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
+import java.text.DateFormat;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -36,16 +41,22 @@ public class WastageController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
+    private SyncJobDataRepo syncJobDataRepo;
+    @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
-    @Autowired
-    private TransferService transferService;
     @Autowired
     private WastageService wastageService;
     @Autowired
+    private SunService sunService;
+    @Autowired
     private InvoiceController invoiceController;
+    @Autowired
+    private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
+
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -55,14 +66,26 @@ public class WastageController {
     @RequestMapping("/getWastage")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getWastageRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getWastageRequest(Principal principal) {
+        HashMap<String, Object> response = new HashMap<>();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
 
-        HashMap<String, Object> response = getWastage(user.getId(), account);
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = getWastage(user.getId(), account);
+            if(response.get("success").equals(false)){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }else {
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        }
+        String message = "Invalid Credentials";
+        response.put("message", message);
+        response.put("success", false);
 
-        return response;
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     public HashMap<String, Object> getWastage(String userId, Account account) {
@@ -74,6 +97,10 @@ public class WastageController {
         ArrayList<Item> items = generalSettings.getItems();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().getWasteGroups();
+
+        String timePeriod = wastageSyncJobType.getConfiguration().getTimePeriod();
+        String fromDate = wastageSyncJobType.getConfiguration().getFromDate();
+        String toDate = wastageSyncJobType.getConfiguration().getToDate();
 
         ArrayList<OverGroup> overGroups;
         if (!wastageSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
@@ -87,28 +114,37 @@ public class WastageController {
             return sunConfigResponse;
         }
 
-        if (wastageSyncJobType.getConfiguration().getTimePeriod().equals("")){
-            String message = "Configure business date before sync transfers.";
+        if (timePeriod.equals("")){
+            String message = "Configure business date before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
+        }else if (timePeriod.equals("UserDefined")){
+            if (fromDate.equals("")
+                    || toDate.equals("")){
+                String message = "Configure business date before sync wastage.";
+
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
         }
 
-        if (generalSettings != null && generalSettings.getCostCenterAccountMapping().size() == 0){
+        if (generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Configure cost center before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (generalSettings != null && generalSettings.getItems().size() == 0){
+        if (generalSettings.getItems().size() == 0){
             String message = "Map items before sync wastage.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (generalSettings != null && generalSettings.getCostCenterLocationMapping().size() == 0){
+        if (generalSettings.getCostCenterLocationMapping().size() == 0){
             String message = "Map cost centers to location before sync wastage.";
             response.put("message", message);
             response.put("success", false);
@@ -130,16 +166,80 @@ public class WastageController {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
                 if (wastes.size() > 0) {
                     addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
-                    IAuthenticationVoucher voucher = transferService.connectToSunSystem(account);
-                    if (voucher != null){
-                        invoiceController.handleSendJournal(wastageSyncJobType, syncJob, addedWastes, account, voucher);
-                        syncJob.setReason("");
-                        syncJob.setEndDate(new Date());
-                        syncJob.setRowsFetched(addedWastes.size());
-                        syncJobRepo.save(syncJob);
+                    if(addedWastes.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
+                        IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
+                        if (voucher != null){
+                            invoiceController.handleSendJournal(wastageSyncJobType, syncJob, addedWastes, account, voucher);
+                            syncJob.setReason("");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(addedWastes.size());
+                            syncJobRepo.save(syncJob);
 
-                        response.put("message", "Sync Invoices Successfully.");
-                        response.put("success", true);
+                            response.put("message", "Sync Wastage Successfully.");
+                            response.put("success", true);
+                        }
+                    }
+                    else if (addedWastes.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+                        String username = sunCredentials.getUsername();
+                        String password = sunCredentials.getPassword();
+                        String host = sunCredentials.getHost();
+
+                        FtpClient ftpClient = new FtpClient(host, username, password);
+
+                        if(ftpClient.open()){
+                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                    wastageSyncJobType, creditNotesList);
+
+                            DateFormatSymbols dfs = new DateFormatSymbols();
+                            String[] weekdays = dfs.getWeekdays();
+
+                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
+                            Calendar cal = Calendar.getInstance();
+                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                            cal.setTime(date);
+                            int day = cal.get(Calendar.DAY_OF_WEEK);
+
+                            String dayName = weekdays[day];
+                            String fileExtension = ".ndf";
+                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+                            File file = excelExporter.createNDFFile();
+
+                            boolean sendFileFlag = false;
+                            try {
+                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                                ftpClient.close();
+                            } catch (IOException e) {
+                                ftpClient.close();
+                            }
+
+                            if (sendFileFlag){
+//                            if (true){
+                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                        "Sync wastage successfully.", Constants.SUCCESS);
+
+                                response.put("success", true);
+                                response.put("message", "Sync wastage successfully.");
+                            }else {
+                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                        "Failed to sync wastage to sun system via FTP.", Constants.FAILED);
+
+                                response.put("success", false);
+                                response.put("message", "Failed to sync wastage to sun system via FTP.");
+                            }
+                        }
+                        else {
+                            syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+
+                            response.put("success", false);
+                            response.put("message", "Failed to connect to sun system via FTP.");
+                        }
                     }
                 }
                 else {
@@ -204,9 +304,7 @@ public class WastageController {
         ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-
-            if (!setupEnvironment.loginOHIM(driver, url, account)) {
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -270,4 +368,21 @@ public class WastageController {
         }
     }
 
+    @GetMapping("/wastage/export/excel")
+    public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
+                              HttpServletResponse response) throws IOException {
+        response.setContentType("application/octet-stream");
+        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        String currentDateTime = dateFormatter.format(new Date());
+
+        String headerKey = "Content-Disposition";
+        String headerValue = "attachment; filename=Wastage" + currentDateTime + ".xlsx";
+        response.setHeader(headerKey, headerValue);
+
+        List<SyncJobData> wastageList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,false);
+
+        WastageExcelExporter excelExporter = new WastageExcelExporter(wastageList);
+
+        excelExporter.export(response);
+    }
 }

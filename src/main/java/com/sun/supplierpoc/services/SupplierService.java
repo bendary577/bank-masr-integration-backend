@@ -3,12 +3,8 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.SyncJobDataController;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
-import com.sun.supplierpoc.models.data.Data;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.SSC;
@@ -66,7 +62,7 @@ public class SupplierService {
         String sccXMLStringValue = "";
 
         try {
-            SecurityProvider securityProvider = new SecurityProvider(Constants.HOST, useEncryption);
+            SecurityProvider securityProvider = new SecurityProvider(sunCredentials.getHost(), useEncryption);
             voucher = securityProvider.Authenticate(username, password);
         } catch (ComponentException | SoapFaultException e) {
             data.put("status", Constants.FAILED);
@@ -77,9 +73,9 @@ public class SupplierService {
 
         SoapComponent component = null;
         if (useEncryption) {
-            component = new SecureSoapComponent(Constants.HOST, Constants.PORT);
+            component = new SecureSoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
         } else {
-            component = new SoapComponent(Constants.HOST, Constants.PORT);
+            component = new SoapComponent(sunCredentials.getHost(), sunCredentials.getPort());
         }
         component.authenticate(voucher);
 
@@ -138,6 +134,14 @@ public class SupplierService {
 
             Element paymentTermsGroupCodeElement = doc.createElement("PaymentTermsGroupCode");
             supplierElement.appendChild(paymentTermsGroupCodeElement);
+
+            ///////////////////////////////////////////  Supplier Accounts /////////////////////////////////////////////
+
+            Element accountsElement = doc.createElement("Accounts");
+            supplierElement.appendChild(accountsElement);
+
+            Element descriptionElement = doc.createElement("Description");
+            accountsElement.appendChild(descriptionElement);
 
             ///////////////////////////////////////////  Address Contact //////////////////////////////////////////////
 
@@ -214,8 +218,11 @@ public class SupplierService {
         }
     }
 
-    public ArrayList<SyncJobData> saveSuppliersData(ArrayList<Supplier> suppliers, SyncJob syncJob, SyncJobType syncJobType) {
+    public Response saveSuppliersData(ArrayList<Supplier> suppliers, SyncJob syncJob, SyncJobType syncJobType) {
+        Response response = new Response();
         ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
+        ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
+
         ArrayList<SyncJobData> savedSuppliers = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (Supplier supplier : suppliers) {
@@ -223,6 +230,7 @@ public class SupplierService {
 
             data.put("supplierId", "");
             data.put("supplier", supplier.getSupplierName());
+            data.put("description", supplier.getAccounts().getDescription());
             data.put("supplierNumber", supplier.getSupplierCode());
             data.put("accountCode", supplier.getAccountCode());
             data.put("status", supplier.getStatus());
@@ -241,9 +249,14 @@ public class SupplierService {
             // check existence of supplier in middleware (UNIQUE: supplierNumber)
             SyncJobData oldSupplier = conversions.checkSupplierExistence(savedSuppliers, supplier.getSupplierName());
             if (oldSupplier != null){
-                oldSupplier.setData(data);
-                syncJobDataRepo.save(oldSupplier);
                 if (!oldSupplier.getStatus().equals(Constants.FAILED)){
+                    // check if there is any change
+                    if (compareSupplier(data, oldSupplier.getData())){
+                        oldSupplier.setData(data);
+                        syncJobDataRepo.save(oldSupplier);
+
+                        updatedSuppliers.add(oldSupplier);
+                    }
                     continue;
                 }
                 else {
@@ -257,55 +270,133 @@ public class SupplierService {
             syncJobDataRepo.save(syncJobData);
             addedSuppliers.add(syncJobData);
         }
-        return addedSuppliers;
+
+        response.setAddedSuppliers(addedSuppliers);
+        response.setUpdatedSuppliers(updatedSuppliers);
+        return response;
     }
 
     public HashMap<String, Object> sendSuppliersData(ArrayList<SyncJobData> suppliers, SyncJob syncJob,
-                                                     SyncJobType syncJobType, Account account){
+                                                     SyncJobType syncJobType, Account account, boolean addUpdateFlag,
+                                                     boolean closeDriverFlag, boolean openDriverFlag, WebDriver driver){
         HashMap<String, Object> response = new HashMap<>();
-
-        WebDriver driver;
-        try{
-            driver = setupEnvironment.setupSeleniumEnv(false);
-        }
-        catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
-            return response;
-        }
+        ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
+        String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
 
         try {
-            String url = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/FormLogin.aspx";
-            driver.get(url);
+            if(openDriverFlag){
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
+                    driver.quit();
 
-            if (!setupEnvironment.loginOHIM(driver, url, account)){
-                driver.quit();
-
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                return response;
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    return response;
+                }
             }
 
+            Response addSupplierResponse;
             for (SyncJobData supplier : suppliers) {
-                String vendorPage = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Vendors/OverviewVendor.aspx";
-                driver.get(vendorPage);
-                driver.findElement(By.linkText("New")).click();
+//                if(!driver.getCurrentUrl().equals(vendorPage)){
+                    driver.get(vendorPage);
+                    driver.findElement(By.name("filterPanel_btnRefresh")).click();
+//                }
 
-                // wait to make sure elements exits
-                WebDriverWait wait = new WebDriverWait(driver, 10);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxtLF_NAME")));
+                // Adding new suppler
+                if (addUpdateFlag){
+                    try{
+                        WebElement existSupplier = driver.findElement(By.linkText(((HashMap) supplier.getData()).get("supplier").toString()));
+                        if (existSupplier != null){
+                            updatedSuppliers.add(supplier);
+                            continue;
+                        }
+                    } catch (Exception e) {
+                        supplier.getData().put("supplierStatus", "NEW");
+                    }
+
+                    driver.findElement(By.linkText("New")).click();
+                }else {
+                    // Check if supplier already exists
+                    try{
+                        WebElement existSupplier = driver.findElement(By.linkText(((HashMap) supplier.getData()).get("supplier").toString()));
+                        if (existSupplier != null){
+                            existSupplier.click();
+                            supplier.getData().put("supplierStatus", "UPDATED");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Supplier not exists");
+                        continue;
+                    }
+
+                }
+
+                try{
+                    addSupplierResponse = fillSupplierForm (supplier, syncJobType, syncJob, driver);
+                    if (addSupplierResponse.isStatus()){
+                        supplier.setStatus(Constants.SUCCESS);
+                        supplier.setReason("");
+                        supplier.setSyncJobId(syncJob.getId());
+                        syncJobDataRepo.save(supplier);
+                    }else {
+                        supplier.setStatus(Constants.FAILED);
+                        supplier.setReason(addSupplierResponse.getMessage());
+                        supplier.setSyncJobId(syncJob.getId());
+                        syncJobDataRepo.save(supplier);
+                    }
+                }catch (Exception e) {
+                    String message = "Failed to add supplier in oracle hospitality.";
+                    supplier.setStatus(Constants.FAILED);
+                    supplier.setReason(message);
+                    supplier.setSyncJobId(syncJob.getId());
+                    syncJobDataRepo.save(supplier);
+                }
+            }
+
+            if(closeDriverFlag && updatedSuppliers.size() == 0){
+                driver.quit();
+            }
+
+            response.put("status", Constants.SUCCESS);
+            response.put("updatedSuppliers", updatedSuppliers);
+            response.put("message", "Sync Suppliers Successfully.");
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("status", Constants.FAILED);
+            response.put("message", e.getMessage());
+            return response;
+        }
+    }
+
+
+    private Response fillSupplierForm (SyncJobData supplier, SyncJobType syncJobType, SyncJob syncJob, WebDriver driver){
+        Response response = new Response();
+        try{
+            // wait to make sure elements exits
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxtLF_NAME")));
+
+            if (!((HashMap) supplier.getData()).get("supplier").toString().equals("")){
+                driver.findElement(By.id("igtxtLF_NAME")).clear();
                 driver.findElement(By.id("igtxtLF_NAME")).sendKeys(((HashMap) supplier.getData()).get("supplier").toString());
+            }
 
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxttb__ctl0_LF_KONR")));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxttb__ctl0_LF_KONR")));
+
+            if (!((HashMap) supplier.getData()).get("supplierNumber").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).clear();
                 driver.findElement(By.id("igtxttb__ctl0_LF_KONR")).sendKeys(((HashMap) supplier.getData()).get("supplierNumber").toString());
+            }
 
-                //////////////////////////////////////  Set Hidden Elements  ///////////////////////////////////////////
-                JavascriptExecutor js = (JavascriptExecutor) driver;
-                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
-                js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
+            //////////////////////////////////////  Set Hidden Elements  ///////////////////////////////////////////
+            JavascriptExecutor js = (JavascriptExecutor) driver;
+            js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
+            js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
 
-                String tax = syncJobType.getConfiguration().getTaxes();
+            String tax = syncJobType.getConfiguration().getVendorTaxes();
+            if (!tax.equals("")){
+                driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).clear();
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);
                 Thread.sleep(2000);
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(Keys.ARROW_DOWN);
@@ -321,13 +412,19 @@ public class SupplierService {
                     supplier.setReason(message);
                     supplier.setSyncJobId(syncJob.getId());
                     syncJobDataRepo.save(supplier);
-                    continue;
+
+                    response.setStatus(false);
+                    response.setMessage(message);
+                    return response;
                 }
+            }
 
-                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
-                js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
+            js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
+            js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
 
-                String group = (String) syncJobType.getConfiguration().getGroups();
+            String group = (String) syncJobType.getConfiguration().getGroups();
+            if (!group.equals("")){
+                driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).clear();
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(group);
                 Thread.sleep(2000);
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(Keys.ARROW_DOWN);
@@ -343,96 +440,147 @@ public class SupplierService {
                     supplier.setReason(message);
                     supplier.setSyncJobId(syncJob.getId());
                     syncJobDataRepo.save(supplier);
-                    continue;
+
+                    response.setStatus(false);
+                    response.setMessage(message);
+                    return response;
                 }
-
-                //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////
-
-                driver.findElement(By.id("igtxttb__ctl0_LF_KDNNR")).sendKeys(((HashMap) supplier.getData()).get("customerNumber").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_TEL")).sendKeys(((HashMap) supplier.getData()).get("phoneNumber").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_TELEX")).sendKeys(((HashMap) supplier.getData()).get("email").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_SACHB")).sendKeys(((HashMap) supplier.getData()).get("contactFirstName").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_ZBED")).sendKeys(((HashMap) supplier.getData()).get("paymentTerms").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_PLZ")).sendKeys(((HashMap) supplier.getData()).get("postalCode").toString());
-                driver.findElement(By.id("igtxttb__ctl0_LF_FAX")).sendKeys(((HashMap) supplier.getData()).get("faxNumber").toString());
-
-
-                //////////////////////////////////////  Set Address  ///////////////////////////////////////////////////
-                ArrayList<String> handles = new ArrayList<>(driver.getWindowHandles());
-                String windowBefore = handles.get(0);
-
-                driver.findElement(By.id("tb__ctl0_btnEditAddress")).click();
-
-                while (true) {
-                    if (handles.size() != driver.getWindowHandles().size()) {
-                        break;
-                    }
-                }
-
-                handles = new ArrayList<>(driver.getWindowHandles());
-                String windowAfter = handles.get(1);
-
-                driver.switchTo().window(windowAfter);
-
-                wait = new WebDriverWait(driver, 20);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxttbStreet")));
-
-                driver.findElement(By.id("igtxttbStreet")).sendKeys(((HashMap) supplier.getData()).get("address").toString());
-                driver.findElement(By.id("igtxttbAddressline1")).sendKeys(((HashMap) supplier.getData()).get("line1").toString());
-                driver.findElement(By.id("igtxttbAddressline2")).sendKeys(((HashMap) supplier.getData()).get("line2").toString());
-
-                driver.findElement(By.id("btnOk")).click();
-
-                while (true) {
-                    if (handles.size() != driver.getWindowHandles().size()) {
-                        break;
-                    }
-                }
-                driver.switchTo().window(windowBefore);
-
-                //////////////////////////////////////  Set Order Settings  ////////////////////////////////////////////
-
-                driver.findElement(By.id("tbtd1")).click();
-                driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL")).click();
-
-                //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
-//
-//                driver.findElement(By.linkText("Save")).click();
-//                try {
-//                    new WebDriverWait(driver, 5)
-//                            .ignoring(NoAlertPresentException.class)
-//                            .until(ExpectedConditions.alertIsPresent());
-//
-//                    Alert al = driver.switchTo().alert();
-//                    al.accept();
-//
-//                    supplier.setStatus(Constants.FAILED);
-//                    supplier.setReason("Already Exits");
-//                    supplier.setSyncJobId(syncJob.getId());
-//                    syncJobDataRepo.save(supplier);
-//                    continue;
-//                } catch (NoAlertPresentException Ex) {
-//                    System.out.println("No alert");
-//                }
-
-                supplier.setStatus(Constants.SUCCESS);
-                supplier.setReason("");
-                supplier.setSyncJobId(syncJob.getId());
-                syncJobDataRepo.save(supplier);
             }
 
-            driver.quit();
+            //////////////////////////////////////  Set Vendor Info  ///////////////////////////////////////////////////
+            if (!((HashMap) supplier.getData()).get("customerNumber").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_KDNNR")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_KDNNR")).sendKeys(((HashMap) supplier.getData()).get("customerNumber").toString());
+            }
 
-            response.put("status", Constants.SUCCESS);
-            response.put("message", "Save Suppliers Successfully.");
+            if (!((HashMap) supplier.getData()).get("phoneNumber").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_TEL")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_TEL")).sendKeys(((HashMap) supplier.getData()).get("phoneNumber").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("email").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_TELEX")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_TELEX")).sendKeys(((HashMap) supplier.getData()).get("email").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("contactFirstName").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_SACHB")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_SACHB")).sendKeys(((HashMap) supplier.getData()).get("contactFirstName").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("paymentTerms").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_ZBED")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_ZBED")).sendKeys(((HashMap) supplier.getData()).get("paymentTerms").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("postalCode").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_PLZ")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_PLZ")).sendKeys(((HashMap) supplier.getData()).get("postalCode").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("faxNumber").toString().equals("")){
+                driver.findElement(By.id("igtxttb__ctl0_LF_FAX")).clear();
+                driver.findElement(By.id("igtxttb__ctl0_LF_FAX")).sendKeys(((HashMap) supplier.getData()).get("faxNumber").toString());
+            }
+
+
+            //////////////////////////////////////  Set Address  ///////////////////////////////////////////////////
+            ArrayList<String> handles = new ArrayList<>(driver.getWindowHandles());
+            String windowBefore = handles.get(0);
+
+            driver.findElement(By.id("tb__ctl0_btnEditAddress")).click();
+
+            while (true) {
+                if (handles.size() != driver.getWindowHandles().size()) {
+                    break;
+                }
+            }
+
+            handles = new ArrayList<>(driver.getWindowHandles());
+            String windowAfter = handles.get(1);
+
+            driver.switchTo().window(windowAfter);
+
+            wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("igtxttbStreet")));
+
+            if(!((HashMap) supplier.getData()).get("address").toString().equals("")){
+                driver.findElement(By.id("igtxttbStreet")).clear();
+                driver.findElement(By.id("igtxttbStreet")).sendKeys(((HashMap) supplier.getData()).get("address").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("line1").toString().equals("")){
+                driver.findElement(By.id("igtxttbAddressline1")).clear();
+                driver.findElement(By.id("igtxttbAddressline1")).sendKeys(((HashMap) supplier.getData()).get("line1").toString());
+            }
+
+            if(!((HashMap) supplier.getData()).get("line2").toString().equals("")){
+                driver.findElement(By.id("igtxttbAddressline2")).clear();
+                driver.findElement(By.id("igtxttbAddressline2")).sendKeys(((HashMap) supplier.getData()).get("line2").toString());
+            }
+
+            driver.findElement(By.id("btnOk")).click();
+
+            while (true) {
+                if (handles.size() != driver.getWindowHandles().size()) {
+                    break;
+                }
+            }
+            driver.switchTo().window(windowBefore);
+
+            //////////////////////////////////////  Set Order Settings  ////////////////////////////////////////////
+
+            driver.findElement(By.id("tbtd1")).click();
+            WebElement PRAllItems = driver.findElement(By.id("tb__ctl1_LF_PURCHASEALL"));
+            if(!PRAllItems.isSelected()){
+                PRAllItems.click();
+            }
+
+            //////////////////////////////////////  Save And Check Existence  //////////////////////////////////////
+
+            driver.findElement(By.linkText("Save")).click();
+            try {
+                Alert al = driver.switchTo().alert();
+                al.accept();
+
+                String message = "Already Exits";
+                response.setStatus(true);
+                response.setMessage(message);
+                return response;
+            } catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+            String message = "Add supplier successfully";
+            response.setStatus(true);
+            response.setMessage(message);
             return response;
-        } catch (Exception e) {
-            e.printStackTrace();
-            driver.quit();
-
-            response.put("status", Constants.FAILED);
-            response.put("message", e.getMessage());
+        }catch (Exception e) {
+            String message = "Failed to add supplier";
+            response.setStatus(false);
+            response.setMessage(message);
             return response;
         }
+    }
+
+    private boolean compareSupplier (HashMap<String, String> supplier, HashMap<String, String> oldSupplier){
+        if(!supplier.get("supplierId").equals(oldSupplier.get("supplierId"))
+                || !supplier.get("supplier").equals(oldSupplier.get("supplier"))
+                || !supplier.get("description").equals(oldSupplier.get("description"))
+                || !supplier.get("supplierNumber").equals(oldSupplier.get("supplierNumber"))
+                || !supplier.get("accountCode").equals(oldSupplier.get("accountCode"))
+                || !supplier.get("status").equals(oldSupplier.get("status"))
+                || !supplier.get("paymentTerms").equals(oldSupplier.get("paymentTerms"))
+                || !supplier.get("phoneNumber").equals(oldSupplier.get("phoneNumber"))
+                || !supplier.get("address").equals(oldSupplier.get("address"))
+                || !supplier.get("line1").equals(oldSupplier.get("line1"))
+                || !supplier.get("line2").equals(oldSupplier.get("line2"))
+                || !supplier.get("line3").equals(oldSupplier.get("line3"))
+                || !supplier.get("postalCode").equals(oldSupplier.get("postalCode"))){
+            return true;
+        }else {
+            return false;
+        }
+
     }
 }

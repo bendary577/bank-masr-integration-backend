@@ -4,6 +4,7 @@ import com.sun.supplierpoc.models.configurations.Discount;
 import com.sun.supplierpoc.models.configurations.ServiceCharge;
 import com.sun.supplierpoc.models.configurations.Tax;
 import com.sun.supplierpoc.models.configurations.Tender;
+import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +21,7 @@ public class Response {
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
+    private ArrayList<DbMenuItemDefinition> menuItems = new ArrayList<>();
 
     // Supplier Variables
     private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
@@ -125,5 +127,13 @@ public class Response {
 
     public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
         this.salesDiscount = salesDiscount;
+    }
+
+    public ArrayList<DbMenuItemDefinition> getMenuItems() {
+        return menuItems;
+    }
+
+    public void setMenuItems(ArrayList<DbMenuItemDefinition> menuItems) {
+        this.menuItems = menuItems;
     }
 }

@@ -25,8 +25,6 @@ public class ConfigurationController {
     @Autowired
     private AccountRepo accountRepo;
     @Autowired
-    private UserRepo userRepo;
-    @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
     private SyncJobRepo syncJobRepo;

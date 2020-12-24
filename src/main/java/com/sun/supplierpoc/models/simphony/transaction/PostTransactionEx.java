@@ -1,4 +1,6 @@
-package com.sun.supplierpoc.models.simphony;
+package com.sun.supplierpoc.models.simphony.transaction;
+import com.sun.supplierpoc.models.simphony.ppMenuItems;
+
 import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -6,13 +8,7 @@ import javax.xml.bind.annotation.*;
         "vendorCode",
         "pGuestCheck",
         "ppMenuItems",
-        "ppComboMeals"/*,
-        "pSvcCharge",
-        "pSubTotalDiscount",
-        "pTmedDetail",
-        "pTotalsResponse",
-        "ppCheckPrintLines",
-        "ppVoucherOutput"*/
+        "ppComboMeals"
 })
 @XmlRootElement(name = "PostTransactionEx")
 
@@ -20,11 +16,12 @@ public class PostTransactionEx {
     @XmlElement(name = "vendorCode",nillable=true,required = true)
     protected String vendorCode;
     @XmlElement(name = "pGuestCheck",nillable=true,required = true)
-    protected pGustCheck pGuestCheck;
+    protected com.sun.supplierpoc.models.simphony.transaction.pGuestCheck pGuestCheck;
     @XmlElement(name = "ppMenuItems",nillable=true,required = true)
-    protected ppMenuItems ppMenuItems;
+    protected com.sun.supplierpoc.models.simphony.ppMenuItems ppMenuItems;
     @XmlElement(name = "ppComboMeals",nillable=true,required = true)
-    protected ppComboMeals ppComboMeals;
+    protected com.sun.supplierpoc.models.simphony.ppComboMeals ppComboMeals;
+
     public String getVendorCode() {
         return vendorCode;
     }
@@ -33,11 +30,11 @@ public class PostTransactionEx {
         this.vendorCode = vendorCode;
     }
 
-    public pGustCheck getpGuestCheck() {
+    public com.sun.supplierpoc.models.simphony.transaction.pGuestCheck getpGuestCheck() {
         return pGuestCheck;
     }
 
-    public void setpGuestCheck(pGustCheck pGuestCheck) {
+    public void setpGuestCheck(com.sun.supplierpoc.models.simphony.transaction.pGuestCheck pGuestCheck) {
         this.pGuestCheck = pGuestCheck;
     }
 

@@ -56,6 +56,11 @@ public class Configuration implements Serializable {
     private Boolean uniqueOverGroupMapping = false;
     private Boolean uniqueAnalysisMapping = false;
 
+    // Menu Items variables
+    private int employeeNumber;
+    private int revenueCenter;
+    private String simphonyServer = "";
+
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
@@ -440,5 +445,29 @@ public class Configuration implements Serializable {
 
     public void setAccountSettings(AccountSettings accountSettings) {
         this.accountSettings = accountSettings;
+    }
+
+    public int getEmployeeNumber() {
+        return employeeNumber;
+    }
+
+    public void setEmployeeNumber(int employeeNumber) {
+        this.employeeNumber = employeeNumber;
+    }
+
+    public int getRevenueCenter() {
+        return revenueCenter;
+    }
+
+    public void setRevenueCenter(int revenueCenter) {
+        this.revenueCenter = revenueCenter;
+    }
+
+    public String getSimphonyServer() {
+        return simphonyServer;
+    }
+
+    public void setSimphonyServer(String simphonyServer) {
+        this.simphonyServer = simphonyServer;
     }
 }

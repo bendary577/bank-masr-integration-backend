@@ -40,7 +40,8 @@ public class MenuItemService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
 
-    public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter){
+    public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter,
+                                                                      String simphonyServerIP){
         com.sun.supplierpoc.models.Response response = new com.sun.supplierpoc.models.Response();
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
@@ -95,7 +96,7 @@ public class MenuItemService {
 
             soapMessage.saveChanges();
             Entity<String> payload = Entity.text(soapMessageToString(soapMessage));
-            Response configInfoExResponse = client.target("http://192.168.1.101:8080/EGateway/SimphonyPosApiWeb.asmx")
+            Response configInfoExResponse = client.target(simphonyServerIP + "/EGateway/SimphonyPosApiWeb.asmx")
                     .request(MediaType.TEXT_PLAIN_TYPE)
                     .header("SOAPAction", "http://micros-hosting.com/EGateway/GetConfigurationInfoEx")
                     .post(payload);
@@ -224,9 +225,17 @@ public class MenuItemService {
         for (DbMenuItemDefinition menuItem : menuItems) {
             HashMap<String, String> menuItemData = new HashMap<>();
 
-            menuItemData.put("menuName", menuItem.getNameOptions());
+            menuItemData.put("menuFirstName", menuItem.getName1().getStringText());
+            menuItemData.put("menuSecondName", menuItem.getName2().getStringText());
+            menuItemData.put("MiMasterObjNum", menuItem.getMiMasterObjNum());
             menuItemData.put("menuItemDefID", menuItem.getMenuItemDefID());
-            menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());
+            menuItemData.put("Availability", menuItem.getCheckAvailability().toString());
+
+            if (menuItem.getMenuItemPrice() != null){
+                menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());
+            }else{
+                menuItemData.put("menuItemPrice", "0");
+            }
 
             SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

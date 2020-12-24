@@ -64,19 +64,27 @@ public class ConfigurationController {
         try {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
 
-            /////////////////////////////////////// Start Operation Config /////////////////////////////////////////////
-            int empNum = 2;
-            int revenueCenter = 100;
-            String simphonyPosApiWeb = "http://192.168.1.101:8080/EGateway/SimphonyPosApiWeb.asmx";
+            //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
+            int empNum = syncJobType.getConfiguration().getEmployeeNumber();
+            int revenueCenter = syncJobType.getConfiguration().getRevenueCenter();
+            String simphonyPosApiWeb = syncJobType.getConfiguration().getSimphonyServer();
 
-            /////////////////////////////////////// End of Operation Config ////////////////////////////////////////////
+            if (simphonyPosApiWeb.equals("")){
+                String message = "Please configure simphony server IP before sync credit notes.";
+                response.setMessage(message);
+                response.setStatus(false);
+
+                return response;
+            }
+
+            //////////////////////////////////////// En of Validation //////////////////////////////////////////////////
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                     account.getId(), syncJobType.getId(), 0);
 
             syncJobRepo.save(syncJob);
 
-            response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenter);
+            response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenter, simphonyPosApiWeb);
             if(response.isStatus()){
                 // Save menu items
                 this.menuItemService.saveMenuItemData(response.getMenuItems(), syncJob);

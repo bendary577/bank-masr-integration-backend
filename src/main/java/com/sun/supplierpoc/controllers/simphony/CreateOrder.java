@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.controllers;
+package com.sun.supplierpoc.controllers.simphony;
 
 import org.eclipse.persistence.exceptions.JSONException;
 

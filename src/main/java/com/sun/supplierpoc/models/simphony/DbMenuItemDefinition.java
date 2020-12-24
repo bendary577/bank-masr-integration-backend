@@ -1,5 +1,4 @@
 package com.sun.supplierpoc.models.simphony;
-
 import javax.xml.bind.annotation.XmlElement;
 
 public class DbMenuItemDefinition {
@@ -63,6 +62,12 @@ public class DbMenuItemDefinition {
     private Boolean CheckAvailability ;
     @XmlElement(name = "OutOfMenuItem")
     private Boolean OutOfMenuItem ;
+
+    @XmlElement(name = "Name1")
+    private MenuItemName Name1 ;
+
+    @XmlElement(name = "Name2")
+    private MenuItemName Name2 ;
 
     private DbMenuItemPrice menuItemPrice;
 
@@ -312,5 +317,21 @@ public class DbMenuItemDefinition {
 
     public void setMenuItemPrice(DbMenuItemPrice menuItemPrice) {
         this.menuItemPrice = menuItemPrice;
+    }
+
+    public MenuItemName getName1() {
+        return Name1;
+    }
+
+    public void setName1(MenuItemName name1) {
+        Name1 = name1;
+    }
+
+    public MenuItemName getName2() {
+        return Name2;
+    }
+
+    public void setName2(MenuItemName name2) {
+        Name2 = name2;
     }
 }

@@ -41,6 +41,7 @@ public class Constants {
     public static String EXPORT_TO_SUN_ERD = "ExportSun";
     public static String SUN_ERD = "Sun";
     public static String FUSION_ERD = "Fusion";
+    public static String SIMPHONY_ERD = "Simphony";
 
     ///////////////////////////////////////// Sun Server ///////////////////////////////////////////////////////////////
 

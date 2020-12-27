@@ -1,10 +1,12 @@
 package com.sun.supplierpoc.models.auth;
 
+import com.sun.supplierpoc.models.roles.UserAccess;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -20,6 +22,7 @@ public class User implements UserDetails  {
     private String username ;
     private String password;
     private String accountId;
+    private ArrayList<UserAccess> userAccesses;
     private Date creationDate;
     private boolean deleted;
 
@@ -178,5 +181,13 @@ public class User implements UserDetails  {
 
     public Boolean getAccountNonExpired() {
         return accountNonExpired;
+    }
+
+    public ArrayList<UserAccess> getUserAccesses() {
+        return userAccesses;
+    }
+
+    public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
+        this.userAccesses = userAccesses;
     }
 }

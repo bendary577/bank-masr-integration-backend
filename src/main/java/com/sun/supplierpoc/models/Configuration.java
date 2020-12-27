@@ -10,6 +10,11 @@ import java.util.ArrayList;
 public class Configuration implements Serializable {
     @Id
     private String id;
+
+    // Web Service Credentials
+    private String username = "";
+    private String password = "";
+
     private String businessUnit = "";
     private String transactionReference = "";
     private String journalType = "";
@@ -57,9 +62,7 @@ public class Configuration implements Serializable {
     private Boolean uniqueAnalysisMapping = false;
 
     // Menu Items variables
-    private int employeeNumber;
-    private int revenueCenter;
-    private String simphonyServer = "";
+    private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
 
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
@@ -85,6 +88,22 @@ public class Configuration implements Serializable {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getBusinessUnit() {
@@ -335,6 +354,14 @@ public class Configuration implements Serializable {
         this.uniqueOverGroupMapping = uniqueOverGroupMapping;
     }
 
+    public ArrayList<SimphonyLocation> getSimphonyLocations() {
+        return simphonyLocations;
+    }
+
+    public void setSimphonyLocations(ArrayList<SimphonyLocation> simphonyLocations) {
+        this.simphonyLocations = simphonyLocations;
+    }
+
     public ArrayList<Item> getItems() {
         return items;
     }
@@ -447,27 +474,13 @@ public class Configuration implements Serializable {
         this.accountSettings = accountSettings;
     }
 
-    public int getEmployeeNumber() {
-        return employeeNumber;
+    public SimphonyLocation getSimphonyLocationsByID(int revenueCenterID){
+        for (SimphonyLocation location : this.simphonyLocations) {
+            if (location.getRevenueCenterID() == revenueCenterID) {
+                return location;
+            }
+        }
+        return null;
     }
 
-    public void setEmployeeNumber(int employeeNumber) {
-        this.employeeNumber = employeeNumber;
-    }
-
-    public int getRevenueCenter() {
-        return revenueCenter;
-    }
-
-    public void setRevenueCenter(int revenueCenter) {
-        this.revenueCenter = revenueCenter;
-    }
-
-    public String getSimphonyServer() {
-        return simphonyServer;
-    }
-
-    public void setSimphonyServer(String simphonyServer) {
-        this.simphonyServer = simphonyServer;
-    }
 }

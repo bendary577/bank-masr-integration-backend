@@ -3,30 +3,40 @@ package com.sun.supplierpoc.models.simphony;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MenuItem {
     @XmlElement(name = "ItemDiscount")
     private ItemDiscount itemDiscount;
+
+    /* Object number of given menu item */
     @XmlElement(name = "MiObjectNum")
     private String miObjectNum;
+
+    /* This must be a value between 1 and 8 */
+    @XmlElement(name = "MiMenuLevel")
+    private String miMenuLevel;
+
+    /* This must be a value between 1 and 8 */
+    @XmlElement(name = "MiSubLevel")
+    private String miSubLevel;
+
+    /* This is not currently supported */
+    @XmlElement(name = "MiPriceLevel")
+    private String MiPriceLevel;
+
+    @XmlElement(name = "MiDefinitionSeqNum")
+    private String MiDefinitionSeqNum;
+
+    @XmlElement(name = "MiQuantity")
+    private String MiQuantity;
+
     @XmlElement(name = "MiOverridePrice")
     private String miOverridePrice;
     @XmlElement(name = "MiReference")
     private String miReference;
     @XmlElement(name = "MiWeight")
     private String miWeight;
-    @XmlElement(name = "MiMenuLevel")
-    private String miMenuLevel;
-    @XmlElement(name = "MiSubLevel")
-    private String miSubLevel;
-    @XmlElement(name = "MiPriceLevel")
-    private String MiPriceLevel;
-    @XmlElement(name = "MiDefinitionSeqNum")
-    private String MiDefinitionSeqNum;
-    @XmlElement(name = "MiQuantity")
-    private String MiQuantity;
 
     public ItemDiscount getItemDiscount() {
         return itemDiscount;

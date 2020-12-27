@@ -15,6 +15,7 @@ public class Account implements Serializable {
     private String domain;
     private String ERD;
     private ArrayList<AccountCredential> accountCredentials;
+    private int locationQuota;
     private Date creationDate;
     private boolean deleted;
 
@@ -22,12 +23,13 @@ public class Account implements Serializable {
     }
 
     public Account(String id, String name, String domain, String ERD, ArrayList<AccountCredential> accountCredentials,
-                   Date creationDate, boolean deleted) {
+                   int locationQuota, Date creationDate, boolean deleted) {
         this.id = id;
         this.name = name;
         this.domain = domain;
         this.ERD = ERD;
         this.accountCredentials = accountCredentials;
+        this.locationQuota = locationQuota;
         this.creationDate = creationDate;
         this.deleted = deleted;
     }
@@ -70,6 +72,14 @@ public class Account implements Serializable {
 
     public void setAccountCredentials(ArrayList<AccountCredential> accountCredentials) {
         this.accountCredentials = accountCredentials;
+    }
+
+    public int getLocationQuota() {
+        return locationQuota;
+    }
+
+    public void setLocationQuota(int locationQuota) {
+        this.locationQuota = locationQuota;
     }
 
     public Date getCreationDate() {

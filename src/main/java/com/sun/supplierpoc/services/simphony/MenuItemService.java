@@ -2,16 +2,10 @@ package com.sun.supplierpoc.services.simphony;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
-import com.sun.supplierpoc.models.configurations.Discount;
-import com.sun.supplierpoc.models.configurations.ServiceCharge;
-import com.sun.supplierpoc.models.configurations.Tax;
-import com.sun.supplierpoc.models.configurations.Tender;
-import com.sun.supplierpoc.models.data.Data;
 import com.sun.supplierpoc.models.simphony.*;
 
 import com.sun.supplierpoc.models.simphony.discount.SimphonyPosApi_DiscountEx;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
-import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import org.eclipse.persistence.exceptions.JSONException;
@@ -397,7 +391,6 @@ public class MenuItemService {
         }
         return null;
     }
-
 
     public void saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob) {
         for (DbMenuItemDefinition menuItem : menuItems) {

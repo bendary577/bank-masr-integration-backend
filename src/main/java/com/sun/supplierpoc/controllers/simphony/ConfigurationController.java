@@ -1,17 +1,14 @@
 package com.sun.supplierpoc.controllers.simphony;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.SyncJob;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
-import com.sun.supplierpoc.models.configurations.Tender;
+import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
+import com.sun.supplierpoc.models.simphony.MenuItem;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -35,17 +32,17 @@ public class ConfigurationController {
     MenuItemService menuItemService;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @RequestMapping("/GetSimphonyMenuItems")
+    @RequestMapping("/SyncSimphonyMenuItems")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> GetSimphonyCheckDetailRequest(Principal principal,
-                                                                  @RequestParam(name = "revenueCenterID") int revenueCenterID) {
+    public ResponseEntity<Response> SyncSimphonyMenuItemsRequest(Principal principal,
+                                                                 @RequestParam(name = "revenueCenterID") int revenueCenterID) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = GetSimphonyMenuItems(user.getId(), account, revenueCenterID);
+            response = SyncSimphonyMenuItems(user.getId(), account, revenueCenterID);
             if(!response.isStatus()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -60,7 +57,7 @@ public class ConfigurationController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    public Response GetSimphonyMenuItems(String userId, Account account, int revenueCenterID){
+    public Response SyncSimphonyMenuItems(String userId, Account account, int revenueCenterID){
         Response response = new Response();
         SyncJob syncJob = null;
         try {
@@ -116,6 +113,16 @@ public class ConfigurationController {
         }
     }
 
+    @RequestMapping("/GetSimphonyMenuItemsRequest")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Optional> GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID) {
+        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    }
+
+    public ArrayList<SyncJobData> GetSimphonyMenuItems(String userId, Account account, int revenueCenterID){
+        return new ArrayList<>();
+    }
 
     @RequestMapping("/addSimphonyLocation")
     @CrossOrigin(origins = "*")

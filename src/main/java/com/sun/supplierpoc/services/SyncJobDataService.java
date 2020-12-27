@@ -5,6 +5,7 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -18,6 +19,10 @@ public class SyncJobDataService {
             syncJobData.setStatus(status);
             syncJobDataRepo.save(syncJobData);
         }
+    }
+
+    public ArrayList<SyncJobData> getSyncJobData(String syncJobID){
+        return (ArrayList<SyncJobData>) syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobID, false);
     }
 
 }

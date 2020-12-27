@@ -30,6 +30,8 @@ public class Response {
     // Booked Production Variables
     private ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
 
+    private ArrayList<SyncJobData> addedSyncJobData = new ArrayList<>();
+
     public Response() {
     }
 
@@ -135,5 +137,13 @@ public class Response {
 
     public void setMenuItems(ArrayList<DbMenuItemDefinition> menuItems) {
         this.menuItems = menuItems;
+    }
+
+    public ArrayList<SyncJobData> getAddedSyncJobData() {
+        return addedSyncJobData;
+    }
+
+    public void setAddedSyncJobData(ArrayList<SyncJobData> addedSyncJobData) {
+        this.addedSyncJobData = addedSyncJobData;
     }
 }

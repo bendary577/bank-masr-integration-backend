@@ -392,7 +392,8 @@ public class MenuItemService {
         return null;
     }
 
-    public void saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob) {
+    public ArrayList<SyncJobData> saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob) {
+        ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
         for (DbMenuItemDefinition menuItem : menuItems) {
             HashMap<String, String> menuItemData = new HashMap<>();
 
@@ -411,6 +412,8 @@ public class MenuItemService {
             SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
+            savedMenuItems.add(syncJobData);
         }
+        return savedMenuItems;
     }
 }

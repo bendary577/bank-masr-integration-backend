@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,5 +21,15 @@ public class SyncJobService {
         syncJob.setEndDate(new Date());
         syncJob.setRowsFetched(rowsCount);
         syncJobRepo.save(syncJob);
+    }
+
+    public SyncJob getSyncJobByRevenueCenterID(int revenueCenterID, String syncJobTypeID){
+        try {
+            SyncJob syncJob = syncJobRepo.findSyncJobByStatusAndRevenueCenterAndSyncJobTypeIdAndDeleted(Constants.SUCCESS,
+                    revenueCenterID, syncJobTypeID, false);
+            return  syncJob;
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

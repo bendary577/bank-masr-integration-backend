@@ -4,32 +4,33 @@ import com.sun.supplierpoc.models.roles.UserAccess;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 
 @Document(collection = "InvokerUser")
-public class InvokerUser {
+public class InvokerUser implements Serializable {
     @Id
     private String id;
     private String username ;
     private String password;
+    private String adminUserId;
     private String accountId;
+    private String syncJobTypeId;
     private boolean deleted;
     private Date creationDate;
-    private ArrayList<UserAccess> userAccesses;
 
     public InvokerUser() {
     }
 
-    public InvokerUser(String id, String username, String password, String accountId, boolean deleted,
-                       Date creationDate, ArrayList<UserAccess> userAccesses) {
-        this.id = id;
+    public InvokerUser(String username, String password, String accountId, String syncJobTypeId,
+                       Date creationDate) {
         this.username = username;
         this.password = password;
         this.accountId = accountId;
-        this.deleted = deleted;
         this.creationDate = creationDate;
-        this.userAccesses = userAccesses;
+        this.syncJobTypeId = syncJobTypeId;
+        this.deleted = false;
     }
 
     public String getId() {
@@ -80,11 +81,11 @@ public class InvokerUser {
         this.creationDate = creationDate;
     }
 
-    public ArrayList<UserAccess> getUserAccesses() {
-        return userAccesses;
+    public String getSyncJobTypeId() {
+        return syncJobTypeId;
     }
 
-    public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
-        this.userAccesses = userAccesses;
+    public void setSyncJobTypeId(String syncJobTypeId) {
+        this.syncJobTypeId = syncJobTypeId;
     }
 }

@@ -17,6 +17,7 @@ public class SyncJob implements Serializable {
     private String accountId;
     private String syncJobTypeId;
     private int rowsFetched;
+    private int revenueCenter;
     private boolean deleted;
 
     public SyncJob() {
@@ -113,5 +114,13 @@ public class SyncJob implements Serializable {
 
     public void setRowsFetched(int rowsFetched) {
         this.rowsFetched = rowsFetched;
+    }
+
+    public int getRevenueCenter() {
+        return revenueCenter;
+    }
+
+    public void setRevenueCenter(int revenueCenter) {
+        this.revenueCenter = revenueCenter;
     }
 }

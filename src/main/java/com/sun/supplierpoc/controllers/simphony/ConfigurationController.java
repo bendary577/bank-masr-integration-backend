@@ -2,6 +2,7 @@ package com.sun.supplierpoc.controllers.simphony;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
@@ -9,15 +10,22 @@ import com.sun.supplierpoc.models.simphony.MenuItem;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.services.AccountService;
+import com.sun.supplierpoc.services.InvokerUserService;
+import com.sun.supplierpoc.services.SyncJobDataService;
+import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import javax.xml.ws.spi.Invoker;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @RestController()
@@ -30,6 +38,14 @@ public class ConfigurationController {
     private SyncJobRepo syncJobRepo;
     @Autowired
     MenuItemService menuItemService;
+    @Autowired
+    SyncJobService syncJobService;
+    @Autowired
+    SyncJobDataService syncJobDataService;
+    @Autowired
+    AccountService accountService;
+    @Autowired
+    InvokerUserService invokerUserService;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/SyncSimphonyMenuItems")
@@ -65,11 +81,19 @@ public class ConfigurationController {
 
             //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
             SimphonyLocation simphonyLocation = syncJobType.getConfiguration().getSimphonyLocationsByID(revenueCenterID);
+            if(simphonyLocation == null){
+                String message = "Please configure revenue center before sync menu items.";
+                response.setMessage(message);
+                response.setStatus(false);
+
+                return response;
+            }
+
             int empNum = simphonyLocation.getEmployeeNumber();
             String simphonyPosApiWeb = simphonyLocation.getSimphonyServer();
 
             if (simphonyPosApiWeb.equals("")){
-                String message = "Please configure simphony server IP before sync credit notes.";
+                String message = "Please configure simphony server IP before sync menu items.";
                 response.setMessage(message);
                 response.setStatus(false);
 
@@ -80,17 +104,20 @@ public class ConfigurationController {
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                     account.getId(), syncJobType.getId(), 0);
+            syncJob.setRevenueCenter(revenueCenterID);
 
             syncJobRepo.save(syncJob);
 
             response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenterID, simphonyPosApiWeb);
             if(response.isStatus()){
                 // Save menu items
-                this.menuItemService.saveMenuItemData(response.getMenuItems(), syncJob);
+                ArrayList<SyncJobData> savedMenuItems = this.menuItemService.saveMenuItemData(response.getMenuItems(), syncJob);
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(response.getMenuItems().size());
                 syncJobRepo.save(syncJob);
+
+                response.setAddedSyncJobData(savedMenuItems);
             }else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(response.getMessage());
@@ -98,6 +125,7 @@ public class ConfigurationController {
                 syncJob.setRowsFetched(0);
                 syncJobRepo.save(syncJob);
             }
+
 
             return response;
         }catch (Exception e){
@@ -108,21 +136,56 @@ public class ConfigurationController {
                 syncJob.setRowsFetched(0);
                 syncJobRepo.save(syncJob);
             }
+            response.setMessage(e.getMessage());
+            response.setStatus(false);
 
             return response;
         }
     }
 
     @RequestMapping("/GetSimphonyMenuItemsRequest")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ResponseEntity<Optional> GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID) {
-        return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+    public ResponseEntity GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID) {
+        String username = "testInvoker";
+        String password = "testInvoker@1111";
+
+        ArrayList<SyncJobData> syncJobData;
+
+        InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
+        if (invokerUser != null){
+            Optional<Account> accountOptional = accountService.getAccount(invokerUser.getAccountId());
+
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+                SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
+
+                /*
+                 * Get last success sync job with revenue center ID
+                 * */
+                SyncJob syncJob = syncJobService.getSyncJobByRevenueCenterID(revenueCenterID, syncJobType.getId());
+
+                if (syncJob != null){
+                    syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
+                    return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+
+                }else{
+                    // Sync menu items
+                    Response syncResponse = SyncSimphonyMenuItems(username, account, revenueCenterID);
+
+                    if(syncResponse.isStatus()){
+                        syncJobData = syncResponse.getAddedSyncJobData();
+                        return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+                    }else {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());
+                    }
+                }
+            }else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+            }
+        }else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+        }
     }
 
-    public ArrayList<SyncJobData> GetSimphonyMenuItems(String userId, Account account, int revenueCenterID){
-        return new ArrayList<>();
-    }
 
     @RequestMapping("/addSimphonyLocation")
     @CrossOrigin(origins = "*")

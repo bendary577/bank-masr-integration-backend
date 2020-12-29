@@ -49,10 +49,10 @@ public class Configuration implements Serializable {
     private String cashSurplusPOS = "";
     private String grossDiscountSales = "";
 
-    private String recordType = "L";
-    private String conversionCode = "1";
-    private String conversionRate = "1.0";
-    private String versionCode = "42601";
+    private String recordType = "";
+    private String conversionCode = "";
+    private String conversionRate = "";
+    private String versionCode = "";
 
     private Boolean uniqueOverGroupMapping = false;
     private Boolean uniqueAnalysisMapping = false;

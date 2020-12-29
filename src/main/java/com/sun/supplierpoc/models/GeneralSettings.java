@@ -15,7 +15,7 @@ public class GeneralSettings {
     private ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
     private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
-    private ArrayList<CostCenter> costCenterLocationMapping = new ArrayList<>();
+    private ArrayList<CostCenter> locations = new ArrayList<>();
     private Date creationDate;
     private boolean deleted;
 
@@ -84,12 +84,12 @@ public class GeneralSettings {
         this.costCenterAccountMapping = costCenterAccountMapping;
     }
 
-    public ArrayList<CostCenter> getCostCenterLocationMapping() {
-        return costCenterLocationMapping;
+    public ArrayList<CostCenter> getLocations() {
+        return locations;
     }
 
-    public void setCostCenterLocationMapping(ArrayList<CostCenter> costCenterLocationMapping) {
-        this.costCenterLocationMapping = costCenterLocationMapping;
+    public void setLocations(ArrayList<CostCenter> locations) {
+        this.locations = locations;
     }
 
     public Date getCreationDate() {

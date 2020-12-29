@@ -89,9 +89,7 @@ public class SalesController {
             ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
             ArrayList<RevenueCenter> revenueCenters = syncJobType.getConfiguration().getRevenueCenters();
             ArrayList<ServiceCharge> serviceCharges = syncJobType.getConfiguration().getServiceCharges();
-
-            ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-            ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
+            ArrayList<CostCenter> locations = generalSettings.getLocations();
 
             String timePeriod = syncJobType.getConfiguration().getTimePeriod();
             String fromDate = syncJobType.getConfiguration().getFromDate();
@@ -180,7 +178,7 @@ public class SalesController {
             syncJobRepo.save(syncJob);
 
             try {
-                Response salesResponse = salesService.getSalesData(syncJobType, costCenters, costCentersLocation,
+                Response salesResponse = salesService.getSalesData(syncJobType, locations,
                         majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, account);
 
                 if (salesResponse.isStatus()) {
@@ -235,55 +233,65 @@ public class SalesController {
                             String password = sunCredentials.getPassword();
                             String host = sunCredentials.getHost();
                             int port = sunCredentials.getPort();
+                            List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
-                            FtpClient ftpClient = new FtpClient(host, username, password);
+                            if (!username.equals("") && !password.equals("") && !host.equals("")){
+                                FtpClient ftpClient = new FtpClient(host, username, password);
+                                if(ftpClient.open()){
+                                    SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                                            syncJobType, salesList);
 
-                            if(ftpClient.open()){
-                                List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                                SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                        syncJobType, salesList);
+                                    DateFormatSymbols dfs = new DateFormatSymbols();
+                                    String[] weekdays = dfs.getWeekdays();
 
-                                DateFormatSymbols dfs = new DateFormatSymbols();
-                                String[] weekdays = dfs.getWeekdays();
+                                    String transactionDate = salesList.get(0).getData().get("transactionDate");
+                                    Calendar cal = Calendar.getInstance();
+                                    Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+                                    cal.setTime(date);
+                                    int day = cal.get(Calendar.DAY_OF_WEEK);
 
-                                String transactionDate = salesList.get(0).getData().get("transactionDate");
-                                Calendar cal = Calendar.getInstance();
-                                Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                                cal.setTime(date);
-                                int day = cal.get(Calendar.DAY_OF_WEEK);
+                                    String dayName = weekdays[day];
+                                    String fileExtension = ".ndf";
+                                    String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
 
-                                String dayName = weekdays[day];
-                                String fileExtension = ".ndf";
-                                String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-
-                                File file = excelExporter.createNDFFile();
-                                System.out.println(fileName);
+                                    File file = excelExporter.createNDFFile();
+                                    System.out.println(fileName);
 
 //                                if (ftpClient.putFileToPath(file, fileName)){
-                                if (true){
-                                    syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
-                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                            "Sync sales successfully.", Constants.SUCCESS);
+                                    if (true){
+                                        syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+                                        syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                                "Sync sales successfully.", Constants.SUCCESS);
 
-                                    response.setStatus(true);
-                                    response.setMessage("Sync sales successfully.");
-                                }else {
-                                    syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
-                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                            "Failed to sync sales to sun system via FTP.", Constants.FAILED);
+                                        response.setStatus(true);
+                                        response.setMessage("Sync sales successfully.");
+                                    }else {
+                                        syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                        syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                                "Failed to sync sales to sun system via FTP.", Constants.FAILED);
 
-                                    response.setStatus(true);
-                                    response.setMessage("Failed to sync sales to sun system via FTP.");
+                                        response.setStatus(true);
+                                        response.setMessage("Failed to sync sales to sun system via FTP.");
+                                    }
+                                    ftpClient.close();
                                 }
-                                ftpClient.close();
-                            }
-                            else {
-                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                else {
+                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                            "Failed to connect to sun system via FTP.", Constants.FAILED);
 
-                                response.setStatus(false);
-                                response.setMessage("Failed to connect to sun system via FTP.");
+                                    response.setStatus(false);
+                                    response.setMessage("Failed to connect to sun system via FTP.");
+                                }
                             }
+                            else{
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                        "Sync sales successfully.", Constants.SUCCESS);
+
+                                response.setStatus(true);
+                                response.setMessage("Sync sales successfully.");
+                            }
+
                         }
                         else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,

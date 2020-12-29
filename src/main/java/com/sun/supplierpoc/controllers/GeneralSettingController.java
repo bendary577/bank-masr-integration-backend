@@ -170,5 +170,4 @@ public class GeneralSettingController {
         }
         return response;
     }
-
 }

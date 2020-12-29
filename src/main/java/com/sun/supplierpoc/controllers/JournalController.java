@@ -3,7 +3,6 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.ConsumptionExcelExporter;
-import com.sun.supplierpoc.excelExporters.WastageExcelExporter;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
@@ -15,8 +14,6 @@ import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.ComponentException;
-import com.systemsunion.ssc.client.SoapFaultException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -92,7 +89,7 @@ public class JournalController {
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
         ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
-        ArrayList<CostCenter> costCentersLocation = generalSettings.getCostCenterLocationMapping();
+        ArrayList<CostCenter> costCentersLocation = generalSettings.getLocations();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
         String timePeriod = journalSyncJobType.getConfiguration().getTimePeriod();

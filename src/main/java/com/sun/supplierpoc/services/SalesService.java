@@ -28,7 +28,7 @@ public class SalesService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCenters,
+    public Response getSalesData(SyncJobType salesSyncJobType,
                                  ArrayList<CostCenter> costCentersLocation, ArrayList<MajorGroup> majorGroups,
                                  ArrayList<Tender> includedTenders,  ArrayList<Tax> includedTax,
                                  ArrayList<Discount> includedDiscount, ArrayList<ServiceCharge> includedServiceCharge,
@@ -74,26 +74,22 @@ public class SalesService {
                 System.out.println("No alert exits");
             }
 
-            if (costCenters.size() > 0){
-                for (CostCenter costCenter : costCenters) {
-                    // check if cost center has location mapping
-                    CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
-
-                    if (!costCenterLocation.checked) {
-                        continue;
-                    }
-                    callSalesFunction(salesSyncJobType, majorGroups, includedTenders, includedTax, includedDiscount,
-                            includedServiceCharge, revenueCenters, timePeriod, fromDate, toDate, grossDiscountSales,
-                            costCenter, costCenterLocation.location, journalBatches, account, driver, response);
-                    if (!response.isStatus()){
-                        return response;
+            if (costCentersLocation.size() > 0){
+                for (CostCenter costCenter : costCentersLocation) {
+                    if(costCenter.checked){
+                        callSalesFunction(salesSyncJobType, majorGroups, includedTenders, includedTax, includedDiscount,
+                                includedServiceCharge, revenueCenters, timePeriod, fromDate, toDate, grossDiscountSales,
+                                costCenter, journalBatches, account, driver, response);
+                        if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)){
+                            return response;
+                        }
                     }
                 }
             }
             else {
                 callSalesFunction(salesSyncJobType, majorGroups, includedTenders, includedTax, includedDiscount,
                         includedServiceCharge, revenueCenters, timePeriod, fromDate, toDate, grossDiscountSales,
-                        new CostCenter(), "", journalBatches, account, driver, response);
+                        new CostCenter(), journalBatches, account, driver, response);
                 if (!response.isStatus()){
                     return response;
                 }
@@ -118,18 +114,18 @@ public class SalesService {
                                    ArrayList<Tender> includedTenders, ArrayList<Tax> includedTax,
                                    ArrayList<Discount> includedDiscount, ArrayList<ServiceCharge> includedServiceCharge,
                                    ArrayList<RevenueCenter> revenueCenters, String timePeriod, String fromDate,
-                                   String toDate, String grossDiscountSales, CostCenter costCenter, String location,
+                                   String toDate, String grossDiscountSales, CostCenter costCenter,
                                    ArrayList<JournalBatch> journalBatches, Account account,
                                    WebDriver driver, Response response){
         JournalBatch journalBatch = new JournalBatch();
 
         // Get tender
-        Response tenderResponse = getSalesTenders(location, timePeriod, fromDate, toDate,
+        Response tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
                 costCenter, includedTenders, driver);
         if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 
         // Get taxes
-        Response taxResponse = getSalesTaxes(location, timePeriod, fromDate, toDate,
+        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate,
                 costCenter, false, includedTax, driver);
         if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
 
@@ -138,7 +134,7 @@ public class SalesService {
         if (revenueCenters.size() > 0 ){
             for (RevenueCenter rc : revenueCenters)
             {
-                Response overGroupGrossResponse = getSalesOverGroupGross(rc, location,
+                Response overGroupGrossResponse = getSalesOverGroupGross(rc,
                         timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales, driver);
                 if (!overGroupGrossResponse.isStatus()) {
                     if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
@@ -153,7 +149,7 @@ public class SalesService {
             }
         }
         else {
-            Response overGroupGrossResponse = getSalesOverGroupGross(new RevenueCenter(), location,
+            Response overGroupGrossResponse = getSalesOverGroupGross(new RevenueCenter(),
                     timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales, driver);
             if (checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
 
@@ -164,7 +160,7 @@ public class SalesService {
         if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
                 || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
             // Get discounts
-            discountResponse = getSalesDiscount(location, timePeriod,
+            discountResponse = getSalesDiscount(timePeriod,
                     fromDate, toDate, costCenter, false, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
         }
@@ -172,8 +168,8 @@ public class SalesService {
         // Get serviceCharge
         Response serviceChargeResponse = new Response();
         if (includedServiceCharge.size() > 0){
-            serviceChargeResponse = getTotalSalesServiceCharge(location, timePeriod,
-                    fromDate, toDate, costCenter,  includedServiceCharge, driver);
+            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+                    includedServiceCharge, driver);
             if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
         }
 
@@ -216,8 +212,8 @@ public class SalesService {
         return false;
     }
 
-    private Response getSalesTenders(String location, String businessDate, String fromDate, String toDate,
-                                     CostCenter costCenter, ArrayList<Tender> includedTenders, WebDriver driver) {
+    private Response getSalesTenders(String businessDate, String fromDate, String toDate,
+                                     CostCenter location, ArrayList<Tender> includedTenders, WebDriver driver) {
         Response response = new Response();
         ArrayList<Tender> tenders = new ArrayList<>();
 
@@ -232,7 +228,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                 "", driver);
 
         if (!dateResponse.isStatus()){
@@ -279,7 +275,7 @@ public class SalesService {
                 tender.setCommunicationAccount(tenderData.getCommunicationAccount());
                 tender.setCommunicationRate(tenderData.getCommunicationRate());
                 tender.setCommunicationTender(tenderData.getCommunicationTender());
-                tender.setCostCenter(costCenter);
+                tender.setCostCenter(location);
                 tender.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
 
                 // Check if it already exist, increment its value
@@ -302,8 +298,8 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesTaxes(String location, String businessDate, String fromDate, String toDate,
-                                   CostCenter costCenter, boolean getTaxTotalFlag, ArrayList<Tax> includedTaxes,
+    private Response getSalesTaxes(String businessDate, String fromDate, String toDate,
+                                   CostCenter location, boolean getTaxTotalFlag, ArrayList<Tax> includedTaxes,
                                    WebDriver driver) {
         Response response = new Response();
 
@@ -318,7 +314,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                 "", driver);
 
         if (!dateResponse.isStatus()){
@@ -366,7 +362,7 @@ public class SalesService {
                         }
                         tax.setTax("Total Tax");
                         tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
-                        tax.setCostCenter(costCenter);
+                        tax.setCostCenter(location);
                         salesTax.add(tax);
                         break;
                     }
@@ -378,7 +374,7 @@ public class SalesService {
                     }
                     tax.setTax(taxData.getTax());
                     tax.setAccount(taxData.getAccount());
-                    tax.setCostCenter(costCenter);
+                    tax.setCostCenter(location);
                     tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
                     salesTax.add(tax);
                 }
@@ -400,9 +396,9 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesOverGroupGross(RevenueCenter revenueCenter, String location, String businessDate,
+    private Response getSalesOverGroupGross(RevenueCenter revenueCenter, String businessDate,
                                             String fromDate, String toDate,
-                                            CostCenter costCenter, ArrayList<MajorGroup> majorGroups,
+                                            CostCenter location, ArrayList<MajorGroup> majorGroups,
                                             String grossDiscountSales, WebDriver driver) {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
@@ -416,7 +412,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                 revenueCenter.getRevenueCenter(), driver);
 
         if (!dateResponse.isStatus()){
@@ -477,7 +473,7 @@ public class SalesService {
                     }
 
                     majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
-                            , 0, majorGroupGross, 0, 0, costCenter, revenueCenter);
+                            , 0, majorGroupGross, 0, 0, location, revenueCenter);
                 }else{
                     driver.quit();
                     response.setStatus(false);
@@ -501,8 +497,8 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesDiscount(String location, String businessDate, String fromDate, String toDate,
-                                            CostCenter costCenter, boolean getDiscountTotalFlag, ArrayList<Discount> discounts,
+    private Response getSalesDiscount(String businessDate, String fromDate, String toDate,
+                                            CostCenter location, boolean getDiscountTotalFlag, ArrayList<Discount> discounts,
                                       WebDriver driver) {
         Response response = new Response();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
@@ -515,7 +511,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                 "", driver);
 
         if (!dateResponse.isStatus()){
@@ -561,7 +557,7 @@ public class SalesService {
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
                         discount.setTotal(discountTotal);
-                        discount.setCostCenter(costCenter);
+                        discount.setCostCenter(location);
                         salesDiscount.add(discount);
                         break;
                     }
@@ -577,7 +573,7 @@ public class SalesService {
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
                         discount.setTotal(discountTotal);
-                        discount.setCostCenter(costCenter);
+                        discount.setCostCenter(location);
                         salesDiscount.add(discount);
                     }else{
                         driver.quit();
@@ -598,8 +594,8 @@ public class SalesService {
         return response;
     }
 
-    private Response getTotalSalesServiceCharge(String location, String businessDate, String fromDate, String toDate,
-                                      CostCenter costCenter, ArrayList<ServiceCharge> serviceCharges,WebDriver driver) {
+    private Response getTotalSalesServiceCharge(String businessDate, String fromDate, String toDate,
+                                      CostCenter location, ArrayList<ServiceCharge> serviceCharges,WebDriver driver) {
         Response response = new Response();
         ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
 
@@ -611,7 +607,7 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location,
+        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                 "", driver);
 
         if (!dateResponse.isStatus()){
@@ -655,7 +651,7 @@ public class SalesService {
                     float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
                     serviceCharge.setTotal(serviceChargeTotal);
-                    serviceCharge.setCostCenter(costCenter);
+                    serviceCharge.setCostCenter(location);
                     salesServiceCharges.add(serviceCharge);
                     break;
                 }

@@ -15,8 +15,6 @@ import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
-import com.systemsunion.ssc.client.ComponentException;
-import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -32,7 +30,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -346,7 +343,6 @@ public class InvoiceController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public HashMap<String, Object> getCostCenter(@RequestParam(name = "syncTypeName") String syncTypeName,
-                                                 @RequestParam(name = "toLocation") boolean toLocation,
                                                  Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -370,21 +366,13 @@ public class InvoiceController {
         if (syncTypeName != null && !syncTypeName.equals("")){
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(),
                     false);
-            if (toLocation){
-                oldCostCenters = syncJobType.getConfiguration().getCostCenterLocationMapping();
-            }
-            else{
-                oldCostCenters = syncJobType.getConfiguration().getCostCenters();
-            }
+
+            oldCostCenters = syncJobType.getConfiguration().getCostCenters();
+
         }else{
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
             if (generalSettings != null){
-                if (toLocation){
-                    oldCostCenters = generalSettings.getCostCenterLocationMapping();
-                }
-                else{
-                    oldCostCenters = generalSettings.getCostCenterAccountMapping();
-                }
+                oldCostCenters = generalSettings.getCostCenterAccountMapping();
             }else {
                 generalSettings = new GeneralSettings(user.getAccountId(), new Date(), false);
                 generalSettingsRepo.save(generalSettings);
@@ -402,8 +390,7 @@ public class InvoiceController {
                 return response;
             }
 
-            String costCentersURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/CostCenters/OverviewCC.aspx";
-            driver.get(costCentersURL);
+            driver.get(Constants.COST_CENTERS_LINK);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 

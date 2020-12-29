@@ -2,7 +2,6 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
 import com.sun.supplierpoc.excelExporters.WastageExcelExporter;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
@@ -144,7 +143,7 @@ public class WastageController {
             return response;
         }
 
-        if (generalSettings.getCostCenterLocationMapping().size() == 0){
+        if (generalSettings.getLocations().size() == 0){
             String message = "Map cost centers to location before sync wastage.";
             response.put("message", message);
             response.put("success", false);

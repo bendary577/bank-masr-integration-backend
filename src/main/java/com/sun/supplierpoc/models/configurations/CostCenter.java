@@ -15,8 +15,7 @@ public class CostCenter {
     public String locationName = "";
     public String currency = "";
     public String costCenterReference = "";
-
-    public String accountCode;
+    public String accountCode = "";
 
     public CostCenter() {
         this.checked = false;

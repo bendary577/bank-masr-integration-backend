@@ -335,7 +335,7 @@ public class WastageService {
         HashMap<String, Object> response = new HashMap<>();
         ArrayList<Item> items = generalSettings.getItems();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-        ArrayList<CostCenter> costCenterLocationMapping = generalSettings.getCostCenterLocationMapping();
+        ArrayList<CostCenter> costCenterLocationMapping = generalSettings.getLocations();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
 

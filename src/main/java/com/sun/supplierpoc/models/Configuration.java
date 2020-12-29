@@ -65,7 +65,7 @@ public class Configuration implements Serializable {
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
     private ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     private ArrayList<CostCenter> costCenters = new ArrayList<>();
-    private ArrayList<CostCenter> costCenterLocationMapping = new ArrayList<>();
+    private ArrayList<CostCenter> locations = new ArrayList<>();
     private ArrayList<WasteGroup> wasteGroups = new ArrayList<>();
     private ArrayList<Analysis> analysis = new ArrayList<>();
     private ArrayList<Tender> tenders = new ArrayList<>();
@@ -382,12 +382,12 @@ public class Configuration implements Serializable {
         this.costCenters = costCenters;
     }
 
-    public ArrayList<CostCenter> getCostCenterLocationMapping() {
-        return costCenterLocationMapping;
+    public ArrayList<CostCenter> getLocations() {
+        return locations;
     }
 
-    public void setCostCenterLocationMapping(ArrayList<CostCenter> costCenterLocationMapping) {
-        this.costCenterLocationMapping = costCenterLocationMapping;
+    public void setLocations(ArrayList<CostCenter> locations) {
+        this.locations = locations;
     }
 
     public ArrayList<WasteGroup> getWasteGroups() {

@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +43,7 @@ public class UserController {
     @RequestMapping("/addInvokerUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<String> addInvokerUser(@RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+    public ResponseEntity addInvokerUser(@RequestParam(name = "syncJobTypeId") String syncJobTypeId,
                                          @RequestBody InvokerUser invoker, Principal principal){
         try {
             User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -60,14 +61,25 @@ public class UserController {
                     InvokerUser invokerUser = new InvokerUser(invoker.getUsername(), invoker.getPassword(), account.getId(),
                             syncJobTypeId, new Date());
                     invokerUserRepo.save(invokerUser);
-
-                    return ResponseEntity.status(HttpStatus.OK).body("Add web service invoker successfully.");
+                    return ResponseEntity.status(HttpStatus.OK).body("");
                 }
             }else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add web service invoker.");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add web service invoker.");
+        }
+    }
+
+    @RequestMapping("/getInvokerUser")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getInvokerUser(@RequestParam(name = "syncJobTypeId") String syncJobTypeId){
+        try {
+            ArrayList<InvokerUser> invokerUsers = invokerUserRepo.findAllBySyncJobTypeId(syncJobTypeId);
+            return ResponseEntity.status(HttpStatus.OK).body(invokerUsers);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get web service invoker.");
         }
     }
 }

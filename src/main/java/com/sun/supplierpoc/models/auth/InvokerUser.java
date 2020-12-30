@@ -1,11 +1,9 @@
 package com.sun.supplierpoc.models.auth;
 
-import com.sun.supplierpoc.models.roles.UserAccess;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 
 @Document(collection = "InvokerUser")
@@ -14,22 +12,21 @@ public class InvokerUser implements Serializable {
     private String id;
     private String username ;
     private String password;
-    private String adminUserId;
     private String accountId;
-    private String syncJobTypeId;
+    private String typeId;
     private boolean deleted;
     private Date creationDate;
 
     public InvokerUser() {
     }
 
-    public InvokerUser(String username, String password, String accountId, String syncJobTypeId,
+    public InvokerUser(String username, String password, String accountId, String typeId,
                        Date creationDate) {
         this.username = username;
         this.password = password;
         this.accountId = accountId;
         this.creationDate = creationDate;
-        this.syncJobTypeId = syncJobTypeId;
+        this.typeId = typeId;
         this.deleted = false;
     }
 
@@ -81,11 +78,11 @@ public class InvokerUser implements Serializable {
         this.creationDate = creationDate;
     }
 
-    public String getSyncJobTypeId() {
-        return syncJobTypeId;
+    public String getTypeId() {
+        return typeId;
     }
 
-    public void setSyncJobTypeId(String syncJobTypeId) {
-        this.syncJobTypeId = syncJobTypeId;
+    public void setTypeId(String typeId) {
+        this.typeId = typeId;
     }
 }

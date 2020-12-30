@@ -4,6 +4,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.services.AccountService;
@@ -31,8 +32,9 @@ public class CreateOrder {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @PostMapping(path ="/CreateOrder",produces= MediaType.APPLICATION_JSON)
-    public ResponseEntity CreateOpenCheckRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID,
-                                                 @RequestHeader("Authorization") String authorization) {
+    public ResponseEntity CreateOpenCheckRequest(@RequestHeader("Authorization") String authorization,
+                                                 @RequestBody PostTransactionEx2 checkDetails) {
+        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().getCheckRevenueCenterID());
         String username, password;
         try {
             final String[] values = conversions.convertBasicAuth(authorization);

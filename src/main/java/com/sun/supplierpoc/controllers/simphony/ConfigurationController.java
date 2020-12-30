@@ -165,7 +165,7 @@ public class ConfigurationController {
                     Account account = accountOptional.get();
                     SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
 
-                    if (!invokerUser.getSyncJobTypeId().equals(syncJobType.getId())){
+                    if (!invokerUser.getTypeId().equals(syncJobType.getId())){
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to get menu items!");
                     }
 

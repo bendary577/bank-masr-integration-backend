@@ -15,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-// @RequestMapping(path = "server")
-
 
 public class SyncJobTypeController {
 
@@ -50,11 +48,6 @@ public class SyncJobTypeController {
     @GetMapping("/getSyncJobTypes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<SyncJobType> getSyncJobTypesRequest(Principal principal)  {
-        return getSyncJobTypes(principal);
-    }
-
-
     public ArrayList<SyncJobType> getSyncJobTypes(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         return (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);

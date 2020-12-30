@@ -52,7 +52,7 @@ public class UserController {
                 Account account = accountOptional.get();
 
                 invoker.setAccountId(account.getId());
-                invoker.setSyncJobTypeId(syncJobTypeId);
+                invoker.setTypeId(syncJobTypeId);
 
                 // check existence
                 if (invokerUserRepo.countAllByUsername(invoker.getUsername()) > 0){

@@ -12,6 +12,8 @@ import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
@@ -225,6 +227,13 @@ public class MenuItemService {
             postTransactionEx2.setpGuestCheck(pGuestCheck);
             postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
             postTransactionEx2.setpTmedDetailEx2(pTmedDetailEx2);
+
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                String json = mapper.writeValueAsString(postTransactionEx2);
+            }catch (IOException e) {
+                System.out.println("Failed to convert object to json");
+            }
 
             jaxbContext = JAXBContext.newInstance(PostTransactionEx2.class);
 

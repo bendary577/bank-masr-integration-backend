@@ -19,6 +19,14 @@ public class OperationTypes implements Serializable {
     public OperationTypes() {
     }
 
+    public OperationTypes(int index, String name, String endPoint, Date creationDate, String accountId) {
+        this.index = index;
+        this.name = name;
+        this.endPoint = endPoint;
+        this.creationDate = creationDate;
+        this.accountId = accountId;
+    }
+
     public String getId() {
         return id;
     }

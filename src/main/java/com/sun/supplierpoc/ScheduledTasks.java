@@ -45,8 +45,8 @@ public class ScheduledTasks {
     private SalesController salesController;
     @Autowired
     private BookedProductionController bookedProductionController;
-    @Autowired
-    private ConfigurationController configurationController;
+//    @Autowired
+//    private ConfigurationController configurationController;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -154,15 +154,16 @@ public class ScheduledTasks {
                 }
                 else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)){
                     bookedProductionController.getBookedProduction("Automated User", account);
-                }else if (syncJobType.getName().equals(Constants.MENU_ITEMS)){
-                    // sync per revenue center
-                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-
-                    ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
-                    for (SimphonyLocation location : locations){
-                        configurationController.SyncSimphonyMenuItems("Automated User", account, location.getRevenueCenterID());
-                    }
                 }
+//                else if (syncJobType.getName().equals(Constants.MENU_ITEMS)){
+//                    // sync per revenue center
+//                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+//
+//                    ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
+//                    for (SimphonyLocation location : locations){
+//                        configurationController.SyncSimphonyMenuItems("Automated User", account, location.getRevenueCenterID());
+//                    }
+//                }
             }
         }
 

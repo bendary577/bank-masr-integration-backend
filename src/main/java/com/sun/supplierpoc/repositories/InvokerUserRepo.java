@@ -7,6 +7,6 @@ import java.util.ArrayList;
 
 public interface InvokerUserRepo extends MongoRepository<InvokerUser, String> {
     InvokerUser findByUsernameAndPassword(String username, String password);
-    ArrayList<InvokerUser> findAllBySyncJobTypeId(String syncJobTypeId);
+    ArrayList<InvokerUser> findAllByTypeId(String syncJobTypeId);
     int countAllByUsername(String username);
 }

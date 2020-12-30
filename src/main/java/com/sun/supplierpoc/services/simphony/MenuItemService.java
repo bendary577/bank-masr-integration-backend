@@ -2,9 +2,13 @@ package com.sun.supplierpoc.services.simphony;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.*;
 
 import com.sun.supplierpoc.models.simphony.discount.SimphonyPosApi_DiscountEx;
+import com.sun.supplierpoc.models.simphony.tender.SimphonyPosApi_TmedDetailItemEx2;
+import com.sun.supplierpoc.models.simphony.tender.TmedEPayment;
+import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
@@ -150,11 +154,7 @@ public class MenuItemService {
                 return response;
             }
 
-        } catch (SOAPException e) {
-            e.printStackTrace();
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
+        } catch (SOAPException | JAXBException | ParserConfigurationException e) {
             e.printStackTrace();
         }
 
@@ -163,9 +163,8 @@ public class MenuItemService {
         return response;
     }
 
-    public ResponseEntity<Object> PostTransactionEx(int empNum, int revenueCenter,
-                                                                      String simphonyServerIP){
-        com.sun.supplierpoc.models.Response response = new com.sun.supplierpoc.models.Response();
+    public ResponseEntity PostTransactionEx(SimphonyLocation location){
+
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
         try
@@ -182,8 +181,8 @@ public class MenuItemService {
             pGuestCheck.setCheckStatusBits("0");
             pGuestCheck.setEventObjectNum("0");
             pGuestCheck.setCheckTableObjectNum("1");
-            pGuestCheck.setCheckEmployeeObjectNum(Integer.toString(empNum));
-            pGuestCheck.setCheckRevenueCenterID(Integer.toString(revenueCenter));
+            pGuestCheck.setCheckEmployeeObjectNum(Integer.toString(location.getEmployeeNumber()));
+            pGuestCheck.setCheckRevenueCenterID(Integer.toString(location.getRevenueCenterID()));
             pGuestCheck.setCheckOrderType("1"); //E.g. Dine In and Eat Out
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
             LocalDateTime now = LocalDateTime.now();
@@ -210,10 +209,22 @@ public class MenuItemService {
             menuItem.setItemDiscount(itemDiscount);
 
             menuItems.add(menuItem);
+            menuItems.add(menuItem);
+
             ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
 
-            postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
+            pTmedDetailEx2 pTmedDetailEx2 = new pTmedDetailEx2();
+            SimphonyPosApi_TmedDetailItemEx2 SimphonyPosApi_TmedDetailItemEx2 = new SimphonyPosApi_TmedDetailItemEx2();
+            TmedEPayment TmedEPayment = new TmedEPayment();
+            TmedEPayment.setAccountType("ACCOUNT_TYPE_UNDEFINED");
+
+            SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
+            pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
+            SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum("3001");
+
             postTransactionEx2.setpGuestCheck(pGuestCheck);
+            postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
+            postTransactionEx2.setpTmedDetailEx2(pTmedDetailEx2);
 
             jaxbContext = JAXBContext.newInstance(PostTransactionEx2.class);
 
@@ -239,7 +250,7 @@ public class MenuItemService {
 
             soapMessage.saveChanges();
             Entity<String> payload = Entity.text(soapMessageToString(soapMessage));
-            Response createCheckResponse = client.target(simphonyServerIP + "/EGateway/SimphonyPosApiWeb.asmx")
+            Response createCheckResponse = client.target(location.getSimphonyServer() + "/EGateway/SimphonyPosApiWeb.asmx")
                     .request(MediaType.TEXT_PLAIN_TYPE)
                     .header("SOAPAction", "http://micros-hosting.com/EGateway/PostTransactionEx")
                     .post(payload);
@@ -250,49 +261,27 @@ public class MenuItemService {
             if (responseDoc != null){
                 if(responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")){
                     String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
-                    response.setMessage(errorMessage);
-                    response.setStatus(false);
-//                    return response;
-                    return new ResponseEntity<Object>("Failed to create new open guest check.", HttpStatus.OK);
+                    return new ResponseEntity(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
                 }else {
                     String xmlMenuItem =responseDoc.getElementsByTagName("PostTransactionEx2Response").item(0).getFirstChild().getNodeValue();
 
-//                    jaxbContext = JAXBContext.newInstance(PostTransactionEx2Response.class);
-//                    Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-//                    PostTransactionEx2Response postTransactionEx2Response = (PostTransactionEx2Response) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItem));
-//                    response.setMessage(jsonObject.toString(4));
-//                    response.setStatus(true);
-//                    return response;
-
                     JSONObject jsonObject = xmlDocToJsonObject(responseDoc);
                     try {
-                        return new ResponseEntity<Object>(jsonObject.toString(4), HttpStatus.OK);
+                        return new ResponseEntity(jsonObject.toString(4), HttpStatus.OK);
                     }catch (org.json.JSONException ex){
                         ex.printStackTrace();
+                        return new ResponseEntity("Failed to create new open guest check.", HttpStatus.INTERNAL_SERVER_ERROR);
                     }
-
                 }
 
             }else {
-                response.setMessage("Failed to create new open guest check.");
-                response.setStatus(false);
-//                return response;
-                return new ResponseEntity<Object>("Failed to create new open guest check.", HttpStatus.OK);
-
+                return new ResponseEntity("Failed to create new open guest check.", HttpStatus.OK);
             }
 
-        } catch (SOAPException e) {
+        } catch (SOAPException | ParserConfigurationException | JAXBException e) {
             e.printStackTrace();
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
+            return new ResponseEntity("Failed to create new open guest check.", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
-        response.setMessage("Failed to create new open guest check.");
-        response.setStatus(false);
-//        return response;
-        return new ResponseEntity<Object>("Failed to create new open guest check.", HttpStatus.OK);
     }
 
     private Document responseToDocument(String response){

@@ -1,72 +1,66 @@
 package com.sun.supplierpoc.controllers.simphony;
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.auth.InvokerUser;
+import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
+import com.sun.supplierpoc.services.AccountService;
+import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 import javax.ws.rs.core.MediaType;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.StringReader;
+import java.util.Optional;
 
 @RestController()
-@RequestMapping(value = {"/Simphony.ent"})
+@RequestMapping(value = {"/Simphony"})
 public class CreateOrder {
     @Autowired
-    private AccountRepo accountRepo;
-    @Autowired
-    private SyncJobRepo syncJobRepo;
-    @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
+    private GeneralSettingsRepo generalSettingsRepo;
     @Autowired
     MenuItemService menuItemService;
+    @Autowired
+    AccountService accountService;
+    @Autowired
+    InvokerUserService invokerUserService;
     private Conversions conversions = new Conversions();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @PostMapping(path ="/CreateOrder",produces= MediaType.APPLICATION_JSON)
-    public ResponseEntity CreateOpenCheckRequest(@RequestHeader("Authorization") String authorization) {
+    public ResponseEntity CreateOpenCheckRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID,
+                                                 @RequestHeader("Authorization") String authorization) {
         String username, password;
-
-        final String[] values = conversions.convertBasicAuth(authorization);
-        if (values.length != 0) {
-            username = values[0];
-            password = values[1];
-
-        }
-        return CreateOpenCheck();
-    }
-
-    public ResponseEntity<Object> CreateOpenCheck() {
         try {
-            //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
-            int empNum = 40;
-            int revenueCenter = 100;
-            String simphonyPosApiWeb = "http://192.168.1.101:8080/";
-            //////////////////////////////////////// En of Validation //////////////////////////////////////////////////
-            return this.menuItemService.PostTransactionEx(empNum, revenueCenter, simphonyPosApiWeb);
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
 
-        }catch (Exception e){
-            return new ResponseEntity<Object>("", HttpStatus.EXPECTATION_FAILED);
-        }
-    }
+                InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
 
-    private Document responseToDocument(String response){
-        DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-        Document dDoc = null;
-        try {
-            DocumentBuilder builder = domFactory.newDocumentBuilder();
-            dDoc = builder.parse(new InputSource(new StringReader(response)));
-            return dDoc;
+                if (invokerUser != null) {
+                    Optional<Account> accountOptional = accountService.getAccount(invokerUser.getAccountId());
+
+                    if (accountOptional.isPresent()) {
+                        Account account = accountOptional.get();
+                        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                        SimphonyLocation location = generalSettings.getSimphonyLocationsByID(revenueCenterID);
+                        return this.menuItemService.PostTransactionEx(location);
+                    }else {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+                    }
+                }else{
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+                }
+            }else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+            }
         } catch (Exception e) {
-            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
-
-        return null;
     }
 }

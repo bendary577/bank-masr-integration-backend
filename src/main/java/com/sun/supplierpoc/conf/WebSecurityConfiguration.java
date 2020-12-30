@@ -75,7 +75,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().antMatchers("/CreateOrder");
-        web.ignoring().antMatchers("/Simphony.ent/*");
+        web.ignoring().antMatchers("/Simphony/*");
     }
 /* @Override
     protected void configure(HttpSecurity http) throws Exception {

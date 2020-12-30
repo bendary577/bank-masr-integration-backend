@@ -1,9 +1,13 @@
 package com.sun.supplierpoc.models.simphony;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 import java.util.List;
+
+
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+        "SimphonyPosApi_MenuItemEx"
+})
 
 public class ppMenuItemsEx {
     @XmlElementWrapper(name = "SimphonyPosApi_MenuItemEx")
@@ -14,8 +18,10 @@ public class ppMenuItemsEx {
         return SimphonyPosApi_MenuItemEx;
     }
 
-    public void setSimphonyPosApi_MenuItemEx(List<MenuItem> simphonyPosApi_MenuItemEx) {
-        SimphonyPosApi_MenuItemEx = simphonyPosApi_MenuItemEx;
+    public void setSimphonyPosApi_MenuItemEx(List<MenuItem> SimphonyPosApi_MenuItemEx) {
+        this.SimphonyPosApi_MenuItemEx = SimphonyPosApi_MenuItemEx;
     }
 }
+
+
 

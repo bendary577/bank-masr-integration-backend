@@ -6,8 +6,6 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
-import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
-import com.sun.supplierpoc.models.simphony.MenuItem;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -23,13 +21,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.xml.ws.spi.Invoker;
-import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.util.*;
 
 @RestController()
-@RequestMapping(value = {"/Simphony.ent"})
+@RequestMapping(value = {"/Simphony"})
 public class ConfigurationController {
     @Autowired
     private AccountRepo accountRepo;

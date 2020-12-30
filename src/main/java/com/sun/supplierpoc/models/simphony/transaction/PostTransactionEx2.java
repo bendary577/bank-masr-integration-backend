@@ -1,14 +1,27 @@
 package com.sun.supplierpoc.models.simphony.transaction;
 
 import com.sun.supplierpoc.models.simphony.ppMenuItemsEx;
+import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
+
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+        "pGuestCheck",
+        "ppMenuItemsEx",
+        "pTmedDetailEx2"
+})
 
 @XmlRootElement(name = "PostTransactionEx2")
 public class PostTransactionEx2 {
     private pGuestCheck pGuestCheck;
 
     private ppMenuItemsEx ppMenuItemsEx;
+
+    private pTmedDetailEx2 pTmedDetailEx2;
 
     public pGuestCheck getpGuestCheck() {
         return pGuestCheck;
@@ -24,5 +37,13 @@ public class PostTransactionEx2 {
 
     public void setPpMenuItemsEx(ppMenuItemsEx ppMenuItemsEx) {
         this.ppMenuItemsEx = ppMenuItemsEx;
+    }
+
+    public com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2 getpTmedDetailEx2() {
+        return pTmedDetailEx2;
+    }
+
+    public void setpTmedDetailEx2(com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2 pTmedDetailEx2) {
+        this.pTmedDetailEx2 = pTmedDetailEx2;
     }
 }

@@ -1,12 +1,15 @@
 package com.sun.supplierpoc.controllers.simphony;
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.OperationTypes;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
+import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
@@ -20,6 +23,8 @@ import java.util.Optional;
 @RestController()
 @RequestMapping(value = {"/Simphony"})
 public class CreateOrder {
+    @Autowired
+    private OperationTypeRepo operationTypeRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
     @Autowired
@@ -49,6 +54,11 @@ public class CreateOrder {
 
                     if (accountOptional.isPresent()) {
                         Account account = accountOptional.get();
+                        OperationTypes operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted(Constants.CREATE_CHECK, account.getId(), false);
+                        if (!invokerUser.getTypeId().equals(operationType.getId())){
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to create check!");
+                        }
+
                         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                         SimphonyLocation location = generalSettings.getSimphonyLocationsByID(revenueCenterID);
                         return this.menuItemService.PostTransactionEx(location);

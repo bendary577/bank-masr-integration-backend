@@ -25,6 +25,9 @@ public class Constants {
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
 
+    ///////////////////////////////////////// Operation Types////////////////////////////////////////////////////////////
+    public static String CREATE_CHECK = "Create Check";
+
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";
     public static String WEEKLY = "Weekly";

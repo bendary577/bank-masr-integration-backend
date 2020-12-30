@@ -53,11 +53,16 @@ public class UserController {
                 invoker.setAccountId(account.getId());
                 invoker.setSyncJobTypeId(syncJobTypeId);
 
-                InvokerUser invokerUser = new InvokerUser(invoker.getUsername(), invoker.getPassword(), account.getId(),
-                        syncJobTypeId, new Date());
-                invokerUserRepo.save(invokerUser);
+                // check existence
+                if (invokerUserRepo.countAllByUsername(invoker.getUsername()) > 0){
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists!");
+                }else {
+                    InvokerUser invokerUser = new InvokerUser(invoker.getUsername(), invoker.getPassword(), account.getId(),
+                            syncJobTypeId, new Date());
+                    invokerUserRepo.save(invokerUser);
 
-                return ResponseEntity.status(HttpStatus.OK).body("Add web service invoker successfully.");
+                    return ResponseEntity.status(HttpStatus.OK).body("Add web service invoker successfully.");
+                }
             }else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add web service invoker.");
             }

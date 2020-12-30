@@ -5,4 +5,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface InvokerUserRepo extends MongoRepository<InvokerUser, String> {
     InvokerUser findByUsernameAndPassword(String username, String password);
+    int countAllByUsername(String username);
 }

@@ -18,6 +18,8 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -139,20 +141,19 @@ public class GeneralSettingController {
     @RequestMapping("/getGeneralSettings")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public HashMap<String, Object> getGeneralSettings(Principal principal){
-        HashMap<String, Object> response = new HashMap<>();
+    public ResponseEntity getGeneralSettings(Principal principal){
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
         try {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
-            response.put("data", generalSettings);
-            response.put("message", "get general settings.");
-            response.put("success", true);
+            if(generalSettings != null){
+                return ResponseEntity.status(HttpStatus.OK).body(generalSettings);
+            }else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get general settings.");
+            }
+
         } catch (Exception e) {
-            response.put("message", "Failed to get general settings.");
-            response.put("success", false);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get general settings.");
         }
-        return response;
     }
 
     @RequestMapping("/updateGeneralSettings")

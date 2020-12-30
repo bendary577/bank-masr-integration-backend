@@ -3,8 +3,10 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.controllers.*;
 import com.sun.supplierpoc.controllers.simphony.ConfigurationController;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
@@ -21,6 +23,8 @@ import java.util.*;
 
 @Component
 public class ScheduledTasks {
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
@@ -152,7 +156,9 @@ public class ScheduledTasks {
                     bookedProductionController.getBookedProduction("Automated User", account);
                 }else if (syncJobType.getName().equals(Constants.MENU_ITEMS)){
                     // sync per revenue center
-                    ArrayList<SimphonyLocation> locations = syncJobType.getConfiguration().getSimphonyLocations();
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                    ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
                     for (SimphonyLocation location : locations){
                         configurationController.SyncSimphonyMenuItems("Automated User", account, location.getRevenueCenterID());
                     }

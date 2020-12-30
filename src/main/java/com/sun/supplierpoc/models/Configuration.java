@@ -8,9 +8,6 @@ import java.util.ArrayList;
 
 
 public class Configuration implements Serializable {
-    @Id
-    private String id;
-
     private String businessUnit = "";
     private String transactionReference = "";
     private String journalType = "";
@@ -57,9 +54,6 @@ public class Configuration implements Serializable {
     private Boolean uniqueOverGroupMapping = false;
     private Boolean uniqueAnalysisMapping = false;
 
-    // Menu Items variables
-    private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
-
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
@@ -77,14 +71,6 @@ public class Configuration implements Serializable {
     private AccountSettings accountSettings;
 
     public Configuration() { }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public String getBusinessUnit() {
         return businessUnit.strip();
@@ -334,13 +320,6 @@ public class Configuration implements Serializable {
         this.uniqueOverGroupMapping = uniqueOverGroupMapping;
     }
 
-    public ArrayList<SimphonyLocation> getSimphonyLocations() {
-        return simphonyLocations;
-    }
-
-    public void setSimphonyLocations(ArrayList<SimphonyLocation> simphonyLocations) {
-        this.simphonyLocations = simphonyLocations;
-    }
 
     public ArrayList<Item> getItems() {
         return items;
@@ -453,14 +432,4 @@ public class Configuration implements Serializable {
     public void setAccountSettings(AccountSettings accountSettings) {
         this.accountSettings = accountSettings;
     }
-
-    public SimphonyLocation getSimphonyLocationsByID(int revenueCenterID){
-        for (SimphonyLocation location : this.simphonyLocations) {
-            if (location.getRevenueCenterID() == revenueCenterID) {
-                return location;
-            }
-        }
-        return null;
-    }
-
 }

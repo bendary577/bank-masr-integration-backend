@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.controllers.simphony;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
@@ -8,6 +9,7 @@ import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
 import com.sun.supplierpoc.models.simphony.MenuItem;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.AccountService;
@@ -36,6 +38,8 @@ public class ConfigurationController {
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+    @Autowired
     MenuItemService menuItemService;
     @Autowired
     SyncJobService syncJobService;
@@ -45,6 +49,8 @@ public class ConfigurationController {
     AccountService accountService;
     @Autowired
     InvokerUserService invokerUserService;
+    private Conversions conversions = new Conversions();
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/SyncSimphonyMenuItems")
@@ -77,9 +83,10 @@ public class ConfigurationController {
         SyncJob syncJob = null;
         try {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
-            SimphonyLocation simphonyLocation = syncJobType.getConfiguration().getSimphonyLocationsByID(revenueCenterID);
+            SimphonyLocation simphonyLocation = generalSettings.getSimphonyLocationsByID(revenueCenterID);
             if(simphonyLocation == null){
                 String message = "Please configure revenue center before sync menu items.";
                 response.setMessage(message);
@@ -145,16 +152,10 @@ public class ConfigurationController {
     @RequestMapping("/GetSimphonyMenuItemsRequest")
     public ResponseEntity GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID,
                                                       @RequestHeader("Authorization") String authorization) {
-        String username;
-        String password ;
+        String username, password;
 
-        if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
-            String base64Credentials = authorization.substring("Basic".length()).trim();
-            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
-            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
-            // credentials = username:password
-            final String[] values = credentials.split(":", 2);
-
+        final String[] values = conversions.convertBasicAuth(authorization);
+        if (values.length != 0) {
             username = values[0];
             password = values[1];
 
@@ -208,15 +209,13 @@ public class ConfigurationController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> addSimphonyLocation(@RequestBody ArrayList<SimphonyLocation> locations,
-                                              @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
                                               Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
-
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             // Check account quota first
             if (locations.size() > account.getLocationQuota()){
                 response.setStatus(false);
@@ -224,9 +223,9 @@ public class ConfigurationController {
 
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-            else if (syncJobType != null) {
-                syncJobType.getConfiguration().setSimphonyLocations(locations);
-                syncJobTypeRepo.save(syncJobType);
+            else if (generalSettings != null) {
+                generalSettings.setSimphonyLocations(locations);
+                generalSettingsRepo.save(generalSettings);
 
                 response.setStatus(true);
                 response.setMessage("Update simphony locations successfully.");

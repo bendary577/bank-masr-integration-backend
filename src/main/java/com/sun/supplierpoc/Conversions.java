@@ -3,11 +3,9 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 
+import java.nio.charset.StandardCharsets;
 import java.text.*;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.*;
 import java.text.DecimalFormat;
 
 public class Conversions {
@@ -290,5 +288,18 @@ public class Conversions {
         transactionDate += currentYear;
 
         return transactionDate;
+    }
+
+    public String[] convertBasicAuth(String authorization){
+        String[] values = {};
+        if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
+            String base64Credentials = authorization.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+            values = credentials.split(":", 2);
+            return values;
+        }else{
+            return values;
+        }
     }
 }

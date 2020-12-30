@@ -1,36 +1,22 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.operationConfiguration.OperationConfiguration;
 import org.springframework.data.annotation.Id;
-
 import java.io.Serializable;
 import java.util.Date;
 
-public class SyncJobType implements Serializable {
+public class OperationTypes implements Serializable {
     @Id
     private String id;
-
     private int index;
     private String name;
-    private String description;
     private String endPoint;
     private Date creationDate;
-    private Configuration configuration;
+    private OperationConfiguration configuration;
     private String accountId;
     private boolean deleted;
 
-    public SyncJobType() {
-    }
-
-    public SyncJobType(int index, String name, String description, String endPoint, Date creationDate,
-                       Configuration configuration, String accountId) {
-        this.index = index;
-        this.name = name;
-        this.description = description;
-        this.endPoint = endPoint;
-        this.creationDate = creationDate;
-        this.configuration = configuration;
-        this.accountId = accountId;
-        this.deleted = false;
+    public OperationTypes() {
     }
 
     public String getId() {
@@ -41,20 +27,20 @@ public class SyncJobType implements Serializable {
         this.id = id;
     }
 
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getEndPoint() {
@@ -73,11 +59,11 @@ public class SyncJobType implements Serializable {
         this.creationDate = creationDate;
     }
 
-    public Configuration getConfiguration() {
+    public OperationConfiguration getConfiguration() {
         return configuration;
     }
 
-    public void setConfiguration(Configuration configuration) {
+    public void setConfiguration(OperationConfiguration configuration) {
         this.configuration = configuration;
     }
 
@@ -95,13 +81,5 @@ public class SyncJobType implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
-    }
-
-    public int getIndex() {
-        return index;
-    }
-
-    public void setIndex(int index) {
-        this.index = index;
     }
 }

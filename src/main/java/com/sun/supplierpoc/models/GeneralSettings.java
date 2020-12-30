@@ -16,6 +16,8 @@ public class GeneralSettings {
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
     private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
     private ArrayList<CostCenter> locations = new ArrayList<>();
+    // Menu Items variables
+    private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private Date creationDate;
     private boolean deleted;
 
@@ -106,5 +108,22 @@ public class GeneralSettings {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public ArrayList<SimphonyLocation> getSimphonyLocations() {
+        return simphonyLocations;
+    }
+
+    public void setSimphonyLocations(ArrayList<SimphonyLocation> simphonyLocations) {
+        this.simphonyLocations = simphonyLocations;
+    }
+
+    public SimphonyLocation getSimphonyLocationsByID(int revenueCenterID){
+        for (SimphonyLocation location : this.simphonyLocations) {
+            if (location.getRevenueCenterID() == revenueCenterID) {
+                return location;
+            }
+        }
+        return null;
     }
 }

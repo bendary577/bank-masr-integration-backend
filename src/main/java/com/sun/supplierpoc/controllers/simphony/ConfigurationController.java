@@ -22,13 +22,12 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import javax.xml.ws.spi.Invoker;
+import java.nio.charset.StandardCharsets;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController()
+@RequestMapping(value = {"/Simphony.ent"})
 public class ConfigurationController {
     @Autowired
     private AccountRepo accountRepo;
@@ -144,39 +143,57 @@ public class ConfigurationController {
     }
 
     @RequestMapping("/GetSimphonyMenuItemsRequest")
-    public ResponseEntity GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID) {
-        String username = "testInvoker";
-        String password = "testInvoker@1111";
+    public ResponseEntity GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID,
+                                                      @RequestHeader("Authorization") String authorization) {
+        String username;
+        String password ;
 
-        ArrayList<SyncJobData> syncJobData;
+        if (authorization != null && authorization.toLowerCase().startsWith("basic")) {
+            String base64Credentials = authorization.substring("Basic".length()).trim();
+            byte[] credDecoded = Base64.getDecoder().decode(base64Credentials);
+            String credentials = new String(credDecoded, StandardCharsets.UTF_8);
+            // credentials = username:password
+            final String[] values = credentials.split(":", 2);
 
-        InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
-        if (invokerUser != null){
-            Optional<Account> accountOptional = accountService.getAccount(invokerUser.getAccountId());
+            username = values[0];
+            password = values[1];
 
-            if (accountOptional.isPresent()) {
-                Account account = accountOptional.get();
-                SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
+            ArrayList<SyncJobData> syncJobData;
 
-                /*
-                 * Get last success sync job with revenue center ID
-                 * */
-                SyncJob syncJob = syncJobService.getSyncJobByRevenueCenterID(revenueCenterID, syncJobType.getId());
+            InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
+            if (invokerUser != null){
+                Optional<Account> accountOptional = accountService.getAccount(invokerUser.getAccountId());
 
-                if (syncJob != null){
-                    syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
-                    return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+                if (accountOptional.isPresent()) {
+                    Account account = accountOptional.get();
+                    SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
 
-                }else{
-                    // Sync menu items
-                    Response syncResponse = SyncSimphonyMenuItems(username, account, revenueCenterID);
-
-                    if(syncResponse.isStatus()){
-                        syncJobData = syncResponse.getAddedSyncJobData();
-                        return new ResponseEntity<>(syncJobData, HttpStatus.OK);
-                    }else {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());
+                    if (!invokerUser.getSyncJobTypeId().equals(syncJobType.getId())){
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to get menu items!");
                     }
+
+                    /*
+                     * Get last success sync job with revenue center ID
+                     * */
+                    SyncJob syncJob = syncJobService.getSyncJobByRevenueCenterID(revenueCenterID, syncJobType.getId());
+
+                    if (syncJob != null){
+                        syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
+                        return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+
+                    }else{
+                        // Sync menu items
+                        Response syncResponse = SyncSimphonyMenuItems(username, account, revenueCenterID);
+
+                        if(syncResponse.isStatus()){
+                            syncJobData = syncResponse.getAddedSyncJobData();
+                            return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+                        }else {
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());
+                        }
+                    }
+                }else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
                 }
             }else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");

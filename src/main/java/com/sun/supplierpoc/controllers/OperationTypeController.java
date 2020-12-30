@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.models.OperationTypes;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +28,7 @@ public class OperationTypeController {
     @GetMapping("/getOperationTypeByName")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public OperationTypes getOperationTypeByName(@RequestParam String operationName, Principal principal)  {
+    public OperationTypes getOperationTypeByName(@RequestParam(name = "operationName") String operationName, Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         return operationTypeRepo.findAllByNameAndAccountIdAndDeleted(operationName, user.getAccountId(), false);
     }
@@ -40,5 +41,13 @@ public class OperationTypeController {
         OperationTypes operation = new OperationTypes(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
         operationTypeRepo.save(operation);
         return operation;
+    }
+
+    @PutMapping("/updateOperationTypeConfiguration")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public Boolean updateSyncJobTypesConfiguration(@RequestBody OperationTypes operationTypes)  {
+        operationTypeRepo.save(operationTypes);
+        return true;
     }
 }

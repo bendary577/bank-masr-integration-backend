@@ -1,4 +1,6 @@
 package com.sun.supplierpoc.models.simphony.transaction;
+import com.sun.supplierpoc.models.simphony.PCheckInfoLines;
+
 import javax.xml.bind.annotation.*;
 import java.util.List;
 
@@ -38,9 +40,11 @@ public class pGuestCheck {
     private String CheckStatusBits;
     @XmlElement(name = "CheckTableObjectNum")
     private String CheckTableObjectNum;
-    @XmlElementWrapper(name="PCheckInfoLines")
-    @XmlElement(name="string")
-    private List<String> PCheckInfoLines;
+//    @XmlElementWrapper(name="PCheckInfoLines")
+//    @XmlElement(name="string")
+//    private List<String> PCheckInfoLines;
+    @XmlElement(name="PCheckInfoLines")
+    private PCheckInfoLines PCheckInfoLines;
     @XmlElement(name = "EventObjectNum")
     private String EventObjectNum;
 
@@ -124,11 +128,11 @@ public class pGuestCheck {
         CheckTableObjectNum = checkTableObjectNum;
     }
 
-    public List<String> getPCheckInfoLines() {
+    public com.sun.supplierpoc.models.simphony.PCheckInfoLines getPCheckInfoLines() {
         return PCheckInfoLines;
     }
 
-    public void setPCheckInfoLines(List<String> PCheckInfoLines) {
+    public void setPCheckInfoLines(com.sun.supplierpoc.models.simphony.PCheckInfoLines PCheckInfoLines) {
         this.PCheckInfoLines = PCheckInfoLines;
     }
 

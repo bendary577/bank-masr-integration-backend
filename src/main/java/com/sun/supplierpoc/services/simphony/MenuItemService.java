@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services.simphony;
 
+import com.google.gson.Gson;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
@@ -10,6 +11,7 @@ import com.sun.supplierpoc.models.simphony.tender.SimphonyPosApi_TmedDetailItemE
 import com.sun.supplierpoc.models.simphony.tender.TmedEPayment;
 import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
+import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import org.codehaus.jackson.JsonProcessingException;
@@ -165,76 +167,12 @@ public class MenuItemService {
         return response;
     }
 
-    public ResponseEntity PostTransactionEx(SimphonyLocation location){
+    public ResponseEntity PostTransactionEx(PostTransactionEx2 checkDetails, SimphonyLocation location){
 
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
         try
         {
-            pGuestCheck pGuestCheck = new pGuestCheck();
-            ppMenuItemsEx ppMenuItemsEx = new ppMenuItemsEx();
-            PostTransactionEx2 postTransactionEx2 = new PostTransactionEx2();
-
-            List<String> checkLines = new ArrayList<>();
-            checkLines.add("Online Check");
-            pGuestCheck.setCheckNum("0");
-            pGuestCheck.setCheckSeq("0");
-            pGuestCheck.setCheckGuestCount("0");
-            pGuestCheck.setCheckStatusBits("0");
-            pGuestCheck.setEventObjectNum("0");
-            pGuestCheck.setCheckTableObjectNum("1");
-            pGuestCheck.setCheckEmployeeObjectNum(Integer.toString(location.getEmployeeNumber()));
-            pGuestCheck.setCheckRevenueCenterID(Integer.toString(location.getRevenueCenterID()));
-            pGuestCheck.setCheckOrderType("1"); //E.g. Dine In and Eat Out
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-            LocalDateTime now = LocalDateTime.now();
-            pGuestCheck.setCheckDateToFire(dtf.format(now));
-
-            pGuestCheck.setPCheckInfoLines(checkLines);
-
-            List<MenuItem> menuItems = new ArrayList<>();
-
-            MenuItem menuItem = new MenuItem();
-            ItemDiscount itemDiscount = new ItemDiscount();
-
-            menuItem.setMiSubLevel("1");
-            menuItem.setMiMenuLevel("1");
-            menuItem.setMiPriceLevel("0");
-            menuItem.setMiDefinitionSeqNum("1");
-            menuItem.setMiQuantity("2");
-            menuItem.setMiObjectNum("101");
-
-            SimphonyPosApi_DiscountEx simphonyPosApi_discountEx = new SimphonyPosApi_DiscountEx();
-            simphonyPosApi_discountEx.setDiscObjectNum("0");
-
-            itemDiscount.setSimphonyPosApi_DiscountEx(simphonyPosApi_discountEx);
-            menuItem.setItemDiscount(itemDiscount);
-
-            menuItems.add(menuItem);
-            menuItems.add(menuItem);
-
-            ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
-
-            pTmedDetailEx2 pTmedDetailEx2 = new pTmedDetailEx2();
-            SimphonyPosApi_TmedDetailItemEx2 SimphonyPosApi_TmedDetailItemEx2 = new SimphonyPosApi_TmedDetailItemEx2();
-            TmedEPayment TmedEPayment = new TmedEPayment();
-            TmedEPayment.setAccountType("ACCOUNT_TYPE_UNDEFINED");
-
-            SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
-            pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
-            SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum("3001");
-
-            postTransactionEx2.setpGuestCheck(pGuestCheck);
-            postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
-            postTransactionEx2.setpTmedDetailEx2(pTmedDetailEx2);
-
-            try {
-                ObjectMapper mapper = new ObjectMapper();
-                String json = mapper.writeValueAsString(postTransactionEx2);
-            }catch (IOException e) {
-                System.out.println("Failed to convert object to json");
-            }
-
             jaxbContext = JAXBContext.newInstance(PostTransactionEx2.class);
 
             Marshaller marshaller = jaxbContext.createMarshaller();
@@ -249,7 +187,7 @@ public class MenuItemService {
             dbf.setNamespaceAware(true);
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.newDocument();
-            marshaller.marshal(postTransactionEx2,doc);
+            marshaller.marshal(checkDetails,doc);
             soapBody.addDocument(doc);
             envelope.removeNamespaceDeclaration("SOAP-ENV");
             envelope.addNamespaceDeclaration("soap", "http://schemas.xmlsoap.org/soap/envelope/");
@@ -272,11 +210,15 @@ public class MenuItemService {
                     String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
                     return new ResponseEntity(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
                 }else {
-                    String xmlMenuItem =responseDoc.getElementsByTagName("PostTransactionEx2Response").item(0).getFirstChild().getNodeValue();
-
                     JSONObject jsonObject = xmlDocToJsonObject(responseDoc);
+                    assert jsonObject != null;
+                    JSONObject checkJson = jsonObject.getJSONObject("soap:Envelope").getJSONObject("soap:Body").getJSONObject("PostTransactionEx2Response");
+                    // convert jsonObject --> PostTransactionEx2Response
+                    Gson gson = new Gson();
+                    PostTransactionEx2Response response = gson.fromJson(checkJson.toString(), PostTransactionEx2Response.class);
+
                     try {
-                        return new ResponseEntity(jsonObject.toString(4), HttpStatus.OK);
+                        return new ResponseEntity(response, HttpStatus.OK);
                     }catch (org.json.JSONException ex){
                         ex.printStackTrace();
                         return new ResponseEntity("Failed to create new open guest check.", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -307,8 +249,7 @@ public class MenuItemService {
         return null;
     }
 
-    private String soapMessageToString(SOAPMessage message)
-    {
+    private String soapMessageToString(SOAPMessage message) {
         String result = null;
 
         if (message != null)
@@ -414,4 +355,73 @@ public class MenuItemService {
         }
         return savedMenuItems;
     }
+
+    private PostTransactionEx2 buildCheckObject(SimphonyLocation location){
+        pGuestCheck pGuestCheck = new pGuestCheck();
+        ppMenuItemsEx ppMenuItemsEx = new ppMenuItemsEx();
+        PostTransactionEx2 postTransactionEx2 = new PostTransactionEx2();
+        PCheckInfoLines PCheckInfoLines = new PCheckInfoLines();
+        PCheckInfoLines.setString("Online Check");
+
+        pGuestCheck.setCheckNum("0");
+        pGuestCheck.setCheckSeq("0");
+        pGuestCheck.setCheckGuestCount("0");
+        pGuestCheck.setCheckStatusBits("0");
+        pGuestCheck.setEventObjectNum("0");
+        pGuestCheck.setCheckTableObjectNum("1");
+        pGuestCheck.setCheckEmployeeObjectNum(Integer.toString(location.getEmployeeNumber()));
+        pGuestCheck.setCheckRevenueCenterID(Integer.toString(location.getRevenueCenterID()));
+        pGuestCheck.setCheckOrderType("1"); //E.g. Dine In and Eat Out
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        pGuestCheck.setCheckDateToFire(dtf.format(now));
+
+        pGuestCheck.setPCheckInfoLines(PCheckInfoLines);
+
+        List<MenuItem> menuItems = new ArrayList<>();
+
+        MenuItem menuItem = new MenuItem();
+        ItemDiscount itemDiscount = new ItemDiscount();
+
+        menuItem.setMiSubLevel("1");
+        menuItem.setMiMenuLevel("1");
+        menuItem.setMiPriceLevel("0");
+        menuItem.setMiDefinitionSeqNum("1");
+        menuItem.setMiQuantity("2");
+        menuItem.setMiObjectNum("101");
+
+        SimphonyPosApi_DiscountEx simphonyPosApi_discountEx = new SimphonyPosApi_DiscountEx();
+        simphonyPosApi_discountEx.setDiscObjectNum("0");
+
+        itemDiscount.setSimphonyPosApi_DiscountEx(simphonyPosApi_discountEx);
+        menuItem.setItemDiscount(itemDiscount);
+
+        menuItems.add(menuItem);
+        menuItems.add(menuItem);
+
+        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
+
+        pTmedDetailEx2 pTmedDetailEx2 = new pTmedDetailEx2();
+        SimphonyPosApi_TmedDetailItemEx2 SimphonyPosApi_TmedDetailItemEx2 = new SimphonyPosApi_TmedDetailItemEx2();
+        TmedEPayment TmedEPayment = new TmedEPayment();
+        TmedEPayment.setAccountType("ACCOUNT_TYPE_UNDEFINED");
+
+        SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
+        pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
+        SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum("3001");
+
+        postTransactionEx2.setpGuestCheck(pGuestCheck);
+        postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
+        postTransactionEx2.setpTmedDetailEx2(pTmedDetailEx2);
+
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(postTransactionEx2);
+        }catch (IOException e) {
+            System.out.println("Failed to convert object to json");
+        }
+
+        return postTransactionEx2;
+    }
 }
+

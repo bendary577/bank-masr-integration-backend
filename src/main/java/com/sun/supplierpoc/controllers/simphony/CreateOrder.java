@@ -61,7 +61,7 @@ public class CreateOrder {
 
                         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                         SimphonyLocation location = generalSettings.getSimphonyLocationsByID(revenueCenterID);
-                        return this.menuItemService.PostTransactionEx(location);
+                        return this.menuItemService.PostTransactionEx(checkDetails, location);
                     }else {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
                     }

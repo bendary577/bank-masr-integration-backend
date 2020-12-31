@@ -1,12 +1,19 @@
 package com.sun.supplierpoc.models.simphony;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.*;
 
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(name = "", propOrder = {
+        "ConfigurationInfoTypeID",
+        "StartIndex",
+        "MaxRecordCount"
+})
 @XmlRootElement(name = "SimphonyPosApi_ConfigInfo")
 public class SimphonyPosApi_ConfigInfo {
     @XmlElement(name = "ConfigurationInfoTypeID")
     private String ConfigurationInfoTypeID;
+    @XmlElement(name = "StartIndex")
     private int StartIndex;
+    @XmlElement(name = "MaxRecordCount")
     private int MaxRecordCount;
 
 

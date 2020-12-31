@@ -116,9 +116,8 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.toAccountCode = syncJobData.getData().get("toAccountCode");
             syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation");
             syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation");
-            syncJobDataCSV.DCMarker = syncJobData.getData().get("DCMarker");
-
             syncJobDataCSV.description = syncJobData.getData().get("description");
+
             if(syncJobDataCSV.description.length() > 25){
                 syncJobDataCSV.description = syncJobDataCSV.description.substring(0, 25);
             }else if(syncJobDataCSV.description.length() < 25) {

@@ -487,18 +487,18 @@ public class SalesService {
                     float discountTotal;
                     if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
                         majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
-                        if(majorGroupDiscount){
-                            discount = conversions.checkDiscountExistence(discounts, majorGroup.getMajorGroup() + " Discount");
-                            if (!discount.isChecked()) {
-                                break;
-                            }
-                            discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
-                            discount.setTotal(discountTotal);
-                            discount.setCostCenter(location);
-                            salesDiscount.add(discount);
-                        }
                     }else {
                         majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales")).getText().strip());
+                    }
+                    if(majorGroupDiscount){
+                        discount = conversions.checkDiscountExistence(discounts, majorGroup.getMajorGroup() + " Discount");
+                        if (!discount.isChecked()) {
+                            break;
+                        }
+                        discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
+                        discount.setTotal(discountTotal);
+                        discount.setCostCenter(location);
+                        salesDiscount.add(discount);
                     }
 
                     majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
@@ -981,7 +981,14 @@ public class SalesService {
                 discountData.put("accountingPeriod", transactionDate.substring(2,6));
                 discountData.put("transactionDate", transactionDate);
 
-                discountData.put("totalCr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
+                if (syncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
+                && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                    discountData.put("expensesAccount", discount.getAccount());
+                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
+                }else{
+                    discountData.put("inventoryAccount", discount.getAccount());
+                    discountData.put("totalCr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
+                }
 
                 discountData.put("fromCostCenter", discount.getCostCenter().costCenter);
                 discountData.put("fromAccountCode", discount.getCostCenter().accountCode);
@@ -991,8 +998,6 @@ public class SalesService {
 
                 discountData.put("fromLocation", discount.getCostCenter().accountCode);
                 discountData.put("toLocation", discount.getCostCenter().accountCode);
-
-                discountData.put("inventoryAccount", discount.getAccount());
 
                 String description = "";
                 if(discount.getDiscount().equals("")){

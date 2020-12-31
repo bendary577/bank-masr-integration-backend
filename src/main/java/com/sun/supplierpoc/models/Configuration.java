@@ -54,6 +54,8 @@ public class Configuration implements Serializable {
     private Boolean uniqueOverGroupMapping = false;
     private Boolean uniqueAnalysisMapping = false;
 
+    private boolean majorGroupDiscount = false;
+    private ArrayList<Discount> discounts = new ArrayList<>();
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
@@ -64,7 +66,6 @@ public class Configuration implements Serializable {
     private ArrayList<Analysis> analysis = new ArrayList<>();
     private ArrayList<Tender> tenders = new ArrayList<>();
     private ArrayList<Tax> taxes = new ArrayList<>();
-    private ArrayList<Discount> discounts = new ArrayList<>();
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
     private ArrayList<ServiceCharge> serviceCharges = new ArrayList<>();
 
@@ -399,6 +400,14 @@ public class Configuration implements Serializable {
 
     public void setTaxes(ArrayList<Tax> taxes) {
         this.taxes = taxes;
+    }
+
+    public boolean isMajorGroupDiscount() {
+        return majorGroupDiscount;
+    }
+
+    public void setMajorGroupDiscount(boolean majorGroupDiscount) {
+        this.majorGroupDiscount = majorGroupDiscount;
     }
 
     public ArrayList<Discount> getDiscounts() {

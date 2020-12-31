@@ -130,12 +130,17 @@ public class SalesService {
         if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
 
         // Get over group gross
+        boolean majorGroupDiscount = salesSyncJobType.getConfiguration().isMajorGroupDiscount();
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
+        ArrayList<Discount> salesDiscounts = new ArrayList<>();
+
         if (revenueCenters.size() > 0 ){
             for (RevenueCenter rc : revenueCenters)
             {
                 Response overGroupGrossResponse = getSalesOverGroupGross(rc,
-                        timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales, driver);
+                        timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales,
+                        majorGroupDiscount, includedDiscount,
+                        driver);
                 if (!overGroupGrossResponse.isStatus()) {
                     if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
                         continue;
@@ -145,24 +150,34 @@ public class SalesService {
                     return;
                 }
 
+                if (majorGroupDiscount){
+                    salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
+                }
+
                 salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
             }
         }
         else {
             Response overGroupGrossResponse = getSalesOverGroupGross(new RevenueCenter(),
-                    timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales, driver);
+                    timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales,
+                    majorGroupDiscount, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
+
+            if (majorGroupDiscount){
+                salesDiscounts = overGroupGrossResponse.getSalesDiscount();
+            }
 
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
         }
 
-        Response discountResponse = new Response();
+        Response discountResponse;
         if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
                 || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
             // Get discounts
             discountResponse = getSalesDiscount(timePeriod,
                     fromDate, toDate, costCenter, false, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
         }
 
         // Get serviceCharge
@@ -179,7 +194,7 @@ public class SalesService {
         // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
         journalBatch.setSalesTax(taxResponse.getSalesTax());
         journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
-        journalBatch.setSalesDiscount(discountResponse.getSalesDiscount());
+        journalBatch.setSalesDiscount(salesDiscounts);
         journalBatch.setSalesServiceCharge(serviceChargeResponse.getSalesServiceCharge());
 
         // Calculate different
@@ -399,9 +414,11 @@ public class SalesService {
     private Response getSalesOverGroupGross(RevenueCenter revenueCenter, String businessDate,
                                             String fromDate, String toDate,
                                             CostCenter location, ArrayList<MajorGroup> majorGroups,
-                                            String grossDiscountSales, WebDriver driver) {
+                                            String grossDiscountSales, boolean majorGroupDiscount,
+                                            ArrayList<Discount> discounts,WebDriver driver) {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
+        ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         driver.get(Constants.OVER_GROUP_GROSS_REPORT_LINK);
 
@@ -449,10 +466,11 @@ public class SalesService {
                 if (cols.size() != columns.size()) {
                     continue;
                 }
-
+                Discount discount;
+                MajorGroup majorGroup;
                 if (columns.indexOf("group") != -1){
                     WebElement td = cols.get(columns.indexOf("group"));
-                    MajorGroup majorGroup = conversions.checkMajorGroupExistence(majorGroups,
+                    majorGroup = conversions.checkMajorGroupExistence(majorGroups,
                             td.getText().strip().toLowerCase());
 
                     if (!majorGroup.getChecked()) {
@@ -466,8 +484,19 @@ public class SalesService {
 
                     Journal journal = new Journal();
                     float majorGroupGross;
+                    float discountTotal;
                     if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
                         majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
+                        if(majorGroupDiscount){
+                            discount = conversions.checkDiscountExistence(discounts, majorGroup.getMajorGroup() + " Discount");
+                            if (!discount.isChecked()) {
+                                break;
+                            }
+                            discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
+                            discount.setTotal(discountTotal);
+                            discount.setCostCenter(location);
+                            salesDiscount.add(discount);
+                        }
                     }else {
                         majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales")).getText().strip());
                     }
@@ -485,7 +514,7 @@ public class SalesService {
             response.setStatus(true);
             response.setMessage("");
             response.setSalesMajorGroupGross(majorGroupsGross);
-
+            response.setSalesDiscount(salesDiscount);
         } catch (Exception e) {
             driver.quit();
 
@@ -721,7 +750,7 @@ public class SalesService {
                     tenderData.put("fromLocation", tender.getCostCenter().accountCode);
                     tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
-                    tenderData.put("transactionReference", "Tender Reference");
+                    tenderData.put("transactionReference", "Tender");
 
                     tenderData.put("expensesAccount", tender.getCommunicationAccount());
 
@@ -767,7 +796,7 @@ public class SalesService {
                 tenderData.put("fromLocation", tender.getCostCenter().accountCode);
                 tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
-                tenderData.put("transactionReference", "Tender Reference");
+                tenderData.put("transactionReference", "Tender");
 
                 tenderData.put("expensesAccount", tender.getAccount());
 
@@ -818,7 +847,7 @@ public class SalesService {
                 taxData.put("fromLocation", tax.getCostCenter().accountCode);
                 taxData.put("toLocation", tax.getCostCenter().accountCode);
 
-                taxData.put("transactionReference", "Taxes Reference");
+                taxData.put("transactionReference", "Taxes");
 
                 // Vat out account
 //                String vatOut = syncJobType.getConfiguration().getVatOut();
@@ -868,7 +897,7 @@ public class SalesService {
                 majorGroupData.put("fromLocation", majorGroupJournal.getCostCenter().accountCode);
                 majorGroupData.put("toLocation", majorGroupJournal.getCostCenter().accountCode);
 
-                majorGroupData.put("transactionReference", "MajorGroup Reference");
+                majorGroupData.put("transactionReference", "MajorGroup");
 
                 // Major Group account
                 majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
@@ -917,7 +946,7 @@ public class SalesService {
                 majorGroupData.put("fromLocation", serviceCharge.getCostCenter().accountCode);
                 majorGroupData.put("toLocation", serviceCharge.getCostCenter().accountCode);
 
-                majorGroupData.put("transactionReference", "MajorGroup Reference");
+                majorGroupData.put("transactionReference", "MajorGroup");
                 majorGroupData.put("inventoryAccount", serviceCharge.getAccount());
 
                 String description = "";
@@ -963,16 +992,21 @@ public class SalesService {
                 discountData.put("fromLocation", discount.getCostCenter().accountCode);
                 discountData.put("toLocation", discount.getCostCenter().accountCode);
 
-                discountData.put("transactionReference", "Discount Cost");
-
                 discountData.put("inventoryAccount", discount.getAccount());
 
                 String description = "";
-                if (discount.getCostCenter().costCenter.equals("")){
+                if(discount.getDiscount().equals("")){
+                    discountData.put("transactionReference", "Discount Cost");
                     description = "Discount Cost";
-                }else {
-                    description = "Discount Cost F " + discount.getCostCenter().costCenterReference + " " + discount.getDiscount();
+                }else{
+                    discountData.put("transactionReference", discount.getDiscount());
+                    description = discount.getDiscount();
                 }
+
+                if (!discount.getCostCenter().costCenter.equals("")){
+                    description = description + " F " + discount.getCostCenter().costCenterReference + " " + discount.getDiscount();
+                }
+
                 if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
@@ -1110,7 +1144,7 @@ public class SalesService {
                 differentData.put("toLocation", journalBatch.getCostCenter().accountCode);
 
                 // 30 Char only
-                differentData.put("transactionReference", "Different Reference");
+                differentData.put("transactionReference", "Different");
 
                 String description = "";
                 if (journalBatch.getCostCenter().costCenter.equals("")){

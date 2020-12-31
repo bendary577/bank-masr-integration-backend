@@ -98,7 +98,9 @@ public class SalesFileDelimiterExporter {
                     .append(textLinked).append(roughBookFlag).append(inUseFlag).append(syncJobDataCSV.analysisCode0)
                     .append(syncJobDataCSV.analysisCode1).append(syncJobDataCSV.analysisCode2)
                     .append(syncJobDataCSV.analysisCode3).append(syncJobDataCSV.analysisCode4)
-                    .append(syncJobDataCSV.analysisCode5);
+                    .append(syncJobDataCSV.analysisCode5).append(syncJobDataCSV.analysisCode6)
+                    .append(syncJobDataCSV.analysisCode7).append(syncJobDataCSV.analysisCode8)
+                    .append(syncJobDataCSV.analysisCode9);
             if(i != this.syncJobDataCSVList.size()-1){
                 fileContent.append("\n");
             }
@@ -115,15 +117,6 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation");
             syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation");
             syncJobDataCSV.DCMarker = syncJobData.getData().get("DCMarker");
-            syncJobDataCSV.recordType = syncJobData.getData().get("recordType");
-            syncJobDataCSV.journalType = syncJobData.getData().get("journalType");
-            syncJobDataCSV.conversionCode = syncJobData.getData().get("conversionCode");
-            syncJobDataCSV.conversionRate = syncJobData.getData().get("conversionRate");
-
-            syncJobDataCSV.analysisCode0 = syncJobData.getData().get("analysisCode0");
-            syncJobDataCSV.analysisCode1 = syncJobData.getData().get("analysisCode1");
-
-            syncJobDataCSV.recordType = syncJobType.getConfiguration().getRecordType();
 
             syncJobDataCSV.description = syncJobData.getData().get("description");
             if(syncJobDataCSV.description.length() > 25){
@@ -179,7 +172,8 @@ public class SalesFileDelimiterExporter {
                     accountCode = String.format("%-10s", accountCode);
                 }
                 syncJobDataCSV.accountCode = accountCode;
-            }else {
+            }
+            else {
                 syncJobDataCSV.DCMarker = "C";
                 // 18 char --> 15 char + 3 decimals
                 String totalCr = syncJobData.getData().get("totalCr");
@@ -211,12 +205,17 @@ public class SalesFileDelimiterExporter {
                 syncJobDataCSV.accountCode = accountCode;
             }
 
+            syncJobDataCSV.recordType = syncJobType.getConfiguration().getRecordType();
             syncJobDataCSV.versionCode = syncJobType.getConfiguration().getVersionCode();
-
             syncJobDataCSV.conversionCode = syncJobType.getConfiguration().getConversionCode();
             syncJobDataCSV.conversionRate = syncJobType.getConfiguration().getConversionRate();
 
             syncJobDataCSV.journalType = syncJobType.getConfiguration().getJournalType();
+            if(syncJobDataCSV.journalType.length() > 5){
+                syncJobDataCSV.journalType = syncJobDataCSV.journalType.substring(0, 5);
+            }else if(syncJobDataCSV.journalType.length() < 5) {
+                syncJobDataCSV.journalType = String.format("%-5s", syncJobDataCSV.journalType);
+            }
 
             // 15 char
             syncJobDataCSV.analysisCode0 = fillTCode(0, syncJobData, false);
@@ -225,6 +224,10 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, false);
             syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, false);
             syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, false);
+            syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, false);
+            syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, false);
+            syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, false);
+            syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, false);
 
             if(syncJobType.getConfiguration().getLocationAnalysis() != null){
                 int index = Integer.parseInt(syncJobType.getConfiguration().getLocationAnalysis()) -1;

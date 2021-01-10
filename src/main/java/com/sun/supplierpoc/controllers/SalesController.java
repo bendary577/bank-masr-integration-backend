@@ -61,7 +61,7 @@ public class SalesController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getPOSSales(user.getId(), account);
+            response = syncPOSSalesInDayRange(user.getId(), account);
             if(!response.isStatus()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -238,24 +238,7 @@ public class SalesController {
                             if (!username.equals("") && !password.equals("") && !host.equals("")){
                                 FtpClient ftpClient = new FtpClient(host, username, password);
                                 if(ftpClient.open()){
-                                    SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                            syncJobType, salesList);
-
-                                    DateFormatSymbols dfs = new DateFormatSymbols();
-                                    String[] weekdays = dfs.getWeekdays();
-
-                                    String transactionDate = salesList.get(0).getData().get("transactionDate");
-                                    Calendar cal = Calendar.getInstance();
-                                    Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                                    cal.setTime(date);
-                                    int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                                    String dayName = weekdays[day];
-                                    String fileExtension = ".ndf";
-                                    String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-
-                                    File file = excelExporter.createNDFFile();
-                                    System.out.println(fileName);
+                                    File file = createSalesFile(salesList, syncJobType);
 
 //                                if (ftpClient.putFileToPath(file, fileName)){
                                     if (true){
@@ -284,6 +267,8 @@ public class SalesController {
                                 }
                             }
                             else{
+                                File file = createSalesFile(salesList, syncJobType);
+
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Sync sales successfully.", Constants.SUCCESS);
@@ -334,15 +319,8 @@ public class SalesController {
     private Response syncPOSSalesInDayRange(String userId, Account account){
         Response response = new Response();
 
-//        "2020-10-03","2020-10-04","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"
-//                ,"2020-10-11","2020-10-12","2020-10-13","2020-10-14","2020-10-15","2020-10-16","2020-10-17","2020-10-18"
-//                ,"2020-10-19","2020-10-20","2020-10-21","2020-10-22"," 2020-10-23","2020-10-24","2020-10-25","2020-10-26"
-//                ,"2020-10-27","2020-10-28","2020-10-29","2020-10-30","2020-10-31"
-        String[] datesArray = {"2020-10-03","2020-10-04","2020-10-05","2020-10-06","2020-10-07","2020-10-08","2020-10-09","2020-10-10"
-                ,"2020-10-11","2020-10-12","2020-10-13","2020-10-14","2020-10-15","2020-10-16","2020-10-17","2020-10-18"
-                ,"2020-10-19","2020-10-20","2020-10-21","2020-10-22"," 2020-10-23","2020-10-24","2020-10-25","2020-10-26"
-                ,"2020-10-27","2020-10-28","2020-10-29","2020-10-30","2020-10-31"
-                };
+        String[] datesArray = {"2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                "2021-01-08", "2021-01-09"};
 
         for (String date : datesArray) {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
@@ -573,7 +551,34 @@ public class SalesController {
         response.setHeader(headerKey, headerValue);
         response.setContentType("text/csv");
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter( syncJobType, salesList);
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName + ".txt", syncJobType, salesList);
         excelExporter.writeSyncData(response.getWriter());
+    }
+
+    private File createSalesFile(List<SyncJobData> salesList, SyncJobType syncJobType) {
+        try {
+            DateFormatSymbols dfs = new DateFormatSymbols();
+            String[] weekdays = dfs.getWeekdays();
+
+            String transactionDate = salesList.get(0).getData().get("transactionDate");
+            Calendar cal = Calendar.getInstance();
+            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+            cal.setTime(date);
+            int day = cal.get(Calendar.DAY_OF_WEEK);
+
+            String dayName = weekdays[day];
+            String fileExtension = ".ndf";
+            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+
+            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                    fileName, syncJobType, salesList);
+
+            File file = excelExporter.createNDFFile();
+            System.out.println(fileName);
+
+            return file;
+        }catch (Exception e){
+            return new File("Sales.ndf");
+        }
     }
 }

@@ -204,7 +204,7 @@ public class JournalController {
                         if(ftpClient.open()){
                             List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    journalSyncJobType, creditNotesList);
+                                    "Journals.ndf", journalSyncJobType, creditNotesList);
 
                             DateFormatSymbols dfs = new DateFormatSymbols();
                             String[] weekdays = dfs.getWeekdays();

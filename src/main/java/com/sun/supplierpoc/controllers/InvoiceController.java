@@ -219,7 +219,7 @@ public class InvoiceController {
                         if(ftpClient.open()){
                             List<SyncJobData> approvedInvoicesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    invoiceSyncJobType, approvedInvoicesList);
+                                    "Invoices.ndf", invoiceSyncJobType, approvedInvoicesList);
 
                             DateFormatSymbols dfs = new DateFormatSymbols();
                             String[] weekdays = dfs.getWeekdays();

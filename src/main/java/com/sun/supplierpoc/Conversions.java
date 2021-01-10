@@ -47,7 +47,8 @@ public class Conversions {
 
     public MajorGroup checkMajorGroupExistence(ArrayList<MajorGroup> majorGroups, String majorGroupName){
         for (MajorGroup majorGroup : majorGroups) {
-            if (majorGroup.getMajorGroup().toLowerCase().equals(majorGroupName.toLowerCase())) {
+            if (majorGroup.getMajorGroup().toLowerCase().equals(majorGroupName.toLowerCase())
+                    || majorGroup.getChildren().contains(majorGroupName)) {
                 return majorGroup;
             }
         }

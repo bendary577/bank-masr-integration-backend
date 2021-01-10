@@ -54,6 +54,7 @@ public class Configuration implements Serializable {
     private Boolean uniqueOverGroupMapping = false;
     private Boolean uniqueAnalysisMapping = false;
 
+    private boolean tenderIncludeTax = true;
     private boolean majorGroupDiscount = false;
     private ArrayList<Discount> discounts = new ArrayList<>();
     private ArrayList<Item> items = new ArrayList<>();
@@ -400,6 +401,14 @@ public class Configuration implements Serializable {
 
     public void setTaxes(ArrayList<Tax> taxes) {
         this.taxes = taxes;
+    }
+
+    public boolean isTenderIncludeTax() {
+        return tenderIncludeTax;
+    }
+
+    public void setTenderIncludeTax(boolean tenderIncludeTax) {
+        this.tenderIncludeTax = tenderIncludeTax;
     }
 
     public boolean isMajorGroupDiscount() {

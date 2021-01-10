@@ -2,6 +2,9 @@ package com.sun.supplierpoc.models.configurations;
 
 import org.springframework.data.annotation.Id;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MajorGroup {
     @Id
     private String id;
@@ -9,6 +12,7 @@ public class MajorGroup {
     private String overGroup="";
     private String majorGroup="";
     private String account="";
+    private List<String> children = new ArrayList<>();
 
     public MajorGroup() {
         this.checked = false;
@@ -56,5 +60,13 @@ public class MajorGroup {
 
     public void setAccount(String account) {
         this.account = account;
+    }
+
+    public List<String> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<String> children) {
+        this.children = children;
     }
 }

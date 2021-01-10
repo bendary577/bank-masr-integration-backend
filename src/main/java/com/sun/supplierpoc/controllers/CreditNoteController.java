@@ -214,7 +214,7 @@ public class CreditNoteController {
                     if(ftpClient.open()){
                         List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                invoiceSyncJobType, creditNotesList);
+                                "CreditNote.ndf", invoiceSyncJobType, creditNotesList);
 
                         DateFormatSymbols dfs = new DateFormatSymbols();
                         String[] weekdays = dfs.getWeekdays();

@@ -10,12 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SalesFileDelimiterExporter {
+    private String fileName;
     private SyncJobType syncJobType;
     private List<SyncJobData> listSyncJobData;
     private List<SyncJobDataCSV> syncJobDataCSVList = new ArrayList<>();
     private StringBuilder fileContent = new StringBuilder();
 
-    public SalesFileDelimiterExporter( SyncJobType syncJobType, List<SyncJobData> listSyncJobData) {
+    public SalesFileDelimiterExporter(String fileName, SyncJobType syncJobType, List<SyncJobData> listSyncJobData) {
+        this.fileName = fileName;
         this.syncJobType = syncJobType;
         this.listSyncJobData = listSyncJobData;
     }
@@ -45,7 +47,7 @@ public class SalesFileDelimiterExporter {
 
     public File createNDFFile(){
         this.createFileContent();
-        File file = new File("sales.ndf");
+        File file = new File(fileName);
         try (Writer writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(String.valueOf(this.fileContent));
         } catch (IOException e) {
@@ -99,10 +101,11 @@ public class SalesFileDelimiterExporter {
                     .append(syncJobDataCSV.analysisCode1).append(syncJobDataCSV.analysisCode2)
                     .append(syncJobDataCSV.analysisCode3).append(syncJobDataCSV.analysisCode4)
                     .append(syncJobDataCSV.analysisCode5).append(syncJobDataCSV.analysisCode6)
-                    .append(syncJobDataCSV.analysisCode7).append(syncJobDataCSV.analysisCode8)
-                    .append(syncJobDataCSV.analysisCode9);
+                    .append(syncJobDataCSV.analysisCode7)
+                    .append(syncJobDataCSV.analysisCode8).append(syncJobDataCSV.analysisCode9);
+
             if(i != this.syncJobDataCSVList.size()-1){
-                fileContent.append("\n");
+                fileContent.append("\r\n");
             }
         }
     }

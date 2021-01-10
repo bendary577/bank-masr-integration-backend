@@ -187,7 +187,7 @@ public class TransferController {
                         if(ftpClient.open()){
                             List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    transferSyncJobType, creditNotesList);
+                                    "Transfers.ndf", transferSyncJobType, creditNotesList);
 
                             DateFormatSymbols dfs = new DateFormatSymbols();
                             String[] weekdays = dfs.getWeekdays();
@@ -517,7 +517,7 @@ public class TransferController {
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter("Transfers.ndf", syncJobType, salesList);
 
         excelExporter.writeSyncData(response.getWriter());
     }

@@ -170,23 +170,23 @@ public class SalesService {
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
         }
 
-//        Response discountResponse;
-//        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
-//                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
-//            // Get discounts
-//            discountResponse = getSalesDiscount(timePeriod,
-//                    fromDate, toDate, costCenter, false, includedDiscount, driver);
-//            if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
-//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-//        }
-//
-//        // Get serviceCharge
+        Response discountResponse;
+        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
+                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
+            // Get discounts
+            discountResponse = getSalesDiscount(timePeriod,
+                    fromDate, toDate, costCenter, false, includedDiscount, driver);
+            if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
+
+        // Get serviceCharge
         Response serviceChargeResponse = new Response();
-//        if (includedServiceCharge.size() > 0){
-//            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
-//                    includedServiceCharge, driver);
-//            if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
-//        }
+        if (includedServiceCharge.size() > 0){
+            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+                    includedServiceCharge, driver);
+            if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
+        }
 
         // Set Debit Entries (Tenders)
         journalBatch.setSalesTender(tenderResponse.getSalesTender());
@@ -504,25 +504,26 @@ public class SalesService {
                         }
                         discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
                         if (discountTotal != 0){
-                            if (!location.costCenterReference.equals("")){
-                                discount.setDiscount(discount.getCostCenter().costCenterReference + " " + discount.getDiscount());
-                            }
+                            Discount groupDiscount = new Discount();
+                            groupDiscount.setDiscount(discount.getDiscount());
+                            groupDiscount.setAccount(discount.getAccount());
+
                             if (child){
                                 Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
-                                        discount.getCostCenter().costCenterReference + " " +  majorGroup.getMajorGroup() + " Discount");
+                                        majorGroup.getMajorGroup() + " Discount");
 
                                 int oldDiscountIndex = salesDiscount.indexOf(discountParent);
                                 if(oldDiscountIndex == -1){
-                                    discount.setTotal(discountTotal);
-                                    discount.setCostCenter(location);
-                                    salesDiscount.add(discount);
+                                    groupDiscount.setTotal(discountTotal);
+                                    groupDiscount.setCostCenter(location);
+                                    salesDiscount.add(groupDiscount);
                                 }else{
-                                    salesDiscount.get(oldDiscountIndex).setTotal(discountTotal + discount.getTotal());
+                                    salesDiscount.get(oldDiscountIndex).setTotal(discountTotal + discountParent.getTotal());
                                 }
                             }else {
-                                discount.setTotal(discountTotal);
-                                discount.setCostCenter(location);
-                                salesDiscount.add(discount);
+                                groupDiscount.setTotal(discountTotal);
+                                groupDiscount.setCostCenter(location);
+                                salesDiscount.add(groupDiscount);
                             }
                         }
                     }
@@ -609,15 +610,15 @@ public class SalesService {
                             break;
                         }
 
-                        if (!location.costCenterReference.equals("")){
-                            discount.setDiscount(discount.getCostCenter().costCenterReference + " " + discount.getDiscount());
-                        }
+                        Discount newDiscount = new Discount();
 
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
-                        discount.setTotal(discountTotal);
-                        discount.setCostCenter(location);
-                        salesDiscount.add(discount);
+                        newDiscount.setDiscount(discount.getDiscount());
+                        newDiscount.setAccount(discount.getAccount());
+                        newDiscount.setTotal(discountTotal);
+                        newDiscount.setCostCenter(location);
+                        salesDiscount.add(newDiscount);
                         break;
                     }
                 }else{
@@ -629,15 +630,15 @@ public class SalesService {
                             continue;
                         }
 
-                        if (!location.costCenterReference.equals("")){
-                            discount.setDiscount(discount.getCostCenter().costCenterReference + " " + discount.getDiscount());
-                        }
+                        Discount newDiscount = new Discount();
 
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
-                        discount.setTotal(discountTotal);
-                        discount.setCostCenter(location);
-                        salesDiscount.add(discount);
+                        newDiscount.setDiscount(discount.getDiscount());
+                        newDiscount.setAccount(discount.getAccount());
+                        newDiscount.setTotal(discountTotal);
+                        newDiscount.setCostCenter(location);
+                        salesDiscount.add(newDiscount);
                     }else{
                         driver.quit();
                         response.setStatus(false);
@@ -1082,6 +1083,10 @@ public class SalesService {
                 }else{
                     discountData.put("transactionReference", discount.getDiscount());
                     description = discount.getDiscount();
+                }
+
+                if (!discount.getCostCenter().costCenterReference.equals("")){
+                    description = discount.getCostCenter().costCenterReference + " " + description;
                 }
 
                 if (description.length() > 50) {

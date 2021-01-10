@@ -37,7 +37,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -45,7 +45,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -385,6 +385,14 @@ public class SetupEnvironment {
         Response response = new Response();
         try {
             driver.findElement(By.id("clear0")).click();
+            try {
+                Select businessDate = new Select(driver.findElement(By.id("selectYear")));
+                businessDate.selectByVisibleText(syncFromDate.split("-")[0]);
+            } catch (Exception e) {
+                String message = "Chosen year out of range";
+                response.setStatus(false);
+                response.setMessage(message);
+            }
 
             DateFormat Date = DateFormat.getDateInstance();
             Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);

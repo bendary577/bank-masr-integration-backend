@@ -469,7 +469,6 @@ public class SalesService {
                 Discount discount;
                 MajorGroup majorGroup;
                 if (columns.indexOf("group") != -1){
-                    WebElement td;
                     String majorGroupName = cols.get(columns.indexOf("group")).getText().strip().toLowerCase();
                     majorGroup = conversions.checkMajorGroupExistence(majorGroups,
                             majorGroupName);
@@ -505,8 +504,12 @@ public class SalesService {
                         }
                         discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
                         if (discountTotal != 0){
+                            if (!location.costCenterReference.equals("")){
+                                discount.setDiscount(discount.getCostCenter().costCenterReference + " " + discount.getDiscount());
+                            }
                             if (child){
-                                Discount discountParent = conversions.checkDiscountExistence(salesDiscount, majorGroup.getMajorGroup() + " Discount");
+                                Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
+                                        discount.getCostCenter().costCenterReference + " " +  majorGroup.getMajorGroup() + " Discount");
 
                                 int oldDiscountIndex = salesDiscount.indexOf(discountParent);
                                 if(oldDiscountIndex == -1){
@@ -606,6 +609,10 @@ public class SalesService {
                             break;
                         }
 
+                        if (!location.costCenterReference.equals("")){
+                            discount.setDiscount(discount.getCostCenter().costCenterReference + " " + discount.getDiscount());
+                        }
+
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
                         discount.setTotal(discountTotal);
@@ -620,6 +627,10 @@ public class SalesService {
 
                         if (!discount.isChecked()) {
                             continue;
+                        }
+
+                        if (!location.costCenterReference.equals("")){
+                            discount.setDiscount(discount.getCostCenter().costCenterReference + " " + discount.getDiscount());
                         }
 
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
@@ -1071,10 +1082,6 @@ public class SalesService {
                 }else{
                     discountData.put("transactionReference", discount.getDiscount());
                     description = discount.getDiscount();
-                }
-
-                if (!discount.getCostCenter().costCenterReference.equals("")){
-                    description = discount.getCostCenter().costCenterReference + " "+ description ;
                 }
 
                 if (description.length() > 50) {

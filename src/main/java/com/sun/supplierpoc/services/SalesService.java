@@ -170,15 +170,15 @@ public class SalesService {
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
         }
 
-//        Response discountResponse;
-//        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
-//                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
-//            // Get discounts
-//            discountResponse = getSalesDiscount(timePeriod,
-//                    fromDate, toDate, costCenter, false, includedDiscount, driver);
-//            if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
-//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-//        }
+        Response discountResponse;
+        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
+                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
+            // Get discounts
+            discountResponse = getSalesDiscount(timePeriod,
+                    fromDate, toDate, costCenter, false, includedDiscount, driver);
+            if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
 
         // Get serviceCharge
         Response serviceChargeResponse = new Response();

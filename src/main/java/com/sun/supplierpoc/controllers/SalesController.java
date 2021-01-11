@@ -61,7 +61,7 @@ public class SalesController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = syncPOSSalesInDayRange(user.getId(), account);
+            response = getPOSSales(user.getId(), account);
             if(!response.isStatus()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -320,10 +320,8 @@ public class SalesController {
         Response response = new Response();
 
         String[] datesArray = {
-                "2020-12-14",
-                "2020-12-15",
-                "2020-12-16",
-                "2020-12-17"};
+
+                "2020-12-31"};
 
         for (String date : datesArray) {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);

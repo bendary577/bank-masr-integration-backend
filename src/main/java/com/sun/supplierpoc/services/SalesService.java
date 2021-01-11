@@ -170,15 +170,15 @@ public class SalesService {
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
         }
 
-        Response discountResponse;
-        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
-                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
-            // Get discounts
-            discountResponse = getSalesDiscount(timePeriod,
-                    fromDate, toDate, costCenter, false, includedDiscount, driver);
-            if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
-            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-        }
+//        Response discountResponse;
+//        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
+//                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
+//            // Get discounts
+//            discountResponse = getSalesDiscount(timePeriod,
+//                    fromDate, toDate, costCenter, false, includedDiscount, driver);
+//            if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
+//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+//        }
 
         // Get serviceCharge
         Response serviceChargeResponse = new Response();
@@ -469,7 +469,12 @@ public class SalesService {
                 Discount discount;
                 MajorGroup majorGroup;
                 if (columns.indexOf("group") != -1){
-                    String majorGroupName = cols.get(columns.indexOf("group")).getText().strip().toLowerCase();
+                    WebElement col = cols.get(columns.indexOf("group"));
+                    if (!col.getAttribute("class").equals("header_1")){ // Group
+                        continue;
+                    }
+
+                    String majorGroupName = col.getText().strip().toLowerCase();
                     majorGroup = conversions.checkMajorGroupExistence(majorGroups,
                             majorGroupName);
 
@@ -485,12 +490,6 @@ public class SalesService {
                     Journal journal = new Journal();
                     float majorGroupGross;
                     float discountTotal;
-                    /*
-                     * check if this was child major group
-                     * */
-                    boolean child = false;
-                    if(!majorGroup.getMajorGroup().toLowerCase().equals(majorGroupName))
-                        child = true;
 
                     if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
                         majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_disc")).getText().strip());
@@ -508,28 +507,22 @@ public class SalesService {
                             groupDiscount.setDiscount(discount.getDiscount());
                             groupDiscount.setAccount(discount.getAccount());
 
-                            if (child){
-                                Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
-                                        majorGroup.getMajorGroup() + " Discount");
+                            Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
+                                    majorGroup.getMajorGroup() + " Discount");
 
-                                int oldDiscountIndex = salesDiscount.indexOf(discountParent);
-                                if(oldDiscountIndex == -1){
-                                    groupDiscount.setTotal(discountTotal);
-                                    groupDiscount.setCostCenter(location);
-                                    salesDiscount.add(groupDiscount);
-                                }else{
-                                    salesDiscount.get(oldDiscountIndex).setTotal(discountTotal + discountParent.getTotal());
-                                }
-                            }else {
+                            int oldDiscountIndex = salesDiscount.indexOf(discountParent);
+                            if(oldDiscountIndex == -1){
                                 groupDiscount.setTotal(discountTotal);
                                 groupDiscount.setCostCenter(location);
                                 salesDiscount.add(groupDiscount);
+                            }else{
+                                salesDiscount.get(oldDiscountIndex).setTotal(discountTotal + discountParent.getTotal());
                             }
                         }
                     }
 
                     majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
-                            , 0, majorGroupGross, 0, 0, location, revenueCenter, child);
+                            , 0, majorGroupGross, 0, 0, location, revenueCenter);
                 }else{
                     driver.quit();
                     response.setStatus(false);

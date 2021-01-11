@@ -41,17 +41,15 @@ public class Journal {
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
                                              float waste, float cost, float variance, float transfer,
-                                             CostCenter costCenter, RevenueCenter revenueCenter, boolean child){
+                                             CostCenter costCenter, RevenueCenter revenueCenter){
 
         for (Journal journal:journals) {
             if(journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())){
-                if(child){
-                    // Add new value
-                    journal.totalWaste += waste;
-                    journal.totalCost += cost;
-                    journal.totalVariance += variance;
-                    journal.totalTransfer += transfer;
-                }
+                // Add new value
+                journal.totalWaste += waste;
+                journal.totalCost += cost;
+                journal.totalVariance += variance;
+                journal.totalTransfer += transfer;
                 return journals;
             }
         }

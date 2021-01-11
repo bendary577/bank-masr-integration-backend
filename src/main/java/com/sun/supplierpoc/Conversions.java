@@ -281,6 +281,8 @@ public class Conversions {
         else if(businessDate.equals(Constants.USER_DEFINED)){
             String[] fromDateArr = fromDate.split("-");
             transactionDate += fromDateArr[2] + fromDateArr[1] ;
+            currentYear = fromDateArr[0];
+
         }
         else{
             transactionDate += today + currentMonth ;

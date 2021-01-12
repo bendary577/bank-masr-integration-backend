@@ -347,7 +347,7 @@ public class MenuItemService {
             menuItemData.put("menuFirstName", menuItem.getName1().getStringText());
             menuItemData.put("menuSecondName", menuItem.getName2().getStringText());
             menuItemData.put("miObjectNum", menuItem.getMiMasterObjNum());
-            menuItemData.put("Availability", menuItem.getCheckAvailability().toString());
+            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
 
             if (menuItem.getMenuItemPrice() != null){
                 menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());

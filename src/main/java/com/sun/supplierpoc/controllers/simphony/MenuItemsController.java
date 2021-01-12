@@ -25,7 +25,7 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController()
-@RequestMapping(value = {"/Simphony"})
+//@RequestMapping(value = {"/Simphony"})
 public class MenuItemsController {
     @Autowired
     private AccountRepo accountRepo;
@@ -52,19 +52,25 @@ public class MenuItemsController {
     @RequestMapping("/SyncSimphonyMenuItems")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> SyncSimphonyMenuItemsRequest(Principal principal,
-                                                                 @RequestParam(name = "revenueCenterID") int revenueCenterID) {
+    public ResponseEntity<Response> SyncSimphonyMenuItemsRequest(Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = SyncSimphonyMenuItems(user.getId(), account, revenueCenterID);
-            if(!response.isStatus()){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }else {
-                return ResponseEntity.status(HttpStatus.OK).body(response);
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
+            for (SimphonyLocation location : locations){
+                if(location.isChecked()){
+                    response = SyncSimphonyMenuItems(user.getId(), account, location.getRevenueCenterID());
+                    if(!response.isStatus()){
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
+                }
             }
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
 
         String message = "Invalid Credentials";
@@ -145,7 +151,7 @@ public class MenuItemsController {
         }
     }
 
-    @RequestMapping("/GetSimphonyMenuItems")
+    @RequestMapping("/Simphony/GetSimphonyMenuItems")
     public ResponseEntity GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID,
                                                       @RequestHeader("Authorization") String authorization) {
         String username, password;

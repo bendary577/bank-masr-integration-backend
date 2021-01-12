@@ -161,7 +161,9 @@ public class ScheduledTasks {
 
                     ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
                     for (SimphonyLocation location : locations){
-                        menuItemsController.SyncSimphonyMenuItems("Automated User", account, location.getRevenueCenterID());
+                        if(location.isChecked()){
+                            menuItemsController.SyncSimphonyMenuItems("Automated User", account, location.getRevenueCenterID());
+                        }
                     }
                 }
             }

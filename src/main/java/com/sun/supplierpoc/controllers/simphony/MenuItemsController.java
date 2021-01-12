@@ -88,6 +88,9 @@ public class MenuItemsController {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
+            int startIndex = syncJobType.getConfiguration().getStartIndex();
+            int maxCount = syncJobType.getConfiguration().getMaxCount();
+
             SimphonyLocation simphonyLocation = generalSettings.getSimphonyLocationsByID(revenueCenterID);
             if(simphonyLocation == null){
                 String message = "Please configure revenue center before sync menu items.";
@@ -108,6 +111,14 @@ public class MenuItemsController {
                 return response;
             }
 
+            if (maxCount == 0){
+                String message = "Please configure menu items count before sync menu items.";
+                response.setMessage(message);
+                response.setStatus(false);
+
+                return response;
+            }
+
             //////////////////////////////////////// End of Validation //////////////////////////////////////////////////
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
@@ -116,10 +127,12 @@ public class MenuItemsController {
 
             syncJobRepo.save(syncJob);
 
-            response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenterID, simphonyPosApiWeb);
+            response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenterID, simphonyPosApiWeb,
+                    startIndex, maxCount);
             if(response.isStatus()){
                 // Save menu items
-                ArrayList<SyncJobData> savedMenuItems = this.menuItemService.saveMenuItemData(response.getMenuItems(), syncJob);
+                ArrayList<SyncJobData> savedMenuItems = this.menuItemService.saveMenuItemData(response.getMenuItems(),
+                        syncJob);
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(response.getMenuItems().size());

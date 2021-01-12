@@ -31,4 +31,5 @@ public class OperationConfiguration {
     public void setDiscountNumber(String discountNumber) {
         this.discountNumber = discountNumber;
     }
+
 }

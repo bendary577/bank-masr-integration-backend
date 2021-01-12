@@ -62,7 +62,7 @@ public class MenuItemService {
     private SyncJobDataRepo syncJobDataRepo;
 
     public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter,
-                                                                      String simphonyServerIP){
+                                                                      String simphonyServerIP, int startIndex, int maxCount){
         com.sun.supplierpoc.models.Response response = new com.sun.supplierpoc.models.Response();
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
@@ -75,15 +75,15 @@ public class MenuItemService {
 
 
             simphonyPosApi_configInfo.setConfigurationInfoTypeID("MENUITEMDEFINITIONS");
-            simphonyPosApi_configInfo.setStartIndex(1);
-            simphonyPosApi_configInfo.setMaxRecordCount(10);
+            simphonyPosApi_configInfo.setStartIndex(startIndex);
+            simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
             simphonyPosApi_configInfos.add(simphonyPosApi_configInfo);
 
             simphonyPosApi_configInfo = new SimphonyPosApi_ConfigInfo();
 
             simphonyPosApi_configInfo.setConfigurationInfoTypeID("MENUITEMPRICE");
-            simphonyPosApi_configInfo.setStartIndex(1);
-            simphonyPosApi_configInfo.setMaxRecordCount(10);
+            simphonyPosApi_configInfo.setStartIndex(startIndex);
+            simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
             simphonyPosApi_configInfos.add(simphonyPosApi_configInfo);
 
 

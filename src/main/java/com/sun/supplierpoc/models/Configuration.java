@@ -51,6 +51,12 @@ public class Configuration implements Serializable {
     private String conversionRate = "";
     private String versionCode = "";
 
+    /*
+     * Menu Items Sync
+     * */
+    private int startIndex = 1;
+    private int maxCount = 10;
+
     private Boolean uniqueOverGroupMapping = false;
     private Boolean uniqueAnalysisMapping = false;
 
@@ -449,5 +455,21 @@ public class Configuration implements Serializable {
 
     public void setAccountSettings(AccountSettings accountSettings) {
         this.accountSettings = accountSettings;
+    }
+
+    public int getStartIndex() {
+        return startIndex;
+    }
+
+    public void setStartIndex(int startIndex) {
+        this.startIndex = startIndex;
+    }
+
+    public int getMaxCount() {
+        return maxCount;
+    }
+
+    public void setMaxCount(int maxCount) {
+        this.maxCount = maxCount;
     }
 }

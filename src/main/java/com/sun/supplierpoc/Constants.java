@@ -83,6 +83,7 @@ public class Constants {
 
     // Daily Detail >> Sales Mix
     public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=15";
+    public static String OVER_GROUP_NET_VAT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
     // Daily Detail >> Discount
     public static String DISCOUNT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=13";

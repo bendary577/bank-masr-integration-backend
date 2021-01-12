@@ -133,13 +133,15 @@ public class SalesService {
         boolean majorGroupDiscount = salesSyncJobType.getConfiguration().isMajorGroupDiscount();
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
+        boolean taxIncluded = salesSyncJobType.getConfiguration().isTenderIncludeTax();
 
         if (revenueCenters.size() > 0 ){
             for (RevenueCenter rc : revenueCenters)
             {
+
                 Response overGroupGrossResponse = getSalesOverGroupGross(rc,
                         timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales,
-                        majorGroupDiscount, includedDiscount,
+                        majorGroupDiscount, includedDiscount, taxIncluded,
                         driver);
                 if (!overGroupGrossResponse.isStatus()) {
                     if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
@@ -160,7 +162,7 @@ public class SalesService {
         else {
             Response overGroupGrossResponse = getSalesOverGroupGross(new RevenueCenter(),
                     timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales,
-                    majorGroupDiscount, includedDiscount, driver);
+                    majorGroupDiscount, includedDiscount, taxIncluded, driver);
             if (checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
 
             if (majorGroupDiscount){
@@ -415,12 +417,20 @@ public class SalesService {
                                             String fromDate, String toDate,
                                             CostCenter location, ArrayList<MajorGroup> majorGroups,
                                             String grossDiscountSales, boolean majorGroupDiscount,
-                                            ArrayList<Discount> discounts,WebDriver driver) {
+                                            ArrayList<Discount> discounts, boolean taxIncluded,
+                                            WebDriver driver) {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
-        driver.get(Constants.OVER_GROUP_GROSS_REPORT_LINK);
+        /*
+        * Check if account use tax included or add on
+        * */
+        if(taxIncluded){
+            driver.get(Constants.OVER_GROUP_NET_VAT_REPORT_LINK);
+        }else{
+            driver.get(Constants.OVER_GROUP_GROSS_REPORT_LINK);
+        }
 
         try{
             WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -441,8 +451,13 @@ public class SalesService {
 
         driver.findElement(By.id("Run Report")).click();
 
-        String overGroupGrossLink = Constants.OHRA_LINK +
-                "/finengine/reportRunAction.do?rptroot=15&reportID=SalesMixDailyDetail&method=run";
+        String overGroupGrossLink = Constants.OHRA_LINK;
+
+        if(taxIncluded){
+            overGroupGrossLink += "/finengine/reportRunAction.do?method=run&reportID=EAME_SalesMixDailyDetail_VAT&rptroot=1191";
+        }else{
+            overGroupGrossLink += "/finengine/reportRunAction.do?rptroot=15&reportID=SalesMixDailyDetail&method=run";
+        }
 
         try {
             driver.get(overGroupGrossLink);
@@ -468,7 +483,7 @@ public class SalesService {
                 }
                 Discount discount;
                 MajorGroup majorGroup;
-                if (columns.indexOf("group") != -1){
+                if (!taxIncluded && columns.indexOf("group") != -1){
                     WebElement col = cols.get(columns.indexOf("group"));
                     if (!col.getAttribute("class").equals("header_1")){ // Group
                         continue;
@@ -523,7 +538,64 @@ public class SalesService {
 
                     majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
                             , 0, majorGroupGross, 0, 0, location, revenueCenter);
-                }else{
+                }
+                else if(taxIncluded && columns.indexOf("item_group") != -1){
+                    WebElement col = cols.get(columns.indexOf("item_group"));
+                    if (!col.getAttribute("class").equals("header_2")){ // Group
+                        continue;
+                    }
+
+                    String majorGroupName = col.getText().strip().toLowerCase();
+                    majorGroup = conversions.checkMajorGroupExistence(majorGroups,
+                            majorGroupName);
+
+                    if (!majorGroup.getChecked()) {
+                        majorGroup = conversions.checkMajorGroupExistence(majorGroups,
+                                majorGroupName + " "+ revenueCenter.getRevenueCenter().toLowerCase());
+
+                        if (!majorGroup.getChecked()) {
+                            continue;
+                        }
+                    }
+
+                    Journal journal = new Journal();
+                    float majorGroupGross;
+                    float discountTotal;
+
+                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
+                        majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_after_disc.")).getText().strip());
+                    }else {
+                        majorGroupGross = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_before_disc.")).getText().strip());
+                    }
+                    if(majorGroupDiscount){
+                        discount = conversions.checkDiscountExistence(discounts, majorGroup.getMajorGroup() + " Discount");
+                        if (!discount.isChecked()) {
+                            break;
+                        }
+                        discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts_vat")).getText().strip());
+                        if (discountTotal != 0){
+                            Discount groupDiscount = new Discount();
+                            groupDiscount.setDiscount(discount.getDiscount());
+                            groupDiscount.setAccount(discount.getAccount());
+
+                            Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
+                                    majorGroup.getMajorGroup() + " Discount");
+
+                            int oldDiscountIndex = salesDiscount.indexOf(discountParent);
+                            if(oldDiscountIndex == -1){
+                                groupDiscount.setTotal(discountTotal);
+                                groupDiscount.setCostCenter(location);
+                                salesDiscount.add(groupDiscount);
+                            }else{
+                                salesDiscount.get(oldDiscountIndex).setTotal(discountTotal + discountParent.getTotal());
+                            }
+                        }
+                    }
+
+                    majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
+                            , 0, majorGroupGross, 0, 0, location, revenueCenter);
+                }
+                else{
                     driver.quit();
                     response.setStatus(false);
                     response.setMessage("Failed to get majorGroup gross entries, Please contact support team.");
@@ -899,50 +971,6 @@ public class SalesService {
 
                 float taxTotal = tax.getTotal();
                 totalTax += taxTotal;
-            }
-
-            /*
-            * Check if tender include tax or not
-            * */
-            if (!syncJobType.getConfiguration().isTenderIncludeTax() && totalTax != 0){
-                HashMap<String, String> taxData = new HashMap<>();
-
-                taxData.put("accountingPeriod", transactionDate.substring(2,6));
-                taxData.put("transactionDate", transactionDate);
-
-                taxData.put("totalDr", String.valueOf(totalTax));
-
-                taxData.put("fromCostCenter", journalBatch.getCostCenter().costCenter);
-                taxData.put("fromAccountCode", journalBatch.getCostCenter().accountCode);
-
-                taxData.put("toCostCenter", journalBatch.getCostCenter().costCenter);
-                taxData.put("toAccountCode", journalBatch.getCostCenter().accountCode);
-
-                taxData.put("fromLocation", journalBatch.getCostCenter().accountCode);
-                taxData.put("toLocation", journalBatch.getCostCenter().accountCode);
-
-                taxData.put("transactionReference", "Taxes");
-                taxData.put("expensesAccount", "121006");
-
-                String description = "";
-                if (journalBatch.getCostCenter().costCenterReference.equals("")){
-                    description = "Total Tax";
-                }else {
-                    description = journalBatch.getCostCenter().costCenterReference + " Total Tax";
-                }
-
-                if (description.length() > 50) {
-                    description = description.substring(0, 50);
-                }
-
-                taxData.put("description", description);
-
-                SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
-                journalBatch.getSalesTaxData().add(syncJobData);
-
-                totalTender += totalTax;
             }
 
             // Save majorGroup {Credit}

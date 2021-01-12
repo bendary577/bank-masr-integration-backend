@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.controllers;
 
-import com.sun.supplierpoc.models.OperationTypes;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.OperationType;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ public class OperationTypeController {
     @GetMapping("/getOperationTypes")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ArrayList<OperationTypes> getOperationTypes(Principal principal)  {
+    public ArrayList<OperationType> getOperationTypes(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         return operationTypeRepo.findAllByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);
     }
@@ -28,7 +27,7 @@ public class OperationTypeController {
     @GetMapping("/getOperationTypeByName")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public OperationTypes getOperationTypeByName(@RequestParam(name = "operationName") String operationName, Principal principal)  {
+    public OperationType getOperationTypeByName(@RequestParam(name = "operationName") String operationName, Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         return operationTypeRepo.findAllByNameAndAccountIdAndDeleted(operationName, user.getAccountId(), false);
     }
@@ -36,9 +35,9 @@ public class OperationTypeController {
     @RequestMapping("/createOperationType")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public OperationTypes createOperationType(Principal principal)  {
+    public OperationType createOperationType(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        OperationTypes operation = new OperationTypes(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
+        OperationType operation = new OperationType(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
         operationTypeRepo.save(operation);
         return operation;
     }
@@ -46,8 +45,8 @@ public class OperationTypeController {
     @PutMapping("/updateOperationTypeConfiguration")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public Boolean updateSyncJobTypesConfiguration(@RequestBody OperationTypes operationTypes)  {
-        operationTypeRepo.save(operationTypes);
+    public Boolean updateSyncJobTypesConfiguration(@RequestBody OperationType operationType)  {
+        operationTypeRepo.save(operationType);
         return true;
     }
 }

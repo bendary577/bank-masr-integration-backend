@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.models.operationConfiguration.OperationConfiguration;
 import com.sun.supplierpoc.models.simphony.*;
 
 import com.sun.supplierpoc.models.simphony.discount.SimphonyPosApi_DiscountEx;
@@ -167,12 +168,19 @@ public class MenuItemService {
         return response;
     }
 
-    public ResponseEntity PostTransactionEx(PostTransactionEx2 checkDetails, SimphonyLocation location){
+    public ResponseEntity PostTransactionEx(PostTransactionEx2 checkDetails, SimphonyLocation location,
+                                            OperationType operationType){
 
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
         try
         {
+            /*
+            * Add extra static fields to check
+            * */
+
+            buildCheckObject(checkDetails, location, operationType);
+
             jaxbContext = JAXBContext.newInstance(PostTransactionEx2.class);
 
             Marshaller marshaller = jaxbContext.createMarshaller();
@@ -423,5 +431,65 @@ public class MenuItemService {
 
         return postTransactionEx2;
     }
+
+    private void buildCheckObject(PostTransactionEx2 checkDetails, SimphonyLocation location,
+                                                OperationType operationType){
+        OperationConfiguration configuration = operationType.getConfiguration();
+        //////////////////////////////////////// Guest Check Details ////////////////////////////////////////////////
+        pGuestCheck pGuestCheck = checkDetails.getpGuestCheck();
+
+        pGuestCheck.setCheckNum("0");
+        pGuestCheck.setCheckSeq("0");
+        pGuestCheck.setCheckGuestCount("1");
+        pGuestCheck.setCheckStatusBits("0");
+        pGuestCheck.setEventObjectNum("0");
+        pGuestCheck.setCheckTableObjectNum("1");
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        LocalDateTime now = LocalDateTime.now();
+        pGuestCheck.setCheckDateToFire(dtf.format(now));
+
+        pGuestCheck.setCheckEmployeeObjectNum(Integer.toString(location.getEmployeeNumber()));
+        pGuestCheck.setCheckRevenueCenterID(Integer.toString(location.getRevenueCenterID()));
+
+        ////////////////////////////////////// Tender Details ///////////////////////////////////////////////////////
+
+        pTmedDetailEx2 pTmedDetailEx2 = new pTmedDetailEx2();
+        SimphonyPosApi_TmedDetailItemEx2 SimphonyPosApi_TmedDetailItemEx2 = new SimphonyPosApi_TmedDetailItemEx2();
+        TmedEPayment TmedEPayment = new TmedEPayment();
+        TmedEPayment.setAccountType(configuration.getAccountType());
+
+        SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
+        SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum(configuration.getTenderNumber());
+        pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
+
+        ////////////////////////////////////// Menu Items Details ///////////////////////////////////////////////////
+        ppMenuItemsEx ppMenuItemsEx = checkDetails.getPpMenuItemsEx();
+        List<MenuItem> menuItems = ppMenuItemsEx.getSimphonyPosApi_MenuItemEx();
+
+        // Prepare discount object
+        SimphonyPosApi_DiscountEx simphonyPosApi_discountEx = new SimphonyPosApi_DiscountEx();
+        simphonyPosApi_discountEx.setDiscObjectNum(configuration.getDiscountNumber());
+
+        ItemDiscount itemDiscount = new ItemDiscount();
+        itemDiscount.setSimphonyPosApi_DiscountEx(simphonyPosApi_discountEx);
+
+        for (MenuItem items : menuItems) {
+            // Add Discount
+            items.setItemDiscount(itemDiscount);
+
+            items.setMiSubLevel("1");
+            items.setMiMenuLevel("1");
+            items.setMiPriceLevel("0");
+            items.setMiDefinitionSeqNum("1");
+        }
+
+        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
+
+        checkDetails.setpGuestCheck(pGuestCheck);
+        checkDetails.setPpMenuItemsEx(ppMenuItemsEx);
+        checkDetails.setpTmedDetailEx2(pTmedDetailEx2);
+    }
+
 }
 

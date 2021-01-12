@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 import java.util.Date;
 
-public class OperationTypes implements Serializable {
+public class OperationType implements Serializable {
     @Id
     private String id;
     private int index;
@@ -16,10 +16,10 @@ public class OperationTypes implements Serializable {
     private String accountId;
     private boolean deleted;
 
-    public OperationTypes() {
+    public OperationType() {
     }
 
-    public OperationTypes(int index, String name, String endPoint, Date creationDate, String accountId) {
+    public OperationType(int index, String name, String endPoint, Date creationDate, String accountId) {
         this.index = index;
         this.name = name;
         this.endPoint = endPoint;

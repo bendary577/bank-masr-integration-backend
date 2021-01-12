@@ -26,7 +26,7 @@ import java.util.*;
 
 @RestController()
 @RequestMapping(value = {"/Simphony"})
-public class ConfigurationController {
+public class MenuItemsController {
     @Autowired
     private AccountRepo accountRepo;
     @Autowired

@@ -102,7 +102,7 @@ public class MenuItemsController {
                 return response;
             }
 
-            //////////////////////////////////////// En of Validation //////////////////////////////////////////////////
+            //////////////////////////////////////// End of Validation //////////////////////////////////////////////////
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                     account.getId(), syncJobType.getId(), 0);
@@ -145,7 +145,7 @@ public class MenuItemsController {
         }
     }
 
-    @RequestMapping("/GetSimphonyMenuItemsRequest")
+    @RequestMapping("/GetSimphonyMenuItems")
     public ResponseEntity GetSimphonyMenuItemsRequest(@RequestParam(name = "revenueCenterID") int revenueCenterID,
                                                       @RequestHeader("Authorization") String authorization) {
         String username, password;
@@ -176,7 +176,8 @@ public class MenuItemsController {
 
                     if (syncJob != null){
                         syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
-                        return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+                        ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                        return new ResponseEntity<>(menuItems, HttpStatus.OK);
 
                     }else{
                         // Sync menu items
@@ -184,7 +185,8 @@ public class MenuItemsController {
 
                         if(syncResponse.isStatus()){
                             syncJobData = syncResponse.getAddedSyncJobData();
-                            return new ResponseEntity<>(syncJobData, HttpStatus.OK);
+                            ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                            return new ResponseEntity<>(menuItems, HttpStatus.OK);
                         }else {
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());
                         }

@@ -346,8 +346,7 @@ public class MenuItemService {
 
             menuItemData.put("menuFirstName", menuItem.getName1().getStringText());
             menuItemData.put("menuSecondName", menuItem.getName2().getStringText());
-            menuItemData.put("MiMasterObjNum", menuItem.getMiMasterObjNum());
-            menuItemData.put("menuItemDefID", menuItem.getMenuItemDefID());
+            menuItemData.put("miObjectNum", menuItem.getMiMasterObjNum());
             menuItemData.put("Availability", menuItem.getCheckAvailability().toString());
 
             if (menuItem.getMenuItemPrice() != null){
@@ -362,6 +361,15 @@ public class MenuItemService {
             savedMenuItems.add(syncJobData);
         }
         return savedMenuItems;
+    }
+
+    public ArrayList<HashMap<String, String>> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
+        ArrayList<HashMap<String, String>> menuItems = new ArrayList<>();
+
+        for (SyncJobData data : menuItemsData ) {
+            menuItems.add(data.getData());
+        }
+        return menuItems;
     }
 
     private PostTransactionEx2 buildCheckObject(SimphonyLocation location){

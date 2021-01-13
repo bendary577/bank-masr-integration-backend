@@ -245,17 +245,32 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                "", driver);
+        String message = "";
+        do{
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
+                    location.locationName, "", driver);
 
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage( dateResponse.getMessage());
-            response.setSalesTender(tenders);
-            return response;
-        }
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage( dateResponse.getMessage());
+                response.setSalesTender(tenders);
+                return response;
+            }
 
-        driver.findElement(By.id("Run Report")).click();
+            driver.findElement(By.id("Run Report")).click();
+
+            /*
+             * Check if selenium failed to select business date, and re-try
+             * */
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
@@ -338,17 +353,32 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                "", driver);
+        String message = "";
+        do{
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
+                    "", driver);
 
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage( dateResponse.getMessage());
-            response.setSalesTax(salesTax);
-            return response;
-        }
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage( dateResponse.getMessage());
+                response.setSalesTax(salesTax);
+                return response;
+            }
 
-        driver.findElement(By.id("Run Report")).click();
+            driver.findElement(By.id("Run Report")).click();
+
+            /*
+             * Check if selenium failed to select business date, and re-try
+             * */
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
 
         if(taxIncluded){
             driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
@@ -465,17 +495,32 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                revenueCenter.getRevenueCenter(), driver);
+        String message = "";
+        do{
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
+                    revenueCenter.getRevenueCenter(), driver);
 
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage( dateResponse.getMessage());
-            response.setSalesMajorGroupGross(majorGroupsGross);
-            return response;
-        }
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage( dateResponse.getMessage());
+                response.setSalesMajorGroupGross(majorGroupsGross);
+                return response;
+            }
 
-        driver.findElement(By.id("Run Report")).click();
+            driver.findElement(By.id("Run Report")).click();
+
+            /*
+            * Check if selenium failed to select business date, and re-try
+            * */
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
 
         String overGroupGrossLink = Constants.OHRA_LINK;
 
@@ -658,16 +703,31 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                "", driver);
+        String message = "";
+        do{
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
+                    location.locationName, "", driver);
 
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage(dateResponse.getMessage());
-            return response;
-        }
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
 
-        driver.findElement(By.id("Run Report")).click();
+            driver.findElement(By.id("Run Report")).click();
+
+            /*
+             * Check if selenium failed to select business date, and re-try
+             * */
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
 
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
@@ -762,16 +822,31 @@ public class SalesService {
             System.out.println("There is no loader");
         }
 
-        Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                "", driver);
+        String message = "";
+        do{
+            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
+                    "", driver);
 
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage(dateResponse.getMessage());
-            return response;
-        }
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
 
-        driver.findElement(By.id("Run Report")).click();
+            driver.findElement(By.id("Run Report")).click();
+
+            /*
+             * Check if selenium failed to select business date, and re-try
+             * */
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
 
         try {
             driver.get(Constants.SERVICE_CHARGE_TABLE_LINK);
@@ -1122,13 +1197,12 @@ public class SalesService {
 
                 discountData.put("fromLocation", discount.getCostCenter().accountCode);
                 discountData.put("toLocation", discount.getCostCenter().accountCode);
+                discountData.put("transactionReference", "Discount");
 
                 String description = "";
                 if(discount.getDiscount().equals("")){
-                    discountData.put("transactionReference", "Discount Cost");
                     description = "Discount Cost";
                 }else{
-                    discountData.put("transactionReference", discount.getDiscount());
                     description = discount.getDiscount();
                 }
 

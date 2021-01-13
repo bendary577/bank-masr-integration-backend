@@ -8,8 +8,11 @@ public class Constants {
     public static String RETRY_TO_SEND = "Retry to Send";
 
     public static String INVALID_LOCATION = "Invalid location";
+    public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
+    public static String EMPTY_REVENUE_CENTER = "Revenue Centers parameter is empty. Please make a selection.";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
+    public static String EMPTY_BUSINESS_DATE = "Business Dates parameter is empty. Please make a selection.";
 
     ///////////////////////////////////////// Sync Job Status///////////////////////////////////////////////////////////
     public static String RUNNING = "Running";
@@ -25,7 +28,7 @@ public class Constants {
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
 
-    ///////////////////////////////////////// Operation Types////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Operation Types///////////////////////////////////////////////////////////
     public static String CREATE_CHECK = "Create Check";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
@@ -39,7 +42,7 @@ public class Constants {
     public static String ORACLE_OHIM = "HospitalityOHIM";
     public static String ORACLE_OHRA = "HospitalityOHRA";
 
-    //////////////////////////////////////////////// ERD //////////////////////////////////////////////
+    //////////////////////////////////////////////// ERD //////////////////////////////////////////////////////////////
 
     public static String EXPORT_TO_SUN_ERD = "ExportSun";
     public static String SUN_ERD = "Sun";
@@ -98,7 +101,7 @@ public class Constants {
     public static String CONSUMPTION_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=499";
     public static String CONSUMPTION_TABLE_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
 
-    ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
 
     public static String APPROVED_INVOICE = "Approved Invoices";
     public static String ACCOUNT_PAYABLE = "Account Payable";
@@ -107,12 +110,12 @@ public class Constants {
     public static String ACCOUNT_PAYABLE_RTV_Status = "Invoice sent to A/P (RTV)";
     public static String ACCOUNT_PAYABLE_Status = "Invoice sent to A/P";
 
-    ///////////////////////////////////////// Sales over group gross types ////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Sales over group gross types /////////////////////////////////////////////
 
     public static String SALES_GROSS = "Gross";
     public static String SALES_GROSS_LESS_DISCOUNT = "Gross Less Discount";
 
-    ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
 
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

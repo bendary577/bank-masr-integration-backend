@@ -206,10 +206,11 @@ public class Conversions {
                 value = "-" + value;
             }
 
-            DecimalFormat df = new DecimalFormat("###.###");
-            String temp = df.format(Float.parseFloat(value));
-            temp = temp.toLowerCase().replaceAll(",", "");
-            return Float.parseFloat(temp);
+//            DecimalFormat df = new DecimalFormat("###.####");
+//            String temp = df.format(Float.parseFloat(value));
+//            temp = temp.toLowerCase().replaceAll(",", "");
+//            return Float.parseFloat(temp);
+            return Float.parseFloat(value);
         } catch (NumberFormatException e) {
             System.out.println(e.getMessage());
             return 0;

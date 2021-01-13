@@ -125,15 +125,15 @@ public class SalesService {
         if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 
         // Get taxes
+        boolean taxIncluded = salesSyncJobType.getConfiguration().isTenderIncludeTax();
         Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate,
-                costCenter, false, includedTax, driver);
+                costCenter, false, includedTax, taxIncluded, driver);
         if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
 
         // Get over group gross
         boolean majorGroupDiscount = salesSyncJobType.getConfiguration().isMajorGroupDiscount();
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
-        boolean taxIncluded = salesSyncJobType.getConfiguration().isTenderIncludeTax();
 
         if (revenueCenters.size() > 0 ){
             for (RevenueCenter rc : revenueCenters)
@@ -317,12 +317,19 @@ public class SalesService {
 
     private Response getSalesTaxes(String businessDate, String fromDate, String toDate,
                                    CostCenter location, boolean getTaxTotalFlag, ArrayList<Tax> includedTaxes,
-                                   WebDriver driver) {
+                                   boolean taxIncluded, WebDriver driver) {
         Response response = new Response();
 
         ArrayList<Tax> salesTax = new ArrayList<>();
 
-        driver.get(Constants.TAXES_REPORT_LINK);
+        /*
+         * Check if account use tax included or add on
+         * */
+        if(taxIncluded){
+            driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
+        }else{
+            driver.get(Constants.TAXES_REPORT_LINK);
+        }
 
         try {
             WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -343,8 +350,19 @@ public class SalesService {
 
         driver.findElement(By.id("Run Report")).click();
 
-        String taxReportLink = Constants.OHRA_LINK +
-                "/finengine/reportRunAction.do?rptroot=18&reportID=TaxesDailyDetail&method=run";
+        if(taxIncluded){
+            driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
+        }else{
+            driver.get(Constants.TAXES_REPORT_LINK);
+        }
+
+        String taxReportLink = Constants.OHRA_LINK;
+
+        if(taxIncluded){
+            taxReportLink = Constants.TAX_INCLUDED_REPORT_LINK;
+        }else{
+            taxReportLink += "/finengine/reportRunAction.do?rptroot=18&reportID=TaxesDailyDetail&method=run";
+        }
 
         try {
             driver.get(taxReportLink);
@@ -389,10 +407,18 @@ public class SalesService {
                     if (!taxData.isChecked()) {
                         continue;
                     }
+
                     tax.setTax(taxData.getTax());
                     tax.setAccount(taxData.getAccount());
                     tax.setCostCenter(location);
-                    tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
+                    float taxAmount;
+                    if(taxIncluded){
+                        taxAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip());
+                    }else{
+                        taxAmount = conversions.convertStringToFloat(cols.get(1).getText().strip());
+                    }
+
+                    tax.setTotal(taxAmount);
                     salesTax.add(tax);
                 }
             }
@@ -427,7 +453,7 @@ public class SalesService {
         * Check if account use tax included or add on
         * */
         if(taxIncluded){
-            driver.get(Constants.OVER_GROUP_NET_VAT_REPORT_LINK);
+            driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
         }else{
             driver.get(Constants.OVER_GROUP_GROSS_REPORT_LINK);
         }

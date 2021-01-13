@@ -77,13 +77,14 @@ public class Constants {
 
     // Daily Detail >> Tax
     public static String TAXES_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=18";
+    public static String TAX_INCLUDED_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?method=run&reportID=EAME_TaxesDailyDetail_VAT&rptroot=1191";
 
     // Menu Engineering >> Sales Mix Summary
     public static String ITEM_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=46";
 
     // Daily Detail >> Sales Mix
     public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=15";
-    public static String OVER_GROUP_NET_VAT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
+    public static String SYSTEM_SALES_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
     // Daily Detail >> Discount
     public static String DISCOUNT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=13";

@@ -61,7 +61,7 @@ public class SalesController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getPOSSales(user.getId(), account);
+            response = syncPOSSalesInDayRange(user.getId(), account);
             if(!response.isStatus()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -238,7 +238,12 @@ public class SalesController {
                             if (!username.equals("") && !password.equals("") && !host.equals("")){
                                 FtpClient ftpClient = new FtpClient(host, username, password);
                                 if(ftpClient.open()){
-                                    File file = createSalesFile(salesList, syncJobType);
+                                    if(syncJobType.getConfiguration().isExportFilePerLocation()){
+                                        ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
+                                                syncJobType, account.getName());
+                                    }else {
+                                        File file = createSalesFile(salesList, syncJobType);
+                                    }
 
 //                                if (ftpClient.putFileToPath(file, fileName)){
                                     if (true){
@@ -267,7 +272,12 @@ public class SalesController {
                                 }
                             }
                             else{
-                                File file = createSalesFile(salesList, syncJobType);
+                                if(syncJobType.getConfiguration().isExportFilePerLocation()){
+                                    ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
+                                            syncJobType, account.getName());
+                                }else {
+                                    File file = createSalesFile(salesList, syncJobType);
+                                }
 
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
@@ -316,29 +326,40 @@ public class SalesController {
     }
 
 
-    private Response syncPOSSalesInDayRange(String userId, Account account){
+    public Response syncPOSSalesInDayRange(String userId, Account account){
         Response response = new Response();
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
-        String[] datesArray = {
+        if(syncJobType.getConfiguration().getDuration().equals(Constants.DAILY_PER_MONTH)) {
+            syncJobType.getConfiguration().setTimePeriod(Constants.USER_DEFINED);
 
-                "2020-12-31"};
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MONTH, -1);
+            calendar.set(Calendar.DAY_OF_MONTH, 1);
 
-        for (String date : datesArray) {
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
-            syncJobType.getConfiguration().setFromDate(date);
-            syncJobType.getConfiguration().setToDate(date);
-            syncJobTypeRepo.save(syncJobType);
+            DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+            int numDays = calendar.getActualMaximum(Calendar.DATE);
+            String startDate;
 
-            response = getPOSSales(userId, account);
+            while (numDays != 0){
+                startDate = dateFormat.format(calendar.getTime());
+                calendar.add(Calendar.DATE, +1);
 
-            if (!response.isStatus()){
-                return response;
+                syncJobType.getConfiguration().setFromDate(startDate);
+                syncJobType.getConfiguration().setToDate(startDate);
+                syncJobTypeRepo.save(syncJobType);
+
+                response = getPOSSales(userId, account);
+                numDays--;
             }
-        }
 
-        String message = "Sync sales from 3-10-2020 to 31-10-2020";
-        response.setStatus(true);
-        response.setMessage(message);
+            String message = "Sync sales of last month successfully";
+            response.setStatus(true);
+            response.setMessage(message);
+        }
+        else{
+            response = getPOSSales(userId, account);
+        }
         return response;
     }
 
@@ -544,15 +565,19 @@ public class SalesController {
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
 
-        String transactionDate = salesList.get(0).getData().get("transactionDate");
-        String fileName = transactionDate.substring(4) + transactionDate.substring(2,4) + transactionDate.substring(0,2);
+        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
+        String fromDate =  syncJobType.getConfiguration().getFromDate();
+        String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
+
+        String fileName = "month/" + transactionDate.substring(4) + transactionDate.substring(2,4) + transactionDate.substring(0,2);
 
         String headerKey = HttpHeaders.CONTENT_DISPOSITION;
-        String headerValue = "attachment; filename=" + fileName + ".txt";
+        String headerValue = "attachment; filename=" + fileName + ".ndf";
         response.setHeader(headerKey, headerValue);
         response.setContentType("text/csv");
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName + ".txt", syncJobType, salesList);
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName + ".ndf", syncJobType, salesList);
+
         excelExporter.writeSyncData(response.getWriter());
     }
 
@@ -580,6 +605,59 @@ public class SalesController {
             return file;
         }catch (Exception e){
             return new File("Sales.ndf");
+        }
+    }
+
+    private ArrayList<File> createSalesFilePerLocation(List<JournalBatch> salesBatches, SyncJobType syncJobType,
+                                                       String AccountName) {
+        ArrayList<File> locationFiles = new ArrayList<>();
+        try {
+            List<SyncJobData> salesList;
+            DateFormatSymbols dfs = new DateFormatSymbols();
+            String[] weekdays = dfs.getWeekdays();
+
+            String fileExtension = ".ndf";
+            String businessDate =  syncJobType.getConfiguration().getTimePeriod();
+            String fromDate =  syncJobType.getConfiguration().getFromDate();
+            String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
+            Calendar cal = Calendar.getInstance();
+            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+            cal.setTime(date);
+            int day = cal.get(Calendar.DAY_OF_WEEK);
+            int Month = cal.get(Calendar.MONTH) + 1;
+            String dayName = weekdays[day];
+
+            SalesFileDelimiterExporter excelExporter;
+            File file;
+            String fileName;
+            String fileDirectory;
+
+            for (JournalBatch locationBatch : salesBatches) {
+                fileDirectory = AccountName + "/" + Month + "/" + locationBatch.getCostCenter().costCenterReference + "/";
+
+                salesList = new ArrayList<>();
+                salesList.addAll(locationBatch.getSalesTenderData());
+                salesList.addAll(locationBatch.getSalesMajorGroupGrossData());
+                salesList.addAll(locationBatch.getSalesTaxData());
+                salesList.addAll(locationBatch.getSalesDiscountData());
+                salesList.addAll(locationBatch.getSalesServiceChargeData());
+                if(locationBatch.getSalesDifferentData().getId() != null){
+                    salesList.add(locationBatch.getSalesDifferentData());
+                }
+
+                fileName = fileDirectory + dayName.substring(0,3) + transactionDate + " - " +
+                        locationBatch.getCostCenter().costCenterReference + fileExtension;
+
+                excelExporter = new SalesFileDelimiterExporter(fileName, syncJobType, salesList);
+                file = excelExporter.createNDFFile();
+
+                System.out.println(fileName);
+                locationFiles.add(file);
+            }
+            return locationFiles;
+        }catch (Exception e){
+            e.printStackTrace();
+            return locationFiles;
         }
     }
 }

@@ -45,9 +45,13 @@ public class SalesFileDelimiterExporter {
         writer.print(this.fileContent);
     }
 
-    public File createNDFFile(){
+    public File createNDFFile() throws IOException {
         this.createFileContent();
         File file = new File(fileName);
+        boolean status= file.getParentFile().mkdirs();
+        if(status)
+            file.createNewFile();
+
         try (Writer writer = new BufferedWriter(new FileWriter(file))) {
             writer.write(String.valueOf(this.fileContent));
         } catch (IOException e) {
@@ -84,7 +88,8 @@ public class SalesFileDelimiterExporter {
         String roughBookFlag = " "; // 1 Length
         String inUseFlag  = " "; // 1 Length
 
-        fileContent.append("VERSION                         ").append(this.syncJobDataCSVList.get(0).versionCode).append("\n");
+        fileContent.append("VERSION                         ")
+                .append(this.syncJobType.getConfiguration().getVersionCode()).append("\n");
 
         for (int i = 0; i < this.syncJobDataCSVList.size(); i++) {
             SyncJobDataCSV syncJobDataCSV = this.syncJobDataCSVList.get(i);

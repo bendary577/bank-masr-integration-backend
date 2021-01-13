@@ -35,6 +35,7 @@ public class Constants {
     public static String DAILY = "Daily";
     public static String WEEKLY = "Weekly";
     public static String MONTHLY = "Monthly";
+    public static String DAILY_PER_MONTH = "DailyPerMonth";
 
     ////////////////////////////////////////// Accounts ////////////////////////////////////////////////////////////////
     public static String SUN = "Sun";

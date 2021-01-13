@@ -50,6 +50,7 @@ public class Configuration implements Serializable {
     private String conversionCode = "";
     private String conversionRate = "";
     private String versionCode = "";
+    private boolean exportFilePerLocation = false;
 
     /*
      * Menu Items Sync
@@ -322,6 +323,14 @@ public class Configuration implements Serializable {
 
     public void setVersionCode(String versionCode) {
         this.versionCode = versionCode;
+    }
+
+    public boolean isExportFilePerLocation() {
+        return exportFilePerLocation;
+    }
+
+    public void setExportFilePerLocation(boolean exportFilePerLocation) {
+        this.exportFilePerLocation = exportFilePerLocation;
     }
 
     public void setUniqueOverGroupMapping(Boolean uniqueOverGroupMapping) {

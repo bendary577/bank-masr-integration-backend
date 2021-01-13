@@ -16,7 +16,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.text.DateFormat;
 import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -116,7 +118,8 @@ public class ScheduledTasks {
                     }
                 }
                 // check hours and day
-                if (syncJobType.getConfiguration().getDuration().equals(Constants.MONTHLY)){
+                if (syncJobType.getConfiguration().getDuration().equals(Constants.MONTHLY)
+                        || syncJobType.getConfiguration().getDuration().equals(Constants.DAILY_PER_MONTH)){
                     if (syncJobType.getConfiguration().getDay() != null){
                         if (Integer.parseInt(arrOfStr[0]) == hour){
                             int schedulerDay = Integer.parseInt(syncJobType.getConfiguration().getDay());
@@ -147,7 +150,7 @@ public class ScheduledTasks {
                     journalController.getJournals("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.SALES)){
-                    salesController.getPOSSales("Automated User", account);
+                    salesController.syncPOSSalesInDayRange("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.WASTAGE)){
                     wastageController.getWastage("Automated User", account);

@@ -161,7 +161,7 @@ public class SalesFileDelimiterExporter {
                 }
 
                 if(decimalPart.length() > 3){
-                    decimalPart = decimalPart.substring(0, 4);
+                    decimalPart = decimalPart.substring(0, 3);
                 }else if (decimalPart.length() < 3){
                     decimalPart = decimalPart +
                             String.format("%0"+ (3 - decimalPart.length()) +"d", 0);

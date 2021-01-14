@@ -611,14 +611,22 @@ public class SalesController {
         excelExporter.writeSyncData(response.getWriter());
     }
 
+    @GetMapping("/listSyncFiles")
+    public ResponseEntity listSyncFiles(Principal principal) {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter();
+        return ResponseEntity.status(HttpStatus.OK).body(excelExporter.generateSingleFile(account.getName()));
+    }
+
     @GetMapping("/sales/export/generateSingleFile")
     public void generateSingleFile(Principal principal, HttpServletResponse response) throws IOException {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
         response.setContentType("application/octet-stream");
-
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
         String fileName;
         String fileDirectory = account.getName() + "/" + "12" + "/" + "MOE" + "/";
@@ -631,7 +639,6 @@ public class SalesController {
         response.setContentType("text/csv");
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-
         excelExporter.generateSingleFile(response.getWriter(), fileDirectory, fileName);
     }
 

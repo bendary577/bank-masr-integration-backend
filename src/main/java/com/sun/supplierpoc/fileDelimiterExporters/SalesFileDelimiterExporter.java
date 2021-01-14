@@ -17,6 +17,9 @@ public class SalesFileDelimiterExporter {
     private List<SyncJobDataCSV> syncJobDataCSVList = new ArrayList<>();
     private StringBuilder fileContent = new StringBuilder();
 
+    public SalesFileDelimiterExporter() {
+    }
+
     public SalesFileDelimiterExporter(String fileName) {
         this.fileName = fileName;
     }
@@ -315,4 +318,19 @@ public class SalesFileDelimiterExporter {
         printWriter.print(this.fileContent);
     }
 
+    public ArrayList<String> generateSingleFile(String path){
+        File folder = new File(path);
+        File[] listOfFiles = folder.listFiles();
+        ArrayList<String> fileName = new ArrayList<>();
+
+        assert listOfFiles != null;
+        for (File listOfFile : listOfFiles) {
+            if (listOfFile.isFile()) {
+                fileName.add(path + "/" + listOfFile.getName());
+            } else if (listOfFile.isDirectory()) {
+                fileName.addAll(generateSingleFile(path + "/" + listOfFile.getName()));
+            }
+        }
+        return fileName;
+    }
 }

@@ -246,6 +246,7 @@ public class SalesService {
         }
 
         String message = "";
+        int tryMaxCount = 2;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                     location.locationName, "", driver);
@@ -269,8 +270,8 @@ public class SalesService {
             }catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
-
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
+            tryMaxCount--;
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
@@ -354,6 +355,7 @@ public class SalesService {
         }
 
         String message = "";
+        int tryMaxCount = 2;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                     "", driver);
@@ -377,8 +379,8 @@ public class SalesService {
             }catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
-
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
+            tryMaxCount--;
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
         if(taxIncluded){
             driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
@@ -496,6 +498,7 @@ public class SalesService {
         }
 
         String message = "";
+        int tryMaxCount = 2;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                     revenueCenter.getRevenueCenter(), driver);
@@ -519,8 +522,8 @@ public class SalesService {
             }catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
-
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
+            tryMaxCount--;
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
         String overGroupGrossLink = Constants.OHRA_LINK;
 
@@ -704,6 +707,7 @@ public class SalesService {
         }
 
         String message = "";
+        int tryMaxCount = 2;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                     location.locationName, "", driver);
@@ -726,8 +730,8 @@ public class SalesService {
             }catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
-
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
+            tryMaxCount --;
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
@@ -823,6 +827,8 @@ public class SalesService {
         }
 
         String message = "";
+        int tryMaxCount = 2;
+
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                     "", driver);
@@ -845,8 +851,9 @@ public class SalesService {
             }catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
+            tryMaxCount --;
 
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE));
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
         try {
             driver.get(Constants.SERVICE_CHARGE_TABLE_LINK);
@@ -1411,4 +1418,5 @@ public class SalesService {
             syncJobDataRepo.save(data);
         }
     }
+
 }

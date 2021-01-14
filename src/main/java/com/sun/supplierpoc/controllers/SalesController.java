@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -55,7 +56,7 @@ public class SalesController {
     @RequestMapping("/getPOSSales")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> getPOSSalesRequest(Principal principal) {
+    public ResponseEntity<Response> getPOSSalesRequest(Principal principal) throws ParseException {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -76,7 +77,7 @@ public class SalesController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    public Response getPOSSales(String userId, Account account) {
+    private Response getPOSSales(String userId, Account account) {
         Response response = new Response();
         SyncJob syncJob = null;
         try {
@@ -242,7 +243,7 @@ public class SalesController {
                                         ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                                 syncJobType, account.getName());
                                     }else {
-                                        File file = createSalesFile(salesList, syncJobType);
+                                        File file = createSalesFile(salesList, syncJobType, account.getName());
                                     }
 
 //                                if (ftpClient.putFileToPath(file, fileName)){
@@ -276,7 +277,7 @@ public class SalesController {
                                     ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                             syncJobType, account.getName());
                                 }else {
-                                    File file = createSalesFile(salesList, syncJobType);
+                                    File file = createSalesFile(salesList, syncJobType, account.getName());
                                 }
 
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
@@ -326,10 +327,13 @@ public class SalesController {
     }
 
 
-    public Response syncPOSSalesInDayRange(String userId, Account account){
+    public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException {
         Response response = new Response();
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
+        /*
+        * Sync days of last month
+        * */
         if(syncJobType.getConfiguration().getDuration().equals(Constants.DAILY_PER_MONTH)) {
             syncJobType.getConfiguration().setTimePeriod(Constants.USER_DEFINED);
 
@@ -354,6 +358,32 @@ public class SalesController {
             }
 
             String message = "Sync sales of last month successfully";
+            response.setStatus(true);
+            response.setMessage(message);
+        }
+        /*
+         * Sync days in range
+         * */
+        if(syncJobType.getConfiguration().getTimePeriod().equals(Constants.USER_DEFINED)) {
+            DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+            String startDate = syncJobType.getConfiguration().getFromDate();
+            String endDate = syncJobType.getConfiguration().getToDate();
+
+            Date date= dateFormat.parse(startDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            while (!startDate.equals(endDate)){
+                response = getPOSSales(userId, account);
+
+                calendar.add(Calendar.DATE, +1);
+                startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().setFromDate(startDate);
+                syncJobTypeRepo.save(syncJobType);
+            }
+
+            String message = "Sync sales successfully.";
             response.setStatus(true);
             response.setMessage(message);
         }
@@ -581,7 +611,32 @@ public class SalesController {
         excelExporter.writeSyncData(response.getWriter());
     }
 
-    private File createSalesFile(List<SyncJobData> salesList, SyncJobType syncJobType) {
+    @GetMapping("/sales/export/generateSingleFile")
+    public void generateSingleFile(Principal principal, HttpServletResponse response) throws IOException {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+        response.setContentType("application/octet-stream");
+
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
+
+        String fileName;
+        String fileDirectory = account.getName() + "/" + "12" + "/" + "MOE" + "/";
+
+        fileName = "122020 - MOE.ndf";
+
+        String headerKey = HttpHeaders.CONTENT_DISPOSITION;
+        String headerValue = "attachment; filename=" + fileName;
+        response.setHeader(headerKey, headerValue);
+        response.setContentType("text/csv");
+
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
+
+        excelExporter.generateSingleFile(response.getWriter(), fileDirectory, fileName);
+    }
+
+
+    private File createSalesFile(List<SyncJobData> salesList, SyncJobType syncJobType, String AccountName) {
         try {
             DateFormatSymbols dfs = new DateFormatSymbols();
             String[] weekdays = dfs.getWeekdays();
@@ -591,15 +646,20 @@ public class SalesController {
             Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
             cal.setTime(date);
             int day = cal.get(Calendar.DAY_OF_WEEK);
-
+            int Month = cal.get(Calendar.MONTH) + 1;
             String dayName = weekdays[day];
             String fileExtension = ".ndf";
-            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
+
+            File file;
+            String fileName;
+            String fileDirectory = AccountName + "/" + Month + "/";
+
+            fileName = fileDirectory + dayName.substring(0,3) + transactionDate + fileExtension;
 
             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
                     fileName, syncJobType, salesList);
 
-            File file = excelExporter.createNDFFile();
+            file = excelExporter.createNDFFile();
             System.out.println(fileName);
 
             return file;

@@ -6,6 +6,7 @@ import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.util.SyncJobDataCSV;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,10 @@ public class SalesFileDelimiterExporter {
     private List<SyncJobData> listSyncJobData;
     private List<SyncJobDataCSV> syncJobDataCSVList = new ArrayList<>();
     private StringBuilder fileContent = new StringBuilder();
+
+    public SalesFileDelimiterExporter(String fileName) {
+        this.fileName = fileName;
+    }
 
     public SalesFileDelimiterExporter(String fileName, SyncJobType syncJobType, List<SyncJobData> listSyncJobData) {
         this.fileName = fileName;
@@ -32,14 +37,6 @@ public class SalesFileDelimiterExporter {
         "recordType", "amount", "DCMarker", "journalType", "transactionReference", "description",
         "conversionCode", "conversionRate", "analysisCode0", "analysisCode1"};
         mapStrategy.setColumnMapping(columns);
-
-//        StatefulBeanToCsv<SyncJobDataCSV> csvWriter = new StatefulBeanToCsvBuilder<SyncJobDataCSV>(writer)
-//                .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER)
-//                .withMappingStrategy(mapStrategy)
-//                .withSeparator('\t')
-//                .withOrderedResults(false)
-//                .build();
-//            csvWriter.write(this.syncJobDataCSVList);
 
         this.createFileContent();
         writer.print(this.fileContent);
@@ -274,6 +271,48 @@ public class SalesFileDelimiterExporter {
             analysisTCode = String.format("%-15s", analysisTCode);
         }
         return analysisTCode;
+    }
+
+    public void generateSingleFile(PrintWriter printWriter, String path, String FileName) throws IOException {
+        File folder = new File(path);
+        File generalSyncFile = new File(path + "/" + FileName);
+        Files.deleteIfExists(generalSyncFile.toPath());
+
+        String[] syncFileNames = folder.list();
+        BufferedReader reader;
+
+        assert syncFileNames != null;
+        for (int i = 0; i < syncFileNames.length; i++) {
+            String pathname = syncFileNames[i];
+            reader = new BufferedReader(new FileReader(path + pathname));
+
+            String line;
+            String ls = System.getProperty("line.separator");
+            while ((line = reader.readLine()) != null) {
+                if(i != 0 && line.contains("VERSION")){
+                    if(this.fileContent.charAt(this.fileContent.length()-1) != '\r'){
+                        this.fileContent.append(ls);
+                    }
+                    continue;
+                }
+
+                this.fileContent.append(line);
+                this.fileContent.append(ls);
+            }
+
+            // delete the last new line separator
+            this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+            reader.close();
+        }
+
+        try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
+            writer.write(String.valueOf(this.fileContent));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        printWriter.flush();
+        printWriter.print(this.fileContent);
     }
 
 }

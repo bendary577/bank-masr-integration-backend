@@ -319,16 +319,18 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                    if (syncFromDate.equals(syncToDate)){
-                        response = chooseDayDateOHRA(syncFromDate,driver);
-                    }
-                    // check if they are in same month or not
-                    else if(syncFromDate.substring(5,7).equals(syncToDate.substring(5,7))){
-                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
-                    }
-                    else {
-                        response = chooseMonthsDateOHRA(syncFromDate, syncToDate, driver);
-                    }
+                    response = chooseDayDateOHRA(syncFromDate,driver);
+
+//                    if (syncFromDate.equals(syncToDate)){
+//                        response = chooseDayDateOHRA(syncFromDate,driver);
+//                    }
+//                    // check if they are in same month or not
+//                    else if(syncFromDate.substring(5,7).equals(syncToDate.substring(5,7))){
+//                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
+//                    }
+//                    else {
+//                        response = chooseMonthsDateOHRA(syncFromDate, syncToDate, driver);
+//                    }
 
                     if (!response.isStatus()){
                         return response;

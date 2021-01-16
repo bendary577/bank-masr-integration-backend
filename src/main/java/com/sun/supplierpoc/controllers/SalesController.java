@@ -234,7 +234,7 @@ public class SalesController {
                             String username = sunCredentials.getUsername();
                             String password = sunCredentials.getPassword();
                             String host = sunCredentials.getHost();
-                            int port = sunCredentials.getPort();
+
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                             if (!username.equals("") && !password.equals("") && !host.equals("")){

@@ -248,65 +248,69 @@ public class SetupEnvironment {
                                          String location, String revenueCenter, WebDriver driver) {
         Response response = new Response();
         try {
-            Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-            if (!location.equals("")) {
-                String selectLocationOption;
-                do{
-                    try {
-                        selectLocation.selectByVisibleText(location);
-                    } catch (Exception e) {
-                        response.setStatus(false);
-                        response.setMessage(Constants.INVALID_LOCATION);
-                        response.setEntries(new ArrayList<>());
-                        return response;
-                    }
-                    selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-
-                    /*
-                    * Check if there is any popup error message, e.g: Locations parameter is empty. Please make a selection.
-                    * */
-                    try {
-                        Alert locationAlert = driver.switchTo().alert();
-                        String message = locationAlert.getText();
-                        locationAlert.accept();
-                        if(message.equals(Constants.EMPTY_LOCATION)){
-                            try {
-                                selectLocation.selectByVisibleText("All");
-                                selectLocation.selectByVisibleText(location);
-                            } catch (Exception e) {
-                                response.setStatus(false);
-                                response.setMessage(Constants.INVALID_LOCATION);
-                                response.setEntries(new ArrayList<>());
-                                return response;
-                            }
-                            selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+            if (driver.findElements(By.id("locationData")).size() != 0){
+                Select selectLocation = new Select(driver.findElement(By.id("locationData")));
+                if (!location.equals("")) {
+                    String selectLocationOption;
+                    do{
+                        try {
+                            selectLocation.selectByVisibleText(location);
+                        } catch (Exception e) {
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_LOCATION);
+                            response.setEntries(new ArrayList<>());
+                            return response;
                         }
-                    } catch (NoAlertPresentException Ex) {
-                        System.out.println("No alert exits");
-                    }
+                        selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
 
-                }while (!selectLocationOption.equals(location));
-            }else{
-                selectLocation.selectByVisibleText("All");
+                        /*
+                         * Check if there is any popup error message, e.g: Locations parameter is empty. Please make a selection.
+                         * */
+                        try {
+                            Alert locationAlert = driver.switchTo().alert();
+                            String message = locationAlert.getText();
+                            locationAlert.accept();
+                            if(message.equals(Constants.EMPTY_LOCATION)){
+                                try {
+                                    selectLocation.selectByVisibleText("All");
+                                    selectLocation.selectByVisibleText(location);
+                                } catch (Exception e) {
+                                    response.setStatus(false);
+                                    response.setMessage(Constants.INVALID_LOCATION);
+                                    response.setEntries(new ArrayList<>());
+                                    return response;
+                                }
+                                selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                            }
+                        } catch (NoAlertPresentException Ex) {
+                            System.out.println("No alert exits");
+                        }
+
+                    }while (!selectLocationOption.equals(location));
+                }else{
+                    selectLocation.selectByVisibleText("All");
+                }
             }
 
-            Select selectRevenueCenter = new Select(driver.findElement(By.id("revenueCenterData")));
-            if (!revenueCenter.equals("")) {
-                String selectRevenueCenterOption;
-                do{
-                    try {
-                        selectRevenueCenter.selectByVisibleText(revenueCenter);
-                    } catch (Exception e) {
-                        response.setStatus(false);
-                        response.setMessage(Constants.INVALID_REVENUE_CENTER);
-                        response.setEntries(new ArrayList<>());
-                        return response;
-                    }
+            if (driver.findElements(By.id("revenueCenterData")).size() != 0){
+                Select selectRevenueCenter = new Select(driver.findElement(By.id("revenueCenterData")));
+                if (!revenueCenter.equals("")) {
+                    String selectRevenueCenterOption;
+                    do{
+                        try {
+                            selectRevenueCenter.selectByVisibleText(revenueCenter);
+                        } catch (Exception e) {
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_REVENUE_CENTER);
+                            response.setEntries(new ArrayList<>());
+                            return response;
+                        }
 
-                    selectRevenueCenterOption = selectRevenueCenter.getFirstSelectedOption().getText().strip();
-                }while (!selectRevenueCenterOption.equals(revenueCenter));
-            }else{
-                selectRevenueCenter.selectByVisibleText("All");
+                        selectRevenueCenterOption = selectRevenueCenter.getFirstSelectedOption().getText().strip();
+                    }while (!selectRevenueCenterOption.equals(revenueCenter));
+                }else{
+                    selectRevenueCenter.selectByVisibleText("All");
+                }
             }
 
             if (timePeriod.equals(Constants.USER_DEFINED)) {

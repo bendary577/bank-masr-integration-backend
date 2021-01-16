@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
@@ -63,7 +64,7 @@ public class ScheduledTasks {
     // run every 60 min
 //    @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
     @Scheduled(cron="0 0/60 * * * SUN-SAT")
-    public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException, ParseException {
+    public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException, ParseException, IOException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
 

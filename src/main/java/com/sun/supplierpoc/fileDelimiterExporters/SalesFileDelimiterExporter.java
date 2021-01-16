@@ -276,36 +276,83 @@ public class SalesFileDelimiterExporter {
         return analysisTCode;
     }
 
-    public void generateSingleFile(PrintWriter printWriter, String path, String FileName) throws IOException {
+    public void generateSingleFile(PrintWriter printWriter, String path, String FileName, boolean perLocation) throws IOException {
         File folder = new File(path);
         File generalSyncFile = new File(path + "/" + FileName);
         Files.deleteIfExists(generalSyncFile.toPath());
 
-        String[] syncFileNames = folder.list();
+        boolean status= generalSyncFile.getParentFile().mkdirs();
+        if(status)
+            generalSyncFile.createNewFile();
+
+        String[] syncFileNames;
         BufferedReader reader;
 
-        assert syncFileNames != null;
-        for (int i = 0; i < syncFileNames.length; i++) {
-            String pathname = syncFileNames[i];
-            reader = new BufferedReader(new FileReader(path + pathname));
+        /*
+         * Loop over all locations
+         * */
+        if (perLocation){
+            String[] syncLocations = folder.list();
+            if(syncLocations == null)
+                syncLocations = new String[]{};
 
-            String line;
-            String ls = System.getProperty("line.separator");
-            while ((line = reader.readLine()) != null) {
-                if(i != 0 && line.contains("VERSION")){
-                    if(this.fileContent.charAt(this.fileContent.length()-1) != '\r'){
-                        this.fileContent.append(ls);
+            for (String location : syncLocations) {
+                if(new File(path, location).isDirectory()){
+                    File locationFolder = new File(path + "/" + location);
+                    syncFileNames = locationFolder.list();
+
+                    assert syncFileNames != null;
+                    for (int i = 0; i < syncFileNames.length; i++) {
+                        String syncFileName = syncFileNames[i];
+                        reader = new BufferedReader(new FileReader(path + "/"+ location + "/" + syncFileName));
+
+                        String line;
+                        String ls = System.getProperty("line.separator");
+                        while ((line = reader.readLine()) != null) {
+                            if(i != 0 && line.contains("VERSION")){
+                                if(this.fileContent.charAt(this.fileContent.length()-1) != '\r'){
+                                    this.fileContent.append(ls);
+                                }
+                                continue;
+                            }
+
+                            this.fileContent.append(line);
+                            this.fileContent.append(ls);
+                        }
+
+                        // delete the last new line separator
+                        this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                        reader.close();
                     }
-                    continue;
+                }
+            }
+        }else{
+            syncFileNames = folder.list();
+            if(syncFileNames == null)
+                syncFileNames = new String[]{};
+
+            for (int i = 0; i < syncFileNames.length; i++) {
+                String pathname = syncFileNames[i];
+                reader = new BufferedReader(new FileReader(path + pathname));
+
+                String line;
+                String ls = System.getProperty("line.separator");
+                while ((line = reader.readLine()) != null) {
+                    if(i != 0 && line.contains("VERSION")){
+                        if(this.fileContent.charAt(this.fileContent.length()-1) != '\r'){
+                            this.fileContent.append(ls);
+                        }
+                        continue;
+                    }
+
+                    this.fileContent.append(line);
+                    this.fileContent.append(ls);
                 }
 
-                this.fileContent.append(line);
-                this.fileContent.append(ls);
+                // delete the last new line separator
+                this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                reader.close();
             }
-
-            // delete the last new line separator
-            this.fileContent.deleteCharAt(this.fileContent.length() - 1);
-            reader.close();
         }
 
         try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
@@ -314,11 +361,13 @@ public class SalesFileDelimiterExporter {
             e.printStackTrace();
         }
 
-        printWriter.flush();
-        printWriter.print(this.fileContent);
+        if (printWriter != null){
+            printWriter.flush();
+            printWriter.print(this.fileContent);
+        }
     }
 
-    public ArrayList<String> generateSingleFile(String path){
+    public ArrayList<String> ListSyncFiles(String path){
         File folder = new File(path);
         File[] listOfFiles = folder.listFiles();
         ArrayList<String> fileName = new ArrayList<>();
@@ -328,7 +377,7 @@ public class SalesFileDelimiterExporter {
             if (listOfFile.isFile()) {
                 fileName.add(path + "/" + listOfFile.getName());
             } else if (listOfFile.isDirectory()) {
-                fileName.addAll(generateSingleFile(path + "/" + listOfFile.getName()));
+                fileName.addAll(ListSyncFiles(path + "/" + listOfFile.getName()));
             }
         }
         return fileName;

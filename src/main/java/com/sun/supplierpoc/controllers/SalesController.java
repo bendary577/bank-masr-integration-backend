@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
@@ -56,7 +57,7 @@ public class SalesController {
     @RequestMapping("/getPOSSales")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> getPOSSalesRequest(Principal principal) throws ParseException {
+    public ResponseEntity<Response> getPOSSalesRequest(Principal principal) throws ParseException, IOException {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -327,9 +328,13 @@ public class SalesController {
     }
 
 
-    public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException {
+    public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException, IOException {
         Response response = new Response();
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
 
         /*
         * Sync days of last month
@@ -341,21 +346,34 @@ public class SalesController {
             calendar.add(Calendar.MONTH, -1);
             calendar.set(Calendar.DAY_OF_MONTH, 1);
 
-            DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
             int numDays = calendar.getActualMaximum(Calendar.DATE);
             String startDate;
 
             while (numDays != 0){
                 startDate = dateFormat.format(calendar.getTime());
-                calendar.add(Calendar.DATE, +1);
-
-                syncJobType.getConfiguration().setFromDate(startDate);
-                syncJobType.getConfiguration().setToDate(startDate);
-                syncJobTypeRepo.save(syncJobType);
 
                 response = getPOSSales(userId, account);
-                numDays--;
+                if (response.isStatus()){
+                    calendar.add(Calendar.DATE, +1);
+
+                    syncJobType.getConfiguration().setFromDate(startDate);
+                    syncJobType.getConfiguration().setToDate(startDate);
+                    syncJobTypeRepo.save(syncJobType);
+                    numDays--;
+                }
             }
+
+            /*
+            * Generate single file
+            * */
+            String month = monthFormat.format(calendar.getTime());
+            String date = fileDateFormat.format(calendar.getTime());
+
+            String path = account.getName() + "/" + month;
+            String fileName = date + ".ndf";
+            boolean perLocation = syncJobType.getConfiguration().isExportFilePerLocation();
+
+            generateSingleFile(null, path, fileName, perLocation);
 
             String message = "Sync sales of last month successfully";
             response.setStatus(true);
@@ -364,8 +382,7 @@ public class SalesController {
         /*
          * Sync days in range
          * */
-        if(syncJobType.getConfiguration().getTimePeriod().equals(Constants.USER_DEFINED)) {
-            DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        else if(syncJobType.getConfiguration().getTimePeriod().equals(Constants.USER_DEFINED)) {
             String startDate = syncJobType.getConfiguration().getFromDate();
             String endDate = syncJobType.getConfiguration().getToDate();
 
@@ -618,30 +635,43 @@ public class SalesController {
         Account account = accountOptional.get();
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter();
-        return ResponseEntity.status(HttpStatus.OK).body(excelExporter.generateSingleFile(account.getName()));
+        return ResponseEntity.status(HttpStatus.OK).body(excelExporter.ListSyncFiles(account.getName()));
     }
 
     @GetMapping("/sales/export/generateSingleFile")
-    public void generateSingleFile(Principal principal, HttpServletResponse response) throws IOException {
+    public void generateSingleFileRequest(Principal principal, HttpServletResponse response) throws IOException {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
-        response.setContentType("application/octet-stream");
 
-        String fileName;
-        String fileDirectory = account.getName() + "/" + "12" + "/" + "MOE" + "/";
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
+        boolean perLocation = syncJobType.getConfiguration().isExportFilePerLocation();
 
-        fileName = "122020 - MOE.ndf";
+        DateFormat dateFormat = new SimpleDateFormat("MMyyy");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.MONTH, -1);
+
+        String month = monthFormat.format(calendar.getTime());
+        String date = dateFormat.format(calendar.getTime());
+
+        String fileDirectory = account.getName() + "/" + month;
+        String fileName = date + ".ndf";
 
         String headerKey = HttpHeaders.CONTENT_DISPOSITION;
         String headerValue = "attachment; filename=" + fileName;
         response.setHeader(headerKey, headerValue);
+        response.setContentType("application/octet-stream");
         response.setContentType("text/csv");
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-        excelExporter.generateSingleFile(response.getWriter(), fileDirectory, fileName);
+        generateSingleFile(response.getWriter(), fileDirectory, fileName, perLocation);
     }
 
+    private void generateSingleFile(PrintWriter printWriter, String path, String fileName, boolean perLocation) throws IOException {
+        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
+        excelExporter.generateSingleFile(printWriter, path, fileName, perLocation);
+    }
 
     private File createSalesFile(List<SyncJobData> salesList, SyncJobType syncJobType, String AccountName) {
         try {

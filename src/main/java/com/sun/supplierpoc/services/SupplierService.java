@@ -101,7 +101,7 @@ public class SupplierService {
             SSCRootElement.appendChild(sunSystemContextElement);
 
             Element businessUnitElement = doc.createElement("BusinessUnit");
-            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getBusinessUnit()));
+            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.businessUnit));
             sunSystemContextElement.appendChild(businessUnitElement);
 
             ///////////////////////////////////////////  Payload ///////////////////////////////////////////////////////
@@ -394,7 +394,7 @@ public class SupplierService {
             js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').setAttribute('type','text')");
             js.executeScript("document.getElementById('tb__ctl0_cfTaxes_Value').style.display = 'block';");
 
-            String tax = syncJobType.getConfiguration().getVendorTaxes();
+            String tax = syncJobType.getConfiguration().supplierConfiguration.vendorTaxes;
             if (!tax.equals("")){
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).clear();
                 driver.findElement(By.id("tb__ctl0_cfTaxes_Text")).sendKeys(tax);
@@ -422,7 +422,7 @@ public class SupplierService {
             js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').setAttribute('type','text')");
             js.executeScript("document.getElementById('tb__ctl0_cfVendorGroup_Value').style.display = 'block';");
 
-            String group = (String) syncJobType.getConfiguration().getGroups();
+            String group = (String) syncJobType.getConfiguration().supplierConfiguration.groups;
             if (!group.equals("")){
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).clear();
                 driver.findElement(By.id("tb__ctl0_cfVendorGroup_Text")).sendKeys(group);

@@ -91,19 +91,19 @@ public class CreditNoteController {
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
         SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
-        String invoiceTypeIncluded = creditNoteSyncJobType.getConfiguration().getInvoiceTypeIncluded();
+        String invoiceTypeIncluded = creditNoteSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
 
-        String timePeriod = creditNoteSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = creditNoteSyncJobType.getConfiguration().getFromDate();
-        String toDate = creditNoteSyncJobType.getConfiguration().getToDate();
+        String timePeriod = creditNoteSyncJobType.getConfiguration().timePeriod;
+        String fromDate = creditNoteSyncJobType.getConfiguration().fromDate;
+        String toDate = creditNoteSyncJobType.getConfiguration().toDate;
 
         ArrayList<OverGroup> overGroups ;
-        if (!invoiceSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
+        if (!invoiceSyncJobType.getConfiguration().uniqueOverGroupMapping){
             overGroups =  generalSettings.getOverGroups();
         }else{
-            overGroups =  invoiceSyncJobType.getConfiguration().getOverGroups();
+            overGroups =  invoiceSyncJobType.getConfiguration().overGroups;
         }
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(creditNoteSyncJobType);

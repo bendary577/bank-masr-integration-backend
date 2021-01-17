@@ -73,9 +73,9 @@ public class WastageService {
             driver.get(bookedWastes);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
-            String fromDate = syncJobType.getConfiguration().getFromDate();
-            String toDate = syncJobType.getConfiguration().getToDate();
+            String timePeriod = syncJobType.getConfiguration().timePeriod;
+            String fromDate = syncJobType.getConfiguration().fromDate;
+            String toDate = syncJobType.getConfiguration().toDate;
 
             // Open filter search
             String filterStatus = driver.findElement(By.id("filterPanel_btnToggleFilter")).getAttribute("value");
@@ -337,7 +337,7 @@ public class WastageService {
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<CostCenter> costCenterLocationMapping = generalSettings.getLocations();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
-        ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().getWasteGroups();
+        ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
 
         WebDriver driver = null;
         try{
@@ -392,9 +392,9 @@ public class WastageService {
                 }
                 catch (Exception ex){ }
 
-                String timePeriod = syncJobType.getConfiguration().getTimePeriod();
-                String fromDate = syncJobType.getConfiguration().getFromDate();
-                String toDate = syncJobType.getConfiguration().getToDate();
+                String timePeriod = syncJobType.getConfiguration().timePeriod;
+                String fromDate = syncJobType.getConfiguration().fromDate;
+                String toDate = syncJobType.getConfiguration().toDate;
 
                 Select locationData = new Select(driver.findElement(By.id("locationData")));
                 try {

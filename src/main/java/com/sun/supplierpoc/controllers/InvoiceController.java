@@ -96,19 +96,19 @@ public class InvoiceController {
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
         SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
-        String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().getInvoiceTypeIncluded();
+        String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
 
-        String timePeriod = invoiceSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = invoiceSyncJobType.getConfiguration().getFromDate();
-        String toDate = invoiceSyncJobType.getConfiguration().getToDate();
+        String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
+        String fromDate = invoiceSyncJobType.getConfiguration().fromDate;
+        String toDate = invoiceSyncJobType.getConfiguration().toDate;
 
         ArrayList<OverGroup> overGroups ;
-        if (!invoiceSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
+        if (!invoiceSyncJobType.getConfiguration().uniqueOverGroupMapping){
             overGroups =  generalSettings.getOverGroups();
         }else{
-            overGroups =  invoiceSyncJobType.getConfiguration().getOverGroups();
+            overGroups =  invoiceSyncJobType.getConfiguration().overGroups;
         }
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
@@ -367,14 +367,14 @@ public class InvoiceController {
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(),
                     false);
 
-            oldCostCenters = syncJobType.getConfiguration().getCostCenters();
+            oldCostCenters = syncJobType.getConfiguration().costCenters;
 
         }else{
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
             if (generalSettings != null){
                 oldCostCenters = generalSettings.getCostCenterAccountMapping();
             }else {
-                generalSettings = new GeneralSettings(user.getAccountId(), new Date(), false);
+                generalSettings = new GeneralSettings(user.getAccountId(), new Date());
                 generalSettingsRepo.save(generalSettings);
             }
         }

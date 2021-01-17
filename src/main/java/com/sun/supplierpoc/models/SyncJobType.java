@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.configurations.Configuration;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
@@ -74,7 +76,7 @@ public class SyncJobType implements Serializable {
     }
 
     public Configuration getConfiguration() {
-        return configuration;
+        return configuration ;
     }
 
     public void setConfiguration(Configuration configuration) {

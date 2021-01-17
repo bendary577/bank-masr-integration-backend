@@ -100,15 +100,15 @@ public class TransferController {
         ArrayList<Item> items =  generalSettings.getItems();
         ArrayList<OverGroup> overGroups;
 
-        String timePeriod = transferSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = transferSyncJobType.getConfiguration().getFromDate();
-        String toDate = transferSyncJobType.getConfiguration().getToDate();
+        String timePeriod = transferSyncJobType.getConfiguration().timePeriod;
+        String fromDate = transferSyncJobType.getConfiguration().fromDate;
+        String toDate = transferSyncJobType.getConfiguration().toDate;
 
 
-        if (!transferSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
+        if (!transferSyncJobType.getConfiguration().uniqueOverGroupMapping){
             overGroups =  generalSettings.getOverGroups();
         }else{
-            overGroups =  transferSyncJobType.getConfiguration().getOverGroups();
+            overGroups =  transferSyncJobType.getConfiguration().overGroups;
         }
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);

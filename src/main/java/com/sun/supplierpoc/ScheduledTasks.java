@@ -93,13 +93,13 @@ public class ScheduledTasks {
             if (syncJobTypes.size() == 0) continue;
 
             for (SyncJobType syncJobType : syncJobTypes) {
-                if (syncJobType.getConfiguration().getHour().equals("")) continue;
+                if (syncJobType.getConfiguration().schedulerConfiguration.hour.equals("")) continue;
 
-                String schedulerHour = syncJobType.getConfiguration().getHour();
+                String schedulerHour = syncJobType.getConfiguration().schedulerConfiguration.hour;
                 String[] arrOfStr = schedulerHour.split(":");
 
                 // check hours
-                if (syncJobType.getConfiguration().getDuration().equals(Constants.DAILY)){
+                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY)){
                     if (Integer.parseInt(arrOfStr[0]) == hour){
                         syncJobsQueue.add(syncJobType);
                         System.out.println(Constants.DAILY);
@@ -107,10 +107,10 @@ public class ScheduledTasks {
                     }
                 }
                 // check hours and day_name
-                if (syncJobType.getConfiguration().getDuration().equals(Constants.WEEKLY)){
-                    if (syncJobType.getConfiguration().getDayName() != null){
+                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.WEEKLY)){
+                    if (syncJobType.getConfiguration().schedulerConfiguration.dayName != null){
                         if (Integer.parseInt(arrOfStr[0]) == hour){
-                            String schedulerDay = (syncJobType.getConfiguration().getDayName()).toLowerCase();
+                            String schedulerDay = (syncJobType.getConfiguration().schedulerConfiguration.dayName).toLowerCase();
                             if (dayOfWeekName.equals(schedulerDay)){
                                 syncJobsQueue.add(syncJobType);
                                 System.out.println(Constants.WEEKLY);
@@ -120,11 +120,11 @@ public class ScheduledTasks {
                     }
                 }
                 // check hours and day
-                if (syncJobType.getConfiguration().getDuration().equals(Constants.MONTHLY)
-                        || syncJobType.getConfiguration().getDuration().equals(Constants.DAILY_PER_MONTH)){
-                    if (syncJobType.getConfiguration().getDay() != null){
+                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.MONTHLY)
+                        || syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)){
+                    if (syncJobType.getConfiguration().schedulerConfiguration.day != null){
                         if (Integer.parseInt(arrOfStr[0]) == hour){
-                            int schedulerDay = Integer.parseInt(syncJobType.getConfiguration().getDay());
+                            int schedulerDay = Integer.parseInt(syncJobType.getConfiguration().schedulerConfiguration.day);
                             if (dayOfMonth == schedulerDay){
                                 syncJobsQueue.add(syncJobType);
                                 System.out.println(Constants.MONTHLY);

@@ -310,9 +310,6 @@ public class SalesFileDelimiterExporter {
                         String ls = System.getProperty("line.separator");
                         while ((line = reader.readLine()) != null) {
                             if(i != 0 && line.contains("VERSION")){
-                                if(this.fileContent.charAt(this.fileContent.length()-1) != '\r'){
-                                    this.fileContent.append(ls);
-                                }
                                 continue;
                             }
 
@@ -321,7 +318,7 @@ public class SalesFileDelimiterExporter {
                         }
 
                         // delete the last new line separator
-                        this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                        this.fileContent.deleteCharAt(this.fileContent.length() - 2);
                         reader.close();
                     }
                 }
@@ -339,9 +336,6 @@ public class SalesFileDelimiterExporter {
                 String ls = System.getProperty("line.separator");
                 while ((line = reader.readLine()) != null) {
                     if(i != 0 && line.contains("VERSION")){
-                        if(this.fileContent.charAt(this.fileContent.length()-1) != '\r'){
-                            this.fileContent.append(ls);
-                        }
                         continue;
                     }
 
@@ -350,7 +344,7 @@ public class SalesFileDelimiterExporter {
                 }
 
                 // delete the last new line separator
-                this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                this.fileContent.deleteCharAt(this.fileContent.length() - 2);
                 reader.close();
             }
         }

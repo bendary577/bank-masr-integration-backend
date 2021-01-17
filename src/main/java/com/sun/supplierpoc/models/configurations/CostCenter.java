@@ -20,5 +20,4 @@ public class CostCenter {
     public CostCenter() {
         this.checked = false;
     }
-
 }

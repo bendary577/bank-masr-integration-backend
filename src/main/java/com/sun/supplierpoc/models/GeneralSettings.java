@@ -16,6 +16,7 @@ public class GeneralSettings {
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
     private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
     private ArrayList<CostCenter> locations = new ArrayList<>();
+    private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
     // Menu Items variables
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private Date creationDate;
@@ -24,10 +25,10 @@ public class GeneralSettings {
     public GeneralSettings() {
     }
 
-    public GeneralSettings(String accountId, Date creationDate, boolean deleted) {
+    public GeneralSettings(String accountId, Date creationDate) {
         this.accountId = accountId;
         this.creationDate = creationDate;
-        this.deleted = deleted;
+        this.deleted = false;
     }
 
     public String getId() {
@@ -85,6 +86,14 @@ public class GeneralSettings {
 
     public void setCostCenterAccountMapping(ArrayList<CostCenter> costCenterAccountMapping) {
         this.costCenterAccountMapping = costCenterAccountMapping;
+    }
+
+    public ArrayList<RevenueCenter> getRevenueCenters() {
+        return revenueCenters;
+    }
+
+    public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
+        this.revenueCenters = revenueCenters;
     }
 
     public ArrayList<CostCenter> getLocations() {

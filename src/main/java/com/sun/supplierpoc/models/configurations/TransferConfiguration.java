@@ -1,4 +1,6 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class TransferConfiguration {
+import java.io.Serializable;
+
+public class TransferConfiguration implements Serializable {
 }

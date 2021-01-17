@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class MenuItemConfiguration {
+import java.io.Serializable;
+
+public class MenuItemConfiguration implements Serializable {
     /*
      * Menu Items Sync
      * */

@@ -92,7 +92,7 @@ public class SalesController {
             ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
             ArrayList<ServiceCharge> serviceCharges = configuration.serviceCharges;
             ArrayList<CostCenter> locations = generalSettings.getLocations();
-            ArrayList<RevenueCenter> revenueCenters = syncJobType.getConfiguration().revenueCenters;
+            ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
             String timePeriod = syncJobType.getConfiguration().timePeriod;
             String fromDate = syncJobType.getConfiguration().fromDate;
@@ -546,33 +546,6 @@ public class SalesController {
             } else {
                 response.setStatus(false);
                 response.setMessage("Failed to update sales service charge.");
-
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
-    @RequestMapping("/addRevenueCenter")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ResponseEntity<Response> addRevenueCenter(@RequestBody ArrayList<RevenueCenter> revenueCenters,
-                                                @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                                Principal principal) {
-        Response response = new Response();
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        if (accountOptional.isPresent()) {
-            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
-            if (syncJobType != null) {
-                syncJobType.getConfiguration().revenueCenters = revenueCenters;
-                syncJobTypeRepo.save(syncJobType);
-
-                response.setStatus(true);
-                response.setMessage("Update sales revenue center successfully.");
-            } else {
-                response.setStatus(false);
-                response.setMessage("Failed to update sales revenue center.");
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }

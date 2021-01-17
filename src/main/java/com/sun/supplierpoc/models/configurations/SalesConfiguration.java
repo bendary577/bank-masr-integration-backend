@@ -1,8 +1,9 @@
 package com.sun.supplierpoc.models.configurations;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class SalesConfiguration {
+public class SalesConfiguration implements Serializable{
     public boolean tenderIncludeTax = true;
     public boolean majorGroupDiscount = false;
 

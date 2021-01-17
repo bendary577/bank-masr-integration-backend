@@ -45,6 +45,14 @@ public class SyncJobTypeController {
         return syncJobType;
     }
 
+    @GetMapping("/getDefaultSyncJobTypes")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ArrayList<SyncJobType> getDefaultSyncJobTypes(Principal principal)  {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        return (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);
+    }
+
     @GetMapping("/getSyncJobTypes")
     @CrossOrigin(origins = "*")
     @ResponseBody

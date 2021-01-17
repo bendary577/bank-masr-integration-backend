@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class InvoiceConfiguration {
+import java.io.Serializable;
+
+public class InvoiceConfiguration implements Serializable {
     /*
      * Invoices/Credit Notes variables
      * */

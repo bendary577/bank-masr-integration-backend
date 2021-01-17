@@ -1,9 +1,10 @@
 package com.sun.supplierpoc.models.configurations;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 
-public class Configuration {
+public class Configuration implements Serializable {
     public String timePeriod = "";
     public String fromDate = "";
     public String toDate = "";
@@ -23,8 +24,6 @@ public class Configuration {
     public String expensesAccount = "";
 
     public ArrayList<CostCenter> costCenters = new ArrayList<>();
-    public ArrayList<CostCenter> locations = new ArrayList<>();
-    public ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
 
     public String locationAnalysis = "";
     public ArrayList<Analysis> analysis = new ArrayList<>();
@@ -34,8 +33,9 @@ public class Configuration {
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     public ArrayList<OverGroup> overGroups = new ArrayList<>();
 
-    public SchedulerConfiguration schedulerConfiguration;
+    public SchedulerConfiguration schedulerConfiguration = new SchedulerConfiguration();
     public InforConfiguration inforConfiguration;
+
     public SalesConfiguration salesConfiguration;
     public SupplierConfiguration supplierConfiguration;
     public InvoiceConfiguration invoiceConfiguration;

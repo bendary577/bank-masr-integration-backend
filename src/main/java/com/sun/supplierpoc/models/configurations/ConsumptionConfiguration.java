@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class ConsumptionConfiguration {
+import java.io.Serializable;
+
+public class ConsumptionConfiguration implements Serializable {
     /*
      *  Consumption variables
      * get consumption based of (Location/Cost Center)

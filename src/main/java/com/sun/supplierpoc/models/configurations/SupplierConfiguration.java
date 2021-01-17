@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class SupplierConfiguration {
+import java.io.Serializable;
+
+public class SupplierConfiguration implements Serializable {
     /*
      * Supplier Variables
      * */

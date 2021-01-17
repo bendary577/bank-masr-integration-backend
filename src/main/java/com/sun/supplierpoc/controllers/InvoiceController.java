@@ -374,7 +374,7 @@ public class InvoiceController {
             if (generalSettings != null){
                 oldCostCenters = generalSettings.getCostCenterAccountMapping();
             }else {
-                generalSettings = new GeneralSettings(user.getAccountId(), new Date(), false);
+                generalSettings = new GeneralSettings(user.getAccountId(), new Date());
                 generalSettingsRepo.save(generalSettings);
             }
         }

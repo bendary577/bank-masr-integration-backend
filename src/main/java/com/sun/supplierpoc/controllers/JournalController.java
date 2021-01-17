@@ -92,17 +92,17 @@ public class JournalController {
         ArrayList<CostCenter> costCentersLocation = generalSettings.getLocations();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
-        String timePeriod = journalSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
-        String toDate = journalSyncJobType.getConfiguration().getToDate();
+        String timePeriod = journalSyncJobType.getConfiguration().timePeriod;
+        String fromDate = journalSyncJobType.getConfiguration().fromDate;
+        String toDate = journalSyncJobType.getConfiguration().toDate;
 
-        String consumptionBasedOnType = journalSyncJobType.getConfiguration().getConsumptionBasedOnType();
+        String consumptionBasedOnType = journalSyncJobType.getConfiguration().consumptionConfiguration.consumptionBasedOnType;
 
         ArrayList<OverGroup> overGroups;
-        if (!journalSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
+        if (!journalSyncJobType.getConfiguration().uniqueOverGroupMapping){
             overGroups =  generalSettings.getOverGroups();
         }else{
-            overGroups =  journalSyncJobType.getConfiguration().getOverGroups();
+            overGroups =  journalSyncJobType.getConfiguration().overGroups;
         }
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType);
@@ -152,7 +152,7 @@ public class JournalController {
         syncJobRepo.save(syncJob);
 
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
-        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
+        String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
 
         try {
             HashMap<String, Object> data;

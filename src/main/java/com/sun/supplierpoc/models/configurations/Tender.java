@@ -1,17 +1,14 @@
 package com.sun.supplierpoc.models.configurations;
 
-import org.springframework.data.annotation.Id;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 public class Tender implements Serializable {
-    @Id
-    private String id;
     private boolean checked = false;
     private String tender = "";
     private String account = "";
+    private float total = 0;
 
     private String communicationTender = "";
     private String communicationAccount = "";
@@ -19,21 +16,15 @@ public class Tender implements Serializable {
 
     private String analysisCodeT5 = "";
 
+    private CostCenter costCenter;
+    private String revenueCenterName;
+
     private List<String> children = new ArrayList<>();
 
-    private float total = 0;
-    private CostCenter costCenter;
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Tender() {
         communicationRate = 0;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public boolean isChecked() {
@@ -114,5 +105,13 @@ public class Tender implements Serializable {
 
     public void setCostCenter(CostCenter costCenter) {
         this.costCenter = costCenter;
+    }
+
+    public String getRevenueCenterName() {
+        return revenueCenterName;
+    }
+
+    public void setRevenueCenterName(String revenueCenterName) {
+        this.revenueCenterName = revenueCenterName;
     }
 }

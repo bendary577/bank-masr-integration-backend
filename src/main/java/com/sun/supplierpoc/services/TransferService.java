@@ -72,9 +72,9 @@ public class TransferService {
         }
 
         ArrayList<HashMap<String, Object>> transfers = new ArrayList<>();
-        String timePeriod = syncJobTypeTransfer.getConfiguration().getTimePeriod();
-        String fromDate = syncJobTypeTransfer.getConfiguration().getFromDate();
-        String toDate = syncJobTypeTransfer.getConfiguration().getToDate();
+        String timePeriod = syncJobTypeTransfer.getConfiguration().timePeriod;
+        String fromDate = syncJobTypeTransfer.getConfiguration().fromDate;
+        String toDate = syncJobTypeTransfer.getConfiguration().toDate;
 
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 

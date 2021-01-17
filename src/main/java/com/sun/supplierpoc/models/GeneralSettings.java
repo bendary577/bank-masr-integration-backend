@@ -11,7 +11,7 @@ public class GeneralSettings {
     private String id;
     private String accountId;
     private ArrayList<Item> items = new ArrayList<>();
-    ArrayList<ItemGroup> itemGroups = new ArrayList<>();
+    private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     private ArrayList<OverGroup> overGroups = new ArrayList<>();
     private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
@@ -61,6 +61,7 @@ public class GeneralSettings {
     public void setItemGroups(ArrayList<ItemGroup> itemGroups) {
         this.itemGroups = itemGroups;
     }
+
 
     public ArrayList<MajorGroup> getMajorGroups() {
         return majorGroups;

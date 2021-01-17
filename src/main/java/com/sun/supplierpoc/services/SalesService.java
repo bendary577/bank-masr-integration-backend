@@ -38,10 +38,10 @@ public class SalesService {
         Response response = new Response();
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
-        String timePeriod = salesSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = salesSyncJobType.getConfiguration().getFromDate();
-        String toDate = salesSyncJobType.getConfiguration().getToDate();
-        String grossDiscountSales = salesSyncJobType.getConfiguration().getGrossDiscountSales();
+        String timePeriod = salesSyncJobType.getConfiguration().timePeriod;
+        String fromDate = salesSyncJobType.getConfiguration().fromDate;
+        String toDate = salesSyncJobType.getConfiguration().toDate;
+        String grossDiscountSales = salesSyncJobType.getConfiguration().salesConfiguration.grossDiscountSales;
 
         WebDriver driver;
         try {
@@ -125,13 +125,13 @@ public class SalesService {
         if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 
         // Get taxes
-        boolean taxIncluded = salesSyncJobType.getConfiguration().isTenderIncludeTax();
+        boolean taxIncluded = salesSyncJobType.getConfiguration().salesConfiguration.tenderIncludeTax;
         Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate,
                 costCenter, false, includedTax, taxIncluded, driver);
         if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
 
         // Get over group gross
-        boolean majorGroupDiscount = salesSyncJobType.getConfiguration().isMajorGroupDiscount();
+        boolean majorGroupDiscount = salesSyncJobType.getConfiguration().salesConfiguration.majorGroupDiscount;
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
@@ -173,7 +173,7 @@ public class SalesService {
         }
 
         Response discountResponse;
-        if ((salesSyncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
+        if ((salesSyncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
                 || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
             // Get discounts
             discountResponse = getSalesDiscount(timePeriod,
@@ -910,9 +910,9 @@ public class SalesService {
                                                                SyncJobType syncJobType, Account account) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
 
-        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
-        String fromDate =  syncJobType.getConfiguration().getFromDate();
-        ArrayList<Discount> includedDiscountTypes = syncJobType.getConfiguration().getDiscounts();
+        String businessDate =  syncJobType.getConfiguration().timePeriod;
+        String fromDate =  syncJobType.getConfiguration().fromDate;
+        ArrayList<Discount> includedDiscountTypes = syncJobType.getConfiguration().salesConfiguration.discounts;
 
         String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
 
@@ -1187,7 +1187,7 @@ public class SalesService {
                 discountData.put("accountingPeriod", transactionDate.substring(2,6));
                 discountData.put("transactionDate", transactionDate);
 
-                if (syncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)
+                if (syncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
                 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                     discountData.put("expensesAccount", discount.getAccount());
                     discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
@@ -1318,7 +1318,7 @@ public class SalesService {
 
             float totalDr = totalTender;
             float totalCr;
-            if(syncJobType.getConfiguration().getGrossDiscountSales().equals(Constants.SALES_GROSS)){
+            if(syncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)){
                 totalCr = totalMajorGroupNet + totalDiscount + totalTax + totalServiceCharge;
             }else
             {
@@ -1333,13 +1333,13 @@ public class SalesService {
 
                 // {Debit} - ShortagePOS
                 if (totalCr > totalDr ) {
-                    String cashShortagePOS = syncJobType.getConfiguration().getCashShortagePOS();
+                    String cashShortagePOS = syncJobType.getConfiguration().salesConfiguration.cashShortagePOS;
                     differentData.put("totalDr", String.valueOf(conversions.roundUpFloat(totalCr - totalDr)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
-                    String cashSurplusPOS = syncJobType.getConfiguration().getCashSurplusPOS();
+                    String cashSurplusPOS = syncJobType.getConfiguration().salesConfiguration.cashSurplusPOS;
                     differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalDr - totalCr)));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }

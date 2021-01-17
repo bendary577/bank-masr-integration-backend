@@ -80,9 +80,9 @@ public class BookedProductionController {
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
 
-        String timePeriod = bookedProductionSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = bookedProductionSyncJobType.getConfiguration().getFromDate();
-        String toDate = bookedProductionSyncJobType.getConfiguration().getToDate();
+        String timePeriod = bookedProductionSyncJobType.getConfiguration().timePeriod;
+        String fromDate = bookedProductionSyncJobType.getConfiguration().fromDate;
+        String toDate = bookedProductionSyncJobType.getConfiguration().toDate;
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(bookedProductionSyncJobType);
         if (sunConfigResponse != null){

@@ -27,7 +27,7 @@ public class SyncJobTypeController {
     public SyncJobType getSyncJobType(@RequestParam(name = "typeName") String syncJobTypeName, Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         SyncJobType syncJobType =  syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncJobTypeName, user.getAccountId(), false);
-        if (syncJobType.getConfiguration().getAnalysis().size() == 0){
+        if (syncJobType.getConfiguration().analysis.size() == 0){
             ArrayList<Analysis> analysis = new ArrayList<>();
             analysis.add(new Analysis(false, "1", "", ""));
             analysis.add(new Analysis(false, "2", "", ""));
@@ -39,7 +39,7 @@ public class SyncJobTypeController {
             analysis.add(new Analysis(false, "8", "", ""));
             analysis.add(new Analysis(false, "9", "", ""));
             analysis.add(new Analysis(false, "10", "", ""));
-            syncJobType.getConfiguration().setAnalysis(analysis);
+            syncJobType.getConfiguration().analysis = (analysis);
         }
 
         return syncJobType;

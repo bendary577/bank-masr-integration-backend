@@ -89,7 +89,7 @@ public class SalesFileDelimiterExporter {
         String inUseFlag  = " "; // 1 Length
 
         fileContent.append("VERSION                         ")
-                .append(this.syncJobType.getConfiguration().getVersionCode()).append("\n");
+                .append(this.syncJobType.getConfiguration().versionCode).append("\n");
 
         for (int i = 0; i < this.syncJobDataCSVList.size(); i++) {
             SyncJobDataCSV syncJobDataCSV = this.syncJobDataCSVList.get(i);
@@ -212,12 +212,12 @@ public class SalesFileDelimiterExporter {
                 syncJobDataCSV.accountCode = accountCode;
             }
 
-            syncJobDataCSV.recordType = syncJobType.getConfiguration().getRecordType();
-            syncJobDataCSV.versionCode = syncJobType.getConfiguration().getVersionCode();
-            syncJobDataCSV.conversionCode = syncJobType.getConfiguration().getConversionCode();
-            syncJobDataCSV.conversionRate = syncJobType.getConfiguration().getConversionRate();
+            syncJobDataCSV.recordType = syncJobType.getConfiguration().recordType;
+            syncJobDataCSV.versionCode = syncJobType.getConfiguration().versionCode;
+            syncJobDataCSV.conversionCode = syncJobType.getConfiguration().conversionCode;
+            syncJobDataCSV.conversionRate = syncJobType.getConfiguration().conversionRate;
 
-            syncJobDataCSV.journalType = syncJobType.getConfiguration().getJournalType();
+            syncJobDataCSV.journalType = syncJobType.getConfiguration().inforConfiguration.journalType;
             if(syncJobDataCSV.journalType.length() > 5){
                 syncJobDataCSV.journalType = syncJobDataCSV.journalType.substring(0, 5);
             }else if(syncJobDataCSV.journalType.length() < 5) {
@@ -236,8 +236,8 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, false);
             syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, false);
 
-            if(syncJobType.getConfiguration().getLocationAnalysis() != null){
-                int index = Integer.parseInt(syncJobType.getConfiguration().getLocationAnalysis()) -1;
+            if(syncJobType.getConfiguration().locationAnalysis != null){
+                int index = Integer.parseInt(syncJobType.getConfiguration().locationAnalysis) -1;
                 if(index == 1){
                     syncJobDataCSV.analysisCode0 = fillTCode(index, syncJobData, true);
                 }else if(index == 2){
@@ -265,7 +265,7 @@ public class SalesFileDelimiterExporter {
         }else if(locationFlag && syncJobData.getData().containsKey("fromLocation") && !syncJobData.getData().get("fromLocation").equals("")){
             analysisTCode = syncJobData.getData().get("fromLocation");
         }else {
-            analysisTCode = syncJobType.getConfiguration().getAnalysis().get(index).getCodeElement();
+            analysisTCode = syncJobType.getConfiguration().analysis.get(index).getCodeElement();
         }
 
         if(analysisTCode.length() > 15){

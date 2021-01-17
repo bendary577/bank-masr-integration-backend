@@ -84,21 +84,21 @@ public class SupplierController {
             return response;
         }
 
-        if (supplierSyncJobType.getConfiguration().getBusinessUnit().equals("")){
+        if (supplierSyncJobType.getConfiguration().inforConfiguration.businessUnit.equals("")){
             String message = "Configure business unit before sync suppliers.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (supplierSyncJobType.getConfiguration().getGroups().equals("")){
+        if (supplierSyncJobType.getConfiguration().supplierConfiguration.groups.equals("")){
             String message = "Configure supplier group before sync suppliers.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (supplierSyncJobType.getConfiguration().getVendorTaxes().equals("")){
+        if (supplierSyncJobType.getConfiguration().supplierConfiguration.vendorTaxes.equals("")){
             String message = "Configure supplier tax before sync suppliers.";
             response.put("message", message);
             response.put("success", false);

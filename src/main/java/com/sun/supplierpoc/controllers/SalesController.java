@@ -85,17 +85,18 @@ public class SalesController {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
-            ArrayList<Discount> discounts = syncJobType.getConfiguration().getDiscounts();
-            ArrayList<Tender> tenders = syncJobType.getConfiguration().getTenders();
-            ArrayList<Tax> taxes = syncJobType.getConfiguration().getTaxes();
-            ArrayList<MajorGroup> majorGroups = syncJobType.getConfiguration().getMajorGroups();
-            ArrayList<RevenueCenter> revenueCenters = syncJobType.getConfiguration().getRevenueCenters();
-            ArrayList<ServiceCharge> serviceCharges = syncJobType.getConfiguration().getServiceCharges();
+            SalesConfiguration configuration = syncJobType.getConfiguration().salesConfiguration;
+            ArrayList<Discount> discounts = configuration.discounts;
+            ArrayList<Tender> tenders = configuration.tenders;
+            ArrayList<Tax> taxes = configuration.taxes;
+            ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
+            ArrayList<ServiceCharge> serviceCharges = configuration.serviceCharges;
             ArrayList<CostCenter> locations = generalSettings.getLocations();
+            ArrayList<RevenueCenter> revenueCenters = syncJobType.getConfiguration().revenueCenters;
 
-            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
-            String fromDate = syncJobType.getConfiguration().getFromDate();
-            String toDate = syncJobType.getConfiguration().getToDate();
+            String timePeriod = syncJobType.getConfiguration().timePeriod;
+            String fromDate = syncJobType.getConfiguration().fromDate;
+            String toDate = syncJobType.getConfiguration().toDate;
 
             //////////////////////////////////////// Validation ///////////////////////////////////////////////////////////
             HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(syncJobType);
@@ -128,21 +129,21 @@ public class SalesController {
 //                return response;
 //            }
 
-            if (syncJobType.getConfiguration().getCashShortagePOS().equals("")) {
+            if (configuration.cashShortagePOS.equals("")) {
                 String message = "Configure cash shortage account before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (syncJobType.getConfiguration().getCashSurplusPOS().equals("")) {
+            if (configuration.cashSurplusPOS.equals("")) {
                 String message = "Configure Cash surplus account before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
 
-            if (syncJobType.getConfiguration().getGrossDiscountSales().equals("")) {
+            if (configuration.grossDiscountSales.equals("")) {
                 String message = "Configure sales gross/gross less discount before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
@@ -240,7 +241,7 @@ public class SalesController {
                             if (!username.equals("") && !password.equals("") && !host.equals("")){
                                 FtpClient ftpClient = new FtpClient(host, username, password);
                                 if(ftpClient.open()){
-                                    if(syncJobType.getConfiguration().isExportFilePerLocation()){
+                                    if(syncJobType.getConfiguration().exportFilePerLocation){
                                         ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                                 syncJobType, account.getName());
                                     }else {
@@ -274,7 +275,7 @@ public class SalesController {
                                 }
                             }
                             else{
-                                if(syncJobType.getConfiguration().isExportFilePerLocation()){
+                                if(syncJobType.getConfiguration().exportFilePerLocation){
                                     ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                             syncJobType, account.getName());
                                 }else {
@@ -339,8 +340,8 @@ public class SalesController {
         /*
         * Sync days of last month
         * */
-        if(syncJobType.getConfiguration().getDuration().equals(Constants.DAILY_PER_MONTH)) {
-            syncJobType.getConfiguration().setTimePeriod(Constants.USER_DEFINED);
+        if(syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
+            syncJobType.getConfiguration().timePeriod = Constants.USER_DEFINED;
 
             Calendar calendar = Calendar.getInstance();
             calendar.add(Calendar.MONTH, -1);
@@ -356,8 +357,8 @@ public class SalesController {
                 if (response.isStatus()){
                     calendar.add(Calendar.DATE, +1);
 
-                    syncJobType.getConfiguration().setFromDate(startDate);
-                    syncJobType.getConfiguration().setToDate(startDate);
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobType.getConfiguration().toDate = startDate;
                     syncJobTypeRepo.save(syncJobType);
                     numDays--;
                 }
@@ -371,7 +372,7 @@ public class SalesController {
 
             String path = account.getName() + "/" + month;
             String fileName = date + ".ndf";
-            boolean perLocation = syncJobType.getConfiguration().isExportFilePerLocation();
+            boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
             generateSingleFile(null, path, fileName, perLocation);
 
@@ -382,9 +383,9 @@ public class SalesController {
         /*
          * Sync days in range
          * */
-        else if(syncJobType.getConfiguration().getTimePeriod().equals(Constants.USER_DEFINED)) {
-            String startDate = syncJobType.getConfiguration().getFromDate();
-            String endDate = syncJobType.getConfiguration().getToDate();
+        else if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+            String startDate = syncJobType.getConfiguration().fromDate;
+            String endDate = syncJobType.getConfiguration().toDate;
 
             Date date= dateFormat.parse(startDate);
 
@@ -396,7 +397,7 @@ public class SalesController {
 
                 calendar.add(Calendar.DATE, +1);
                 startDate = dateFormat.format(calendar.getTime());
-                syncJobType.getConfiguration().setFromDate(startDate);
+                syncJobType.getConfiguration().fromDate = startDate;
                 syncJobTypeRepo.save(syncJobType);
             }
 
@@ -423,7 +424,7 @@ public class SalesController {
             Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                syncJobType.getConfiguration().setTenders(tenders);
+                syncJobType.getConfiguration().salesConfiguration.tenders = tenders;
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
@@ -453,7 +454,7 @@ public class SalesController {
             Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                syncJobType.getConfiguration().setTaxes(taxes);
+                syncJobType.getConfiguration().salesConfiguration.taxes = taxes;
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
@@ -482,7 +483,7 @@ public class SalesController {
             Account account = accountOptional.get();
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                syncJobType.getConfiguration().setMajorGroups(majorGroups);
+                syncJobType.getConfiguration().salesConfiguration.majorGroups = majorGroups;
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
@@ -509,7 +510,7 @@ public class SalesController {
         if (accountOptional.isPresent()) {
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                syncJobType.getConfiguration().setDiscounts(discounts);
+                syncJobType.getConfiguration().salesConfiguration.discounts = discounts;
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
@@ -537,7 +538,7 @@ public class SalesController {
         if (accountOptional.isPresent()) {
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                syncJobType.getConfiguration().setServiceCharges(serviceCharges);
+                syncJobType.getConfiguration().salesConfiguration.serviceCharges = serviceCharges;
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
@@ -564,7 +565,7 @@ public class SalesController {
         if (accountOptional.isPresent()) {
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                syncJobType.getConfiguration().setRevenueCenters(revenueCenters);
+                syncJobType.getConfiguration().revenueCenters = revenueCenters;
                 syncJobTypeRepo.save(syncJobType);
 
                 response.setStatus(true);
@@ -612,8 +613,8 @@ public class SalesController {
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
 
 
-        String businessDate =  syncJobType.getConfiguration().getTimePeriod();
-        String fromDate =  syncJobType.getConfiguration().getFromDate();
+        String businessDate =  syncJobType.getConfiguration().timePeriod;
+        String fromDate =  syncJobType.getConfiguration().fromDate;
         String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
 
         String fileName = "month/" + transactionDate.substring(4) + transactionDate.substring(2,4) + transactionDate.substring(0,2);
@@ -645,7 +646,7 @@ public class SalesController {
         Account account = accountOptional.get();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
-        boolean perLocation = syncJobType.getConfiguration().isExportFilePerLocation();
+        boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
         DateFormat dateFormat = new SimpleDateFormat("MMyyy");
         DateFormat monthFormat = new SimpleDateFormat("MM");
@@ -714,8 +715,8 @@ public class SalesController {
             String[] weekdays = dfs.getWeekdays();
 
             String fileExtension = ".ndf";
-            String businessDate =  syncJobType.getConfiguration().getTimePeriod();
-            String fromDate =  syncJobType.getConfiguration().getFromDate();
+            String businessDate =  syncJobType.getConfiguration().timePeriod;
+            String fromDate =  syncJobType.getConfiguration().fromDate;
             String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
             Calendar cal = Calendar.getInstance();
             Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);

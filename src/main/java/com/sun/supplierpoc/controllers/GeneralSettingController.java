@@ -52,7 +52,7 @@ public class GeneralSettingController {
         ArrayList<OverGroup> oldOverGroups = new ArrayList<>();
         if (syncTypeName != null && !syncTypeName.equals("")){
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, user.getAccountId(), false);
-            oldOverGroups = syncJobType.getConfiguration().getOverGroups();
+            oldOverGroups = syncJobType.getConfiguration().overGroups;
         }else{
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
             if (generalSettings != null){

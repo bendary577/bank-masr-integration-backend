@@ -88,8 +88,8 @@ public class MenuItemsController {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
-            int startIndex = syncJobType.getConfiguration().getStartIndex();
-            int maxCount = syncJobType.getConfiguration().getMaxCount();
+            int startIndex = syncJobType.getConfiguration().menuItemConfiguration.startIndex;
+            int maxCount = syncJobType.getConfiguration().menuItemConfiguration.maxCount;
 
             SimphonyLocation simphonyLocation = generalSettings.getSimphonyLocationsByID(revenueCenterID);
             if(simphonyLocation == null){

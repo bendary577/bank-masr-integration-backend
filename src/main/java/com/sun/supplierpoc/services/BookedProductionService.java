@@ -69,9 +69,9 @@ public class BookedProductionService {
             driver.get(Constants.BOOKED_PRODUCTION_LINK);
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-            String timePeriod = syncJobType.getConfiguration().getTimePeriod();
-            String fromDate = syncJobType.getConfiguration().getFromDate();
-            String toDate = syncJobType.getConfiguration().getToDate();
+            String timePeriod = syncJobType.getConfiguration().timePeriod;
+            String fromDate = syncJobType.getConfiguration().fromDate;
+            String toDate = syncJobType.getConfiguration().toDate;
 
             HashMap<String, Object> timePeriodResponse = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate,select, driver);
 
@@ -289,7 +289,7 @@ public class BookedProductionService {
             bookedProductionData.put("transactionReference", "Booked Production");
 
             bookedProductionData.put("inventoryAccount", bookedProduction.getOverGroup().getInventoryAccount());
-            bookedProductionData.put("expensesAccount", bookedProductionSyncJobType.getConfiguration().getExpensesAccount());
+            bookedProductionData.put("expensesAccount", bookedProductionSyncJobType.getConfiguration().expensesAccount);
 
             bookedProductionData.put("createdBy", bookedProduction.getCreatedBy());
             bookedProductionData.put("createdAt", bookedProduction.getCreatedAt());

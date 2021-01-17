@@ -143,49 +143,49 @@ public class Conversions {
     public HashMap<String, Object> checkSunDefaultConfiguration(SyncJobType syncJobType){
         HashMap<String, Object> response = new HashMap<>();
 
-        if (syncJobType.getConfiguration().getBusinessUnit().equals("")){
+        if (syncJobType.getConfiguration().inforConfiguration.businessUnit.equals("")){
             String message = "Configure business unit before sync " + syncJobType.getName();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobType.getConfiguration().getJournalType().equals("")){
+        if (syncJobType.getConfiguration().inforConfiguration.journalType.equals("")){
             String message = "Configure journal type before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobType.getConfiguration().getCurrencyCode().equals("")){
+        if (syncJobType.getConfiguration().inforConfiguration.currencyCode.equals("")){
             String message = "Configure currency code before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobType.getConfiguration().getPostingType().equals("")){
+        if (syncJobType.getConfiguration().inforConfiguration.postingType.equals("")){
             String message = "Configure posting type before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobType.getConfiguration().getAnalysis().size() == 0){
+        if (syncJobType.getConfiguration().analysis.size() == 0){
             String message = "Configure analysis before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobType.getConfiguration().getLocationAnalysis().equals("")){
+        if (syncJobType.getConfiguration().locationAnalysis.equals("")){
             String message = "Configure location ledger analysis before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (syncJobType.getConfiguration().getSuspenseAccount().equals("")){
+        if (syncJobType.getConfiguration().inforConfiguration.suspenseAccount.equals("")){
             String message = "Configure suspense account before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
             response.put("success", false);

@@ -91,7 +91,7 @@ public class SunService {
             SSCRootElement.appendChild(sunSystemContextElement);
 
             Element businessUnitElement = doc.createElement("BusinessUnit");
-            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getBusinessUnit()));
+            businessUnitElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.businessUnit));
             sunSystemContextElement.appendChild(businessUnitElement);
 
             ///////////////////////////////////////////  MethodContext /////////////////////////////////////////////////
@@ -113,19 +113,19 @@ public class SunService {
             LedgerPostingParametersElement.appendChild(DescriptionElement);
 
             Element journalTypeElement = doc.createElement("JournalType");
-            journalTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getJournalType()));
+            journalTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.journalType));
             LedgerPostingParametersElement.appendChild(journalTypeElement);
 
             Element postingTypeElement = doc.createElement("PostingType");
-            postingTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getPostingType()));
+            postingTypeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.postingType));
             LedgerPostingParametersElement.appendChild(postingTypeElement);
 
             Element SuspenseAccount = doc.createElement("SuspenseAccount");
-            SuspenseAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
+            SuspenseAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.suspenseAccount));
             LedgerPostingParametersElement.appendChild(SuspenseAccount);
 
             Element TransactionAmountAccount = doc.createElement("TransactionAmountAccount");
-            TransactionAmountAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().getSuspenseAccount()));
+            TransactionAmountAccount.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.suspenseAccount));
             LedgerPostingParametersElement.appendChild(TransactionAmountAccount);
 
 
@@ -252,7 +252,7 @@ public class SunService {
 
     private void createJournalLine(boolean creditDebitFlag, Document doc, Element ledgerElement, SyncJobType syncJobType,
                                   SyncJobData addedJournalEntry) {
-        ArrayList<Analysis> analysis = syncJobType.getConfiguration().getAnalysis();
+        ArrayList<Analysis> analysis = syncJobType.getConfiguration().analysis;
 
         Element lineElement = doc.createElement("Line");
         ledgerElement.appendChild(lineElement);
@@ -287,7 +287,7 @@ public class SunService {
         lineElement.appendChild(baseAmountElement);
 
         Element currencyCodeElement = doc.createElement("CurrencyCode");
-        currencyCodeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().getCurrencyCode()));
+        currencyCodeElement.appendChild(doc.createTextNode(syncJobType.getConfiguration().inforConfiguration.currencyCode));
         lineElement.appendChild(currencyCodeElement);
 
         Element debitCreditElement = doc.createElement("DebitCredit");
@@ -336,7 +336,7 @@ public class SunService {
         lineElement.appendChild(accountCodeElement);
 
         // T#loctionAnalysis
-        String locationAnalysis = syncJobType.getConfiguration().getLocationAnalysis();
+        String locationAnalysis = syncJobType.getConfiguration().locationAnalysis;
 
         Element enterAnalysis1ElementT3 = doc.createElement("EnterAnalysis"+ locationAnalysis);
         enterAnalysis1ElementT3.appendChild(doc.createTextNode("1"));

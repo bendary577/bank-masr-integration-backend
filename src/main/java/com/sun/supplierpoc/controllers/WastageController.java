@@ -95,17 +95,17 @@ public class WastageController {
 
         ArrayList<Item> items = generalSettings.getItems();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-        ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().getWasteGroups();
+        ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().wastageConfiguration.wasteGroups;
 
-        String timePeriod = wastageSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = wastageSyncJobType.getConfiguration().getFromDate();
-        String toDate = wastageSyncJobType.getConfiguration().getToDate();
+        String timePeriod = wastageSyncJobType.getConfiguration().timePeriod;
+        String fromDate = wastageSyncJobType.getConfiguration().fromDate;
+        String toDate = wastageSyncJobType.getConfiguration().toDate;
 
         ArrayList<OverGroup> overGroups;
-        if (!wastageSyncJobType.getConfiguration().getUniqueOverGroupMapping()){
+        if (!wastageSyncJobType.getConfiguration().uniqueOverGroupMapping){
             overGroups =  generalSettings.getOverGroups();
         }else{
-            overGroups =  wastageSyncJobType.getConfiguration().getOverGroups();
+            overGroups =  wastageSyncJobType.getConfiguration().overGroups;
         }
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType);
@@ -287,7 +287,7 @@ public class WastageController {
         Account account = accountOptional.get();
 
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, user.getAccountId(), false);
-        ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().getWasteGroups();
+        ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
         HashMap<String, Object> response = new HashMap<>();
 
         WebDriver driver;

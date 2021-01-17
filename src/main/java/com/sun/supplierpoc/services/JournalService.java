@@ -55,9 +55,9 @@ public class JournalService {
         ArrayList<Journal> journals;
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
-        String toDate = journalSyncJobType.getConfiguration().getToDate();
+        String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
+        String fromDate = journalSyncJobType.getConfiguration().fromDate;
+        String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
@@ -251,9 +251,9 @@ public class JournalService {
         ArrayList<Journal> journals;
         ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
 
-        String businessDate =  journalSyncJobType.getConfiguration().getTimePeriod();
-        String fromDate = journalSyncJobType.getConfiguration().getFromDate();
-        String toDate = journalSyncJobType.getConfiguration().getToDate();
+        String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
+        String fromDate = journalSyncJobType.getConfiguration().fromDate;
+        String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
             if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){

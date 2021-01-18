@@ -278,12 +278,7 @@ public class SalesFileDelimiterExporter {
 
     public void generateSingleFile(PrintWriter printWriter, String path, String FileName, boolean perLocation) throws IOException {
         File folder = new File(path);
-        File generalSyncFile = new File(path + "/" + FileName);
-        Files.deleteIfExists(generalSyncFile.toPath());
-
-        boolean status= generalSyncFile.getParentFile().mkdirs();
-        if(status)
-            generalSyncFile.createNewFile();
+        File generalSyncFile;
 
         String[] syncFileNames;
         BufferedReader reader;
@@ -298,6 +293,14 @@ public class SalesFileDelimiterExporter {
 
             for (String location : syncLocations) {
                 if(new File(path, location).isDirectory()){
+                    this.fileContent = new StringBuilder();
+                    generalSyncFile = new File(path + "/" + location + "-" + FileName);
+                    Files.deleteIfExists(generalSyncFile.toPath());
+
+                    boolean status= generalSyncFile.getParentFile().mkdirs();
+                    if(status)
+                        generalSyncFile.createNewFile();
+
                     File locationFolder = new File(path + "/" + location);
                     syncFileNames = locationFolder.list();
 
@@ -321,16 +324,34 @@ public class SalesFileDelimiterExporter {
                         this.fileContent.deleteCharAt(this.fileContent.length() - 2);
                         reader.close();
                     }
+
+                    try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
+                        writer.write(String.valueOf(this.fileContent));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
-        }else{
+
+        }
+        else{
+            generalSyncFile = new File(path + "/" + FileName);
+            Files.deleteIfExists(generalSyncFile.toPath());
+
+            boolean status= generalSyncFile.getParentFile().mkdirs();
+            if(status)
+                generalSyncFile.createNewFile();
+
             syncFileNames = folder.list();
             if(syncFileNames == null)
                 syncFileNames = new String[]{};
 
             for (int i = 0; i < syncFileNames.length; i++) {
                 String pathname = syncFileNames[i];
-                reader = new BufferedReader(new FileReader(path + pathname));
+                if(new File(path, pathname).isDirectory())
+                    continue;
+
+                reader = new BufferedReader(new FileReader(path + "/" + pathname));
 
                 String line;
                 String ls = System.getProperty("line.separator");
@@ -347,12 +368,12 @@ public class SalesFileDelimiterExporter {
                 this.fileContent.deleteCharAt(this.fileContent.length() - 2);
                 reader.close();
             }
-        }
 
-        try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
-            writer.write(String.valueOf(this.fileContent));
-        } catch (IOException e) {
-            e.printStackTrace();
+            try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
+                writer.write(String.valueOf(this.fileContent));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
         if (printWriter != null){

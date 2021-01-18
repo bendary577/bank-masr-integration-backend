@@ -16,6 +16,7 @@ public class Journal {
     private float totalTransfer;
     private RevenueCenter revenueCenter;
     private CostCenter costCenter;
+    private String departmentCode;
 
     public Journal() {
     }
@@ -139,5 +140,13 @@ public class Journal {
 
     public void setRevenueCenter(RevenueCenter revenueCenter) {
         this.revenueCenter = revenueCenter;
+    }
+
+    public String getDepartmentCode() {
+        return departmentCode;
+    }
+
+    public void setDepartmentCode(String departmentCode) {
+        this.departmentCode = departmentCode;
     }
 }

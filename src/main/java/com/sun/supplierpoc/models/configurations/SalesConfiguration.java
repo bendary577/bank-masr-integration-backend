@@ -28,5 +28,6 @@ public class SalesConfiguration implements Serializable{
     * Include Major Group Discount or Not
     * */
     public boolean MGDiscount = false;
+    public boolean RVDiscount = false;
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
 }

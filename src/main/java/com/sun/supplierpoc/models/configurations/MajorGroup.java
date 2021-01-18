@@ -1,29 +1,25 @@
 package com.sun.supplierpoc.models.configurations;
 
-import org.springframework.data.annotation.Id;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class MajorGroup {
-    @Id
-    private String id;
     private boolean checked;
     private String overGroup="";
     private String majorGroup="";
     private String account="";
+    private String discountAccount="";
+
+    /*
+    * Use it to merge multiple major groups
+    * */
     private List<String> children = new ArrayList<>();
+    private List<FamilyGroup> familyGroups = new ArrayList<>();
+    private List<RevenueCenter> revenueCenters = new ArrayList<>();
+
 
     public MajorGroup() {
         this.checked = false;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
     }
 
     public boolean getChecked() {
@@ -68,5 +64,29 @@ public class MajorGroup {
 
     public void setChildren(List<String> children) {
         this.children = children;
+    }
+
+    public String getDiscountAccount() {
+        return discountAccount;
+    }
+
+    public void setDiscountAccount(String discountAccount) {
+        this.discountAccount = discountAccount;
+    }
+
+    public List<FamilyGroup> getFamilyGroups() {
+        return familyGroups;
+    }
+
+    public void setFamilyGroups(List<FamilyGroup> familyGroups) {
+        this.familyGroups = familyGroups;
+    }
+
+    public List<RevenueCenter> getRevenueCenters() {
+        return revenueCenters;
+    }
+
+    public void setRevenueCenters(List<RevenueCenter> revenueCenters) {
+        this.revenueCenters = revenueCenters;
     }
 }

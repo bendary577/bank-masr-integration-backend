@@ -118,6 +118,7 @@ public class SalesService {
                                    ArrayList<JournalBatch> journalBatches, Account account,
                                    WebDriver driver, Response response){
         JournalBatch journalBatch = new JournalBatch();
+        SalesConfiguration configuration = salesSyncJobType.getConfiguration().salesConfiguration;
 
         // Get tender
         Response tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
@@ -125,9 +126,9 @@ public class SalesService {
         if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 
         // Get taxes
-        boolean taxIncluded = salesSyncJobType.getConfiguration().salesConfiguration.taxIncluded;
-        boolean syncTotalTax = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalTax;
-        String totalTaxAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalTaxAccount;
+        boolean taxIncluded = configuration.taxIncluded;
+        boolean syncTotalTax = configuration.syncTotalTax;
+        String totalTaxAccount = configuration.totalTaxAccount;
 
         Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
                 totalTaxAccount, includedTax, taxIncluded, driver);
@@ -144,15 +145,14 @@ public class SalesService {
             if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
         }
 
-        // Get over group gross
-        boolean majorGroupDiscount = salesSyncJobType.getConfiguration().salesConfiguration.MGDiscount;
+        // Get Major Groups/Family Groups net sales
+        boolean majorGroupDiscount = configuration.MGDiscount;
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
         if (revenueCenters.size() > 0 ){
             for (RevenueCenter rc : revenueCenters)
             {
-
                 Response overGroupGrossResponse = getSalesOverGroupGross(rc,
                         timePeriod, fromDate, toDate, costCenter, majorGroups, grossDiscountSales,
                         majorGroupDiscount, includedDiscount, taxIncluded,
@@ -186,15 +186,14 @@ public class SalesService {
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
         }
 
+        // Get discounts
         Response discountResponse;
-        boolean syncTotalDiscounts = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalDiscounts;
-        String totalDiscountsAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalDiscountsAccount;
+        boolean syncTotalDiscounts = configuration.syncTotalDiscounts;
+        String totalDiscountsAccount = configuration.totalDiscountsAccount;
 
-        if ((salesSyncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
-                || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
-            // Get discounts
-            discountResponse = getSalesDiscount(timePeriod,
-                    fromDate, toDate, costCenter, false, includedDiscount, driver);
+        if ((includedDiscount.size() > 0 || syncTotalDiscounts) && configuration.grossDiscountSales.equals(Constants.SALES_GROSS)){
+            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
             salesDiscounts.addAll(discountResponse.getSalesDiscount());
         }
@@ -488,7 +487,7 @@ public class SalesService {
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         /*
-        * Check if account use tax included or add on
+        * Check if account use tax included or add-on
         * */
         if(taxIncluded){
             driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
@@ -554,6 +553,8 @@ public class SalesService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
+            Discount discount;
+            MajorGroup majorGroup;
             for (int i = 7; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -561,8 +562,7 @@ public class SalesService {
                 if (cols.size() != columns.size()) {
                     continue;
                 }
-                Discount discount;
-                MajorGroup majorGroup;
+
                 if (!taxIncluded && columns.indexOf("group") != -1){
                     WebElement col = cols.get(columns.indexOf("group"));
                     if (!col.getAttribute("class").equals("header_1")){ // Group
@@ -698,9 +698,9 @@ public class SalesService {
         return response;
     }
 
-    private Response getSalesDiscount(String businessDate, String fromDate, String toDate,
-                                            CostCenter location, boolean getDiscountTotalFlag, ArrayList<Discount> discounts,
-                                      WebDriver driver) {
+    private Response getSalesDiscount(String businessDate, String fromDate, String toDate, CostCenter location,
+                                      boolean getDiscountTotalFlag, String totalDiscountsAccount,
+                                      ArrayList<Discount> discounts, WebDriver driver) {
         Response response = new Response();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
@@ -763,20 +763,15 @@ public class SalesService {
                 }
                 Discount discount;
 
+                WebElement td = cols.get(0);
                 if(getDiscountTotalFlag){
-                    WebElement td = cols.get(0);
                     if (td.getText().equals("Total Discounts:")) {
-                        discount = conversions.checkDiscountExistence(discounts, "discount cost");
-                        if (!discount.isChecked()) {
-                            break;
-                        }
-
                         Discount newDiscount = new Discount();
 
                         float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
 
-                        newDiscount.setDiscount(discount.getDiscount());
-                        newDiscount.setAccount(discount.getAccount());
+                        newDiscount.setDiscount("Total Discount");
+                        newDiscount.setAccount(totalDiscountsAccount);
                         newDiscount.setTotal(discountTotal);
                         newDiscount.setCostCenter(location);
                         salesDiscount.add(newDiscount);
@@ -784,7 +779,7 @@ public class SalesService {
                     }
                 }else{
                     if (columns.indexOf("discount_type") != -1){
-                        WebElement td = cols.get(columns.indexOf("discount_type"));
+                        td = cols.get(columns.indexOf("discount_type"));
                         discount = conversions.checkDiscountExistence(discounts, td.getText().strip().toLowerCase());
 
                         if (!discount.isChecked()) {

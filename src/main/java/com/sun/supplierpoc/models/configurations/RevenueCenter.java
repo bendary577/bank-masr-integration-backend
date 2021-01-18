@@ -3,6 +3,8 @@ package com.sun.supplierpoc.models.configurations;
 public class RevenueCenter {
     private boolean checked = false;
     private String revenueCenter = "";
+    private String discountAccount ="";
+    private String accountCode ="";
 
     public RevenueCenter() {
     }
@@ -26,5 +28,21 @@ public class RevenueCenter {
 
     public void setRevenueCenter(String revenueCenter) {
         this.revenueCenter = revenueCenter;
+    }
+
+    public String getDiscountAccount() {
+        return discountAccount;
+    }
+
+    public void setDiscountAccount(String discountAccount) {
+        this.discountAccount = discountAccount;
+    }
+
+    public String getAccountCode() {
+        return accountCode;
+    }
+
+    public void setAccountCode(String accountCode) {
+        this.accountCode = accountCode;
     }
 }

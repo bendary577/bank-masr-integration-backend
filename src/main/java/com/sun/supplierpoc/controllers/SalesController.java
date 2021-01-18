@@ -122,33 +122,26 @@ public class SalesController {
                 }
             }
 
-//            if (syncJobType.getConfiguration().getRevenue().equals("")) {
-//                String message = "Configure revenue before sync sales.";
+//            if (configuration.cashShortagePOS.equals("")) {
+//                String message = "Configure cash shortage account before sync sales.";
 //                response.setMessage(message);
 //                response.setStatus(false);
 //                return response;
 //            }
-
-            if (configuration.cashShortagePOS.equals("")) {
-                String message = "Configure cash shortage account before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
-
-            if (configuration.cashSurplusPOS.equals("")) {
-                String message = "Configure Cash surplus account before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
-
-            if (configuration.grossDiscountSales.equals("")) {
-                String message = "Configure sales gross/gross less discount before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
+//
+//            if (configuration.cashSurplusPOS.equals("")) {
+//                String message = "Configure Cash surplus account before sync sales.";
+//                response.setMessage(message);
+//                response.setStatus(false);
+//                return response;
+//            }
+//
+//            if (configuration.grossDiscountSales.equals("")) {
+//                String message = "Configure sales gross/gross less discount before sync sales.";
+//                response.setMessage(message);
+//                response.setStatus(false);
+//                return response;
+//            }
 
             if (tenders.size() == 0) {
                 String message = "Configure tenders before sync sales.";
@@ -157,19 +150,19 @@ public class SalesController {
                 return response;
             }
 
-            if (taxes.size() == 0) {
+            if (taxes.size() == 0 && (!configuration.syncTotalTax || configuration.totalTaxAccount.equals(""))) {
                 String message = "Configure taxes before sync sales.";
                 response.setMessage(message);
                 response.setStatus(false);
                 return response;
             }
-
-            if (majorGroups.size() == 0) {
-                String message = "Map major groups before sync sales.";
-                response.setMessage(message);
-                response.setStatus(false);
-                return response;
-            }
+//
+//            if (majorGroups.size() == 0) {
+//                String message = "Map major groups before sync sales.";
+//                response.setMessage(message);
+//                response.setStatus(false);
+//                return response;
+//            }
 
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 

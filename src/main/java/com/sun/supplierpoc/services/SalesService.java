@@ -125,13 +125,27 @@ public class SalesService {
         if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 
         // Get taxes
-        boolean taxIncluded = salesSyncJobType.getConfiguration().salesConfiguration.tenderIncludeTax;
-        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate,
-                costCenter, false, includedTax, taxIncluded, driver);
+        boolean taxIncluded = salesSyncJobType.getConfiguration().salesConfiguration.taxIncluded;
+        boolean syncTotalTax = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalTax;
+        String totalTaxAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalTaxAccount;
+
+        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+                totalTaxAccount, includedTax, taxIncluded, driver);
         if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
 
+        // Get serviceCharge
+        boolean syncTotalServiceCharge = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalServiceCharge;
+        String totalServiceChargeAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalServiceChargeAccount;
+
+        Response serviceChargeResponse = new Response();
+        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
+            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
+            if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
+        }
+
         // Get over group gross
-        boolean majorGroupDiscount = salesSyncJobType.getConfiguration().salesConfiguration.majorGroupDiscount;
+        boolean majorGroupDiscount = salesSyncJobType.getConfiguration().salesConfiguration.MGDiscount;
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
@@ -173,6 +187,9 @@ public class SalesService {
         }
 
         Response discountResponse;
+        boolean syncTotalDiscounts = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalDiscounts;
+        String totalDiscountsAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalDiscountsAccount;
+
         if ((salesSyncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
                 || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) && includedDiscount.size() > 0){
             // Get discounts
@@ -182,13 +199,6 @@ public class SalesService {
             salesDiscounts.addAll(discountResponse.getSalesDiscount());
         }
 
-        // Get serviceCharge
-        Response serviceChargeResponse = new Response();
-        if (includedServiceCharge.size() > 0){
-            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
-                    includedServiceCharge, driver);
-            if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
-        }
 
         // Set Debit Entries (Tenders)
         journalBatch.setSalesTender(tenderResponse.getSalesTender());
@@ -296,7 +306,8 @@ public class SalesService {
                 }
 
                 // Check if tender exists
-                Tender tenderData = conversions.checkTenderExistence(includedTenders, cols.get(0).getText().strip(), 0);
+                Tender tenderData = conversions.checkTenderExistence(includedTenders, cols.get(0).getText().strip(),
+                        location.locationName, 0);
                 if (!tenderData.isChecked()) {
                     continue;
                 }
@@ -312,7 +323,8 @@ public class SalesService {
                 tender.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
 
                 // Check if it already exist, increment its value
-                tenderData = conversions.checkTenderExistence(tenders, tender.getTender(), tender.getTotal());
+                tenderData = conversions.checkTenderExistence(tenders, tender.getTender(), location.locationName,
+                        tender.getTotal());
                 if (tenderData.getTender().equals("")) {
                     tenders.add(tender);
                 }
@@ -332,8 +344,8 @@ public class SalesService {
     }
 
     private Response getSalesTaxes(String businessDate, String fromDate, String toDate,
-                                   CostCenter location, boolean getTaxTotalFlag, ArrayList<Tax> includedTaxes,
-                                   boolean taxIncluded, WebDriver driver) {
+                                   CostCenter location, boolean getTaxTotalFlag, String totalTaxAccount,
+                                   ArrayList<Tax> includedTaxes, boolean taxIncluded, WebDriver driver) {
         Response response = new Response();
 
         ArrayList<Tax> salesTax = new ArrayList<>();
@@ -382,19 +394,16 @@ public class SalesService {
             tryMaxCount--;
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
+        String taxReportLink;
+
         if(taxIncluded){
             driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
-        }else{
-            driver.get(Constants.TAXES_REPORT_LINK);
-        }
-
-        String taxReportLink = Constants.OHRA_LINK;
-
-        if(taxIncluded){
             taxReportLink = Constants.TAX_INCLUDED_REPORT_LINK;
         }else{
-            taxReportLink += "/finengine/reportRunAction.do?rptroot=18&reportID=TaxesDailyDetail&method=run";
+            driver.get(Constants.TAXES_REPORT_LINK);
+            taxReportLink = Constants.ADD_ON_TAX_INCLUDED_REPORT_LINK;
         }
+
 
         try {
             driver.get(taxReportLink);
@@ -420,22 +429,19 @@ public class SalesService {
 
                 Tax tax = new Tax();
 
+                WebElement td = cols.get(0);
                 if(getTaxTotalFlag){
-                    WebElement td = cols.get(0);
                     if (td.getText().equals("Total Taxes:")) {
-                        tax = conversions.checkTaxExistence(includedTaxes, "total");
-                        if (!tax.isChecked()) {
-                            break;
-                        }
                         tax.setTax("Total Tax");
-                        tax.setTotal(conversions.convertStringToFloat(cols.get(1).getText().strip()));
+                        tax.setAccount(totalTaxAccount);
+                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip()));
                         tax.setCostCenter(location);
                         salesTax.add(tax);
                         break;
                     }
                 }else{
                     // Check if tax exists
-                    Tax taxData = conversions.checkTaxExistence(includedTaxes, cols.get(0).getText().strip());
+                    Tax taxData = conversions.checkTaxExistence(includedTaxes, td.getText().strip());
                     if (!taxData.isChecked()) {
                         continue;
                     }
@@ -814,7 +820,8 @@ public class SalesService {
     }
 
     private Response getTotalSalesServiceCharge(String businessDate, String fromDate, String toDate,
-                                      CostCenter location, ArrayList<ServiceCharge> serviceCharges,WebDriver driver) {
+                                      CostCenter location, boolean getSCTotalFlag, String totalSCAccount,
+                                                ArrayList<ServiceCharge> serviceCharges,WebDriver driver) {
         Response response = new Response();
         ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
 
@@ -880,17 +887,27 @@ public class SalesService {
                 }
 
                 WebElement td = cols.get(0);
-                if (td.getText().equals("Total Service Charges:")) {
-                    serviceCharge = conversions.checkServiceChargeExistence(serviceCharges, "total");
-                    if(!serviceCharge.isChecked()){
+                if(getSCTotalFlag){
+                    if (td.getText().equals("Total Service Charges:")) {
+                        float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+                        serviceCharge = new ServiceCharge();
+                        serviceCharge.setServiceCharge("Total Service Charge");
+                        serviceCharge.setAccount(totalSCAccount);
+                        serviceCharge.setTotal(serviceChargeTotal);
+                        serviceCharge.setCostCenter(location);
+                        salesServiceCharges.add(serviceCharge);
                         break;
                     }
-                    float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+                }else{
+                    serviceCharge = conversions.checkServiceChargeExistence(serviceCharges, td.getText(), location.locationName);
+                    if(!serviceCharge.isChecked()){
+                        continue;
+                    }
 
+                    float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
                     serviceCharge.setTotal(serviceChargeTotal);
                     serviceCharge.setCostCenter(location);
                     salesServiceCharges.add(serviceCharge);
-                    break;
                 }
             }
             response.setStatus(true);

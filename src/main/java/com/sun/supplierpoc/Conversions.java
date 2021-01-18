@@ -25,10 +25,10 @@ public class Conversions {
         return new Tax();
     }
 
-    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName, float amount) {
+    public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName, String location, float amount) {
         for (Tender tender : tenders) {
-            if (tender.getTender().toLowerCase().equals(tenderName.toLowerCase())
-            || tender.getChildren().contains(tenderName)) {
+            if ((tender.getCostCenter().locationName.equals("General") || tender.getCostCenter().locationName.equals(location))
+                    && (tender.getTender().toLowerCase().equals(tenderName.toLowerCase()) || tender.getChildren().contains(tenderName))) {
                 tender.setTotal(tender.getTotal() + amount);
                 return tender;
             }
@@ -66,9 +66,11 @@ public class Conversions {
         return new Discount();
     }
 
-    public ServiceCharge checkServiceChargeExistence(ArrayList<ServiceCharge> serviceCharges, String serviceChargeName){
+    public ServiceCharge checkServiceChargeExistence(ArrayList<ServiceCharge> serviceCharges, String serviceChargeName,
+                                                     String location){
         for (ServiceCharge serviceCharge : serviceCharges) {
-            if (serviceCharge.getServiceCharge().toLowerCase().equals(serviceChargeName.toLowerCase())) {
+            if ((serviceCharge.getCostCenter().locationName.equals("General") || serviceCharge.getCostCenter().locationName.equals(location))
+                && (serviceCharge.getServiceCharge().toLowerCase().equals(serviceChargeName.toLowerCase()))) {
                 return serviceCharge;
             }
         }

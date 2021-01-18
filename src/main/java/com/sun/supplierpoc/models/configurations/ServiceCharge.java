@@ -1,11 +1,13 @@
 package com.sun.supplierpoc.models.configurations;
 
 public class ServiceCharge {
+    private boolean checked = false;
     private String serviceCharge = "";
     private String account = "";
     private Float total;
-    private CostCenter costCenter;
-    private boolean checked = false;
+
+    private CostCenter costCenter = new CostCenter();
+    private RevenueCenter revenueCenter = new RevenueCenter();
 
     public ServiceCharge() {
     }
@@ -48,5 +50,13 @@ public class ServiceCharge {
 
     public void setChecked(boolean checked) {
         this.checked = checked;
+    }
+
+    public RevenueCenter getRevenueCenter() {
+        return revenueCenter;
+    }
+
+    public void setRevenueCenter(RevenueCenter revenueCenter) {
+        this.revenueCenter = revenueCenter;
     }
 }

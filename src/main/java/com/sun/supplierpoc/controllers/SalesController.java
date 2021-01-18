@@ -352,14 +352,14 @@ public class SalesController {
 
             while (numDays != 0){
                 startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobType.getConfiguration().toDate = startDate;
+                syncJobTypeRepo.save(syncJobType);
 
                 response = getPOSSales(userId, account);
                 if (response.isStatus()){
                     calendar.add(Calendar.DATE, +1);
 
-                    syncJobType.getConfiguration().fromDate = startDate;
-                    syncJobType.getConfiguration().toDate = startDate;
-                    syncJobTypeRepo.save(syncJobType);
                     numDays--;
                 }
             }

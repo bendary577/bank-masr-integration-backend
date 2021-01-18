@@ -665,7 +665,7 @@ public class SalesController {
             String fileName;
             String fileDirectory = AccountName + "/" + Month + "/";
 
-            fileName = fileDirectory + dayName.substring(0,3) + transactionDate + fileExtension;
+            fileName = fileDirectory + transactionDate + dayName.substring(0,3)  + fileExtension;
 
             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
                     fileName, syncJobType, salesList);
@@ -716,7 +716,7 @@ public class SalesController {
                     salesList.add(locationBatch.getSalesDifferentData());
                 }
 
-                fileName = fileDirectory + dayName.substring(0,3) + transactionDate + " - " +
+                fileName = fileDirectory + transactionDate + dayName.substring(0,3) + " - " +
                         locationBatch.getCostCenter().costCenterReference + fileExtension;
 
                 excelExporter = new SalesFileDelimiterExporter(fileName, syncJobType, salesList);

@@ -17,7 +17,7 @@ public class Tender implements Serializable {
     private String analysisCodeT5 = "";
 
     private CostCenter costCenter;
-    private String revenueCenterName;
+    private RevenueCenter revenueCenter;
 
     private List<String> children = new ArrayList<>();
 
@@ -107,11 +107,11 @@ public class Tender implements Serializable {
         this.costCenter = costCenter;
     }
 
-    public String getRevenueCenterName() {
-        return revenueCenterName;
+    public RevenueCenter getRevenueCenter() {
+        return revenueCenter;
     }
 
-    public void setRevenueCenterName(String revenueCenterName) {
-        this.revenueCenterName = revenueCenterName;
+    public void setRevenueCenter(RevenueCenter revenueCenter) {
+        this.revenueCenter = revenueCenter;
     }
 }

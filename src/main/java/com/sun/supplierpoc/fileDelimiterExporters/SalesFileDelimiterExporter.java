@@ -313,6 +313,12 @@ public class SalesFileDelimiterExporter {
                         String ls = System.getProperty("line.separator");
                         while ((line = reader.readLine()) != null) {
                             if(i != 0 && line.contains("VERSION")){
+                                if(this.fileContent.charAt(this.fileContent.length()-1) != '\n'){
+                                    if (this.fileContent.charAt(this.fileContent.length()-1) != '\r')
+                                        this.fileContent.append(ls);
+                                    else
+                                        this.fileContent.append('\n');
+                                }
                                 continue;
                             }
 
@@ -321,9 +327,14 @@ public class SalesFileDelimiterExporter {
                         }
 
                         // delete the last new line separator
+                        this.fileContent.deleteCharAt(this.fileContent.length() - 1);
                         this.fileContent.deleteCharAt(this.fileContent.length() - 2);
+
                         reader.close();
                     }
+                    // delete the last new line separator
+                    this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                    this.fileContent.deleteCharAt(this.fileContent.length() - 2);
 
                     try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
                         writer.write(String.valueOf(this.fileContent));
@@ -356,8 +367,11 @@ public class SalesFileDelimiterExporter {
                 String line;
                 String ls = System.getProperty("line.separator");
                 while ((line = reader.readLine()) != null) {
-                    if(i != 0 && line.contains("VERSION")){
-                        continue;
+                    if(this.fileContent.charAt(this.fileContent.length()-1) != '\n'){
+                        if (this.fileContent.charAt(this.fileContent.length()-1) != '\r')
+                            this.fileContent.append(ls);
+                        else
+                            this.fileContent.append('\n');
                     }
 
                     this.fileContent.append(line);
@@ -365,9 +379,13 @@ public class SalesFileDelimiterExporter {
                 }
 
                 // delete the last new line separator
+                this.fileContent.deleteCharAt(this.fileContent.length() - 1);
                 this.fileContent.deleteCharAt(this.fileContent.length() - 2);
                 reader.close();
             }
+            // delete the last new line separator
+            this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+            this.fileContent.deleteCharAt(this.fileContent.length() - 2);
 
             try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
                 writer.write(String.valueOf(this.fileContent));

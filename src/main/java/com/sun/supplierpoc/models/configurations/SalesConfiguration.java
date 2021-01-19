@@ -29,5 +29,11 @@ public class SalesConfiguration implements Serializable{
     * */
     public boolean MGDiscount = false;
     public boolean RVDiscount = false;
+
+    /*
+    * sync based on major groups or family groups
+    * */
+    public boolean syncMG = true;
+
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
 }

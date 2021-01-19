@@ -13,9 +13,9 @@ public class MajorGroup {
     /*
     * Use it to merge multiple major groups
     * */
-    private List<String> children = new ArrayList<>();
-    private List<FamilyGroup> familyGroups = new ArrayList<>();
-    private List<RevenueCenter> revenueCenters = new ArrayList<>();
+    private ArrayList<String> children = new ArrayList<>();
+    private ArrayList<FamilyGroup> familyGroups = new ArrayList<>();
+    private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
 
 
     public MajorGroup() {
@@ -62,10 +62,6 @@ public class MajorGroup {
         return children;
     }
 
-    public void setChildren(List<String> children) {
-        this.children = children;
-    }
-
     public String getDiscountAccount() {
         return discountAccount;
     }
@@ -74,19 +70,23 @@ public class MajorGroup {
         this.discountAccount = discountAccount;
     }
 
-    public List<FamilyGroup> getFamilyGroups() {
+    public void setChildren(ArrayList<String> children) {
+        this.children = children;
+    }
+
+    public ArrayList<FamilyGroup> getFamilyGroups() {
         return familyGroups;
     }
 
-    public void setFamilyGroups(List<FamilyGroup> familyGroups) {
+    public void setFamilyGroups(ArrayList<FamilyGroup> familyGroups) {
         this.familyGroups = familyGroups;
     }
 
-    public List<RevenueCenter> getRevenueCenters() {
+    public ArrayList<RevenueCenter> getRevenueCenters() {
         return revenueCenters;
     }
 
-    public void setRevenueCenters(List<RevenueCenter> revenueCenters) {
+    public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
         this.revenueCenters = revenueCenters;
     }
 }

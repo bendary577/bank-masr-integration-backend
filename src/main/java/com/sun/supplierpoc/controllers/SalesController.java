@@ -135,13 +135,6 @@ public class SalesController {
 //                response.setStatus(false);
 //                return response;
 //            }
-//
-//            if (configuration.grossDiscountSales.equals("")) {
-//                String message = "Configure sales gross/gross less discount before sync sales.";
-//                response.setMessage(message);
-//                response.setStatus(false);
-//                return response;
-//            }
 
             if (tenders.size() == 0) {
                 String message = "Configure tenders before sync sales.";
@@ -156,13 +149,13 @@ public class SalesController {
                 response.setStatus(false);
                 return response;
             }
-//
-//            if (majorGroups.size() == 0) {
-//                String message = "Map major groups before sync sales.";
-//                response.setMessage(message);
-//                response.setStatus(false);
-//                return response;
-//            }
+
+            if (majorGroups.size() == 0) {
+                String message = "Map major groups before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
 
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 

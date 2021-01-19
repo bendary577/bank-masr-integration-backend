@@ -56,6 +56,24 @@ public class Conversions {
         return new MajorGroup();
     }
 
+    public RevenueCenter checkRevenueCenterExistence(ArrayList<RevenueCenter> revenueCenters, String revenueCenterName){
+        for (RevenueCenter rc : revenueCenters) {
+            if (rc.getRevenueCenter().toLowerCase().equals(revenueCenterName.toLowerCase())) {
+                return rc;
+            }
+        }
+        return new RevenueCenter();
+    }
+
+    public FamilyGroup checkFamilyGroupExistence(ArrayList<FamilyGroup> familyGroups, String familyGroupName){
+        for (FamilyGroup fg : familyGroups) {
+            if (fg.familyGroup.toLowerCase().equals(familyGroupName.toLowerCase())) {
+                return fg;
+            }
+        }
+        return new FamilyGroup();
+    }
+
     public Discount checkDiscountExistence(ArrayList<Discount> discounts, String discountName){
         for (Discount discount : discounts) {
             if (discount.getDiscount().toLowerCase().equals(discountName.toLowerCase())) {
@@ -180,12 +198,12 @@ public class Conversions {
             return response;
         }
 
-        if (syncJobType.getConfiguration().locationAnalysis.equals("")){
-            String message = "Configure location ledger analysis before sync invoices " + syncJobType.getName().toLowerCase();
-            response.put("message", message);
-            response.put("success", false);
-            return response;
-        }
+//        if (syncJobType.getConfiguration().locationAnalysis.equals("")){
+//            String message = "Configure location ledger analysis before sync invoices " + syncJobType.getName().toLowerCase();
+//            response.put("message", message);
+//            response.put("success", false);
+//            return response;
+//        }
 
         if (syncJobType.getConfiguration().inforConfiguration.suspenseAccount.equals("")){
             String message = "Configure suspense account before sync invoices " + syncJobType.getName().toLowerCase();

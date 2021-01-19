@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.FamilyGroup;
 import com.sun.supplierpoc.models.configurations.MajorGroup;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 
@@ -9,13 +10,16 @@ import java.util.ArrayList;
 public class Journal {
 
     private MajorGroup majorGroup;
+    private FamilyGroup familyGroup;
     private String overGroup;
+
     private float totalWaste;
     private float totalCost;
     private float totalVariance;
     private float totalTransfer;
-    private RevenueCenter revenueCenter;
+
     private CostCenter costCenter;
+    private RevenueCenter revenueCenter;
     private String departmentCode;
 
     public Journal() {
@@ -29,8 +33,17 @@ public class Journal {
         this.totalTransfer = totalTransfer;
     }
 
+    private Journal(MajorGroup majorGroup, FamilyGroup familyGroup, float totalCost, CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
+        this.majorGroup = majorGroup;
+        this.familyGroup = familyGroup;
+        this.totalCost = totalCost;
+        this.costCenter = costCenter;
+        this.revenueCenter = revenueCenter;
+        this.departmentCode = departmentCode;
+    }
+
     private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
-                    CostCenter costCenter, RevenueCenter revenueCenter) {
+                    CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
         this.majorGroup = majorGroup;
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
@@ -38,11 +51,12 @@ public class Journal {
         this.totalTransfer = totalTransfer;
         this.costCenter = costCenter;
         this.revenueCenter = revenueCenter;
+        this.departmentCode = departmentCode;
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
                                              float waste, float cost, float variance, float transfer,
-                                             CostCenter costCenter, RevenueCenter revenueCenter){
+                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode){
 
         for (Journal journal:journals) {
             if(journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())){
@@ -55,7 +69,23 @@ public class Journal {
             }
         }
 
-        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter, revenueCenter));
+        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter, revenueCenter, departmentCode));
+        return journals;
+
+    }
+
+    public ArrayList<Journal> checkFGExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
+                                               float cost, CostCenter costCenter, RevenueCenter revenueCenter,
+                                               String departmentCode){
+
+        for (Journal journal:journals) {
+            if(journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)){
+                journal.totalCost += cost;
+                return journals;
+            }
+        }
+
+        journals.add(new Journal(majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
         return journals;
 
     }
@@ -148,5 +178,13 @@ public class Journal {
 
     public void setDepartmentCode(String departmentCode) {
         this.departmentCode = departmentCode;
+    }
+
+    public FamilyGroup getFamilyGroup() {
+        return familyGroup;
+    }
+
+    public void setFamilyGroup(FamilyGroup familyGroup) {
+        this.familyGroup = familyGroup;
     }
 }

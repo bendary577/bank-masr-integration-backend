@@ -45,11 +45,23 @@ public class Conversions {
         return new OverGroup();
     }
 
-    public MajorGroup checkMajorGroupExistence(ArrayList<MajorGroup> majorGroups, String majorGroupName){
+    public MajorGroup checkMajorGroupExistence(ArrayList<MajorGroup> majorGroups, String majorGroupName) throws CloneNotSupportedException {
         for (MajorGroup majorGroup : majorGroups) {
             if (majorGroup.getMajorGroup().toLowerCase().equals(majorGroupName.toLowerCase())
                     || majorGroup.getChildren().contains(majorGroupName)) {
-                return majorGroup;
+                /*
+                * Return copy of object
+                * */
+                MajorGroup mj = new MajorGroup();
+                mj.setChecked(majorGroup.getChecked());
+                mj.setOverGroup(majorGroup.getOverGroup());
+                mj.setMajorGroup(majorGroup.getMajorGroup());
+                mj.setFamilyGroups(majorGroup.getFamilyGroups());
+                mj.setRevenueCenters(majorGroup.getRevenueCenters());
+                mj.setChildren(majorGroup.getChildren());
+                mj.setAccount(majorGroup.getAccount());
+                mj.setDiscountAccount(majorGroup.getDiscountAccount());
+                return mj;
             }
         }
 

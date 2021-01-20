@@ -22,6 +22,19 @@ public class MajorGroup {
         this.checked = false;
     }
 
+    public MajorGroup(boolean checked, String overGroup, String majorGroup, String account, String discountAccount,
+                      ArrayList<String> children, ArrayList<FamilyGroup> familyGroups,
+                      ArrayList<RevenueCenter> revenueCenters) {
+        this.checked = checked;
+        this.overGroup = overGroup;
+        this.majorGroup = majorGroup;
+        this.account = account;
+        this.discountAccount = discountAccount;
+        this.children = children;
+        this.familyGroups = familyGroups;
+        this.revenueCenters = revenueCenters;
+    }
+
     public boolean getChecked() {
         return checked;
     }
@@ -58,7 +71,7 @@ public class MajorGroup {
         this.account = account;
     }
 
-    public List<String> getChildren() {
+    public ArrayList<String> getChildren() {
         return children;
     }
 

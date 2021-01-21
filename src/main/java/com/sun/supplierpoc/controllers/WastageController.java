@@ -108,7 +108,7 @@ public class WastageController {
             overGroups =  wastageSyncJobType.getConfiguration().overGroups;
         }
 
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }

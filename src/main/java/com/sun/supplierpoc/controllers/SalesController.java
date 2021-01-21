@@ -99,7 +99,7 @@ public class SalesController {
             String toDate = syncJobType.getConfiguration().toDate;
 
             //////////////////////////////////////// Validation ///////////////////////////////////////////////////////////
-            HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(syncJobType);
+            HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(syncJobType, account.getERD());
             if (sunConfigResponse != null) {
                 response.setMessage((String) sunConfigResponse.get("message"));
                 response.setStatus(false);
@@ -122,19 +122,19 @@ public class SalesController {
                 }
             }
 
-//            if (configuration.cashShortagePOS.equals("")) {
-//                String message = "Configure cash shortage account before sync sales.";
-//                response.setMessage(message);
-//                response.setStatus(false);
-//                return response;
-//            }
-//
-//            if (configuration.cashSurplusPOS.equals("")) {
-//                String message = "Configure Cash surplus account before sync sales.";
-//                response.setMessage(message);
-//                response.setStatus(false);
-//                return response;
-//            }
+            if (configuration.cashShortagePOS.equals("")) {
+                String message = "Configure cash shortage account before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
+
+            if (configuration.cashSurplusPOS.equals("")) {
+                String message = "Configure Cash surplus account before sync sales.";
+                response.setMessage(message);
+                response.setStatus(false);
+                return response;
+            }
 
             if (tenders.size() == 0) {
                 String message = "Configure tenders before sync sales.";
@@ -174,7 +174,7 @@ public class SalesController {
                     if (salesResponse.getJournalBatches().size() > 0) {
                         // Save Sales Entries
                         addedSalesBatches = salesService.saveSalesJournalBatchesData(salesResponse, syncJob,
-                                syncJobType, account);
+                                syncJobType.getConfiguration(), account);
 
                         if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
                             // Sent Sales Entries

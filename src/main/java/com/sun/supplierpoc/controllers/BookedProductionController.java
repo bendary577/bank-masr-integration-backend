@@ -84,7 +84,7 @@ public class BookedProductionController {
         String fromDate = bookedProductionSyncJobType.getConfiguration().fromDate;
         String toDate = bookedProductionSyncJobType.getConfiguration().toDate;
 
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(bookedProductionSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(bookedProductionSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }

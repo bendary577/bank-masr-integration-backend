@@ -111,7 +111,7 @@ public class TransferController {
             overGroups =  transferSyncJobType.getConfiguration().overGroups;
         }
 
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(transferSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }

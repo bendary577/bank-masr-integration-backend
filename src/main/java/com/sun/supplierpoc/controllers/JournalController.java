@@ -105,7 +105,7 @@ public class JournalController {
             overGroups =  journalSyncJobType.getConfiguration().overGroups;
         }
 
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }

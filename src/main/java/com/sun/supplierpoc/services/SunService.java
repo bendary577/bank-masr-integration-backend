@@ -336,7 +336,7 @@ public class SunService {
         lineElement.appendChild(accountCodeElement);
 
         // T#loctionAnalysis
-        String locationAnalysis = syncJobType.getConfiguration().locationAnalysis;
+        String locationAnalysis = syncJobType.getConfiguration().locationAnalysisCode;
 
         Element enterAnalysis1ElementT3 = doc.createElement("EnterAnalysis"+ locationAnalysis);
         enterAnalysis1ElementT3.appendChild(doc.createTextNode("1"));

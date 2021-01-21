@@ -106,7 +106,7 @@ public class CreditNoteController {
             overGroups =  invoiceSyncJobType.getConfiguration().overGroups;
         }
 
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(creditNoteSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(creditNoteSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }

@@ -930,12 +930,12 @@ public class SalesService {
 
 
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob,
-                                                               SyncJobType syncJobType, Account account) {
+                                                               Configuration configuration , Account account) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
 
-        String businessDate =  syncJobType.getConfiguration().timePeriod;
-        String fromDate =  syncJobType.getConfiguration().fromDate;
-        ArrayList<Discount> includedDiscountTypes = syncJobType.getConfiguration().salesConfiguration.discounts;
+        String businessDate =  configuration.timePeriod;
+        String fromDate =  configuration.fromDate;
+        ArrayList<Discount> includedDiscountTypes = configuration.salesConfiguration.discounts;
 
         String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
 
@@ -998,10 +998,7 @@ public class SalesService {
 
                     tenderData.put("description", description);
 
-                    if(!tender.getAnalysisCodeT5().equals("")){
-                        tenderData.put("analysisCodeT5", tender.getAnalysisCodeT5());
-                    }
-                    tenderData.put("analysisCodeT1", tender.getCostCenter().accountCode);
+                    prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
 
                     SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());
@@ -1045,10 +1042,7 @@ public class SalesService {
 
                 tenderData.put("description", description);
 
-                if(!tender.getAnalysisCodeT5().equals("")){
-                    tenderData.put("analysisCodeT5", tender.getAnalysisCodeT5());
-                }
-                tenderData.put("analysisCodeT1", tender.getCostCenter().accountCode);
+                prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
 
                 SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1096,7 +1090,7 @@ public class SalesService {
                 }
 
                 taxData.put("description", description);
-                taxData.put("analysisCodeT1", tax.getCostCenter().accountCode);
+                prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
 
                 SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1129,10 +1123,10 @@ public class SalesService {
                 majorGroupData.put("fromLocation", majorGroupJournal.getCostCenter().accountCode);
                 majorGroupData.put("toLocation", majorGroupJournal.getCostCenter().accountCode);
 
-                majorGroupData.put("transactionReference", "MajorGroup");
+                majorGroupData.put("transactionReference", "Major Group");
 
                 // Major Group account
-                if(syncJobType.getConfiguration().salesConfiguration.MGDiscount){
+                if(configuration.salesConfiguration.MGDiscount){
                     majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
                 }else {
                     majorGroupData.put("inventoryAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
@@ -1143,11 +1137,12 @@ public class SalesService {
                     description = majorGroupJournal.getCostCenter().costCenterReference;
                 }
 
-                description += " " + majorGroupJournal.getMajorGroup().getMajorGroup();
-
-                if(!syncJobType.getConfiguration().salesConfiguration.syncMG){
+                if(!configuration.salesConfiguration.syncMG){
                     description += " " + majorGroupJournal.getFamilyGroup().familyGroup;
-                    majorGroupData.put("analysisCodeT2", majorGroupJournal.getFamilyGroup().departmentCode);
+                    prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), majorGroupJournal.getFamilyGroup(), null);
+                }else {
+                    description += " " + majorGroupJournal.getMajorGroup().getMajorGroup();
+                    prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
                 }
 
                 if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals(""))
@@ -1158,7 +1153,6 @@ public class SalesService {
                 }
 
                 majorGroupData.put("description", description);
-                majorGroupData.put("analysisCodeT1", majorGroupJournal.getCostCenter().accountCode);
 
                 SyncJobData syncJobData = new SyncJobData(majorGroupData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1175,24 +1169,24 @@ public class SalesService {
                 if (serviceCharge.getTotal() == 0)
                     continue;
 
-                HashMap<String, String> majorGroupData = new HashMap<>();
+                HashMap<String, String> serviceChargeData = new HashMap<>();
 
-                majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
-                majorGroupData.put("transactionDate", transactionDate);
+                serviceChargeData.put("accountingPeriod", transactionDate.substring(2,6));
+                serviceChargeData.put("transactionDate", transactionDate);
 
-                majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat(serviceCharge.getTotal())));
+                serviceChargeData.put("totalCr", String.valueOf(conversions.roundUpFloat(serviceCharge.getTotal())));
 
-                majorGroupData.put("fromCostCenter", serviceCharge.getCostCenter().costCenter);
-                majorGroupData.put("fromAccountCode", serviceCharge.getCostCenter().accountCode);
+                serviceChargeData.put("fromCostCenter", serviceCharge.getCostCenter().costCenter);
+                serviceChargeData.put("fromAccountCode", serviceCharge.getCostCenter().accountCode);
 
-                majorGroupData.put("toCostCenter", serviceCharge.getCostCenter().costCenter);
-                majorGroupData.put("toAccountCode", serviceCharge.getCostCenter().accountCode);
+                serviceChargeData.put("toCostCenter", serviceCharge.getCostCenter().costCenter);
+                serviceChargeData.put("toAccountCode", serviceCharge.getCostCenter().accountCode);
 
-                majorGroupData.put("fromLocation", serviceCharge.getCostCenter().accountCode);
-                majorGroupData.put("toLocation", serviceCharge.getCostCenter().accountCode);
+                serviceChargeData.put("fromLocation", serviceCharge.getCostCenter().accountCode);
+                serviceChargeData.put("toLocation", serviceCharge.getCostCenter().accountCode);
 
-                majorGroupData.put("transactionReference", "MajorGroup");
-                majorGroupData.put("inventoryAccount", serviceCharge.getAccount());
+                serviceChargeData.put("transactionReference", "Service Charge");
+                serviceChargeData.put("inventoryAccount", serviceCharge.getAccount());
 
                 String description = "";
                 if (serviceCharge.getCostCenter().costCenterReference.equals("")){
@@ -1205,10 +1199,11 @@ public class SalesService {
                     description = description.substring(0, 50);
                 }
 
-                majorGroupData.put("description", description);
-                majorGroupData.put("analysisCodeT1", serviceCharge.getCostCenter().accountCode);
+                serviceChargeData.put("description", description);
 
-                SyncJobData syncJobData = new SyncJobData(majorGroupData, Constants.RECEIVED, "", new Date(),
+                prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
+
+                SyncJobData syncJobData = new SyncJobData(serviceChargeData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
                 syncJobDataRepo.save(syncJobData);
                 journalBatch.getSalesMajorGroupGrossData().add(syncJobData);
@@ -1227,7 +1222,7 @@ public class SalesService {
                 discountData.put("accountingPeriod", transactionDate.substring(2,6));
                 discountData.put("transactionDate", transactionDate);
 
-                if (syncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
+                if (configuration.salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
                 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                     discountData.put("expensesAccount", discount.getAccount());
                     discountData.put("totalDr", String.valueOf(conversions.roundUpFloat(discount.getTotal())));
@@ -1262,7 +1257,7 @@ public class SalesService {
                 }
 
                 discountData.put("description", description);
-                discountData.put("analysisCodeT1", discount.getCostCenter().accountCode);
+                prepareAnalysis(discountData, configuration, discount.getCostCenter(), null, null);
 
                 SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1296,7 +1291,7 @@ public class SalesService {
                     discountData.put("transactionReference", "Discount Expense");
 
                     discountData.put("expensesAccount", discount.getAccount());
-                    discountData.put("analysisCodeT1", discount.getCostCenter().accountCode);
+                    prepareAnalysis(discountData, configuration, discount.getCostCenter(), null, null);
 
                     String description = "";
                     if (discount.getCostCenter().costCenterReference.equals("")){
@@ -1350,7 +1345,7 @@ public class SalesService {
                     }
 
                     discountData.put("description", description);
-                    discountData.put("analysisCodeT1", discount.getCostCenter().accountCode);
+                    prepareAnalysis(discountData, configuration, discount.getCostCenter(), null, null);
 
                     SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());
@@ -1361,7 +1356,7 @@ public class SalesService {
 
             float totalDr = totalTender;
             float totalCr;
-            if(syncJobType.getConfiguration().salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)){
+            if(configuration.salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)){
                 totalCr = totalMajorGroupNet + totalDiscount + totalTax + totalServiceCharge;
             }else
             {
@@ -1376,13 +1371,13 @@ public class SalesService {
 
                 // {Debit} - ShortagePOS
                 if (totalCr > totalDr ) {
-                    String cashShortagePOS = syncJobType.getConfiguration().salesConfiguration.cashShortagePOS;
+                    String cashShortagePOS = configuration.salesConfiguration.cashShortagePOS;
                     differentData.put("totalDr", String.valueOf(conversions.roundUpFloat(totalCr - totalDr)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
-                    String cashSurplusPOS = syncJobType.getConfiguration().salesConfiguration.cashSurplusPOS;
+                    String cashSurplusPOS = configuration.salesConfiguration.cashSurplusPOS;
                     differentData.put("totalCr", String.valueOf(conversions.roundUpFloat(totalDr - totalCr)));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
@@ -1411,7 +1406,7 @@ public class SalesService {
                 }
 
                 differentData.put("description", description);
-                differentData.put("analysisCodeT1", journalBatch.getCostCenter().accountCode);
+                prepareAnalysis(differentData, configuration, journalBatch.getCostCenter(), null, null);
 
                 SyncJobData syncJobData = new SyncJobData(differentData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1460,6 +1455,30 @@ public class SalesService {
             data.setStatus(status);
             data.setReason(reason);
             syncJobDataRepo.save(data);
+        }
+    }
+
+    private void prepareAnalysis(HashMap<String, String> data, Configuration configuration,
+                                 CostCenter location, FamilyGroup familyGroup, Tender tender){
+        ArrayList<Analysis> analysis = configuration.analysis;
+        for (int i = 1; i <= analysis.size(); i++) {
+            data.put("analysisCodeT" + i, analysis.get(i - 1).getCodeElement());
+        }
+
+        String index;
+        if(location != null && !location.accountCode.equals("")){
+            index = configuration.locationAnalysisCode;
+            data.put("analysisCodeT" + index, location.accountCode);
+        }
+
+        if(tender != null && !tender.getAnalysisCodeT5().equals("")){
+            index = configuration.tenderAnalysisCode;
+            data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());
+        }
+
+        if(familyGroup != null && !familyGroup.departmentCode.equals("")){
+            index = configuration.familyGroupAnalysisCode;
+            data.put("analysisCodeT" + index, familyGroup.departmentCode);
         }
     }
 

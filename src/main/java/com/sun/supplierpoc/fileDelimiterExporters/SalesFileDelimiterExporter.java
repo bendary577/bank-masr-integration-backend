@@ -7,8 +7,7 @@ import com.sun.supplierpoc.models.util.SyncJobDataCSV;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class SalesFileDelimiterExporter {
     private String fileName;
@@ -63,6 +62,8 @@ public class SalesFileDelimiterExporter {
 
     private void createFileContent(){
         this.extractSyncJobData();
+        this.sortFileByAccountCode();
+
         String journalNumberSpaces = "       "; // 7 Length
         String lineSpaces = "       "; // 7 Length
         String allocationIndicatorSpace = " "; // 1 Length
@@ -102,12 +103,12 @@ public class SalesFileDelimiterExporter {
                     .append(filler6).append(paymentRef).append(paymentDate).append(paymentPeriod).append(asssetIndicator)
                     .append(asssetCode).append(assetSubCode).append(conversionCode).append(conversionRate)
                     .append(otherAmount).append(amountDec).append(cleardown).append(filler4).append(nextPeriodReversal)
-                    .append(textLinked).append(roughBookFlag).append(inUseFlag).append(syncJobDataCSV.analysisCode0)
+                    .append(textLinked).append(roughBookFlag).append(inUseFlag)
                     .append(syncJobDataCSV.analysisCode1).append(syncJobDataCSV.analysisCode2)
                     .append(syncJobDataCSV.analysisCode3).append(syncJobDataCSV.analysisCode4)
                     .append(syncJobDataCSV.analysisCode5).append(syncJobDataCSV.analysisCode6)
-                    .append(syncJobDataCSV.analysisCode7)
-                    .append(syncJobDataCSV.analysisCode8).append(syncJobDataCSV.analysisCode9);
+                    .append(syncJobDataCSV.analysisCode7).append(syncJobDataCSV.analysisCode8)
+                    .append(syncJobDataCSV.analysisCode9).append(syncJobDataCSV.analysisCode10);
 
             if(i != this.syncJobDataCSVList.size()-1){
                 fileContent.append("\r\n");
@@ -213,7 +214,6 @@ public class SalesFileDelimiterExporter {
             }
 
             syncJobDataCSV.recordType = syncJobType.getConfiguration().recordType;
-            syncJobDataCSV.versionCode = syncJobType.getConfiguration().versionCode;
             syncJobDataCSV.conversionCode = syncJobType.getConfiguration().conversionCode;
             syncJobDataCSV.conversionRate = syncJobType.getConfiguration().conversionRate;
 
@@ -225,49 +225,34 @@ public class SalesFileDelimiterExporter {
             }
 
             // 15 char
-            syncJobDataCSV.analysisCode0 = fillTCode(0, syncJobData, false);
-            syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, false);
-            syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, false);
-            syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, false);
-            syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, false);
-            syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, false);
-            syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, false);
-            syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, false);
-            syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, false);
-            syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, false);
-
-//            if(syncJobType.getConfiguration().locationAnalysis != null && syncJobType.getConfiguration().locationAnalysis.equals("")){
-//                int index = Integer.parseInt(syncJobType.getConfiguration().locationAnalysis) -1;
-//                if(index == 1){
-//                    syncJobDataCSV.analysisCode0 = fillTCode(index, syncJobData, true);
-//                }else if(index == 2){
-//                    syncJobDataCSV.analysisCode1 = fillTCode(index, syncJobData, true);
-//                }else if(index == 3){
-//                    syncJobDataCSV.analysisCode2 = fillTCode(index, syncJobData, true);
-//                }else if(index == 4){
-//                    syncJobDataCSV.analysisCode3 = fillTCode(index, syncJobData, true);
-//                }else if(index == 5){
-//                    syncJobDataCSV.analysisCode4 = fillTCode(index, syncJobData, true);
-//                }else if(index == 6){
-//                    syncJobDataCSV.analysisCode5 = fillTCode(index, syncJobData, true);
-//                }
-//            }
+            syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData);
+            syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData);
+            syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData);
+            syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData);
+            syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData);
+            syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData);
+            syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData);
+            syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData);
+            syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData);
+            syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData);
 
             this.syncJobDataCSVList.add(syncJobDataCSV);
         }
     }
 
-    private String fillTCode(int index, SyncJobData syncJobData, boolean locationFlag){
+    private void sortFileByAccountCode(){
+        this.syncJobDataCSVList.sort(new Comparator<>() {
+            public int compare(SyncJobDataCSV o1, SyncJobDataCSV o2) {
+                return o1.accountCode.compareTo(o2.accountCode);
+            }
+        });
+    }
+
+    private String fillTCode(int index, SyncJobData syncJobData){
         String analysisTCode = "#";
 
-        if (!locationFlag && syncJobData.getData().containsKey("analysisCodeT" + (index + 1))){
-            analysisTCode = syncJobData.getData().get("analysisCodeT" + (index + 1));
-        }
-        else if(locationFlag && syncJobData.getData().containsKey("fromLocation") && !syncJobData.getData().get("fromLocation").equals("")){
-            analysisTCode = syncJobData.getData().get("fromLocation");
-        }
-        else if(!syncJobType.getConfiguration().analysis.get(index).getCodeElement().equals("")){
-            analysisTCode = syncJobType.getConfiguration().analysis.get(index).getCodeElement();
+        if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")){
+            analysisTCode = syncJobData.getData().get("analysisCodeT" + index);
         }
 
         if(analysisTCode.length() > 15){

@@ -3,8 +3,6 @@ package com.sun.supplierpoc.models.util;
 import java.io.Serializable;
 
 public class SyncJobDataCSV implements Serializable {
-    public String versionCode = "";
-
     public String accountCode = "";
     public String amount = "";
 
@@ -27,7 +25,6 @@ public class SyncJobDataCSV implements Serializable {
     public String conversionCode = "";
     public String conversionRate = "";
 
-    public String analysisCode0 = "";
     public String analysisCode1 = "";
     public String analysisCode2 = "";
     public String analysisCode3 = "";
@@ -37,6 +34,7 @@ public class SyncJobDataCSV implements Serializable {
     public String analysisCode7 = "";
     public String analysisCode8 = "";
     public String analysisCode9 = "";
+    public String analysisCode10 = "";
 
     public SyncJobDataCSV() {
     }

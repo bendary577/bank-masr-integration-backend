@@ -11,7 +11,6 @@ public class Configuration implements Serializable {
 
     public String transactionReference = "";
     public Boolean uniqueOverGroupMapping = false;
-    public Boolean uniqueAnalysisMapping = false;
 
     // Exported File variables
     public String recordType = "";
@@ -25,7 +24,10 @@ public class Configuration implements Serializable {
 
     public ArrayList<CostCenter> costCenters = new ArrayList<>();
 
-    public String locationAnalysis = "";
+    public String locationAnalysisCode = "";
+    public String tenderAnalysisCode = "";
+    public String familyGroupAnalysisCode = "";
+
     public ArrayList<Analysis> analysis = new ArrayList<>();
 
     public ArrayList<Item> items = new ArrayList<>();

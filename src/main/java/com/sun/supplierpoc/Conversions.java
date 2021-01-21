@@ -172,7 +172,7 @@ public class Conversions {
         return null;
     }
 
-    public HashMap<String, Object> checkSunDefaultConfiguration(SyncJobType syncJobType){
+    public HashMap<String, Object> checkSunDefaultConfiguration(SyncJobType syncJobType, String ERD){
         HashMap<String, Object> response = new HashMap<>();
 
         if (syncJobType.getConfiguration().inforConfiguration.businessUnit.equals("")){
@@ -210,13 +210,6 @@ public class Conversions {
             return response;
         }
 
-//        if (syncJobType.getConfiguration().locationAnalysis.equals("")){
-//            String message = "Configure location ledger analysis before sync invoices " + syncJobType.getName().toLowerCase();
-//            response.put("message", message);
-//            response.put("success", false);
-//            return response;
-//        }
-
         if (syncJobType.getConfiguration().inforConfiguration.suspenseAccount.equals("")){
             String message = "Configure suspense account before sync invoices " + syncJobType.getName().toLowerCase();
             response.put("message", message);
@@ -224,6 +217,38 @@ public class Conversions {
             return response;
         }
 
+        /*
+        * Validate exported file configuration
+        * */
+        if(ERD.equals(Constants.EXPORT_TO_SUN_ERD)){
+            if (syncJobType.getConfiguration().recordType.equals("")){
+                String message = "Configure record type before sync invoices " + syncJobType.getName().toLowerCase();
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
+
+            if (syncJobType.getConfiguration().conversionCode.equals("")){
+                String message = "Configure conversion code before sync invoices " + syncJobType.getName().toLowerCase();
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
+
+            if (syncJobType.getConfiguration().conversionRate.equals("")){
+                String message = "Configure conversion rate before sync invoices " + syncJobType.getName().toLowerCase();
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
+
+            if (syncJobType.getConfiguration().versionCode.equals("")){
+                String message = "Configure version code before sync invoices " + syncJobType.getName().toLowerCase();
+                response.put("message", message);
+                response.put("success", false);
+                return response;
+            }
+        }
         return null;
     }
 

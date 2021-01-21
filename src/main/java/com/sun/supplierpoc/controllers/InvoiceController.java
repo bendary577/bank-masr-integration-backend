@@ -111,7 +111,7 @@ public class InvoiceController {
             overGroups =  invoiceSyncJobType.getConfiguration().overGroups;
         }
 
-        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType);
+        HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(invoiceSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
         }

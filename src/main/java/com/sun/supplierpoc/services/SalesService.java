@@ -265,7 +265,6 @@ public class SalesService {
 
         String message = "";
         int tryMaxCount = 2;
-        List<WebElement> rows;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                     location.locationName, "", driver);
@@ -289,56 +288,17 @@ public class SalesService {
             tryMaxCount--;
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE)&& tryMaxCount != 0);
 
-        tryMaxCount = 2;
-        message = "";
-        wait = new WebDriverWait(driver, 40);
-        JavascriptExecutor js = ((JavascriptExecutor) driver);
-
-        do{
-            try{
-                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
-                //presence in DOM
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
-                if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
-                    //scrolling
-                    WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
-                    js.executeScript("arguments[0].scrollIntoView(true);", element);
-
-                    //clickable
-                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
-                    driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).click();
-
-                    rows = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_TABLE_XPATH)).findElements(By.tagName("tr"));
-                    if(!setupEnvironment.checkReportParameter( rows, fromDate, location.locationName, "")){
-                        driver.switchTo().defaultContent();
-                        message = Constants.WRONG_BUSINESS_DATE;
-                        driver.findElement(By.id("Run Report")).click();
-                    }
-                    else {
-                        driver.switchTo().defaultContent();
-                        message = "";
-                        break;
-                    }
-                }
-            } catch (Exception Ex) {
-                System.out.println("Can not fetch parameter data.");
-                message = Constants.WRONG_BUSINESS_DATE;
-                driver.findElement(By.id("Run Report")).click();
-            }
-            tryMaxCount--;
-        }while (message.equals(Constants.WRONG_BUSINESS_DATE) && tryMaxCount != 0);
+        message = checkReportParameters(driver, location.locationName, fromDate);
 
         if(message.equals(Constants.WRONG_BUSINESS_DATE)){
             response.setStatus(false);
             response.setMessage(message);
-            response.setSalesTender(tenders);
             return response;
         }
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
-
-            rows = driver.findElements(By.tagName("tr"));
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
             if (rows.size() < 5) {
                 response.setStatus(true);
                 response.setMessage("There is no tender entries in this location");
@@ -411,8 +371,8 @@ public class SalesService {
             driver.get(Constants.TAXES_REPORT_LINK);
         }
 
+        WebDriverWait wait = new WebDriverWait(driver, 20);
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 20);
             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
         } catch (Exception Ex) {
             System.out.println("There is no loader");
@@ -420,6 +380,7 @@ public class SalesService {
 
         String message = "";
         int tryMaxCount = 2;
+        List<WebElement> rows;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
                     "", driver);
@@ -433,9 +394,6 @@ public class SalesService {
 
             driver.findElement(By.id("Run Report")).click();
 
-            /*
-             * Check if selenium failed to select business date, and re-try
-             * */
             try {
                 Alert locationAlert = driver.switchTo().alert();
                 message = locationAlert.getText();
@@ -445,6 +403,14 @@ public class SalesService {
             }
             tryMaxCount--;
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
+
+        message = checkReportParameters(driver, location.locationName, fromDate);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
 
         String taxReportLink;
 
@@ -460,7 +426,7 @@ public class SalesService {
         try {
             driver.get(taxReportLink);
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+            rows = driver.findElements(By.tagName("tr"));
             if (rows.size() < 5) {
                 response.setStatus(true);
                 response.setMessage("There is no tax entries in this location");
@@ -575,6 +541,14 @@ public class SalesService {
             }
             tryMaxCount--;
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
+
+        message = checkReportParameters(driver, location.locationName, fromDate);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
 
         String overGroupGrossLink;
         if(taxIncluded)
@@ -793,6 +767,14 @@ public class SalesService {
             tryMaxCount --;
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
+        message = checkReportParameters(driver, location.locationName, fromDate);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
+
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
 
@@ -910,6 +892,14 @@ public class SalesService {
             tryMaxCount --;
 
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
+
+        message = checkReportParameters(driver, location.locationName, fromDate);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
 
         try {
             driver.get(Constants.SERVICE_CHARGE_TABLE_LINK);
@@ -1523,6 +1513,51 @@ public class SalesService {
             index = configuration.familyGroupAnalysisCode;
             data.put("analysisCodeT" + index, familyGroup.departmentCode);
         }
+    }
+
+    private String checkReportParameters(WebDriver driver, String locationName, String fromDate){
+        int tryMaxCount = 2;
+        String message = "";
+        WebDriverWait wait = new WebDriverWait(driver, 20);
+        List<WebElement> rows;
+
+        JavascriptExecutor js = ((JavascriptExecutor) driver);
+
+        do{
+            try{
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
+                //presence in DOM
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+                if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
+                    //scrolling
+                    WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
+                    js.executeScript("arguments[0].scrollIntoView(true);", element);
+
+                    //clickable
+                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+                    driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).click();
+
+                    rows = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_TABLE_XPATH)).findElements(By.tagName("tr"));
+                    if(!setupEnvironment.checkReportParameter(rows, fromDate, locationName, "")){
+                        driver.switchTo().defaultContent();
+                        message = Constants.WRONG_BUSINESS_DATE;
+                        driver.findElement(By.id("Run Report")).click();
+                    }
+                    else {
+                        driver.switchTo().defaultContent();
+                        message = "";
+                        break;
+                    }
+                }
+            } catch (Exception Ex) {
+                System.out.println("Can not fetch parameter data.");
+                message = Constants.WRONG_BUSINESS_DATE;
+                driver.findElement(By.id("Run Report")).click();
+            }
+            tryMaxCount--;
+        }while (message.equals(Constants.WRONG_BUSINESS_DATE) && tryMaxCount != 0);
+
+        return message;
     }
 
 }

@@ -77,7 +77,6 @@ public class Constants {
     public static String TENDERS_PARAMETERS_XPATH = "/html/body/div[2]/div[1]";
     public static String TENDERS_PARAMETERS_TABLE_XPATH = "/html/body/div[2]/div[2]/table";
 
-
     // Daily Detail >> Tax
     public static String TAXES_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=18";
     public static String TAX_INCLUDED_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?method=run&reportID=EAME_TaxesDailyDetail_VAT&rptroot=1191";

@@ -571,11 +571,12 @@ public class SalesService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
-            if ((!taxIncluded && columns.indexOf("group") == -1) || (taxIncluded && columns.indexOf("item_group") != -1)){
+            if ((!taxIncluded && columns.indexOf("group") == -1) && (taxIncluded && columns.indexOf("item_group") != -1)){
                 driver.quit();
                 response.setStatus(false);
                 response.setMessage("Failed to get majorGroup gross entries, Please contact support team.");
                 response.setEntries(new ArrayList<>());
+                return response;
             }
 
             MajorGroup majorGroup;

@@ -36,13 +36,13 @@ public class Configuration implements Serializable {
     public ArrayList<OverGroup> overGroups = new ArrayList<>();
 
     public SchedulerConfiguration schedulerConfiguration = new SchedulerConfiguration();
-    public InforConfiguration inforConfiguration;
+    public InforConfiguration inforConfiguration = new InforConfiguration();
 
-    public SalesConfiguration salesConfiguration;
-    public SupplierConfiguration supplierConfiguration;
-    public InvoiceConfiguration invoiceConfiguration;
-    public WastageConfiguration wastageConfiguration;
-    public ConsumptionConfiguration consumptionConfiguration;
+    public SalesConfiguration salesConfiguration = new SalesConfiguration();
+    public SupplierConfiguration supplierConfiguration = new SupplierConfiguration();
+    public InvoiceConfiguration invoiceConfiguration = new InvoiceConfiguration();
+    public WastageConfiguration wastageConfiguration = new WastageConfiguration();
+    public ConsumptionConfiguration consumptionConfiguration = new ConsumptionConfiguration();
     public TransferConfiguration transferConfiguration;
-    public MenuItemConfiguration menuItemConfiguration;
+    public MenuItemConfiguration menuItemConfiguration = new MenuItemConfiguration();
 }

@@ -567,6 +567,38 @@ public class SetupEnvironment {
             return response;
         }
     }
+
+    public boolean checkReportParameter(List<WebElement> parameterRows, String syncFromDate, String location, String revenueCenter){
+        ArrayList<String> parameterColumns;
+
+        parameterColumns = getTableColumns(parameterRows, false, 0);
+        if(parameterColumns.get(0).equals("business_dates")){
+            try {
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                DateFormat BusinessDateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                Date date = BusinessDateFormat.parse(parameterColumns.get(1));
+
+                if(!syncFromDate.equals(dateFormat.format(date)))
+                    return false;
+            } catch (ParseException e) {
+                e.printStackTrace();
+                return false;
+            }
+
+        }
+
+        parameterColumns = getTableColumns(parameterRows, false, 1);
+        if(parameterColumns.get(0).equals("locations")){
+            if(!parameterColumns.get(1).equals(conversions.transformColName(location)))
+                return false;
+        }
+
+        parameterColumns = getTableColumns(parameterRows, false, 2);
+        if(parameterColumns.get(0).equals("revenue_centers") && !revenueCenter.equals("")){
+            return parameterColumns.get(1).equals(conversions.transformColName(revenueCenter));
+        }
+        return true;
+    }
 }
 
 

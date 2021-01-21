@@ -275,7 +275,6 @@ public class SalesController {
                                 response.setStatus(true);
                                 response.setMessage("Sync sales successfully.");
                             }
-
                         }
                         else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,

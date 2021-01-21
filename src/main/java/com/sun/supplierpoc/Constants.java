@@ -13,6 +13,7 @@ public class Constants {
     public static String EMPTY_REVENUE_CENTER = "Revenue Centers parameter is empty. Please make a selection.";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
     public static String EMPTY_BUSINESS_DATE = "Business Dates parameter is empty. Please make a selection.";
+    public static String WRONG_BUSINESS_DATE = "Wrong Business Dates Chosen.";
 
     ///////////////////////////////////////// Sync Job Status///////////////////////////////////////////////////////////
     public static String RUNNING = "Running";
@@ -50,11 +51,6 @@ public class Constants {
     public static String FUSION_ERD = "Fusion";
     public static String SIMPHONY_ERD = "Simphony";
 
-    ///////////////////////////////////////// Sun Server ///////////////////////////////////////////////////////////////
-
-//    public static int PORT = 8080;
-//    public static String HOST = "41.33.13.24";
-
     ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
 
     public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
@@ -78,6 +74,9 @@ public class Constants {
     // Daily Detail >> Tenders
     public static String TENDERS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=19";
     public static String TENDERS_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=19&reportID=TendersDailyDetail&method=run";
+    public static String TENDERS_PARAMETERS_XPATH = "/html/body/div[2]/div[1]";
+    public static String TENDERS_PARAMETERS_TABLE_XPATH = "/html/body/div[2]/div[2]/table";
+
 
     // Daily Detail >> Tax
     public static String TAXES_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=18";

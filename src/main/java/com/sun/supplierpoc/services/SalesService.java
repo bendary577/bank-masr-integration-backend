@@ -229,20 +229,20 @@ public class SalesService {
     private boolean checkSalesFunctionResponse(WebDriver driver, Response response, Response overGroupGrossResponse) {
         if (!overGroupGrossResponse.isStatus()) {
             if (overGroupGrossResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                driver.quit();
-
-                response.setStatus(false);
                 response.setMessage(Constants.INVALID_LOCATION);
                 response.setEntries(new ArrayList<>());
             } else if(overGroupGrossResponse.getMessage().equals(Constants.INVALID_BUSINESS_DATE)){
                 driver.quit();
-
-                response.setStatus(false);
-                response.setMessage(Constants.INVALID_LOCATION);
-                response.setEntries(new ArrayList<>());
+                response.setMessage(Constants.INVALID_BUSINESS_DATE);
+            } else if(overGroupGrossResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                driver.quit();
+                response.setMessage(Constants.WRONG_BUSINESS_DATE);
             }
+
             response.setStatus(false);
             response.setMessage(overGroupGrossResponse.getMessage());
+            response.setEntries(new ArrayList<>());
+
             return true;
         }
         return false;
@@ -256,9 +256,8 @@ public class SalesService {
         if (!driver.getCurrentUrl().equals(Constants.TENDERS_REPORT_LINK)) {
             driver.get(Constants.TENDERS_REPORT_LINK);
         }
-
+        WebDriverWait wait = new WebDriverWait(driver, 20);
         try{
-            WebDriverWait wait = new WebDriverWait(driver, 20);
             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
         } catch (Exception Ex) {
             System.out.println("There is no loader");
@@ -266,10 +265,10 @@ public class SalesService {
 
         String message = "";
         int tryMaxCount = 2;
+        List<WebElement> rows;
         do{
             Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
                     location.locationName, "", driver);
-
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
                 response.setMessage( dateResponse.getMessage());
@@ -279,9 +278,6 @@ public class SalesService {
 
             driver.findElement(By.id("Run Report")).click();
 
-            /*
-             * Check if selenium failed to select business date, and re-try
-             * */
             try {
                 Alert locationAlert = driver.switchTo().alert();
                 message = locationAlert.getText();
@@ -289,13 +285,60 @@ public class SalesService {
             }catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
+
             tryMaxCount--;
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE)&& tryMaxCount != 0);
+
+        tryMaxCount = 2;
+        message = "";
+        wait = new WebDriverWait(driver, 40);
+        JavascriptExecutor js = ((JavascriptExecutor) driver);
+
+        do{
+            try{
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
+                //presence in DOM
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+                if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
+                    //scrolling
+                    WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
+                    js.executeScript("arguments[0].scrollIntoView(true);", element);
+
+                    //clickable
+                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+                    driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).click();
+
+                    rows = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_TABLE_XPATH)).findElements(By.tagName("tr"));
+                    if(!setupEnvironment.checkReportParameter( rows, fromDate, location.locationName, "")){
+                        driver.switchTo().defaultContent();
+                        message = Constants.WRONG_BUSINESS_DATE;
+                        driver.findElement(By.id("Run Report")).click();
+                    }
+                    else {
+                        driver.switchTo().defaultContent();
+                        message = "";
+                        break;
+                    }
+                }
+            } catch (Exception Ex) {
+                System.out.println("Can not fetch parameter data.");
+                message = Constants.WRONG_BUSINESS_DATE;
+                driver.findElement(By.id("Run Report")).click();
+            }
+            tryMaxCount--;
+        }while (message.equals(Constants.WRONG_BUSINESS_DATE) && tryMaxCount != 0);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            response.setSalesTender(tenders);
+            return response;
+        }
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+            rows = driver.findElements(By.tagName("tr"));
             if (rows.size() < 5) {
                 response.setStatus(true);
                 response.setMessage("There is no tender entries in this location");

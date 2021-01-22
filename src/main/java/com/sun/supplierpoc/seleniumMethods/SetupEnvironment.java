@@ -37,7 +37,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -45,7 +45,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -587,16 +587,21 @@ public class SetupEnvironment {
 
         }
 
-        parameterColumns = getTableColumns(parameterRows, false, 1);
-        if(parameterColumns.get(0).equals("locations")){
-            if(!parameterColumns.get(1).equals(conversions.transformColName(location)))
-                return false;
+        if(!location.equals("")){
+            parameterColumns = getTableColumns(parameterRows, false, 1);
+            if(parameterColumns.get(0).equals("locations")){
+                if(!parameterColumns.get(1).equals(conversions.transformColName(location)))
+                    return false;
+            }
         }
 
-        parameterColumns = getTableColumns(parameterRows, false, 2);
-        if(parameterColumns.get(0).equals("revenue_centers") && !revenueCenter.equals("")){
-            return parameterColumns.get(1).equals(conversions.transformColName(revenueCenter));
+        if(!revenueCenter.equals("")){
+            parameterColumns = getTableColumns(parameterRows, false, 2);
+            if(parameterColumns.get(0).equals("revenue_centers")){
+                return parameterColumns.get(1).equals(conversions.transformColName(revenueCenter));
+            }
         }
+
         return true;
     }
 }

@@ -391,6 +391,16 @@ public class SalesController {
             response.setMessage(message);
         }
         else{
+            if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.DATE, -1);
+
+                String startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobTypeRepo.save(syncJobType);
+            }
+
             response = getPOSSales(userId, account);
         }
         return response;

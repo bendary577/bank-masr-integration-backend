@@ -249,7 +249,9 @@ public class SalesFileDelimiterExporter {
     }
 
     private String fillTCode(int index, SyncJobData syncJobData){
-        String analysisTCode = "#";
+        String analysisTCode = "";
+        if(syncJobType.getConfiguration().analysis.get(index -1).getChecked())
+            analysisTCode = "#";
 
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")){
             analysisTCode = syncJobData.getData().get("analysisCodeT" + index);

@@ -13,6 +13,7 @@ import java.util.Date;
 
 @RestController
 public class OperationTypeController {
+
     @Autowired
     OperationTypeRepo operationTypeRepo;
 
@@ -37,7 +38,9 @@ public class OperationTypeController {
     @ResponseBody
     public OperationType createOperationType(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        OperationType operation = new OperationType(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
+  //      OperationType operation = new OperationType(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
+        OperationType operation = new OperationType(1, "Zeal Points", "/zealPoints", new Date(), user.getAccountId());
+
         operationTypeRepo.save(operation);
         return operation;
     }

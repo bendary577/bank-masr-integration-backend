@@ -20,4 +20,9 @@ public class CostCenter {
     public CostCenter() {
         this.checked = false;
     }
+
+    public CostCenter(String locationName) {
+        this.checked = false;
+        this.locationName = locationName;
+    }
 }

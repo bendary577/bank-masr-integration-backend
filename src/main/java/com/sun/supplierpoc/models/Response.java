@@ -31,6 +31,7 @@ public class Response {
     private ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
 
     private ArrayList<SyncJobData> addedSyncJobData = new ArrayList<>();
+    private ArrayList<OperationData> addedOperationData = new ArrayList<>();
 
     public Response() {
     }
@@ -145,5 +146,13 @@ public class Response {
 
     public void setAddedSyncJobData(ArrayList<SyncJobData> addedSyncJobData) {
         this.addedSyncJobData = addedSyncJobData;
+    }
+
+    public ArrayList<OperationData> getAddedOperationData() {
+        return addedOperationData;
+    }
+
+    public void setAddedOperationData(ArrayList<OperationData> addedOperationData) {
+        this.addedOperationData = addedOperationData;
     }
 }

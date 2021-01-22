@@ -16,8 +16,8 @@ public class Tender implements Serializable {
 
     private String analysisCodeT5 = "";
 
-    private CostCenter costCenter = new CostCenter();
-    private RevenueCenter revenueCenter = new RevenueCenter();
+    private CostCenter costCenter = new CostCenter("General");
+    private RevenueCenter revenueCenter = new RevenueCenter(true, "General");
 
     private List<String> children = new ArrayList<>();
 

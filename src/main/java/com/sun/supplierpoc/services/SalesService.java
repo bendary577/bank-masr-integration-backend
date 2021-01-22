@@ -295,6 +295,11 @@ public class SalesService {
             response.setMessage(message);
             return response;
         }
+        else if(message.equals("No information is available for the selected range")){
+            response.setStatus(true);
+            response.setMessage(message);
+            return response;
+        }
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
@@ -408,6 +413,11 @@ public class SalesService {
 
         if(message.equals(Constants.WRONG_BUSINESS_DATE)){
             response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
+        else if(message.equals("No information is available for the selected range")){
+            response.setStatus(true);
             response.setMessage(message);
             return response;
         }
@@ -546,6 +556,11 @@ public class SalesService {
 
         if(message.equals(Constants.WRONG_BUSINESS_DATE)){
             response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
+        else if(message.equals("No information is available for the selected range")){
+            response.setStatus(true);
             response.setMessage(message);
             return response;
         }
@@ -775,6 +790,11 @@ public class SalesService {
             response.setMessage(message);
             return response;
         }
+        else if(message.equals("No information is available for the selected range")){
+            response.setStatus(true);
+            response.setMessage(message);
+            return response;
+        }
 
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
@@ -898,6 +918,10 @@ public class SalesService {
 
         if(message.equals(Constants.WRONG_BUSINESS_DATE)){
             response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }else if(message.equals("No information is available for the selected range")){
+            response.setStatus(true);
             response.setMessage(message);
             return response;
         }
@@ -1526,9 +1550,16 @@ public class SalesService {
 
         do{
             try{
+                if(driver.findElements(By.id("newCell0Div")).size() > 0){
+                    if(driver.findElements(By.id("newCell0Div")).get(0).getText().equals("No information is available for the selected range")){
+                        return "No information is available for the selected range";
+                    }
+                }
+
                 wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
                 //presence in DOM
                 wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+
                 if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
                     //scrolling
                     WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
@@ -1552,6 +1583,7 @@ public class SalesService {
                 }
             } catch (Exception Ex) {
                 System.out.println("Can not fetch parameter data.");
+                driver.switchTo().defaultContent();
                 message = Constants.WRONG_BUSINESS_DATE;
                 driver.findElement(By.id("Run Report")).click();
             }

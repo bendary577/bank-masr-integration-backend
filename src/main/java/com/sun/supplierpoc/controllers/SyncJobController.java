@@ -1,8 +1,10 @@
 package com.sun.supplierpoc.controllers;
 
+import com.sun.supplierpoc.models.OperationType;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -14,11 +16,9 @@ import java.security.Principal;
 import java.util.List;
 
 @RestController
-// @RequestMapping(path = "server")
-
-
 public class SyncJobController {
-
+    @Autowired
+    private OperationTypeRepo operationTypeRepo;
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
@@ -31,6 +31,15 @@ public class SyncJobController {
     public List<SyncJob> getSyncJobs(@RequestParam(name = "typeName") String syncJobTypeId, Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         SyncJobType syncJobType =  syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
+        return syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobType.getId(), false);
+    }
+
+    @GetMapping("/getOperationJobs")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public List<SyncJob> getOperationJobs(@RequestParam(name = "typeName") String syncJobTypeId, Principal principal)  {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        OperationType syncJobType =  operationTypeRepo.findAllByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
         return syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobType.getId(), false);
     }
 }

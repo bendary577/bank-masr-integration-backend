@@ -7,10 +7,7 @@ import com.sun.supplierpoc.repositories.OperationRepo;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -31,5 +28,4 @@ public class OperationController {
         OperationType operationType =  operationTypeRepo.findAllByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
         return operationRepo.findByoperationTypeIdAndDeletedOrderByCreationDateDesc(operationType.getId(), false);
     }
-
 }

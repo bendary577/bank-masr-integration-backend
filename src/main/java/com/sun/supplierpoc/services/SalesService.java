@@ -202,7 +202,7 @@ public class SalesService {
         boolean syncTotalDiscounts = configuration.syncTotalDiscounts;
         String totalDiscountsAccount = configuration.totalDiscountsAccount;
 
-        if ((includedDiscount.size() > 0 || syncTotalDiscounts) && configuration.grossDiscountSales.equals(Constants.SALES_GROSS)){
+        if (includedDiscount.size() > 0 || syncTotalDiscounts){
             discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
                     syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
@@ -1184,10 +1184,10 @@ public class SalesService {
                 majorGroupData.put("transactionReference", "Major Group");
 
                 // Major Group account
-                if(configuration.salesConfiguration.MGDiscount){
-                    majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
-                }else {
+                if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0 && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
                     majorGroupData.put("inventoryAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
+                }else {
+                    majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
                 }
 
                 String description = "";

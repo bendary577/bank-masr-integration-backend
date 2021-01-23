@@ -15,8 +15,8 @@
 
 3. Upload new JAR
     -Generate new jar from terminal
-       ==> mvn clean package
-    -Rename it to "yyyy-mm-dd.h=jar"
+       ==> mvn clean package or mvnw clean package
+    -Rename it to "yyyy-mm-dd.jar"
     -Upload it to "Buckets/oracle-integrator-bucket/Deployed WAR Files"
 
 4. Change current running jar

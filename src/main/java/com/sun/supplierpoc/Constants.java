@@ -101,6 +101,8 @@ public class Constants {
     public static String CONSUMPTION_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=499";
     public static String CONSUMPTION_TABLE_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
 
+    // More Reports >> Summary >> System Sales Summary
+    public static String SALES_SUMMARY_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
 
     public static String APPROVED_INVOICE = "Approved Invoices";

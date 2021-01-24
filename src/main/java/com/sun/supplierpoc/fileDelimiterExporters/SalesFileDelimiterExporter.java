@@ -119,12 +119,10 @@ public class SalesFileDelimiterExporter {
     private void extractSyncJobData(){
         for (SyncJobData syncJobData : listSyncJobData) {
             SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
-            syncJobDataCSV.fromCostCenter = syncJobData.getData().get("fromCostCenter");
-            syncJobDataCSV.fromAccountCode = syncJobData.getData().get("fromAccountCode");
-            syncJobDataCSV.toCostCenter = syncJobData.getData().get("toCostCenter");
-            syncJobDataCSV.toAccountCode = syncJobData.getData().get("toAccountCode");
             syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation");
             syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation");
+            syncJobDataCSV.toCostCenter = syncJobData.getData().get("toCostCenter");
+            syncJobDataCSV.toAccountCode = syncJobData.getData().get("toAccountCode");
             syncJobDataCSV.description = syncJobData.getData().get("description");
 
             if(syncJobDataCSV.description.length() > 25){

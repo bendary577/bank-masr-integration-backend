@@ -1,9 +1,6 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.configurations.Discount;
-import com.sun.supplierpoc.models.configurations.ServiceCharge;
-import com.sun.supplierpoc.models.configurations.Tax;
-import com.sun.supplierpoc.models.configurations.Tender;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
 
 import java.util.ArrayList;
@@ -22,6 +19,7 @@ public class Response {
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
     private ArrayList<DbMenuItemDefinition> menuItems = new ArrayList<>();
+    private SalesStatistics salesStatistics = new SalesStatistics();
 
     // Supplier Variables
     private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
@@ -154,5 +152,13 @@ public class Response {
 
     public void setAddedOperationData(ArrayList<OperationData> addedOperationData) {
         this.addedOperationData = addedOperationData;
+    }
+
+    public SalesStatistics getSalesStatistics() {
+        return salesStatistics;
+    }
+
+    public void setSalesStatistics(SalesStatistics salesStatistics) {
+        this.salesStatistics = salesStatistics;
     }
 }

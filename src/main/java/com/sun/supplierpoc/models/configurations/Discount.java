@@ -6,6 +6,7 @@ public class Discount {
     private String account = "";
     private Float total;
     private CostCenter costCenter;
+    private FamilyGroup familyGroup;
 
     public Discount() {
         costCenter = new CostCenter();
@@ -49,5 +50,13 @@ public class Discount {
 
     public void setCostCenter(CostCenter costCenter) {
         this.costCenter = costCenter;
+    }
+
+    public FamilyGroup getFamilyGroup() {
+        return familyGroup;
+    }
+
+    public void setFamilyGroup(FamilyGroup familyGroup) {
+        this.familyGroup = familyGroup;
     }
 }

@@ -108,6 +108,15 @@ public class Conversions {
         return new ServiceCharge();
     }
 
+    public SalesStatistics checkSalesStatisticsExistence(String location, ArrayList<SalesStatistics> statisticsList){
+        for (SalesStatistics statistics : statisticsList) {
+            if (statistics.location.toLowerCase().equals(location.toLowerCase())) {
+                return statistics;
+            }
+        }
+        return new SalesStatistics();
+    }
+
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
         for (ItemGroup itemGroup : itemGroups) {
             if (itemGroup.getItemGroup().toLowerCase().equals(itemGroupName.toLowerCase())) {

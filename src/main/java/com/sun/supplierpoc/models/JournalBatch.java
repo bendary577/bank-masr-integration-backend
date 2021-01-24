@@ -7,6 +7,8 @@ import java.util.ArrayList;
 public class JournalBatch {
     private CostCenter costCenter = new CostCenter();
     private double salesDifferent = 0.0;
+    private SalesStatistics salesStatistics = new SalesStatistics();
+
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
     private ArrayList<Discount> salesDiscount= new ArrayList<>();
@@ -19,6 +21,7 @@ public class JournalBatch {
     private ArrayList<SyncJobData> salesDiscountData = new ArrayList<>();
     private ArrayList<SyncJobData> salesMajorGroupGrossData = new ArrayList<>();
     private ArrayList<SyncJobData> salesServiceChargeData = new ArrayList<>();
+    private ArrayList<SyncJobData> statisticsData = new ArrayList<>();
 
     public JournalBatch() {}
 
@@ -124,5 +127,21 @@ public class JournalBatch {
 
     public void setSalesServiceChargeData(ArrayList<SyncJobData> salesServiceChargeData) {
         this.salesServiceChargeData = salesServiceChargeData;
+    }
+
+    public SalesStatistics getSalesStatistics() {
+        return salesStatistics;
+    }
+
+    public void setSalesStatistics(SalesStatistics salesStatistics) {
+        this.salesStatistics = salesStatistics;
+    }
+
+    public ArrayList<SyncJobData> getStatisticsData() {
+        return statisticsData;
+    }
+
+    public void setStatisticsData(ArrayList<SyncJobData> statisticsData) {
+        this.statisticsData = statisticsData;
     }
 }

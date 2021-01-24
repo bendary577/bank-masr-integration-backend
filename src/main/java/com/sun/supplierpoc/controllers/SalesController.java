@@ -91,6 +91,7 @@ public class SalesController {
             ArrayList<Tax> taxes = configuration.taxes;
             ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
             ArrayList<ServiceCharge> serviceCharges = configuration.serviceCharges;
+            ArrayList<SalesStatistics> statistics = configuration.statistics;
             ArrayList<CostCenter> locations = generalSettings.getLocations();
             ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
@@ -168,7 +169,7 @@ public class SalesController {
 
             try {
                 Response salesResponse = salesService.getSalesData(syncJobType, locations,
-                        majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, account);
+                        majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
@@ -396,8 +397,7 @@ public class SalesController {
                 calendar.setTime(new Date());
                 calendar.add(Calendar.DATE, -1);
 
-                String startDate = dateFormat.format(calendar.getTime());
-                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
                 syncJobTypeRepo.save(syncJobType);
             }
 
@@ -736,6 +736,9 @@ public class SalesController {
                 salesList.addAll(locationBatch.getSalesServiceChargeData());
                 if(locationBatch.getSalesDifferentData().getId() != null){
                     salesList.add(locationBatch.getSalesDifferentData());
+                }
+                if(locationBatch.getStatisticsData().size() > 0){
+                    salesList.addAll(locationBatch.getStatisticsData());
                 }
 
                 fileName = fileDirectory + transactionDate + dayName.substring(0,3) + " - " +

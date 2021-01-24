@@ -548,6 +548,33 @@ public class SalesController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    @RequestMapping("/addSalesStatistics")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addSalesStatistics(@RequestBody ArrayList<SalesStatistics> statistics,
+                                                     @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                     Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().salesConfiguration.statistics = statistics;
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update sales statistics successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update sales statistics.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
     @GetMapping("/sales/export/excel")
     public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
                               HttpServletResponse response) throws IOException {

@@ -14,6 +14,7 @@ public class SalesConfiguration implements Serializable{
     public String totalTaxAccount = "";
     public ArrayList<Tax> taxes = new ArrayList<>();
 
+    public boolean addTenderAnalysis = false;
     public ArrayList<Tender> tenders = new ArrayList<>();
 
     public boolean syncTotalDiscounts = true;

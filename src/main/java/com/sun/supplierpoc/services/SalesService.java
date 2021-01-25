@@ -131,31 +131,12 @@ public class SalesService {
                 costCenter, includedTenders, driver);
         if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 
-        // Get taxes
-        boolean taxIncluded = configuration.taxIncluded;
-        boolean syncTotalTax = configuration.syncTotalTax;
-        String totalTaxAccount = configuration.totalTaxAccount;
-
-        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
-                totalTaxAccount, includedTax, taxIncluded, driver);
-        if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
-
-        // Get serviceCharge
-        boolean syncTotalServiceCharge = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalServiceCharge;
-        String totalServiceChargeAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalServiceChargeAccount;
-
-        Response serviceChargeResponse = new Response();
-        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
-            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
-                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
-            if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
-        }
-
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;
         boolean majorGroupDiscount = configuration.MGDiscount;
         boolean revenueCenterDiscount = configuration.RVDiscount;
         boolean syncMajorGroups = configuration.syncMG;
+        boolean taxIncluded = configuration.taxIncluded;
 
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
@@ -197,6 +178,7 @@ public class SalesService {
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
         }
 
+
         // Get discounts
         Response discountResponse;
         boolean syncTotalDiscounts = configuration.syncTotalDiscounts;
@@ -207,6 +189,25 @@ public class SalesService {
                     syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
             if (checkSalesFunctionResponse(driver, response, discountResponse)) return;
             salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
+
+        // Get taxes
+        boolean syncTotalTax = configuration.syncTotalTax;
+        String totalTaxAccount = configuration.totalTaxAccount;
+
+        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+                totalTaxAccount, includedTax, taxIncluded, driver);
+        if (checkSalesFunctionResponse(driver, response, taxResponse)) return;
+
+        // Get serviceCharge
+        boolean syncTotalServiceCharge = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalServiceCharge;
+        String totalServiceChargeAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalServiceChargeAccount;
+
+        Response serviceChargeResponse = new Response();
+        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
+            serviceChargeResponse = getTotalSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
+            if (checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
         }
 
         // Set Debit Entries (Tenders)
@@ -231,16 +232,14 @@ public class SalesService {
 
     private boolean checkSalesFunctionResponse(WebDriver driver, Response response, Response reportResponse) {
         if (!reportResponse.isStatus()) {
-            if (reportResponse.getMessage().equals(Constants.INVALID_LOCATION)) {
-                response.setMessage(Constants.INVALID_LOCATION);
-            } else if(reportResponse.getMessage().equals(Constants.INVALID_BUSINESS_DATE)){
+            response.setMessage(reportResponse.getMessage());
+            response.setStatus(false);
+
+            if(reportResponse.getMessage().equals(Constants.INVALID_BUSINESS_DATE)){
                 driver.quit();
-                response.setMessage(Constants.INVALID_BUSINESS_DATE);
             } else if(reportResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
                 driver.quit();
-                response.setMessage(Constants.WRONG_BUSINESS_DATE);
-            }
-            response.setStatus(false);
+            } else return !reportResponse.getMessage().equals(Constants.INVALID_REVENUE_CENTER);
             return true;
         }
         return false;
@@ -942,7 +941,7 @@ public class SalesService {
     private String checkReportParameters(WebDriver driver, String locationName, String fromDate){
         int tryMaxCount = 2;
         String message = "";
-        WebDriverWait wait = new WebDriverWait(driver, 20);
+        WebDriverWait wait = new WebDriverWait(driver, 10);
         List<WebElement> rows;
 
         do{
@@ -1330,7 +1329,7 @@ public class SalesService {
         statisticsData.put("transactionReference", "No Checks");
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        prepareAnalysis(statisticsData, configuration, null, null, null);
 
         syncJobData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1385,7 +1384,10 @@ public class SalesService {
 
             tenderData.put("description", description);
 
-            prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+            if(configuration.salesConfiguration.addTenderAnalysis)
+                prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+            else
+                prepareAnalysis(tenderData, configuration, null, null, null);
 
             SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
@@ -1429,7 +1431,10 @@ public class SalesService {
 
         tenderData.put("description", description);
 
-        prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+        if(configuration.salesConfiguration.addTenderAnalysis)
+            prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+        else
+            prepareAnalysis(tenderData, configuration, null, null, null);
 
         SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1468,7 +1473,7 @@ public class SalesService {
         taxData.put("description", description);
         taxData.put("transactionReference", "Taxes");
 
-        prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
+        prepareAnalysis(taxData, configuration, null, null, null);
 
         SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1563,7 +1568,7 @@ public class SalesService {
 
         serviceChargeData.put("description", description);
 
-        prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
+        prepareAnalysis(serviceChargeData, configuration, null, null, null);
 
         SyncJobData syncJobData = new SyncJobData(serviceChargeData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());

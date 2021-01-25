@@ -189,7 +189,11 @@ public class SalesFileDelimiterExporter {
                 String[] amountArray = totalCr.split("\\.");
 
                 String amountPart = amountArray[0];
-                String decimalPart = amountArray[1];
+                String decimalPart = "0";
+
+                if(amountArray.length > 1){
+                    decimalPart  = amountArray[1];
+                }
 
                 if(amountPart.length() < 15){
                     amountPart = String.format("%0"+ 15 + "d", Integer.parseInt(amountPart));

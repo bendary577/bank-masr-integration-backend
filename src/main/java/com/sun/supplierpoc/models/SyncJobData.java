@@ -96,4 +96,12 @@ public class SyncJobData implements Serializable {
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
+
+    public HashMap<String, Object> getData2() {
+        return data2;
+    }
+
+    public void setData2(HashMap<String, Object> data2) {
+        this.data2 = data2;
+    }
 }

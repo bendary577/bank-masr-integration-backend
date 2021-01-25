@@ -24,18 +24,12 @@ import java.util.List;
 
 @Service
 public class ZealService {
-    @Autowired
-    private CallRestService callRestService;
-    @Autowired
-    private ZealService zealService;
-    @Autowired
-    private AccountRepo accountRepo;
-    @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
+
+    Logger logger = LoggerFactory.getLogger(ZealService.class);
+
+
     @Autowired
     private SyncJobRepo syncJobRepo;
-    @Autowired
-    private GeneralSettingsRepo generalSettingsRepo;
 
     @Autowired
     MenuItemService menuItemService;
@@ -56,53 +50,50 @@ public class ZealService {
     @Autowired
     private OperationDataRepo operationDataRepo;
 
-    public Response simphonyZealPayment(ZealPayment zealPayment, String userId, Account account, int revenueCenterID){
+    public Response zealPaymentService(ZealPayment zealPayment, String userId, Account account, int revenueCenterID) {
 
         Response response = new Response();
 
-        SyncJob syncJob = null;
-
+        Operation operation = null;
         try {
 
             OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Payment", account.getId(), false);
 
-            syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
-                    account.getId(), operationType.getId(), 0);
 
-            syncJob.setRevenueCenter(revenueCenterID);
+            operation = new Operation(Constants.RUNNING, "", new Date(), null, userId,
+                    account.getId(), operationType.getId(), revenueCenterID, false);
 
-            syncJobRepo.save(syncJob);
-
+            operationRepo.save(operation);
             response.setStatus(true);
 
-            if(response.isStatus()){
+            if (response.isStatus()) {
 
                 // Save menu items
-                ArrayList<SyncJobData> savedMenuItems = saveZealPayment(zealPayment, syncJob);
+                ArrayList<OperationData> savedMenuItems = saveZealPayment(zealPayment, operation);
 
-                syncJob.setStatus(Constants.SUCCESS);
-                syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(response.getMenuItems().size());
-                syncJobRepo.save(syncJob);
-
-                response.setAddedSyncJobData(savedMenuItems);
-            }else {
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason(response.getMessage());
-                syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(0);
-                syncJobRepo.save(syncJob);
+                operation.setStatus(Constants.SUCCESS);
+                operation.setEndDate(new Date());
+                operation.setRowsFetched(response.getMenuItems().size());
+                operationRepo.save(operation);
+                logger.info(savedMenuItems.get(0).getOperationId());
+                response.setAddedOperationData(savedMenuItems);
+            } else {
+                operation.setStatus(Constants.FAILED);
+                operation.setReason(response.getMessage());
+                operation.setEndDate(new Date());
+                operation.setRowsFetched(0);
+                operationRepo.save(operation);
             }
 
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
 
-            if (syncJob != null){
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason(e.getMessage());
-                syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(0);
-                syncJobRepo.save(syncJob);
+            if (operation != null) {
+                operation.setStatus(Constants.FAILED);
+                operation.setReason(e.getMessage());
+                operation.setEndDate(new Date());
+                operation.setRowsFetched(0);
+                operationRepo.save(operation);
             }
             response.setMessage(e.getMessage());
             response.setStatus(false);
@@ -111,34 +102,43 @@ public class ZealService {
         }
     }
 
-    public ArrayList<SyncJobData> saveZealPayment(ZealPayment zealPayment, SyncJob syncJob) {
+    public ArrayList<OperationData> saveZealPayment(ZealPayment zealPayment, Operation operation) {
 
-        ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
+        ArrayList<OperationData> savedMenuItems = new ArrayList<>();
 
-        HashMap<String, String> zealPaymentData = new HashMap<>();
+        HashMap<String, Object> zealPaymentData = new HashMap<>();
 
         zealPaymentData.put("id", Integer.toString(zealPayment.getId()));
         zealPaymentData.put("code", zealPayment.getCode());
         zealPaymentData.put("totalDue", zealPayment.getTotalDue());
+        zealPaymentData.put("message", zealPayment.getMessage());
 
-        SyncJobData syncJobData = new SyncJobData(zealPaymentData, Constants.RECEIVED, "", new Date(),
-                syncJob.getId());
+        String status = zealPayment.getStatus();
 
-        syncJobDataRepo.save(syncJobData);
+        if (!zealPayment.getStatus().equals("success"))
+            status = Constants.FAILED;
 
-        savedMenuItems.add(syncJobData);
+        OperationData operationData = new OperationData(zealPaymentData, status, "", new Date(),
+                operation.getId());
 
+        operationDataRepo.save(operationData);
+
+        savedMenuItems.add(operationData);
 
         return savedMenuItems;
     }
 
-    public Response simphonyZealVoucher(ZealVoucher zealVoucher,String username, String userId, Account account, int revenueCenterID){
+    public Response simphonyZealVoucher(ZealVoucher zealVoucher, String username, String userId, Account account, int revenueCenterID) {
+
+        logger.info("get method");
 
         Response response = new Response();
 
         SyncJob syncJob = null;
 
         try {
+
+            logger.info("get try");
 
             OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Voucher", account.getId(), false);
 
@@ -151,11 +151,12 @@ public class ZealService {
 
             response.setStatus(true);
 
-            if(response.isStatus()){
+            if (response.isStatus()) {
 
-                HashMap<String, String> map= getItem();
+                HashMap<String, String> map = getItem();
 
-                ArrayList<SyncJobData> savedMenuItems =saveZealVoucher(map, zealVoucher, syncJob);
+                ArrayList<SyncJobData> savedMenuItems = saveZealVoucher(map, zealVoucher, syncJob);
+
 
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setEndDate(new Date());
@@ -163,7 +164,7 @@ public class ZealService {
                 syncJobRepo.save(syncJob);
 
                 response.setAddedSyncJobData(savedMenuItems);
-            }else {
+            } else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(response.getMessage());
                 syncJob.setEndDate(new Date());
@@ -172,9 +173,9 @@ public class ZealService {
             }
 
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
 
-            if (syncJob != null){
+            if (syncJob != null) {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(e.getMessage());
                 syncJob.setEndDate(new Date());
@@ -188,18 +189,30 @@ public class ZealService {
         }
     }
 
-    public ArrayList<SyncJobData> saveZealVoucher(HashMap<String, String> map, ZealVoucher zealVoucher, SyncJob syncJob) {
+    public ArrayList<SyncJobData> saveZealVoucher(HashMap<String, String> map1, ZealVoucher zealVoucher, SyncJob syncJob) {
+
 
         ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
 
         HashMap<String, Object> zealPaymentData = new HashMap<>();
 
+        HashMap<String, String> map = new HashMap<>();
+
         zealPaymentData.put("id", Integer.toString(zealVoucher.getId()));
         zealPaymentData.put("code", zealVoucher.getCode());
         zealPaymentData.put("itemId", zealVoucher.getItemId());
+        zealPaymentData.put("message", zealVoucher.getMessage());
         zealPaymentData.put("data2", map);
 
-        SyncJobData syncJobData = new SyncJobData(Constants.RECEIVED, zealPaymentData, "", new Date(),
+        String status = Constants.FAILED;
+
+        if (zealVoucher.getStatus().equals("success")) {
+            map = map1;
+            zealPaymentData.put("data2", map);
+            status = Constants.SUCCESS;
+        }
+
+        SyncJobData syncJobData = new SyncJobData(status, zealPaymentData, "", new Date(),
                 syncJob.getId());
 
         syncJobDataRepo.save(syncJobData);
@@ -209,7 +222,7 @@ public class ZealService {
         return savedMenuItems;
     }
 
-    public Response simphonyZealPoints(ZealPoints zealPoints, String userId, Account account, int revenueCenterID){
+    public Response simphonyZealPoints(ZealPoints zealPoints, String userId, Account account, int revenueCenterID) {
 
         Response response = new Response();
 
@@ -228,10 +241,10 @@ public class ZealService {
 
             response.setStatus(true);
 
-            if(response.isStatus()){
+            if (response.isStatus()) {
 
                 // Save menu items
-                ArrayList<SyncJobData> savedMenuItems =saveZealPoints(zealPoints, syncJob);
+                ArrayList<SyncJobData> savedMenuItems = saveZealPoints(zealPoints, syncJob);
 
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setEndDate(new Date());
@@ -239,7 +252,7 @@ public class ZealService {
                 syncJobRepo.save(syncJob);
 
                 response.setAddedSyncJobData(savedMenuItems);
-            }else {
+            } else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(response.getMessage());
                 syncJob.setEndDate(new Date());
@@ -248,15 +261,16 @@ public class ZealService {
             }
 
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
 
-            if (syncJob != null){
+            if (syncJob != null) {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(e.getMessage());
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(0);
                 syncJobRepo.save(syncJob);
             }
+            e.printStackTrace();
             response.setMessage(e.getMessage());
             response.setStatus(false);
 
@@ -270,21 +284,36 @@ public class ZealService {
 
         HashMap<String, String> zealPaymentData = new HashMap<>();
 
+        int coma = zealPoints.getTotalDue().indexOf(".");
+        String totalPoints = zealPoints.getTotalDue();
+
+        if (coma != -1)
+            totalPoints = zealPoints.getTotalDue().substring(0, coma);
+
         zealPaymentData.put("id", Integer.toString(zealPoints.getId()));
         zealPaymentData.put("code", zealPoints.getCode());
-        zealPaymentData.put("totalDue", zealPoints.getTotalDue());
+        zealPaymentData.put("totalDue", totalPoints);
+        zealPaymentData.put("message", zealPoints.getMessage());
 
-        SyncJobData syncJobData = new SyncJobData(zealPaymentData, Constants.RECEIVED, "", new Date(),
+        String status = zealPoints.getStatus();
+
+        if (!zealPoints.getStatus().equals("success"))
+            status = Constants.FAILED;
+
+        SyncJobData syncJobData = new SyncJobData(zealPaymentData, status, "", new Date(),
                 syncJob.getId());
-
-        syncJobDataRepo.save(syncJobData);
-
+        try {
+            syncJobDataRepo.save(syncJobData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         savedMenuItems.add(syncJobData);
 
         return savedMenuItems;
     }
 
-    public Response osimphonyZealPayment(ZealPayment zealPayment, String userId, Account account, int revenueCenterID){
+    public Response osimphonyZealPayment(ZealPayment zealPayment, String userId, Account account,
+                                         int revenueCenterID) {
 
         Response response = new Response();
 
@@ -296,16 +325,16 @@ public class ZealService {
             operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Payment", account.getId(), false);
 
             operation = new Operation(Constants.RUNNING, "", new Date(), null, userId,
-                    account.getId(), operationType.getId(),  revenueCenterID, false);
+                    account.getId(), operationType.getId(), revenueCenterID, false);
 
             operationRepo.save(operation);
 
             response.setStatus(true);
 
-            if(response.isStatus()){
+            if (response.isStatus()) {
 
                 // Save menu items
-                ArrayList<OperationData> savedMenuItems =osaveZealPayment(zealPayment, operation);
+                ArrayList<OperationData> savedMenuItems = osaveZealPayment(zealPayment, operation);
 
                 operation.setStatus(Constants.SUCCESS);
                 operation.setEndDate(new Date());
@@ -313,7 +342,7 @@ public class ZealService {
                 operationRepo.save(operation);
 
                 response.setAddedOperationData(savedMenuItems);
-            }else {
+            } else {
                 operation.setStatus(Constants.FAILED);
                 operation.setReason(response.getMessage());
                 operation.setEndDate(new Date());
@@ -322,9 +351,9 @@ public class ZealService {
             }
 
             return response;
-        }catch (Exception e){
+        } catch (Exception e) {
 
-            if (operation != null){
+            if (operation != null) {
                 operation.setStatus(Constants.FAILED);
                 operation.setReason(e.getMessage());
                 operation.setEndDate(new Date());
@@ -365,7 +394,11 @@ public class ZealService {
 
         ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
 
-        HashMap<String, String> map = menuItems.get(1);
+        //       HashMap<String, String> map = menuItems.get(1);
+        HashMap<String, String> map = new HashMap<>();
+        map.put("menuFirstName", "IFC Test Item - SI 3");
+        map.put("menuItemPrice", "3");
+        map.put("availability", "true");
 
         return map;
 

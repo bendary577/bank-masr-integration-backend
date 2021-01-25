@@ -1,4 +1,5 @@
 package com.sun.supplierpoc.controllers.simphony;
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
@@ -12,16 +13,22 @@ import com.sun.supplierpoc.services.SyncJobDataService;
 import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
 import com.sun.supplierpoc.services.simphony.ZealService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.*;
 
 @RestController
 @RequestMapping("/zeal")
 public class ZealController {
+
+    Logger logger = LoggerFactory.getLogger(ZealController.class);
+
     @Autowired
     private ZealService zealService;
     @Autowired
@@ -38,18 +45,26 @@ public class ZealController {
     AccountService accountService;
     @Autowired
     InvokerUserService invokerUserService;
-
+    @Autowired
+    private OperationTypeRepo operationTypeRepo;
+    @Autowired
+    private OperationRepo operationRepo;
+    @Autowired
+    private OperationDataRepo operationDataRepo;
 
     @PostMapping("/zealPayment")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> simphonyZealPayment(@RequestBody ZealPayment zealPayment) {
+    public ResponseEntity<Response> osimphonyZealPayment(@RequestBody ZealPayment zealPayment) {
+
         Response response = new Response();
 
         String username = "test1";
         String password = "test@test";
 
         InvokerUser user = invokerUserService.getInvokerUser(username, password);
+
+        //User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
         if (accountOptional.isPresent()) {
@@ -60,17 +75,20 @@ public class ZealController {
 
             ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
 
-            for (SimphonyLocation location : locations){
+            for (SimphonyLocation location : locations) {
 
-                if(location.isChecked()){
+                if (location.isChecked()) {
 
-                    response = zealService.simphonyZealPayment(zealPayment, user.getId(), account, location.getRevenueCenterID());
+                    response = zealService.zealPaymentService(zealPayment, user.getId(), account, location.getRevenueCenterID());
 
-                    if(!response.isStatus()){
+                    if (!response.isStatus()) {
+
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
+
                 }
             }
+
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
 
@@ -103,13 +121,14 @@ public class ZealController {
 
             ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
 
-            for (SimphonyLocation location : locations){
+            for (SimphonyLocation location : locations) {
 
-                if(location.isChecked()){
+                if (location.isChecked()) {
 
-                    response =zealService.simphonyZealVoucher(zealVoucher, username, user.getId(), account, location.getRevenueCenterID());
+                    logger.info("get service");
+                    response = zealService.simphonyZealVoucher(zealVoucher, username, user.getId(), account, location.getRevenueCenterID());
 
-                    if(!response.isStatus()){
+                    if (!response.isStatus()) {
 
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
@@ -127,7 +146,6 @@ public class ZealController {
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
-
 
     @PostMapping("/zealPoints")
     @CrossOrigin(origins = "*")
@@ -147,73 +165,19 @@ public class ZealController {
 
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
-
             ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
 
-            for (SimphonyLocation location : locations){
+            for (SimphonyLocation location : locations) {
 
-                if(location.isChecked()){
+                if (location.isChecked()) {
 
-                    response =zealService.simphonyZealPoints(zealPoints, user.getId(), account, location.getRevenueCenterID());
+                    response = zealService.simphonyZealPoints(zealPoints, user.getId(), account, location.getRevenueCenterID());
 
-                    if(!response.isStatus()){
-
+                    if (!response.isStatus()) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
-
                 }
             }
-
-
-            return ResponseEntity.status(HttpStatus.OK).body(response);
-        }
-
-        String message = "Invalid Credentials";
-        response.setMessage(message);
-        response.setStatus(false);
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-    }
-
-
-    @PostMapping("/zealPaymentTest")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ResponseEntity<Response> osimphonyZealPayment(@RequestBody ZealPayment zealPayment) {
-
-        Response response = new Response();
-
-        String username = "test1";
-        String password = "test@test";
-
-        InvokerUser user = invokerUserService.getInvokerUser(username, password);
-
-        //User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
-        if (accountOptional.isPresent()) {
-
-            Account account = accountOptional.get();
-
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-
-
-            ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
-
-            for (SimphonyLocation location : locations){
-
-                if(location.isChecked()){
-
-                    response =zealService.osimphonyZealPayment(zealPayment, user.getId(), account, location.getRevenueCenterID());
-
-                    if(!response.isStatus()){
-
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-
-                }
-            }
-
 
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }

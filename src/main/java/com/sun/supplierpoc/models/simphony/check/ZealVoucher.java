@@ -1,4 +1,6 @@
 package com.sun.supplierpoc.models.simphony.check;
+
+import com.sun.supplierpoc.Constants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -7,8 +9,10 @@ public class ZealVoucher {
 
     @Id
     private int id;
-    private String code;
-    private String itemId;
+    private String code = "-";
+    private String itemId = "-";
+    private String message = "-";
+    private String status = Constants.FAILED;
 
     public int getId() {
         return id;
@@ -32,5 +36,21 @@ public class ZealVoucher {
 
     public void setItemId(String itemId) {
         this.itemId = itemId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.simphony.check;
 
+import com.sun.supplierpoc.Constants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,8 +12,10 @@ public class ZealPayment implements Serializable {
 
     @Id
     private int id;
-    private String code;
-    private String totalDue;
+    private String code = "-";
+    private String totalDue = "-";
+    private String message = "-";
+    private String status = Constants.FAILED;
 
     public static long getSerialVersionUID() {
         return serialVersionUID;
@@ -40,5 +43,21 @@ public class ZealPayment implements Serializable {
 
     public void setTotalDue(String totalDue) {
         this.totalDue = totalDue;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

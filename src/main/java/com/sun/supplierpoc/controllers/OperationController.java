@@ -24,8 +24,15 @@ public class OperationController {
     @GetMapping("/getOperation")
     @CrossOrigin(origins = "*")
     public List<Operation> getOperation(@RequestParam(name = "typeName") String syncJobTypeId, Principal principal){
+
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        OperationType operationType =  operationTypeRepo.findAllByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
-        return operationRepo.findByoperationTypeIdAndDeletedOrderByCreationDateDesc(operationType.getId(), false);
+
+        OperationType operationType =
+                operationTypeRepo.findAllByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
+
+        List<Operation> operations =
+                operationRepo.findByoperationTypeIdAndDeletedOrderByCreationDateDesc(operationType.getId(), false);
+
+        return operations;
     }
 }

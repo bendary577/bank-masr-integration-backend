@@ -6,7 +6,6 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 
 public class Account implements Serializable {
     @Id

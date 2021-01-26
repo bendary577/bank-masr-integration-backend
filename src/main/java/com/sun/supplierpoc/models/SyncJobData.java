@@ -12,8 +12,6 @@ public class SyncJobData implements Serializable {
     @Id
     private String id;
     private HashMap<String, String> data;
-    private HashMap<String, Object> data2;
-
     private String status;
     private String reason;
     private Date creationDate;
@@ -25,15 +23,6 @@ public class SyncJobData implements Serializable {
 
     public SyncJobData(HashMap<String, String> data, String status, String reason, Date creationDate, String syncJobId) {
         this.data = data;
-        this.status = status;
-        this.reason = reason;
-        this.creationDate = creationDate;
-        this.syncJobId = syncJobId;
-        this.deleted = false;
-    }
-
-    public SyncJobData(String status, HashMap<String, Object> data, String reason, Date creationDate, String syncJobId) {
-        this.data2 = data;
         this.status = status;
         this.reason = reason;
         this.creationDate = creationDate;
@@ -96,4 +85,5 @@ public class SyncJobData implements Serializable {
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
     }
+
 }

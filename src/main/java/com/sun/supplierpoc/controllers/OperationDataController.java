@@ -25,34 +25,4 @@ public class OperationDataController {
     }
 
 
-//
-//    public List<OperationData> get(@RequestParam(name = "syncJobId") String syncJobId)  {
-//        List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId, false);
-//        return syncJobData;
-//    }
-//
-//
-//
-//
-//    public ArrayList<SyncJobData> getSyncJobData(String syncJobTypeId)  {
-//        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
-//        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
-//        for (SyncJob syncJob : syncJobs) {
-//            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-//            syncJobsData.addAll(syncJobData);
-//        }
-//        return syncJobsData;
-//    }
-//
-//    public ArrayList<SyncJobData> getFailedSyncJobData(String syncJobTypeId)  {
-//        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
-//        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
-//        for (SyncJob syncJob : syncJobs) {
-//            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeletedAndStatus(syncJob.getId(),
-//                    false, Constants.FAILED);
-//            syncJobsData.addAll(syncJobData);
-//        }
-//        return syncJobsData;
-//    }
-
 }

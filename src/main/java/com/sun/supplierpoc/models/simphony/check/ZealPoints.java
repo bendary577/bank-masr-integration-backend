@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.simphony.check;
 
+import com.sun.supplierpoc.Constants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -8,8 +9,10 @@ public class ZealPoints {
 
     @Id
     private int id;
-    private String code;
-    private String totalDue;
+    private String code = "-";
+    private String totalDue = "-";
+    private String message = "-";
+    private String status = Constants.FAILED;
 
     public int getId() {
         return id;
@@ -17,6 +20,9 @@ public class ZealPoints {
 
     public void setId(int id) {
         this.id = id;
+    }
+    public void setTotalDue(String totalDue) {
+        this.totalDue = totalDue;
     }
 
     public String getCode() {
@@ -31,7 +37,19 @@ public class ZealPoints {
         return totalDue;
     }
 
-    public void setTotalDue(String totalDue) {
-        this.totalDue = totalDue;
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

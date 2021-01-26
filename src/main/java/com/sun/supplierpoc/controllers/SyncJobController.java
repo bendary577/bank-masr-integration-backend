@@ -17,8 +17,7 @@ import java.util.List;
 
 @RestController
 public class SyncJobController {
-    @Autowired
-    private OperationTypeRepo operationTypeRepo;
+
     @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
@@ -34,12 +33,4 @@ public class SyncJobController {
         return syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobType.getId(), false);
     }
 
-    @GetMapping("/getOperationJobs")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public List<SyncJob> getOperationJobs(@RequestParam(name = "typeName") String syncJobTypeId, Principal principal)  {
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        OperationType syncJobType =  operationTypeRepo.findAllByNameAndAccountIdAndDeleted(syncJobTypeId, user.getAccountId(), false);
-        return syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobType.getId(), false);
-    }
 }

@@ -26,6 +26,7 @@ public class AuthorizationResourceConfiguration  extends
         http.
                 anonymous().disable()
                 .authorizeRequests()
+                .antMatchers("/zeal/**").permitAll()
                 .antMatchers("/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }

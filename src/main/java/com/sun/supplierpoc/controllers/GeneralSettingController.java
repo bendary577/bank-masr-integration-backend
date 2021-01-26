@@ -84,9 +84,8 @@ public class GeneralSettingController {
                 response.put("data", overGroups);
                 return response;
             }
-            String overGroupsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/OverGroups/OverviewOverGroup.aspx";
 
-            driver.get(overGroupsURL);
+            driver.get(Constants.OVER_GROUPS_LINK);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 

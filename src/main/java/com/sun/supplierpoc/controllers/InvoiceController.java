@@ -173,9 +173,7 @@ public class InvoiceController {
             }
 
             data = invoiceService.getInvoicesReceiptsData(false,invoiceType, supplierSyncJobType,
-                    costCenters,
-                    items, overGroups, account,
-                    timePeriod, fromDate, toDate);
+                    costCenters, items, overGroups, account, timePeriod, fromDate, toDate);
 
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 

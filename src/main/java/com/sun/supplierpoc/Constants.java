@@ -69,7 +69,14 @@ public class Constants {
 
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
+    public static String MAIN_MENU_URL = OHRA_LOGIN_LINK + "servlet/PortalIfc/?portlet=InventoryPortlet&action=sidemenu&portletId=3882&options=iNVENTORY";
     public static String COST_CENTERS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/CostCenters/OverviewCC.aspx";
+    public static String OVER_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/OverGroups/OverviewOverGroup.aspx";
+    public static String MAJOR_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
+    public static String ITEMS_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
+    public static String ITEMS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/Items/OverviewItem.aspx";
+
+
     // SALES LINKS
     // Daily Detail >> Tenders
     public static String TENDERS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=19";

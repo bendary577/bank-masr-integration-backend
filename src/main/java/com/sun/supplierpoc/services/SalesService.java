@@ -1295,12 +1295,23 @@ public class SalesService {
 
         prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
-        SyncJobData syncJobData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
+        SyncJobData syncJobGuestsData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
-        syncJobDataRepo.save(syncJobData);
-        journalBatch.getStatisticsData().add(syncJobData);
+        syncJobDataRepo.save(syncJobGuestsData);
+        journalBatch.getStatisticsData().add(syncJobGuestsData);
 
         // Number of tables
+        statisticsData = new HashMap<>();
+
+        statisticsData.put("accountingPeriod", transactionDate.substring(2,6));
+        statisticsData.put("transactionDate", transactionDate);
+
+        statisticsData.put("fromCostCenter", journalBatch.getCostCenter().costCenter);
+        statisticsData.put("fromAccountCode", journalBatch.getCostCenter().accountCode);
+        statisticsData.put("fromLocation", journalBatch.getCostCenter().accountCode);
+        statisticsData.put("toLocation", journalBatch.getCostCenter().accountCode);
+        statisticsData.put("toCostCenter", journalBatch.getCostCenter().costCenter);
+        statisticsData.put("toAccountCode", journalBatch.getCostCenter().accountCode);
         statisticsData.put("totalCr", journalBatch.getSalesStatistics().NoTables);
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoTablesAccount);
 
@@ -1313,12 +1324,23 @@ public class SalesService {
 
         prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
-        syncJobData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
+        SyncJobData syncJobTablesData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
-        syncJobDataRepo.save(syncJobData);
-        journalBatch.getStatisticsData().add(syncJobData);
+        syncJobDataRepo.save(syncJobTablesData);
+        journalBatch.getStatisticsData().add(syncJobTablesData);
 
         // Number of checks
+        statisticsData = new HashMap<>();
+
+        statisticsData.put("accountingPeriod", transactionDate.substring(2,6));
+        statisticsData.put("transactionDate", transactionDate);
+
+        statisticsData.put("fromCostCenter", journalBatch.getCostCenter().costCenter);
+        statisticsData.put("fromAccountCode", journalBatch.getCostCenter().accountCode);
+        statisticsData.put("fromLocation", journalBatch.getCostCenter().accountCode);
+        statisticsData.put("toLocation", journalBatch.getCostCenter().accountCode);
+        statisticsData.put("toCostCenter", journalBatch.getCostCenter().costCenter);
+        statisticsData.put("toAccountCode", journalBatch.getCostCenter().accountCode);
         statisticsData.put("totalCr", journalBatch.getSalesStatistics().NoChecks);
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoChecksAccount);
 
@@ -1329,12 +1351,12 @@ public class SalesService {
         statisticsData.put("transactionReference", "No Checks");
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, null, null, null);
+        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
-        syncJobData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
+        SyncJobData syncJobChecksData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
-        syncJobDataRepo.save(syncJobData);
-        journalBatch.getStatisticsData().add(syncJobData);
+        syncJobDataRepo.save(syncJobChecksData);
+        journalBatch.getStatisticsData().add(syncJobChecksData);
     }
 
     private void saveTender(JournalBatch journalBatch, String transactionDate, Configuration configuration,
@@ -1473,7 +1495,7 @@ public class SalesService {
         taxData.put("description", description);
         taxData.put("transactionReference", "Taxes");
 
-        prepareAnalysis(taxData, configuration, null, null, null);
+        prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
 
         SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1568,7 +1590,7 @@ public class SalesService {
 
         serviceChargeData.put("description", description);
 
-        prepareAnalysis(serviceChargeData, configuration, null, null, null);
+        prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
 
         SyncJobData syncJobData = new SyncJobData(serviceChargeData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());

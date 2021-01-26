@@ -90,7 +90,7 @@ public class SalesFileDelimiterExporter {
         String inUseFlag  = " "; // 1 Length
 
         fileContent.append("VERSION                         ")
-                .append(this.syncJobType.getConfiguration().versionCode).append("\n");
+                .append(this.syncJobType.getConfiguration().versionCode).append("\r\n");
 
         for (int i = 0; i < this.syncJobDataCSVList.size(); i++) {
             SyncJobDataCSV syncJobDataCSV = this.syncJobDataCSVList.get(i);

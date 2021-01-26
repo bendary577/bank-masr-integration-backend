@@ -45,17 +45,11 @@ public class ZealController {
     AccountService accountService;
     @Autowired
     InvokerUserService invokerUserService;
-    @Autowired
-    private OperationTypeRepo operationTypeRepo;
-    @Autowired
-    private OperationRepo operationRepo;
-    @Autowired
-    private OperationDataRepo operationDataRepo;
 
     @PostMapping("/zealPayment")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> osimphonyZealPayment(@RequestBody ZealPayment zealPayment) {
+    public ResponseEntity<Response> zealPayment(@RequestBody ZealPayment zealPayment) {
 
         Response response = new Response();
 
@@ -79,7 +73,7 @@ public class ZealController {
 
                 if (location.isChecked()) {
 
-                    response = zealService.zealPaymentService(zealPayment, user.getId(), account, location.getRevenueCenterID());
+                    response = zealService.zealPaymentProcessor(zealPayment, user.getId(), account, location.getRevenueCenterID());
 
                     if (!response.isStatus()) {
 
@@ -99,11 +93,10 @@ public class ZealController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-
     @PostMapping("/zealVoucher")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> simphonyZealVoucher(@RequestBody ZealVoucher zealVoucher) {
+    public ResponseEntity<Response> zealVoucher(@RequestBody ZealVoucher zealVoucher) {
         Response response = new Response();
 
         String username = "test1";
@@ -125,8 +118,7 @@ public class ZealController {
 
                 if (location.isChecked()) {
 
-                    logger.info("get service");
-                    response = zealService.simphonyZealVoucher(zealVoucher, username, user.getId(), account, location.getRevenueCenterID());
+                    response = zealService.zealVoucherProcessor(zealVoucher, username, user.getId(), account, location.getRevenueCenterID());
 
                     if (!response.isStatus()) {
 
@@ -150,7 +142,7 @@ public class ZealController {
     @PostMapping("/zealPoints")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> simphonyZealPoints(@RequestBody ZealPoints zealPoints) {
+    public ResponseEntity<Response> zealPoints(@RequestBody ZealPoints zealPoints) {
         Response response = new Response();
 
         String username = "test1";
@@ -171,7 +163,7 @@ public class ZealController {
 
                 if (location.isChecked()) {
 
-                    response = zealService.simphonyZealPoints(zealPoints, user.getId(), account, location.getRevenueCenterID());
+                    response = zealService.zealPointsProcessor(zealPoints, user.getId(), account, location.getRevenueCenterID());
 
                     if (!response.isStatus()) {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

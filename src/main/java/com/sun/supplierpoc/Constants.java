@@ -54,9 +54,10 @@ public class Constants {
     ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
 
     public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
+//    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
+    public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
 
-    public static String OHIM_LOGIN_LINK = OHIM_LINK + "/Webclient/FormLogin.aspx";
+    public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
     public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
 
     public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
@@ -68,8 +69,7 @@ public class Constants {
 
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
-    public static String COST_CENTERS_LINK = OHIM_LINK + "/Webclient/MasterData/CostCenters/OverviewCC.aspx";
-
+    public static String COST_CENTERS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/CostCenters/OverviewCC.aspx";
     // SALES LINKS
     // Daily Detail >> Tenders
     public static String TENDERS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=19";

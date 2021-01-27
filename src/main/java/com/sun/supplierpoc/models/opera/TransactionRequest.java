@@ -6,6 +6,7 @@ import java.io.Serializable;
 
 @JacksonXmlRootElement
 public class TransactionRequest implements Serializable {
+    @JacksonXmlProperty
     private String SequenceNo;
     @JacksonXmlProperty
     private String TransType;

@@ -3,54 +3,33 @@ package com.sun.supplierpoc.models.simphony.tender;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
-        "TmedEPayment",
-        "TmedObjectNum",
-        "TmedPartialPayment",
-        "TmedReference"
-})
+
 public class SimphonyPosApi_TmedDetailItemEx2 {
-    @XmlElement(name = "TmedEPayment")
-    private TmedEPayment TmedEPayment;
+//    @XmlElement(name = "TmedEPayment")
+//    private TmedEPayment TmedEPayment;
     @XmlElement(name = "TmedObjectNum")
-    private String TmedObjectNum;
+    private String tenderNum;
     @XmlElement(name = "TmedPartialPayment")
-    private String TmedPartialPayment;
-    @XmlElement(name = "TmedReference")
-    private String TmedReference;
+    private String tenderPartialPayment;
+//    @XmlElement(name = "TmedReference")
+//    private String TmedReference;
 
-    public TmedEPayment getTmedEPayment() {
-        return TmedEPayment;
+
+    public String getTenderNum() {
+        return tenderNum;
     }
 
-    public void setTmedEPayment(TmedEPayment tmedEPayment) {
-        TmedEPayment = tmedEPayment;
+    public void setTenderNum(String tenderNum) {
+        this.tenderNum = tenderNum;
     }
 
-    public String getTmedObjectNum() {
-        return TmedObjectNum;
+    public String getTenderPartialPayment() {
+        return tenderPartialPayment;
     }
 
-    public void setTmedObjectNum(String tmedObjectNum) {
-        TmedObjectNum = tmedObjectNum;
-    }
-
-    public String getTmedPartialPayment() {
-        return TmedPartialPayment;
-    }
-
-    public void setTmedPartialPayment(String tmedPartialPayment) {
-        TmedPartialPayment = tmedPartialPayment;
-    }
-
-    public String getTmedReference() {
-        return TmedReference;
-    }
-
-    public void setTmedReference(String tmedReference) {
-        TmedReference = tmedReference;
+    public void setTenderPartialPayment(String tenderPartialPayment) {
+        this.tenderPartialPayment = tenderPartialPayment;
     }
 }

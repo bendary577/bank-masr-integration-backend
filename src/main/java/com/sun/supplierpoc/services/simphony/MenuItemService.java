@@ -15,7 +15,6 @@ import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;
@@ -344,10 +343,10 @@ public class MenuItemService {
         for (DbMenuItemDefinition menuItem : menuItems) {
             HashMap<String, String> menuItemData = new HashMap<>();
 
+            menuItemData.put("id", menuItem.getMiMasterObjNum());
+            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
             menuItemData.put("menuFirstName", menuItem.getName1().getStringText());
             menuItemData.put("menuSecondName", menuItem.getName2().getStringText());
-            menuItemData.put("miObjectNum", menuItem.getMiMasterObjNum());
-            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
 
             if (menuItem.getMenuItemPrice() != null){
                 menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());
@@ -422,9 +421,9 @@ public class MenuItemService {
         TmedEPayment TmedEPayment = new TmedEPayment();
         TmedEPayment.setAccountType("ACCOUNT_TYPE_UNDEFINED");
 
-        SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
-        pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
-        SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum("3001");
+//        SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
+        pTmedDetailEx2.setTenderDetailItem(SimphonyPosApi_TmedDetailItemEx2);
+        SimphonyPosApi_TmedDetailItemEx2.setTenderNum("3001");
 
         postTransactionEx2.setpGuestCheck(pGuestCheck);
         postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
@@ -467,9 +466,9 @@ public class MenuItemService {
         TmedEPayment TmedEPayment = new TmedEPayment();
         TmedEPayment.setAccountType(configuration.getAccountType());
 
-        SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
-        SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum(configuration.getTenderNumber());
-        pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
+//        SimphonyPosApi_TmedDetailItemEx2.setTmedEPayment(TmedEPayment);
+        SimphonyPosApi_TmedDetailItemEx2.setTenderNum(configuration.getTenderNumber());
+        pTmedDetailEx2.setTenderDetailItem(SimphonyPosApi_TmedDetailItemEx2);
 
         ////////////////////////////////////// Menu Items Details ///////////////////////////////////////////////////
         ppMenuItemsEx ppMenuItemsEx = checkDetails.getPpMenuItemsEx();

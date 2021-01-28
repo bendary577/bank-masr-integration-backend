@@ -1,34 +1,20 @@
 package com.sun.supplierpoc.models.simphony.transaction;
 
-import com.sun.supplierpoc.models.simphony.serviceCharge.pSvcChargeEx;
 import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 
 import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
-        "pSvcChargeEx",
-        "pGuestCheck",
-        "pTmedDetailEx2"
-})
 
 public class PostTransactionEx2Response {
-    @XmlElement(name = "pSvcChargeEx")
-    private pSvcChargeEx pSvcChargeEx;
+//    @XmlElement(name = "pSvcChargeEx")
+//    private pSvcChargeEx pSvcChargeEx;
     @XmlElement(name = "pGuestCheck")
     private pGuestCheck pGuestCheck;
     @XmlElement(name = "pTmedDetailEx2")
-    private pTmedDetailEx2 pTmedDetailEx2;
+    private pTmedDetailEx2 tenderDetail;
     @XmlElement(name = "pTotalsResponseEx")
-    private pTotalsResponseEx pTotalsResponseEx;
-
-    public com.sun.supplierpoc.models.simphony.serviceCharge.pSvcChargeEx getpSvcChargeEx() {
-        return pSvcChargeEx;
-    }
-
-    public void setpSvcChargeEx(com.sun.supplierpoc.models.simphony.serviceCharge.pSvcChargeEx pSvcChargeEx) {
-        this.pSvcChargeEx = pSvcChargeEx;
-    }
+    private pTotalsResponseEx checkTotals;
 
     public pGuestCheck getpGuestCheck() {
         return pGuestCheck;
@@ -38,19 +24,19 @@ public class PostTransactionEx2Response {
         this.pGuestCheck = pGuestCheck;
     }
 
-    public com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2 getpTmedDetailEx2() {
-        return pTmedDetailEx2;
+    public com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2 getTenderDetail() {
+        return tenderDetail;
     }
 
-    public void setpTmedDetailEx2(com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2 pTmedDetailEx2) {
-        this.pTmedDetailEx2 = pTmedDetailEx2;
+    public void setTenderDetail(com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2 tenderDetail) {
+        this.tenderDetail = tenderDetail;
     }
 
-    public com.sun.supplierpoc.models.simphony.transaction.pTotalsResponseEx getpTotalsResponseEx() {
-        return pTotalsResponseEx;
+    public com.sun.supplierpoc.models.simphony.transaction.pTotalsResponseEx getCheckTotals() {
+        return checkTotals;
     }
 
-    public void setpTotalsResponseEx(com.sun.supplierpoc.models.simphony.transaction.pTotalsResponseEx pTotalsResponseEx) {
-        this.pTotalsResponseEx = pTotalsResponseEx;
+    public void setCheckTotals(com.sun.supplierpoc.models.simphony.transaction.pTotalsResponseEx checkTotals) {
+        this.checkTotals = checkTotals;
     }
 }

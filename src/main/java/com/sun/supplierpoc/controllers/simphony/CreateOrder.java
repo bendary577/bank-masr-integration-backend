@@ -1,14 +1,12 @@
 package com.sun.supplierpoc.controllers.simphony;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.OperationType;
-import com.sun.supplierpoc.models.SyncJob;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
+import com.sun.supplierpoc.repositories.OperationRepo;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.services.AccountService;
@@ -26,7 +24,7 @@ import java.util.Optional;
 @RequestMapping(value = {"/Simphony"})
 public class CreateOrder {
     @Autowired
-    private SyncJobRepo syncJobRepo;
+    private OperationRepo operationRepo;
     @Autowired
     private OperationTypeRepo operationTypeRepo;
     @Autowired
@@ -60,34 +58,33 @@ public class CreateOrder {
                         Account account = accountOptional.get();
                         OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted(Constants.CREATE_CHECK, account.getId(), false);
 
-
                         if (!invokerUser.getTypeId().equals(operationType.getId())){
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to create check!");
                         }
-
-                        SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, invokerUser.getId(),
-                                account.getId(), operationType.getId(), 0);
-
-                        syncJobRepo.save(syncJob);
+                        Operation operation = new Operation(Constants.RUNNING, "", new Date(), null, invokerUser.getId(),
+                                account.getId(), operationType.getId(), revenueCenterID, false);
+                        operationRepo.save(operation);
 
                         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                         SimphonyLocation location = generalSettings.getSimphonyLocationsByID(revenueCenterID);
                         ResponseEntity responseEntity= this.menuItemService.PostTransactionEx(checkDetails, location, operationType);
 
                         if(responseEntity.getStatusCode().isError()){
-                            syncJob.setStatus(Constants.FAILED);
-                            syncJob.setReason(responseEntity.getBody().toString());
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(0);
+                            operation.setStatus(Constants.FAILED);
+                            operation.setReason(responseEntity.getBody().toString());
+                            operation.setEndDate(new Date());
+                            operation.setRowsFetched(0);
 
-                            syncJobRepo.save(syncJob);
+                            operationRepo.save(operation);
                         }
                         else {
-                            syncJob.setStatus(Constants.SUCCESS);
-                            syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(1);
+                            // Save operation data
 
-                            syncJobRepo.save(syncJob);
+                            operation.setStatus(Constants.SUCCESS);
+                            operation.setEndDate(new Date());
+                            operation.setRowsFetched(1);
+
+                            operationRepo.save(operation);
                         }
 
                         return responseEntity;

@@ -3,33 +3,54 @@ package com.sun.supplierpoc.models.simphony.tender;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
 
 @XmlAccessorType(XmlAccessType.FIELD)
-
+@XmlType(name = "", propOrder = {
+        "TmedEPayment",
+        "TmedObjectNum",
+        "TmedPartialPayment",
+        "TmedReference"
+})
 public class SimphonyPosApi_TmedDetailItemEx2 {
-//    @XmlElement(name = "TmedEPayment")
-//    private TmedEPayment TmedEPayment;
+    @XmlElement(name = "TmedEPayment")
+    private TmedEPayment TmedEPayment;
     @XmlElement(name = "TmedObjectNum")
-    private String tenderNum;
+    private String TmedObjectNum;
     @XmlElement(name = "TmedPartialPayment")
-    private String tenderPartialPayment;
-//    @XmlElement(name = "TmedReference")
-//    private String TmedReference;
+    private String TmedPartialPayment;
+    @XmlElement(name = "TmedReference")
+    private String TmedReference;
 
-
-    public String getTenderNum() {
-        return tenderNum;
+    public TmedEPayment getTmedEPayment() {
+        return TmedEPayment;
     }
 
-    public void setTenderNum(String tenderNum) {
-        this.tenderNum = tenderNum;
+    public void setTmedEPayment(TmedEPayment tmedEPayment) {
+        TmedEPayment = tmedEPayment;
     }
 
-    public String getTenderPartialPayment() {
-        return tenderPartialPayment;
+    public String getTmedObjectNum() {
+        return TmedObjectNum;
     }
 
-    public void setTenderPartialPayment(String tenderPartialPayment) {
-        this.tenderPartialPayment = tenderPartialPayment;
+    public void setTmedObjectNum(String tmedObjectNum) {
+        TmedObjectNum = tmedObjectNum;
+    }
+
+    public String getTmedPartialPayment() {
+        return TmedPartialPayment;
+    }
+
+    public void setTmedPartialPayment(String tmedPartialPayment) {
+        TmedPartialPayment = tmedPartialPayment;
+    }
+
+    public String getTmedReference() {
+        return TmedReference;
+    }
+
+    public void setTmedReference(String tmedReference) {
+        TmedReference = tmedReference;
     }
 }

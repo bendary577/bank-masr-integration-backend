@@ -650,12 +650,10 @@ public class SalesController {
         boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
         DateFormat dateFormat = new SimpleDateFormat("MMyyy");
-        DateFormat monthFormat = new SimpleDateFormat("MM");
-
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
 
-        String month = monthFormat.format(calendar.getTime());
+        int month = calendar.get(Calendar.MONTH) + 1;
         String date = dateFormat.format(calendar.getTime());
 
         String fileDirectory = account.getName() + "/" + month;

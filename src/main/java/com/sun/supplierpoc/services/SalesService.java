@@ -811,9 +811,9 @@ public class SalesService {
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
             ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 1);
 
-            salesStatistics.NoGuest = statisticValues.get(columns.indexOf("guests"));
-            salesStatistics.NoChecks = statisticValues.get(columns.indexOf("checks"));
-            salesStatistics.NoTables = statisticValues.get(columns.indexOf("tables"));
+            salesStatistics.NoGuest = conversions.filterString(statisticValues.get(columns.indexOf("guests")));
+            salesStatistics.NoChecks = conversions.filterString(statisticValues.get(columns.indexOf("checks")));
+            salesStatistics.NoTables = conversions.filterString(statisticValues.get(columns.indexOf("tables")));
 
             response.setStatus(true);
             response.setMessage("");

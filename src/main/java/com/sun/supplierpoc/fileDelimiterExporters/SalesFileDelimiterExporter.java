@@ -90,7 +90,7 @@ public class SalesFileDelimiterExporter {
         String inUseFlag  = " "; // 1 Length
 
         fileContent.append("VERSION                         ")
-                .append(this.syncJobType.getConfiguration().versionCode).append("\n");
+                .append(this.syncJobType.getConfiguration().versionCode).append("\r\n");
 
         for (int i = 0; i < this.syncJobDataCSVList.size(); i++) {
             SyncJobDataCSV syncJobDataCSV = this.syncJobDataCSVList.get(i);
@@ -324,8 +324,10 @@ public class SalesFileDelimiterExporter {
                         reader.close();
                     }
                     // delete the last new line separator
-                    this.fileContent.deleteCharAt(this.fileContent.length() - 1);
-                    this.fileContent.deleteCharAt(this.fileContent.length() - 2);
+                    if(syncFileNames.length > 0){
+                        this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                        this.fileContent.deleteCharAt(this.fileContent.length() - 2);
+                    }
 
                     try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
                         writer.write(String.valueOf(this.fileContent));
@@ -375,8 +377,10 @@ public class SalesFileDelimiterExporter {
                 reader.close();
             }
             // delete the last new line separator
-            this.fileContent.deleteCharAt(this.fileContent.length() - 1);
-            this.fileContent.deleteCharAt(this.fileContent.length() - 2);
+            if(syncFileNames.length > 0){
+                this.fileContent.deleteCharAt(this.fileContent.length() - 1);
+                this.fileContent.deleteCharAt(this.fileContent.length() - 2);
+            }
 
             try (Writer writer = new BufferedWriter(new FileWriter(generalSyncFile))) {
                 writer.write(String.valueOf(this.fileContent));

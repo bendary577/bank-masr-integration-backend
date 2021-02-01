@@ -323,6 +323,8 @@ public class SalesController {
         DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
         DateFormat monthFormat = new SimpleDateFormat("MM");
 
+        int tryCount = 2;
+
         /*
         * Sync days of last month
         * */
@@ -381,10 +383,14 @@ public class SalesController {
             while (!startDate.equals(endDate)){
                 response = getPOSSales(userId, account);
 
-                calendar.add(Calendar.DATE, +1);
-                startDate = dateFormat.format(calendar.getTime());
-                syncJobType.getConfiguration().fromDate = startDate;
-                syncJobTypeRepo.save(syncJobType);
+                if (response.isStatus() || tryCount == 0){
+                    tryCount = 2;
+                    calendar.add(Calendar.DATE, +1);
+                    startDate = dateFormat.format(calendar.getTime());
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobTypeRepo.save(syncJobType);
+                }
+                tryCount--;
             }
 
             String message = "Sync sales successfully.";

@@ -301,8 +301,7 @@ public class TransferController {
         try {
             if (checkLogin(items, driver, response, Constants.OHIM_LOGIN_LINK, account)) return response;
 
-            String majorGroupsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/MajorGroups/OverviewMajorGroup.aspx";
-            driver.get(majorGroupsURL);
+            driver.get(Constants.MAJOR_GROUPS_LINK);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
@@ -343,10 +342,12 @@ public class TransferController {
             generalSettings.setMajorGroups(majorGroups);
 
             // Get Items Group
-            String mainMenuURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Common/Menu/MainMenu.aspx";
-            driver.get(mainMenuURL);
-            String itemGroupsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/ItemGroups/OverviewItemGroup.aspx";
-            driver.get(itemGroupsURL);
+            driver.findElement(By.partialLinkText("Main Menu")).click();
+            driver.findElement(By.name("_ctl31")).click();
+            driver.findElement(By.id("link-27-10-4-ItemGroups")).click();
+
+//            driver.get(Constants.MAIN_MENU_URL);
+//            driver.get(Constants.ITEMS_GROUPS_LINK);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
             rows = driver.findElements(By.tagName("tr"));
@@ -387,9 +388,11 @@ public class TransferController {
             generalSettings.setItemGroups(itemGroups);
 
             // Get Items Group
-            driver.get(mainMenuURL);
-            String itemsURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/Items/OverviewItem.aspx";
-            driver.get(itemsURL);
+            driver.findElement(By.partialLinkText("Main Menu")).click();
+            driver.findElement(By.name("_ctl31")).click();
+            driver.findElement(By.id("link-27-10-2-Items")).click();
+//            driver.get(Constants.MAIN_MENU_URL);
+//            driver.get(Constants.ITEMS_LINK);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
             rows = driver.findElements(By.tagName("tr"));

@@ -31,6 +31,7 @@ public class Constants {
 
     ///////////////////////////////////////// Operation Types///////////////////////////////////////////////////////////
     public static String CREATE_CHECK = "Create Check";
+    public static String OPERA_PAYMENT = "Opera Payment";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";
@@ -54,9 +55,10 @@ public class Constants {
     ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
 
     public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
+//    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
+    public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
 
-    public static String OHIM_LOGIN_LINK = OHIM_LINK + "/Webclient/FormLogin.aspx";
+    public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
     public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
 
     public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
@@ -68,7 +70,13 @@ public class Constants {
 
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
-    public static String COST_CENTERS_LINK = OHIM_LINK + "/Webclient/MasterData/CostCenters/OverviewCC.aspx";
+    public static String MAIN_MENU_URL = OHRA_LOGIN_LINK + "servlet/PortalIfc/?portlet=InventoryPortlet&action=sidemenu&portletId=3882&options=iNVENTORY";
+    public static String COST_CENTERS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/CostCenters/OverviewCC.aspx";
+    public static String OVER_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/OverGroups/OverviewOverGroup.aspx";
+    public static String MAJOR_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
+    public static String ITEMS_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
+    public static String ITEMS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/Items/OverviewItem.aspx";
+
 
     // SALES LINKS
     // Daily Detail >> Tenders

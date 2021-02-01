@@ -261,6 +261,11 @@ public class Conversions {
         return null;
     }
 
+    public String filterString(String value){
+        value = value.toLowerCase().replaceAll(",", "");
+        return value;
+    }
+
     public float convertStringToFloat(String value){
         if (value == null){
             return 0;

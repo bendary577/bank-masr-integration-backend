@@ -8,6 +8,11 @@ public class OperationConfiguration {
     private String accountType = "";
     private String discountNumber = "";
 
+    /*
+    * Opera Payment
+    * */
+    private String tpeConnectorLink = "";
+
     public String getTenderNumber() {
         return tenderNumber;
     }
@@ -32,4 +37,11 @@ public class OperationConfiguration {
         this.discountNumber = discountNumber;
     }
 
+    public String getTpeConnectorLink() {
+        return tpeConnectorLink;
+    }
+
+    public void setTpeConnectorLink(String tpeConnectorLink) {
+        this.tpeConnectorLink = tpeConnectorLink;
+    }
 }

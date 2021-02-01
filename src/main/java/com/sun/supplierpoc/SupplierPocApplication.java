@@ -19,7 +19,6 @@ public class SupplierPocApplication {
 
             MongoTemplate mongoTemplate = (MongoTemplate) context.getBean(MongoTemplate.class);
 
-
             // init the users
             User mongoUser = new User();
             mongoUser.setUsername("user");

@@ -691,6 +691,10 @@ public class InvoiceService {
             for (Journal journal : journals) {
                 HashMap<String, String> journalEntry = new HashMap<>();
 
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+                if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
+                    continue;
+
                 CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
                 Supplier supplier = (Supplier) invoice.get("vendor");
 
@@ -761,11 +765,6 @@ public class InvoiceService {
 
                 journalEntry.put("description", description);
                 journalEntry.put("overGroup", journal.getOverGroup());
-
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-
-                if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
-                    continue;
 
                 if (!flag){ // Invoice from supplier to cost center
                     journalEntry.put("inventoryAccount", supplier.getAccountCode());

@@ -77,6 +77,8 @@ public class PaymentController {
                 break;
             case "02":transactionResponse=  paymentTransaction(transactionRequest);
                 break;
+            case "07":transactionResponse=  paymentTransaction(transactionRequest);
+                break;
 
         }
         return transactionResponse;

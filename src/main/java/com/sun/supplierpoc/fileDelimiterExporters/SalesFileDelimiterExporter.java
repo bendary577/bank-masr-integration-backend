@@ -269,8 +269,8 @@ public class SalesFileDelimiterExporter {
         return analysisTCode;
     }
 
-    public void generateSingleFile(PrintWriter printWriter, String path, String FileName, boolean perLocation) throws IOException {
-        File folder = new File(path);
+    public void generateSingleFile(PrintWriter printWriter, String path, String month, String FileName, boolean perLocation) throws IOException {
+        File folder = new File(path + "/" + month);
         File generalSyncFile;
 
         String[] syncFileNames;
@@ -285,7 +285,7 @@ public class SalesFileDelimiterExporter {
                 syncLocations = new String[]{};
 
             for (String location : syncLocations) {
-                if(new File(path, location).isDirectory()){
+                if(new File(path + "/" + month, location).isDirectory()){
                     this.fileContent = new StringBuilder();
                     generalSyncFile = new File(path + "/" + location + "-" + FileName);
                     Files.deleteIfExists(generalSyncFile.toPath());
@@ -294,13 +294,13 @@ public class SalesFileDelimiterExporter {
                     if(status)
                         generalSyncFile.createNewFile();
 
-                    File locationFolder = new File(path + "/" + location);
+                    File locationFolder = new File(path  + "/" + month + "/" + location);
                     syncFileNames = locationFolder.list();
 
                     assert syncFileNames != null;
                     for (int i = 0; i < syncFileNames.length; i++) {
                         String syncFileName = syncFileNames[i];
-                        reader = new BufferedReader(new FileReader(path + "/"+ location + "/" + syncFileName));
+                        reader = new BufferedReader(new FileReader(path  + "/" + month + "/"+ location + "/" + syncFileName));
 
                         String line;
                         String ls = System.getProperty("line.separator");
@@ -326,7 +326,7 @@ public class SalesFileDelimiterExporter {
                         reader.close();
                     }
                     // delete the last new line separator
-                    if(syncFileNames.length > 0){
+                    if(this.fileContent.length() > 0){
                         this.fileContent.deleteCharAt(this.fileContent.length() - 1);
                         this.fileContent.deleteCharAt(this.fileContent.length() - 2);
                     }
@@ -357,7 +357,7 @@ public class SalesFileDelimiterExporter {
                 if(new File(path, pathname).isDirectory())
                     continue;
 
-                reader = new BufferedReader(new FileReader(path + "/" + pathname));
+                reader = new BufferedReader(new FileReader(path + "/" + month + "/" + pathname));
 
                 String line;
                 String ls = System.getProperty("line.separator");
@@ -379,7 +379,7 @@ public class SalesFileDelimiterExporter {
                 reader.close();
             }
             // delete the last new line separator
-            if(syncFileNames.length > 0){
+            if(this.fileContent.length() > 0){
                 this.fileContent.deleteCharAt(this.fileContent.length() - 1);
                 this.fileContent.deleteCharAt(this.fileContent.length() - 2);
             }

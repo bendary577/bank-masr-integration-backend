@@ -126,7 +126,7 @@ public class SyncExportedFileController {
         int month = calendar.get(Calendar.MONTH) + 1;
         String date = dateFormat.format(calendar.getTime());
 
-        String fileDirectory = account.getName() + "/" + syncJobType.getName() + "/" + month;
+        String fileDirectory = account.getName() + "/" + syncJobType.getName();
         String fileName = date + ".ndf";
 
         String headerKey = HttpHeaders.CONTENT_DISPOSITION;
@@ -135,12 +135,7 @@ public class SyncExportedFileController {
         response.setContentType("application/octet-stream");
         response.setContentType("text/csv");
 
-        generateSingleFile(response.getWriter(), fileDirectory, fileName, perLocation);
-    }
-
-    public void generateSingleFile(PrintWriter printWriter, String path, String fileName, boolean perLocation) throws IOException {
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-        excelExporter.generateSingleFile(printWriter, path, fileName, perLocation);
+        excelExporter.generateSingleFile(response.getWriter(), fileDirectory, String.valueOf(month), fileName, perLocation);
     }
-
 }

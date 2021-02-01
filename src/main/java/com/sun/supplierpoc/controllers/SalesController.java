@@ -361,12 +361,12 @@ public class SalesController {
             String month = monthFormat.format(calendar.getTime());
             String date = fileDateFormat.format(calendar.getTime());
 
-            String path = account.getName() + "/" + month;
+            String path = account.getName();
             String fileName = date + ".ndf";
             boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-            excelExporter.generateSingleFile(null, path, fileName, perLocation);
+            excelExporter.generateSingleFile(null, path, month, fileName, perLocation);
 
             String message = "Sync sales of last month successfully";
             response.setStatus(true);

@@ -61,6 +61,8 @@ public class Constants {
     public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
     public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
 
+    public static String SUPPLIER_GROUPS_URL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/VendorGroups/VendorGroupsOverview.aspx";
+
     public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
     public static String ACCOUNT_PAYABLE_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
@@ -76,6 +78,7 @@ public class Constants {
     public static String MAJOR_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
     public static String ITEMS_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
     public static String ITEMS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/Items/OverviewItem.aspx";
+    public static String SUPPLIER_URL = OHIM_LINK + "/InventoryManagement/MasterData/Vendors/OverviewVendor.aspx";
 
 
     // SALES LINKS

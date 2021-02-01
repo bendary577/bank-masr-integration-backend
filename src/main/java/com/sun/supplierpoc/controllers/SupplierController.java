@@ -1,9 +1,11 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
@@ -25,8 +27,6 @@ import java.util.*;
 
 
 @RestController
-// @RequestMapping(path = "server")
-
 public class SupplierController {
 
     @Autowired
@@ -34,10 +34,13 @@ public class SupplierController {
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
     @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+    @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private SupplierService supplierService;
 
+    public Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -388,8 +391,7 @@ public class SupplierController {
                 return response;
             }
 
-            String groupsUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/VendorGroups/VendorGroupsOverview.aspx";
-            driver.get(groupsUrl);
+            driver.get(Constants.SUPPLIER_GROUPS_URL);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
@@ -430,6 +432,78 @@ public class SupplierController {
             response.put("success", false);
 
             return response;
+        }
+
+    }
+
+
+    @RequestMapping("/getVendors")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getVendors(Principal principal){
+        String supplierName;
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        Account account = accountOptional.get();
+        ArrayList<Supplier> suppliers = new ArrayList<>();
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(user.getAccountId(), false);
+        if (generalSettings != null){
+            suppliers = generalSettings.getSuppliers();
+        }
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to establish connection with firefox driver.");
+        }
+
+        try {
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
+                driver.quit();
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid username and password.");
+            }
+
+            driver.get(Constants.SUPPLIER_URL);
+
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 7);
+
+            Supplier supplier;
+            for (int i = 12; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != 15){
+                    continue;
+                }
+                supplierName = cols.get(columns.indexOf("vendor")).getText().strip();
+
+                supplier = conversions.checkSupplierExistence(suppliers, supplierName);
+                if(supplier != null)
+                    continue;
+
+                supplier = new Supplier();
+                supplier.setSupplierName(supplierName);
+                suppliers.add(supplier);
+            }
+
+            driver.quit();
+
+            // Save new suppliers
+            generalSettingsRepo.save(generalSettings);
+            return ResponseEntity.status(HttpStatus.OK).body(suppliers);
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to fetch new suppliers.");
         }
 
     }

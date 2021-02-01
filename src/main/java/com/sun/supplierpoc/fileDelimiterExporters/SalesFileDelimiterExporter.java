@@ -362,7 +362,7 @@ public class SalesFileDelimiterExporter {
                 String line;
                 String ls = System.getProperty("line.separator");
                 while ((line = reader.readLine()) != null) {
-                    if(this.fileContent.charAt(this.fileContent.length()-1) != '\n'){
+                    if(this.fileContent.length() > 0 && this.fileContent.charAt(this.fileContent.length()-1) != '\n'){
                         if (this.fileContent.charAt(this.fileContent.length()-1) != '\r')
                             this.fileContent.append(ls);
                         else

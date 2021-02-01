@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -31,6 +32,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
+@RestController
 public class SyncExportedFileController {
     @Autowired
     private SyncJobRepo syncJobRepo;
@@ -103,13 +105,18 @@ public class SyncExportedFileController {
         return ResponseEntity.status(HttpStatus.OK).body(excelExporter.ListSyncFiles(account.getName()));
     }
 
+    /*
+    * Generate single file of last month data
+    * */
     @GetMapping("/generateSingleFile")
-    public void generateSingleFileRequest(Principal principal, HttpServletResponse response) throws IOException {
+    public void generateSingleFileRequest(Principal principal,
+                                          @RequestParam(name = "syncJobTypeName") String syncJobTypeName,
+                                          HttpServletResponse response) throws IOException {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncJobTypeName, account.getId(), false);
         boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
         DateFormat dateFormat = new SimpleDateFormat("MMyyy");

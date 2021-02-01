@@ -1,11 +1,13 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -24,5 +26,30 @@ public class SyncJobDataService {
     public ArrayList<SyncJobData> getSyncJobData(String syncJobID){
         return (ArrayList<SyncJobData>) syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobID, false);
     }
+
+    public void prepareAnalysis(HashMap<String, String> data, Configuration configuration,
+                                 CostCenter location, FamilyGroup familyGroup, Tender tender){
+        ArrayList<Analysis> analysis = configuration.analysis;
+        for (int i = 1; i <= analysis.size(); i++) {
+            data.put("analysisCodeT" + i, analysis.get(i - 1).getCodeElement());
+        }
+
+        String index;
+        if(location != null && !location.accountCode.equals("")){
+            index = configuration.locationAnalysisCode;
+            data.put("analysisCodeT" + index, location.accountCode);
+        }
+
+        if(tender != null && !tender.getAnalysisCodeT5().equals("")){
+            index = configuration.tenderAnalysisCode;
+            data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());
+        }
+
+        if(familyGroup != null && !familyGroup.departmentCode.equals("")){
+            index = configuration.familyGroupAnalysisCode;
+            data.put("analysisCodeT" + index, familyGroup.departmentCode);
+        }
+    }
+
 
 }

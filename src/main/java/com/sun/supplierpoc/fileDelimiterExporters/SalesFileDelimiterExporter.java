@@ -7,6 +7,8 @@ import com.sun.supplierpoc.models.util.SyncJobDataCSV;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.text.DateFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class SalesFileDelimiterExporter {
@@ -392,6 +394,38 @@ public class SalesFileDelimiterExporter {
         if (printWriter != null){
             printWriter.flush();
             printWriter.print(this.fileContent);
+        }
+    }
+
+    public File createSalesFile(List<SyncJobData> salesList, SyncJobType syncJobType, String AccountName) {
+        try {
+            DateFormatSymbols dfs = new DateFormatSymbols();
+            String[] weekdays = dfs.getWeekdays();
+
+            String transactionDate = salesList.get(0).getData().get("transactionDate");
+            Calendar cal = Calendar.getInstance();
+            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+            cal.setTime(date);
+            int day = cal.get(Calendar.DAY_OF_WEEK);
+            int Month = cal.get(Calendar.MONTH) + 1;
+            String dayName = weekdays[day];
+            String fileExtension = ".ndf";
+
+            File file;
+            String fileName;
+            String fileDirectory = AccountName + "/" + syncJobType.getName() + "/" + Month + "/";
+
+            fileName = fileDirectory + transactionDate + dayName.substring(0,3)  + fileExtension;
+
+            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
+                    fileName, syncJobType, salesList);
+
+            file = excelExporter.createNDFFile();
+            System.out.println(file.getName());
+
+            return file;
+        }catch (Exception e){
+            return new File("Sales.ndf");
         }
     }
 

@@ -22,6 +22,8 @@ public class SalesService {
     TransferService transferService;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -913,31 +915,7 @@ public class SalesService {
             syncJobDataRepo.save(data);
         }
     }
-
-    private void prepareAnalysis(HashMap<String, String> data, Configuration configuration,
-                                 CostCenter location, FamilyGroup familyGroup, Tender tender){
-        ArrayList<Analysis> analysis = configuration.analysis;
-        for (int i = 1; i <= analysis.size(); i++) {
-            data.put("analysisCodeT" + i, analysis.get(i - 1).getCodeElement());
-        }
-
-        String index;
-        if(location != null && !location.accountCode.equals("")){
-            index = configuration.locationAnalysisCode;
-            data.put("analysisCodeT" + index, location.accountCode);
-        }
-
-        if(tender != null && !tender.getAnalysisCodeT5().equals("")){
-            index = configuration.tenderAnalysisCode;
-            data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());
-        }
-
-        if(familyGroup != null && !familyGroup.departmentCode.equals("")){
-            index = configuration.familyGroupAnalysisCode;
-            data.put("analysisCodeT" + index, familyGroup.departmentCode);
-        }
-    }
-
+    
     private String checkReportParameters(WebDriver driver, String locationName, String fromDate){
         int tryMaxCount = 2;
         String message = "";
@@ -1101,7 +1079,7 @@ public class SalesService {
                 }
 
                 discountData.put("description", description);
-                prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
+                syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                 SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1135,7 +1113,7 @@ public class SalesService {
                     discountData.put("transactionReference", "Discount Expense");
 
                     discountData.put("expensesAccount", discount.getAccount());
-                    prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
+                    syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     String description = "";
                     if (discount.getCostCenter().costCenterReference.equals("")){
@@ -1189,7 +1167,7 @@ public class SalesService {
                     }
 
                     discountData.put("description", description);
-                    prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
+                    syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());
@@ -1250,7 +1228,7 @@ public class SalesService {
                 }
 
                 differentData.put("description", description);
-                prepareAnalysis(differentData, configuration, journalBatch.getCostCenter(), null, null);
+                syncJobDataService.prepareAnalysis(differentData, configuration, journalBatch.getCostCenter(), null, null);
 
                 SyncJobData syncJobData = new SyncJobData(differentData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1293,7 +1271,7 @@ public class SalesService {
         statisticsData.put("transactionReference", "No Guests");
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
         SyncJobData syncJobGuestsData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1322,7 +1300,7 @@ public class SalesService {
         statisticsData.put("transactionReference", "No Tables");
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
         SyncJobData syncJobTablesData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1351,7 +1329,7 @@ public class SalesService {
         statisticsData.put("transactionReference", "No Checks");
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
         SyncJobData syncJobChecksData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1407,9 +1385,9 @@ public class SalesService {
             tenderData.put("description", description);
 
             if(configuration.salesConfiguration.addTenderAnalysis)
-                prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+                syncJobDataService.prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
             else
-                prepareAnalysis(tenderData, configuration, null, null, null);
+                syncJobDataService.prepareAnalysis(tenderData, configuration, null, null, null);
 
             SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
@@ -1454,9 +1432,9 @@ public class SalesService {
         tenderData.put("description", description);
 
         if(configuration.salesConfiguration.addTenderAnalysis)
-            prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+            syncJobDataService.prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
         else
-            prepareAnalysis(tenderData, configuration, null, null, null);
+            syncJobDataService.prepareAnalysis(tenderData, configuration, null, null, null);
 
         SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1495,7 +1473,7 @@ public class SalesService {
         taxData.put("description", description);
         taxData.put("transactionReference", "Taxes");
 
-        prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
 
         SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1534,10 +1512,10 @@ public class SalesService {
 
         if(!configuration.salesConfiguration.syncMG){
             description += " " + majorGroupJournal.getFamilyGroup().familyGroup;
-            prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), majorGroupJournal.getFamilyGroup(), null);
+            syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), majorGroupJournal.getFamilyGroup(), null);
         }else {
             description += " " + majorGroupJournal.getMajorGroup().getMajorGroup();
-            prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
+            syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
         }
 
         if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals(""))
@@ -1590,7 +1568,7 @@ public class SalesService {
 
         serviceChargeData.put("description", description);
 
-        prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
 
         SyncJobData syncJobData = new SyncJobData(serviceChargeData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());

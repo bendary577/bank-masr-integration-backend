@@ -179,14 +179,9 @@ public class WastageController {
                         }
                     }
                     else if (addedWastes.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
-
-                        String username = sunCredentials.getUsername();
-                        String password = sunCredentials.getPassword();
-                        String host = sunCredentials.getHost();
-
-                        FtpClient ftpClient = new FtpClient(host, username, password);
+                        FtpClient ftpClient = new FtpClient();
+                        ftpClient = ftpClient.createFTPClient(account);
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
 
                         if(ftpClient.open()){
                             List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);

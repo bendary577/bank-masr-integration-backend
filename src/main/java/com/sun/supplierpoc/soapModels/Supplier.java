@@ -7,23 +7,23 @@ import java.util.Objects;
 @XmlRootElement(name="Supplier")
 public class Supplier {
     @XmlElement
-    String AccountCode;
+    String AccountCode = "";
     @XmlElement
-    String SupplierName;
+    String SupplierName = "";
     @XmlElement
-    String SupplierCode;
+    String SupplierCode = "";
     @XmlElement
-    String Status;
+    String Status = "";
     @XmlElement
-    String CustomerNumber;
+    String CustomerNumber = "";
     @XmlElement
-    String PaymentTermsGroupCode;
+    String PaymentTermsGroupCode = "";
     @XmlElement
-    SupplierAddress SupplierAddress;
+    SupplierAddress SupplierAddress = new SupplierAddress();
     @XmlElement
-    Address_Contact Address_Contact;
+    Address_Contact Address_Contact = new Address_Contact();
     @XmlElement
-    Accounts Accounts;
+    Accounts Accounts = new Accounts();
 
     public String getAccountCode() {
         return AccountCode;

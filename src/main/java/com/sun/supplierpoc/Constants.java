@@ -66,7 +66,11 @@ public class Constants {
     public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
     public static String ACCOUNT_PAYABLE_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
-    public static String RECEIPTS_LINK = OHIM_LINK + "/Webclient/Purchase/Receiving/RcvOverviewView.aspx?type=2";
+    /*
+    * Old OHIM receipts link
+    * public static String RECEIPTS_LINK = OHIM_LINK + "/Webclient/Purchase/Receiving/RcvOverviewView.aspx?type=2";
+    * */
+    public static String RECEIPTS_LINK = OHIM_LINK + "/InventoryManagement/Purchase/Receiving/RcvOverviewView.aspx?type=1";
 
     public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/Webclient/Production/ProductionD/PrView.aspx?type=20";
 

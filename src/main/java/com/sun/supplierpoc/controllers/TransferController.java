@@ -175,16 +175,10 @@ public class TransferController {
                         }
                     } 
                     else if (addedTransfers.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+                        FtpClient ftpClient = new FtpClient();
+                        ftpClient = ftpClient.createFTPClient(account);
 
-                        String username = sunCredentials.getUsername();
-                        String password = sunCredentials.getPassword();
-                        String host = sunCredentials.getHost();
-
-                        FtpClient ftpClient = new FtpClient(host, username, password);
-
-                        if(ftpClient.open()){
+                        if(ftpClient != null && ftpClient.open()){
                             List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
                                     "Transfers.ndf", transferSyncJobType, creditNotesList);

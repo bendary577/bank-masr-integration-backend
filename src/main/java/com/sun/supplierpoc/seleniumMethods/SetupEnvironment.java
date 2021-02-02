@@ -5,6 +5,8 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -248,71 +250,6 @@ public class SetupEnvironment {
                                          String location, String revenueCenter, WebDriver driver) {
         Response response = new Response();
         try {
-            if (driver.findElements(By.id("locationData")).size() != 0){
-                Select selectLocation = new Select(driver.findElement(By.id("locationData")));
-                if (!location.equals("")) {
-                    String selectLocationOption;
-                    do{
-                        try {
-                            selectLocation.selectByVisibleText(location);
-                        } catch (Exception e) {
-                            response.setStatus(false);
-                            response.setMessage(Constants.INVALID_LOCATION);
-                            response.setEntries(new ArrayList<>());
-                            return response;
-                        }
-                        selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-
-                        /*
-                         * Check if there is any popup error message, e.g: Locations parameter is empty. Please make a selection.
-                         * */
-                        try {
-                            Alert locationAlert = driver.switchTo().alert();
-                            String message = locationAlert.getText();
-                            locationAlert.accept();
-                            if(message.equals(Constants.EMPTY_LOCATION)){
-                                try {
-                                    selectLocation.selectByVisibleText("All");
-                                    selectLocation.selectByVisibleText(location);
-                                } catch (Exception e) {
-                                    response.setStatus(false);
-                                    response.setMessage(Constants.INVALID_LOCATION);
-                                    response.setEntries(new ArrayList<>());
-                                    return response;
-                                }
-                                selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
-                            }
-                        } catch (NoAlertPresentException Ex) {
-                            System.out.println("No alert exits");
-                        }
-
-                    }while (!selectLocationOption.equals(location));
-                }else{
-                    selectLocation.selectByVisibleText("All");
-                }
-            }
-
-            if (driver.findElements(By.id("revenueCenterData")).size() != 0){
-                Select selectRevenueCenter = new Select(driver.findElement(By.id("revenueCenterData")));
-                if (!revenueCenter.equals("")) {
-                    String selectRevenueCenterOption;
-                    do{
-                        try {
-                            selectRevenueCenter.selectByVisibleText(revenueCenter);
-                        } catch (Exception e) {
-                            response.setStatus(false);
-                            response.setMessage(Constants.INVALID_REVENUE_CENTER);
-                            response.setEntries(new ArrayList<>());
-                            return response;
-                        }
-
-                        selectRevenueCenterOption = selectRevenueCenter.getFirstSelectedOption().getText().strip();
-                    }while (!selectRevenueCenterOption.equals(revenueCenter));
-                }else{
-                    selectRevenueCenter.selectByVisibleText("All");
-                }
-            }
-
             if (timePeriod.equals(Constants.USER_DEFINED)) {
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -392,6 +329,71 @@ public class SetupEnvironment {
                     response.setMessage(Constants.INVALID_BUSINESS_DATE);
                     response.setEntries(new ArrayList<>());
                     return response;
+                }
+            }
+
+            if (driver.findElements(By.id("locationData")).size() != 0){
+                Select selectLocation = new Select(driver.findElement(By.id("locationData")));
+                if (!location.equals("")) {
+                    String selectLocationOption;
+                    do{
+                        try {
+                            selectLocation.selectByVisibleText(location);
+                        } catch (Exception e) {
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_LOCATION);
+                            response.setEntries(new ArrayList<>());
+                            return response;
+                        }
+                        selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+
+                        /*
+                         * Check if there is any popup error message, e.g: Locations parameter is empty. Please make a selection.
+                         * */
+                        try {
+                            Alert locationAlert = driver.switchTo().alert();
+                            String message = locationAlert.getText();
+                            locationAlert.accept();
+                            if(message.equals(Constants.EMPTY_LOCATION)){
+                                try {
+                                    selectLocation.selectByVisibleText("All");
+                                    selectLocation.selectByVisibleText(location);
+                                } catch (Exception e) {
+                                    response.setStatus(false);
+                                    response.setMessage(Constants.INVALID_LOCATION);
+                                    response.setEntries(new ArrayList<>());
+                                    return response;
+                                }
+                                selectLocationOption = selectLocation.getFirstSelectedOption().getText().strip();
+                            }
+                        } catch (NoAlertPresentException Ex) {
+                            System.out.println("No alert exits");
+                        }
+
+                    }while (!selectLocationOption.equals(location));
+                }else{
+                    selectLocation.selectByVisibleText("All");
+                }
+            }
+
+            if (driver.findElements(By.id("revenueCenterData")).size() != 0){
+                Select selectRevenueCenter = new Select(driver.findElement(By.id("revenueCenterData")));
+                if (!revenueCenter.equals("")) {
+                    String selectRevenueCenterOption;
+                    do{
+                        try {
+                            selectRevenueCenter.selectByVisibleText(revenueCenter);
+                        } catch (Exception e) {
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_REVENUE_CENTER);
+                            response.setEntries(new ArrayList<>());
+                            return response;
+                        }
+
+                        selectRevenueCenterOption = selectRevenueCenter.getFirstSelectedOption().getText().strip();
+                    }while (!selectRevenueCenterOption.equals(revenueCenter));
+                }else{
+                    selectRevenueCenter.selectByVisibleText("All");
                 }
             }
 
@@ -568,36 +570,146 @@ public class SetupEnvironment {
         }
     }
 
-    public boolean checkReportParameter(List<WebElement> parameterRows, String syncFromDate, String location, String revenueCenter){
-        ArrayList<String> parameterColumns;
-
-        parameterColumns = getTableColumns(parameterRows, false, 0);
-        if(parameterColumns.get(0).equals("business_dates")){
-            try {
-                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                DateFormat BusinessDateFormat = new SimpleDateFormat("MM/dd/yyyy");
-                Date date = BusinessDateFormat.parse(parameterColumns.get(1));
-
-                if(!syncFromDate.equals(dateFormat.format(date)))
-                    return false;
-            } catch (ParseException e) {
-                e.printStackTrace();
-                return false;
-            }
-
+    public boolean runReport(String businessDate, String fromDate, String toDate, CostCenter location,
+                             RevenueCenter revenueCenter, WebDriver driver, Response response) {
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+        } catch (Exception Ex) {
+            System.out.println("There is no loader");
         }
 
-        if(!location.equals("")){
-            parameterColumns = getTableColumns(parameterRows, false, 1);
-            if(parameterColumns.get(0).equals("locations")){
+        String message = "";
+        int tryMaxCount = 2;
+
+        do{
+            Response dateResponse = selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
+                    revenueCenter.getRevenueCenter(), driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return true;
+            }
+
+            driver.findElement(By.id("Run Report")).click();
+
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+            tryMaxCount --;
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
+
+        message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            return true;
+        }else if(message.equals(Constants.NO_INFO)){
+            response.setStatus(true);
+            response.setMessage(message);
+            return true;
+        }
+        return false;
+    }
+
+    private String fetchReportParameters(WebDriver driver, String locationName, String revenueCenter, String fromDate, String toDate){
+        int tryMaxCount = 2;
+        String message = "";
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        List<WebElement> rows;
+
+        do{
+            try{
+                if(driver.findElements(By.id("newCell0Div")).size() > 0){
+                    if(driver.findElements(By.id("newCell0Div")).get(0).getText().equals("No information is available for the selected range")){
+                        return "No information is available for the selected range";
+                    }
+                }
+
+                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
+                //presence in DOM
+                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+
+                if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
+                    //scrolling
+                    WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
+                    JavascriptExecutor js = ((JavascriptExecutor) driver);
+                    js.executeScript("arguments[0].scrollIntoView(true);", element);
+
+                    //clickable
+                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
+                    driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).click();
+
+                    rows = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_TABLE_XPATH)).findElements(By.tagName("tr"));
+                    if(!checkReportParameter(rows, fromDate, toDate, locationName, revenueCenter)){
+                        driver.switchTo().defaultContent();
+                        message = Constants.WRONG_BUSINESS_DATE;
+                        driver.findElement(By.id("Run Report")).click();
+                    }
+                    else {
+                        driver.switchTo().defaultContent();
+                        message = "";
+                        break;
+                    }
+                }
+            } catch (Exception Ex) {
+                System.out.println("Can not fetch parameter data.");
+                driver.switchTo().defaultContent();
+                message = Constants.WRONG_BUSINESS_DATE;
+                driver.findElement(By.id("Run Report")).click();
+            }
+            tryMaxCount--;
+        }while (message.equals(Constants.WRONG_BUSINESS_DATE) && tryMaxCount != 0);
+
+        return message;
+    }
+
+    private boolean checkReportParameter(List<WebElement> parameterRows, String syncFromDate, String syncToDate,
+                                        String location, String revenueCenter){
+        ArrayList<String> parameterColumns;
+
+        for (int i = 0; i < parameterRows.size(); i++) {
+            parameterColumns = getTableColumns(parameterRows, false, i);
+
+            /*
+             * 3 forms of Business Date
+             * 1/1/2021 --> Sales
+             * 1/1/2021 - 1/3/2021 --> Sales
+             * From 1/1/2021 To 1/3/2021 --> Consumption
+             * */
+            if(parameterColumns.get(0).equals("business_dates")){
+                try {
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    DateFormat BusinessDateFormat = new SimpleDateFormat("M/d/yyyy");
+
+                    Date fromDate = dateFormat.parse(syncFromDate);
+                    Date toDate = dateFormat.parse(syncToDate);
+
+                    String businessDate = parameterColumns.get(1);
+                    String firstForm = BusinessDateFormat.format(fromDate);
+                    String secondForm = BusinessDateFormat.format(fromDate) + " - " + BusinessDateFormat.format(toDate);
+                    String thirdForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormat.format(toDate);
+                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(thirdForm);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+
+            }
+
+            else if(parameterColumns.get(0).equals("locations") && !location.equals("")){
                 if(!parameterColumns.get(1).equals(conversions.transformColName(location)))
                     return false;
             }
-        }
 
-        if(!revenueCenter.equals("")){
-            parameterColumns = getTableColumns(parameterRows, false, 2);
-            if(parameterColumns.get(0).equals("revenue_centers")){
+            else if(parameterColumns.get(0).equals("revenue_centers") && !revenueCenter.equals("")){
                 return parameterColumns.get(1).equals(conversions.transformColName(revenueCenter));
             }
         }

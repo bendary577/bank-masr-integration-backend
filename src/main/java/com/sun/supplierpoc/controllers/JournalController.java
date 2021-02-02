@@ -156,11 +156,9 @@ public class JournalController {
         try {
             HashMap<String, Object> data;
             if (consumptionBasedOnType.equals("Cost Center")){
-                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters
-                        ,itemGroups, account);
+                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
             }else {
-                data = journalService.getJournalData(journalSyncJobType, costCenters,
-                        costCentersLocation,itemGroups, account);
+                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, account);
             }
 
             if (data.get("status").equals(Constants.SUCCESS)) {

@@ -91,23 +91,27 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
-                    "", "", driver);
+            Response dateResponse = new Response();
+            if (setupEnvironment.runReport(businessDate, fromDate, toDate, new CostCenter(), new RevenueCenter(), driver, dateResponse)){
+                driver.quit();
 
-            if (!dateResponse.isStatus()){
-                response.put("status", Constants.FAILED);
-                response.put("message", dateResponse.getMessage());
-                response.put("journals", journalsEntries);
-                return response;
+                if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                    response.put("status", Constants.FAILED);
+                    response.put("message", dateResponse.getMessage());
+                    response.put("journals", journalsEntries);
+                    return response;
+                } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                    response.put("status", Constants.SUCCESS);
+                    response.put("message", "");
+                    response.put("journals", journalsEntries);
+                    return response;
+                }
             }
-
-            driver.findElement(By.id("Run Report")).click();
 
             journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
             driver.get(journalUrl);
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
-
 
             if (rows.size() < 4){
                 driver.quit();
@@ -148,13 +152,11 @@ public class JournalService {
                 selectedCostCenters.add(journal);
             }
 
-            String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-
             for (HashMap<String, Object> costCenter : selectedCostCenters) {
                 try {
                     journals = new ArrayList<>();
 
-                    driver.get(baseURL + costCenter.get("extensions"));
+                    driver.get(Constants.OHRA_LINK + costCenter.get("extensions"));
 
                     rows = driver.findElements(By.tagName("tr"));
 
@@ -212,7 +214,6 @@ public class JournalService {
                 }
             }
 
-
             driver.quit();
 
             response.put("status", Constants.SUCCESS);
@@ -235,7 +236,7 @@ public class JournalService {
     /*
      * Get consumptions entries based on location
      * */
-    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType,
                                                   ArrayList<CostCenter> costCentersLocation,
                                                   ArrayList<ItemGroup> itemGroups, Account account){
         HashMap<String, Object> response = new HashMap<>();

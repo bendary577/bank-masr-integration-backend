@@ -7,9 +7,10 @@ import java.util.Objects;
 @XmlRootElement(name="Supplier")
 public class Supplier {
     @XmlElement
-    String AccountCode = "";
+    private String AccountCode = "";
     @XmlElement
     String SupplierName = "";
+    String supplierReference = "";
     @XmlElement
     String SupplierCode = "";
     @XmlElement
@@ -42,6 +43,14 @@ public class Supplier {
 
     public void setSupplierName(String supplierName) {
         SupplierName = supplierName;
+    }
+
+    public String getSupplierReference() {
+        return supplierReference;
+    }
+
+    public void setSupplierReference(String supplierReference) {
+        this.supplierReference = supplierReference;
     }
 
     public String getSupplierCode() {

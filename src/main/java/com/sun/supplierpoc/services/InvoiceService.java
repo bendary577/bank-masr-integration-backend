@@ -730,13 +730,13 @@ public class InvoiceService {
                 journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
 
                 if (!flag){
-                    journalEntry.put("fromCostCenter", supplier.getSupplierName());
+                    journalEntry.put("fromCostCenter", supplier.getSupplierReference());
                     journalEntry.put("fromAccountCode", supplier.getAccountCode());
 
                     journalEntry.put("toCostCenter", toCostCenter.costCenter);
                     journalEntry.put("toAccountCode", toCostCenter.accountCode);
                 }else{
-                    journalEntry.put("toCostCenter", supplier.getSupplierName());
+                    journalEntry.put("toCostCenter", supplier.getSupplierReference());
                     journalEntry.put("toAccountCode", supplier.getAccountCode());
 
                     journalEntry.put("fromCostCenter", toCostCenter.costCenter);
@@ -754,9 +754,9 @@ public class InvoiceService {
 
                 String description = "";
                 if (!flag){
-                    description = "Invoice F "+ supplier.getSupplierName() + " T " + toCostCenter.costCenterReference;
+                    description = "Invoice F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
                 }else{
-                    description = "Credit Note F "+ supplier.getSupplierName() + " T " + toCostCenter.costCenterReference;
+                    description = "Credit Note F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
                 }
 
                 if (description.length() > 50){
@@ -788,13 +788,13 @@ public class InvoiceService {
 
         for (HashMap<String, String> invoice : invoices) {
             // check existence of invoice in middleware (UNIQUE: receiptNo with over group)
-            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
-                    invoice.get("overGroup"));
-            if (oldInvoice != null){
-                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
-                    continue;
-                }
-            }
+//            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
+//                    invoice.get("overGroup"));
+//            if (oldInvoice != null){
+//                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
+//                    continue;
+//                }
+//            }
 
             // Invoice Part
             if (!flag) {

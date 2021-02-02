@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
@@ -28,6 +29,8 @@ public class JournalService {
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -264,7 +267,6 @@ public class JournalService {
                 response.put("journals", journalsEntries);
                 return response;
             }
-            // just wait to make sure credentials of user saved to be able to move to another pages.
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 5);
                 wait.until(ExpectedConditions.alertIsPresent());
@@ -274,7 +276,10 @@ public class JournalService {
             }
 
 
-            for (CostCenter costCenter : costCenters) {
+            for (CostCenter costCenter : costCentersLocation) {
+                if (!costCenter.checked)
+                    continue;
+
                 if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)){
                     driver.get(Constants.CONSUMPTION_REPORT_LINK);
 
@@ -287,27 +292,19 @@ public class JournalService {
                     }
                 }
 
-                // check if cost center has location mapping
-                CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
+                Response dateResponse = new Response();
+                if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)){
+                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                        driver.quit();
 
-                if (!costCenterLocation.checked)
-                    continue;
-
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
-                        costCenterLocation.locationName, "", driver);
-
-                if (!dateResponse.isStatus() && !dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", dateResponse.getMessage());
-                    response.put("journals", journalsEntries);
-                    return response;
-                }else if(!dateResponse.isStatus() && dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
-                    continue;
+                        response.put("status", Constants.FAILED);
+                        response.put("message", dateResponse.getMessage());
+                        response.put("journals", journalsEntries);
+                        return response;
+                    } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                        continue;
+                    }
                 }
-
-                driver.findElement(By.id("Run Report")).click();
 
                 driver.get(Constants.CONSUMPTION_TABLE_LINK);
 
@@ -334,13 +331,11 @@ public class JournalService {
                     extensions.add(extension);
                 }
 
-                String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-
                 journals = new ArrayList<>();
 
                 for (String extension : extensions) {
                     try {
-                        driver.get(baseURL + extension);
+                        driver.get(Constants.OHRA_LINK + extension);
 
                         rows = driver.findElements(By.tagName("tr"));
 
@@ -413,7 +408,8 @@ public class JournalService {
     }
 
 
-    public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
+    public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals,
+                                                  SyncJobType syncJobType, SyncJob syncJob,
                                                   String businessDate, String fromDate,
                                                   ArrayList<OverGroup> overGroups){
         ArrayList<SyncJobData> addedJournals = new ArrayList<>();
@@ -429,8 +425,8 @@ public class JournalService {
 
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
+                syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
 
-                // Example: 01062020
                 String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
                 costData.put("accountingPeriod", transactionDate.substring(2,6));
                 costData.put("transactionDate", transactionDate);
@@ -454,7 +450,7 @@ public class JournalService {
 
                 costData.put("description", description);
 
-                costData.put("transactionReference", "Cost Transaction Reference");
+                costData.put("transactionReference", "Consumption");
                 costData.put("overGroup", journalData.getOverGroup());
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
@@ -471,7 +467,6 @@ public class JournalService {
                     addedJournals.add(syncJobData);
                 }
             }
-
         }
         return addedJournals;
 

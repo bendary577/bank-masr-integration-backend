@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -255,7 +256,7 @@ public class SalesService {
         if (!driver.getCurrentUrl().equals(Constants.TENDERS_REPORT_LINK)) {
             driver.get(Constants.TENDERS_REPORT_LINK);
         }
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
@@ -331,7 +332,7 @@ public class SalesService {
         }else{
             driver.get(Constants.TAXES_REPORT_LINK);
         }
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         List<WebElement> rows;
         String taxReportLink;
@@ -431,7 +432,7 @@ public class SalesService {
         else
             driver.get(Constants.OVER_GROUP_GROSS_REPORT_LINK);
 
-        if (runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, response)) return response;
 
         String overGroupGrossLink;
         if(taxIncluded)
@@ -638,7 +639,7 @@ public class SalesService {
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         driver.get(Constants.DISCOUNT_REPORT_LINK);
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
@@ -722,7 +723,7 @@ public class SalesService {
         ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
 
         driver.get(Constants.SERVICE_CHARGE_REPORT_LINK);
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.SERVICE_CHARGE_TABLE_LINK);
@@ -796,7 +797,7 @@ public class SalesService {
         }
 
         driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.SALES_SUMMARY_LINK);
@@ -826,55 +827,6 @@ public class SalesService {
             response.setMessage(e.getMessage());
         }
         return response;
-    }
-
-    private boolean runReport(String businessDate, String fromDate, String toDate, CostCenter location,
-                              RevenueCenter revenueCenter, WebDriver driver, Response response) {
-        try{
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
-        } catch (Exception Ex) {
-            System.out.println("There is no loader");
-        }
-
-        String message = "";
-        int tryMaxCount = 2;
-
-        do{
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                    revenueCenter.getRevenueCenter(), driver);
-
-            if (!dateResponse.isStatus()){
-                response.setStatus(false);
-                response.setMessage(dateResponse.getMessage());
-                return true;
-            }
-
-            driver.findElement(By.id("Run Report")).click();
-
-            try {
-                Alert locationAlert = driver.switchTo().alert();
-                message = locationAlert.getText();
-                locationAlert.accept();
-            }catch (NoAlertPresentException Ex) {
-                System.out.println("No alert exits");
-            }
-            tryMaxCount --;
-
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
-
-        message = checkReportParameters(driver, location.locationName, fromDate);
-
-        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
-            response.setStatus(false);
-            response.setMessage(message);
-            return true;
-        }else if(message.equals("No information is available for the selected range")){
-            response.setStatus(true);
-            response.setMessage(message);
-            return true;
-        }
-        return false;
     }
 
     public void updateJournalBatchStatus(JournalBatch journalBatch, HashMap<String, Object> response){
@@ -916,58 +868,6 @@ public class SalesService {
         }
     }
     
-    private String checkReportParameters(WebDriver driver, String locationName, String fromDate){
-        int tryMaxCount = 2;
-        String message = "";
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        List<WebElement> rows;
-
-        do{
-            try{
-                if(driver.findElements(By.id("newCell0Div")).size() > 0){
-                    if(driver.findElements(By.id("newCell0Div")).get(0).getText().equals("No information is available for the selected range")){
-                        return "No information is available for the selected range";
-                    }
-                }
-
-                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
-                //presence in DOM
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
-
-                if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
-                    //scrolling
-                    WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
-                    JavascriptExecutor js = ((JavascriptExecutor) driver);
-                    js.executeScript("arguments[0].scrollIntoView(true);", element);
-
-                    //clickable
-                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
-                    driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).click();
-
-                    rows = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_TABLE_XPATH)).findElements(By.tagName("tr"));
-                    if(!setupEnvironment.checkReportParameter(rows, fromDate, locationName, "")){
-                        driver.switchTo().defaultContent();
-                        message = Constants.WRONG_BUSINESS_DATE;
-                        driver.findElement(By.id("Run Report")).click();
-                    }
-                    else {
-                        driver.switchTo().defaultContent();
-                        message = "";
-                        break;
-                    }
-                }
-            } catch (Exception Ex) {
-                System.out.println("Can not fetch parameter data.");
-                driver.switchTo().defaultContent();
-                message = Constants.WRONG_BUSINESS_DATE;
-                driver.findElement(By.id("Run Report")).click();
-            }
-            tryMaxCount--;
-        }while (message.equals(Constants.WRONG_BUSINESS_DATE) && tryMaxCount != 0);
-
-        return message;
-    }
-
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob,
                                                                Configuration configuration , Account account) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();

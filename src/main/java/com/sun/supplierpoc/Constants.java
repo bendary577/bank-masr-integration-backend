@@ -14,6 +14,7 @@ public class Constants {
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
     public static String EMPTY_BUSINESS_DATE = "Business Dates parameter is empty. Please make a selection.";
     public static String WRONG_BUSINESS_DATE = "Wrong Business Dates Chosen.";
+    public static String NO_INFO = "No information is available for the selected range";
 
     ///////////////////////////////////////// Sync Job Status///////////////////////////////////////////////////////////
     public static String RUNNING = "Running";

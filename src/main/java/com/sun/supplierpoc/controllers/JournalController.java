@@ -166,7 +166,7 @@ public class JournalController {
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
                 if (journals.size() > 0) {
-                    addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, fromDate, overGroups);
+                    addedJournals = journalService.saveJournalData(journals,journalSyncJobType, syncJob, businessDate, fromDate, overGroups);
                     if (addedJournals.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
@@ -194,57 +194,51 @@ public class JournalController {
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
+                                File file = exporter.createSalesFile(addedJournals, journalSyncJobType, account.getName());
 
-                        if(ftpClient.open()){
-                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "Journals.ndf", journalSyncJobType, creditNotesList);
+                                boolean sendFileFlag = false;
+                                try {
+                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                    ftpClient.close();
+                                } catch (IOException e) {
+                                    ftpClient.close();
+                                }
 
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
-
-                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
-
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
-                            }
-
-                            if (sendFileFlag){
+                                if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
-                                        "Sync consumption successfully.", Constants.SUCCESS);
+                                    syncJobDataService.updateSyncJobDataStatus(addedJournals, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
+                                            "Sync consumption successfully.", Constants.SUCCESS);
 
-                                response.put("success", true);
-                                response.put("message", "Sync consumption successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                    response.put("success", true);
+                                    response.put("message", "Sync consumption successfully.");
+                                }else {
+                                    syncJobDataService.updateSyncJobDataStatus(addedJournals, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
+                                            "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
+
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync consumption to sun system via FTP.");
+                                }
+                            }
+                            else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
-                                        "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync consumption to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
-                            syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                        }else {
+                            File file = exporter.createSalesFile(addedJournals, journalSyncJobType, account.getName());
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            syncJobDataService.updateSyncJobDataStatus(addedJournals, Constants.SUCCESS);
+                            syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
+
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
                     }
                     else {

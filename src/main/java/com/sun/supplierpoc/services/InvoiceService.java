@@ -730,13 +730,13 @@ public class InvoiceService {
                 journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
 
                 if (!flag){
-                    journalEntry.put("fromCostCenter", supplier.getSupplierReference());
+                    journalEntry.put("fromCostCenter", supplier.getSupplierName());
                     journalEntry.put("fromAccountCode", supplier.getAccountCode());
 
                     journalEntry.put("toCostCenter", toCostCenter.costCenter);
                     journalEntry.put("toAccountCode", toCostCenter.accountCode);
                 }else{
-                    journalEntry.put("toCostCenter", supplier.getSupplierReference());
+                    journalEntry.put("toCostCenter", supplier.getSupplierName());
                     journalEntry.put("toAccountCode", supplier.getAccountCode());
 
                     journalEntry.put("fromCostCenter", toCostCenter.costCenter);

@@ -167,30 +167,14 @@ public class BookedProductionController {
                     else if (addedBookedProduction.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
-                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(bookedProductionSyncJobType, addedBookedProduction);
 
                         if(ftpClient.open()){
-                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "BookedProduction.ndf", bookedProductionSyncJobType, creditNotesList);
-
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
-
-                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
+                            File file = exporter.prepareNDFFile(addedBookedProduction, bookedProductionSyncJobType, account.getName());
 
                             boolean sendFileFlag = false;
                             try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                                sendFileFlag = ftpClient.putFileToPath(file, file.getName());
                                 ftpClient.close();
                             } catch (IOException e) {
                                 ftpClient.close();
@@ -198,14 +182,14 @@ public class BookedProductionController {
 
                             if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                                syncJobDataService.updateSyncJobDataStatus(addedBookedProduction, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
                                         "Sync booked production successfully.", Constants.SUCCESS);
 
                                 response.put("success", true);
                                 response.put("message", "Sync booked production successfully.");
                             }else {
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                syncJobDataService.updateSyncJobDataStatus(addedBookedProduction, Constants.FAILED);
                                 syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
                                         "Failed to sync booked production to sun system via FTP.", Constants.FAILED);
 

@@ -754,9 +754,9 @@ public class InvoiceService {
 
                 String description = "";
                 if (!flag){
-                    description = "Invoice F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
+                    description = "Inv F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
                 }else{
-                    description = "Credit Note F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
+                    description = "CN F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
                 }
 
                 if (description.length() > 50){

@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
-import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -202,10 +200,10 @@ public class CreditNoteController {
                 else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                     FtpClient ftpClient = new FtpClient();
                     ftpClient = ftpClient.createFTPClient(account);
-                    SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
+                    SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(creditNoteSyncJobType, addedInvoices);
 
                     if(ftpClient.open()){
-                        File file = exporter.createSalesFile(addedInvoices, invoiceSyncJobType, account.getName());
+                        File file = exporter.prepareNDFFile(addedInvoices, creditNoteSyncJobType, account.getName());
 
                         boolean sendFileFlag = false;
                         try {

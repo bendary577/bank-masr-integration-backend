@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.SalesExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -46,7 +47,7 @@ public class SyncExportedFileController {
     public Conversions conversions = new Conversions();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @GetMapping("/sales/export/excel")
+    @GetMapping("/export/excel")
     public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
                               HttpServletResponse response) throws IOException {
         response.setContentType("application/octet-stream");
@@ -65,9 +66,10 @@ public class SyncExportedFileController {
         excelExporter.export(response);
     }
 
-    @GetMapping("/sales/export/csv")
+    @GetMapping("/export/csv")
     public void exportToText(Principal principal,
                              @RequestParam(name = "syncJobId") String syncJobId,
+                             @RequestParam(name = "syncTypeName") String syncTypeName,
                              HttpServletResponse response) throws IOException {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -76,7 +78,7 @@ public class SyncExportedFileController {
 
         List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId, false);
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(syncTypeName, account.getId(), false);
 
 
         String businessDate =  syncJobType.getConfiguration().timePeriod;
@@ -91,7 +93,6 @@ public class SyncExportedFileController {
         response.setContentType("text/csv");
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName + ".ndf", syncJobType, salesList);
-
         excelExporter.writeSyncData(response.getWriter());
     }
 
@@ -101,8 +102,8 @@ public class SyncExportedFileController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter();
-        return ResponseEntity.status(HttpStatus.OK).body(excelExporter.ListSyncFiles(account.getName()));
+        GeneralExporterMethods exporterMethods = new GeneralExporterMethods();
+        return ResponseEntity.status(HttpStatus.OK).body(exporterMethods.ListSyncFiles(account.getName()));
     }
 
     /*
@@ -135,7 +136,7 @@ public class SyncExportedFileController {
         response.setContentType("application/octet-stream");
         response.setContentType("text/csv");
 
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-        excelExporter.generateSingleFile(response.getWriter(), fileDirectory, String.valueOf(month), fileName, perLocation);
+        GeneralExporterMethods exporterMethods = new GeneralExporterMethods(fileName);
+        exporterMethods.generateSingleFile(response.getWriter(), fileDirectory, String.valueOf(month), fileName, perLocation);
     }
 }

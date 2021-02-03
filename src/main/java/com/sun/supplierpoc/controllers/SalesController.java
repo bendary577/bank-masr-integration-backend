@@ -2,7 +2,7 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.excelExporters.SalesExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
@@ -12,16 +12,13 @@ import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
@@ -226,6 +223,7 @@ public class SalesController {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             FtpClient ftpClient = new FtpClient();
                             ftpClient = ftpClient.createFTPClient(account);
+                            SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
 
                             if (ftpClient != null){
                                 if(ftpClient.open()){
@@ -233,8 +231,7 @@ public class SalesController {
                                         ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                                 syncJobType, account.getName());
                                     }else {
-                                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
-                                        File file = exporter.createSalesFile(salesList, syncJobType, account.getName());
+                                        File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName());
                                     }
 
 //                                if (ftpClient.putFileToPath(file, fileName)){
@@ -268,8 +265,7 @@ public class SalesController {
                                     ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                             syncJobType, account.getName());
                                 }else {
-                                    SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
-                                    File file = exporter.createSalesFile(salesList, syncJobType, account.getName());
+                                    File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName());
                                 }
 
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
@@ -365,8 +361,8 @@ public class SalesController {
             String fileName = date + ".ndf";
             boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
-            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-            excelExporter.generateSingleFile(null, path, month, fileName, perLocation);
+            GeneralExporterMethods exporterMethods = new GeneralExporterMethods(fileName);
+            exporterMethods.generateSingleFile(null, path, month, fileName, perLocation);
 
             String message = "Sync sales of last month successfully";
             response.setStatus(true);

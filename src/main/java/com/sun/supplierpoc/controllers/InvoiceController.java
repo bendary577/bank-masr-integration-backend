@@ -7,7 +7,6 @@ import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
@@ -30,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
-import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -209,11 +207,11 @@ public class InvoiceController {
                     else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
-                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(invoiceSyncJobType, addedInvoices);
 
                         if(ftpClient != null){
                             if(ftpClient.open()){
-                                File file = exporter.createSalesFile(addedInvoices, invoiceSyncJobType, account.getName());
+                                File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName());
 
                                 boolean sendFileFlag = false;
                                 try {
@@ -248,7 +246,7 @@ public class InvoiceController {
                                 response.put("message", "Failed to connect to sun system via FTP.");
                             }
                         }else {
-                            File file = exporter.createSalesFile(addedInvoices, invoiceSyncJobType, account.getName());
+                            File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName());
 
                             syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),

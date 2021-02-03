@@ -177,29 +177,14 @@ public class TransferController {
                     else if (addedTransfers.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(transferSyncJobType, addedTransfers);
 
                         if(ftpClient != null && ftpClient.open()){
-                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "Transfers.ndf", transferSyncJobType, creditNotesList);
-
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
-
-                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
+                            File file = exporter.prepareNDFFile(addedTransfers, transferSyncJobType, account.getName());
 
                             boolean sendFileFlag = false;
                             try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                                sendFileFlag = ftpClient.putFileToPath(file, file.getName());
                                 ftpClient.close();
                             } catch (IOException e) {
                                 ftpClient.close();
@@ -207,14 +192,14 @@ public class TransferController {
 
                             if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                                syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
                                         "Sync transfers successfully.", Constants.SUCCESS);
 
                                 response.put("success", true);
                                 response.put("message", "Sync transfers successfully.");
                             }else {
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.FAILED);
                                 syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
                                         "Failed to sync transfers to sun system via FTP.", Constants.FAILED);
 
@@ -516,7 +501,7 @@ public class TransferController {
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter("Transfers.ndf", syncJobType, salesList);
 
-        excelExporter.writeSyncData(response.getWriter());
+//        excelExporter.writeSyncData(response.getWriter());
     }
 
 }

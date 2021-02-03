@@ -24,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
-import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -191,10 +190,10 @@ public class JournalController {
                     else if (addedJournals.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
-                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter();
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, addedJournals);
                         if(ftpClient != null){
                             if(ftpClient.open()){
-                                File file = exporter.createSalesFile(addedJournals, journalSyncJobType, account.getName());
+                                File file = exporter.prepareNDFFile(addedJournals, journalSyncJobType, account.getName());
 
                                 boolean sendFileFlag = false;
                                 try {
@@ -229,7 +228,7 @@ public class JournalController {
                                 response.put("message", "Failed to connect to sun system via FTP.");
                             }
                         }else {
-                            File file = exporter.createSalesFile(addedJournals, journalSyncJobType, account.getName());
+                            File file = exporter.prepareNDFFile(addedJournals, journalSyncJobType, account.getName());
 
                             syncJobDataService.updateSyncJobDataStatus(addedJournals, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),

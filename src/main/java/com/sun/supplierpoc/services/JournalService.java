@@ -444,7 +444,7 @@ public class JournalService {
                 costData.put("fromLocation", costCenter.accountCode);
                 costData.put("toLocation", costCenter.accountCode);
 
-                String description = "Con F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
+                String description = "F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }

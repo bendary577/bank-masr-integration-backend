@@ -43,13 +43,14 @@ public class SalesFileDelimiterExporter {
         writer.print(this.fileContent);
     }
 
-    public File prepareNDFFile(List<SyncJobData> jobData, SyncJobType syncJobType, String AccountName) throws ParseException {
+    public File prepareNDFFile(List<SyncJobData> jobData, SyncJobType syncJobType, String accountName, String location) throws ParseException {
+        String transactionDate = jobData.get(0).getData().get("transactionDate");
+        Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+
         DateFormatSymbols dfs = new DateFormatSymbols();
         String[] weekdays = dfs.getWeekdays();
 
-        String transactionDate = jobData.get(0).getData().get("transactionDate");
         Calendar cal = Calendar.getInstance();
-        Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
         cal.setTime(date);
 
         int day = cal.get(Calendar.DAY_OF_WEEK);
@@ -58,8 +59,15 @@ public class SalesFileDelimiterExporter {
         String fileExtension = ".ndf";
 
         File file;
-        String fileDirectory = AccountName + "/" + syncJobType.getName() + "/" + Month + "/";
-        this.fileName = fileDirectory + transactionDate + dayName.substring(0,3)  + fileExtension;
+        String fileDirectory;
+        if(location.equals("")){
+            fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/";
+            this.fileName = fileDirectory + transactionDate + dayName.substring(0,3)  + fileExtension;
+        }
+        else{
+            fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/" + location + "/";
+            this.fileName = fileDirectory + transactionDate + dayName.substring(0,3) + " - " + location + fileExtension;
+        }
 
         try {
             /*
@@ -71,6 +79,7 @@ public class SalesFileDelimiterExporter {
                 this.extractInvoicesSyncJobData();
 
             file = createNDFFile();
+            System.out.println(file.getName());
 
             return file;
         }catch (Exception e){
@@ -78,11 +87,11 @@ public class SalesFileDelimiterExporter {
         }
     }
 
-    public File createNDFFile() throws IOException {
+    private File createNDFFile() throws IOException {
         this.sortFileByAccountCode();
         this.createFileContent();
 
-        File file = new File(fileName);
+        File file = new File(this.fileName);
         boolean status= file.getParentFile().mkdirs();
         if(status)
             file.createNewFile();

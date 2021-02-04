@@ -223,17 +223,17 @@ public class SalesController {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             FtpClient ftpClient = new FtpClient();
                             ftpClient = ftpClient.createFTPClient(account);
+
                             SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+                            if(syncJobType.getConfiguration().exportFilePerLocation){
+                                ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
+                                        syncJobType, account.getName());
+                            }else {
+                                File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
+                            }
 
                             if (ftpClient != null){
                                 if(ftpClient.open()){
-                                    if(syncJobType.getConfiguration().exportFilePerLocation){
-                                        ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
-                                                syncJobType, account.getName());
-                                    }else {
-                                        File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName());
-                                    }
-
 //                                if (ftpClient.putFileToPath(file, fileName)){
                                     if (true){
                                         syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
@@ -261,13 +261,6 @@ public class SalesController {
                                 }
                             }
                             else{
-                                if(syncJobType.getConfiguration().exportFilePerLocation){
-                                    ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
-                                            syncJobType, account.getName());
-                                }else {
-                                    File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName());
-                                }
-
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Sync sales successfully.", Constants.SUCCESS);
@@ -585,29 +578,11 @@ public class SalesController {
                                                        String AccountName) {
         ArrayList<File> locationFiles = new ArrayList<>();
         try {
-            List<SyncJobData> salesList;
-            DateFormatSymbols dfs = new DateFormatSymbols();
-            String[] weekdays = dfs.getWeekdays();
-
-            String fileExtension = ".ndf";
-            String businessDate =  syncJobType.getConfiguration().timePeriod;
-            String fromDate =  syncJobType.getConfiguration().fromDate;
-            String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-            Calendar cal = Calendar.getInstance();
-            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-            cal.setTime(date);
-            int day = cal.get(Calendar.DAY_OF_WEEK);
-            int Month = cal.get(Calendar.MONTH) + 1;
-            String dayName = weekdays[day];
-
-            SalesFileDelimiterExporter excelExporter;
             File file;
-            String fileName;
-            String fileDirectory;
+            List<SyncJobData> salesList;
+            SalesFileDelimiterExporter excelExporter;
 
             for (JournalBatch locationBatch : salesBatches) {
-                fileDirectory = AccountName + "/" + Month + "/" + locationBatch.getCostCenter().costCenterReference + "/";
-
                 salesList = new ArrayList<>();
                 salesList.addAll(locationBatch.getSalesTenderData());
                 salesList.addAll(locationBatch.getSalesMajorGroupGrossData());
@@ -621,13 +596,8 @@ public class SalesController {
                     salesList.addAll(locationBatch.getStatisticsData());
                 }
 
-                fileName = fileDirectory + transactionDate + dayName.substring(0,3) + " - " +
-                        locationBatch.getCostCenter().costCenterReference + fileExtension;
-
-                excelExporter = new SalesFileDelimiterExporter(fileName, syncJobType, salesList);
-                file = excelExporter.createNDFFile();
-
-                System.out.println(fileName);
+                excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+                file = excelExporter.prepareNDFFile(salesList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
                 locationFiles.add(file);
             }
             return locationFiles;

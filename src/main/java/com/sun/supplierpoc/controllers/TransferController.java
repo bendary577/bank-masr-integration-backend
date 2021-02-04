@@ -178,41 +178,49 @@ public class TransferController {
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(transferSyncJobType, addedTransfers);
+                        File file = exporter.prepareNDFFile(addedTransfers, transferSyncJobType, account.getName(), "");
 
-                        if(ftpClient != null && ftpClient.open()){
-                            File file = exporter.prepareNDFFile(addedTransfers, transferSyncJobType, account.getName());
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
+                                boolean sendFileFlag = false;
+                                try {
+                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                    ftpClient.close();
+                                } catch (IOException e) {
+                                    ftpClient.close();
+                                }
 
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, file.getName());
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
-                            }
-
-                            if (sendFileFlag){
+                                if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
-                                        "Sync transfers successfully.", Constants.SUCCESS);
+                                    syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                            "Sync transfers successfully.", Constants.SUCCESS);
 
-                                response.put("success", true);
-                                response.put("message", "Sync transfers successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.FAILED);
+                                    response.put("success", true);
+                                    response.put("message", "Sync transfers successfully.");
+                                }else {
+                                    syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                            "Failed to sync transfers to sun system via FTP.", Constants.FAILED);
+
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync transfers to sun system via FTP.");
+                                }
+                            }
+                            else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
-                                        "Failed to sync transfers to sun system via FTP.", Constants.FAILED);
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync transfers to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
+                        }else{
+                            syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
                     }
                 } else {

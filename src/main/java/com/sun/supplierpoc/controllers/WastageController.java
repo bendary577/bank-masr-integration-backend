@@ -182,41 +182,49 @@ public class WastageController {
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(wastageSyncJobType, addedWastes);
+                        File file = exporter.prepareNDFFile(addedWastes, wastageSyncJobType, account.getName(), "");
 
-                        if(ftpClient.open()){
-                            File file = exporter.prepareNDFFile(addedWastes, wastageSyncJobType, account.getName());
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
+                                boolean sendFileFlag = false;
+                                try {
+                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                    ftpClient.close();
+                                } catch (IOException e) {
+                                    ftpClient.close();
+                                }
 
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, file.getName());
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
-                            }
-
-                            if (sendFileFlag){
+                                if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
-                                        "Sync wastage successfully.", Constants.SUCCESS);
+                                    syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                            "Sync wastage successfully.", Constants.SUCCESS);
 
-                                response.put("success", true);
-                                response.put("message", "Sync wastage successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.FAILED);
+                                    response.put("success", true);
+                                    response.put("message", "Sync wastage successfully.");
+                                }else {
+                                    syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                            "Failed to sync wastage to sun system via FTP.", Constants.FAILED);
+
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync wastage to sun system via FTP.");
+                                }
+                            }
+                            else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
-                                        "Failed to sync wastage to sun system via FTP.", Constants.FAILED);
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync wastage to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
+                        }else{
+                            syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
                     }
                 }

@@ -188,13 +188,19 @@ public class JournalController {
                         }
                     }
                     else if (addedJournals.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        File file;
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
+
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, addedJournals);
+                        if(journalSyncJobType.getConfiguration().exportFilePerLocation && !consumptionBasedOnType.equals("Cost Center")){
+                            file = exporter.prepareNDFFile(addedJournals, journalSyncJobType, account.getName(), "");
+                        }else {
+                            file = exporter.prepareNDFFile(addedJournals, journalSyncJobType, account.getName(), "");
+                        }
+
                         if(ftpClient != null){
                             if(ftpClient.open()){
-                                File file = exporter.prepareNDFFile(addedJournals, journalSyncJobType, account.getName());
-
                                 boolean sendFileFlag = false;
                                 try {
                                     sendFileFlag = ftpClient.putFileToPath(file, file.getName());
@@ -228,8 +234,6 @@ public class JournalController {
                                 response.put("message", "Failed to connect to sun system via FTP.");
                             }
                         }else {
-                            File file = exporter.prepareNDFFile(addedJournals, journalSyncJobType, account.getName());
-
                             syncJobDataService.updateSyncJobDataStatus(addedJournals, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
                                     "Sync approved Invoices successfully.", Constants.SUCCESS);

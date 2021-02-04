@@ -207,11 +207,12 @@ public class InvoiceController {
                     else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
+
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(invoiceSyncJobType, addedInvoices);
+                        File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName(), "");
 
                         if(ftpClient != null){
                             if(ftpClient.open()){
-                                File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName());
 
                                 boolean sendFileFlag = false;
                                 try {
@@ -246,8 +247,6 @@ public class InvoiceController {
                                 response.put("message", "Failed to connect to sun system via FTP.");
                             }
                         }else {
-                            File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName());
-
                             syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                     "Sync approved Invoices successfully.", Constants.SUCCESS);

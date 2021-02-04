@@ -201,10 +201,9 @@ public class CreditNoteController {
                     FtpClient ftpClient = new FtpClient();
                     ftpClient = ftpClient.createFTPClient(account);
                     SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(creditNoteSyncJobType, addedInvoices);
+                    File file = exporter.prepareNDFFile(addedInvoices, creditNoteSyncJobType, account.getName(), "");
 
                     if(ftpClient.open()){
-                        File file = exporter.prepareNDFFile(addedInvoices, creditNoteSyncJobType, account.getName());
-
                         boolean sendFileFlag = false;
                         try {
                             sendFileFlag = ftpClient.putFileToPath(file, file.getName());

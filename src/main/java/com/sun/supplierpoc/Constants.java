@@ -73,7 +73,11 @@ public class Constants {
     * */
     public static String RECEIPTS_LINK = OHIM_LINK + "/InventoryManagement/Purchase/Receiving/RcvOverviewView.aspx?type=1";
 
-    public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/Webclient/Production/ProductionD/PrView.aspx?type=20";
+    /*
+     * Old OHIM booked production link
+     * public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/Webclient/Production/ProductionD/PrView.aspx?type=20";
+     * */
+    public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/InventoryManagement/Production/ProductionD/PrView.aspx?type=20";
 
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 

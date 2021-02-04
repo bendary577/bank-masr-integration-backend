@@ -278,7 +278,7 @@ public class BookedProductionService {
             bookedProductionData.put("fromLocation", bookedProduction.getCostCenter().accountCode);
             bookedProductionData.put("toLocation", bookedProduction.getCostCenter().accountCode);
 
-            String description = "Booked Production F " + bookedProduction.getCostCenter().costCenterReference + " - " +
+            String description = "F " + bookedProduction.getCostCenter().costCenterReference + " - " +
                     bookedProduction.getOverGroup().getOverGroup();
             if (description.length() > 50){
                 description = description.substring(0, 50);

@@ -31,6 +31,8 @@ public class BookedProductionService {
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private SyncJobDataController syncJobTypeController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -256,10 +258,10 @@ public class BookedProductionService {
                                                            SyncJob syncJob, SyncJobType bookedProductionSyncJobType){
         ArrayList<SyncJobData> addedBookedProduction = new ArrayList<>();
 
-//        OverGroup overGroup = conversions.checkOverGroupExistence(overGroups, "Food Production");
-
         for (BookedProduction bookedProduction : bookedProductions) {
             HashMap<String, String> bookedProductionData = new HashMap<>();
+            syncJobDataService.prepareAnalysis(bookedProductionData, bookedProductionSyncJobType.getConfiguration(),
+                    bookedProduction.getCostCenter(), null, null);
 
             bookedProductionData.put("status", bookedProduction.getStatus());
 
@@ -286,10 +288,10 @@ public class BookedProductionService {
 
             bookedProductionData.put("description", description);
 
-            bookedProductionData.put("transactionReference", "Booked Production");
+            bookedProductionData.put("transactionReference", "Production");
 
             bookedProductionData.put("inventoryAccount", bookedProduction.getOverGroup().getInventoryAccount());
-            bookedProductionData.put("expensesAccount", bookedProductionSyncJobType.getConfiguration().expensesAccount);
+            bookedProductionData.put("expensesAccount", bookedProduction.getOverGroup().getExpensesAccount());
 
             bookedProductionData.put("createdBy", bookedProduction.getCreatedBy());
             bookedProductionData.put("createdAt", bookedProduction.getCreatedAt());

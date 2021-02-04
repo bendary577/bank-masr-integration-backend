@@ -260,8 +260,12 @@ public class BookedProductionService {
 
         for (BookedProduction bookedProduction : bookedProductions) {
             HashMap<String, String> bookedProductionData = new HashMap<>();
-            syncJobDataService.prepareAnalysis(bookedProductionData, bookedProductionSyncJobType.getConfiguration(),
-                    bookedProduction.getCostCenter(), null, null);
+            if(bookedProduction.getCostCenter().location != null)
+                syncJobDataService.prepareAnalysis(bookedProductionData, bookedProductionSyncJobType.getConfiguration(),
+                    bookedProduction.getCostCenter().location, null, null);
+            else
+                syncJobDataService.prepareAnalysis(bookedProductionData, bookedProductionSyncJobType.getConfiguration(),
+                        bookedProduction.getCostCenter(), null, null);
 
             bookedProductionData.put("status", bookedProduction.getStatus());
 

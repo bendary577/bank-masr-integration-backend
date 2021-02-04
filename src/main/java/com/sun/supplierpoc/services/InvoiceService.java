@@ -701,7 +701,10 @@ public class InvoiceService {
                 if (toCostCenter.costCenterReference.equals("")){
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
-                syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter, null, null);
+                if(toCostCenter.location != null)
+                    syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter.location, null, null);
+                else
+                    syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter, null, null);
 
                 journalEntry.put("invoiceNo", (String) invoice.get("document"));
 

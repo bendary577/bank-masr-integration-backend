@@ -426,7 +426,11 @@ public class JournalService {
 
             if (journalData.getTotalCost() != 0){
                 HashMap<String, String> costData = new HashMap<>();
-                syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
+                if(syncJobType.getConfiguration().consumptionConfiguration.consumptionBasedOnType.equals("Cost Center")
+                        && costCenter.location != null)
+                    syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
+                else
+                    syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
 
                 String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
                 costData.put("accountingPeriod", transactionDate.substring(2,6));

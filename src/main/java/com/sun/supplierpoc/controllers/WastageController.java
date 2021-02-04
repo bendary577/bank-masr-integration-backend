@@ -299,8 +299,7 @@ public class WastageController {
                 return response;
             }
 
-            String wasteTypesURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/WasteGroups/WasteGroup.aspx";
-            driver.get(wasteTypesURL);
+            driver.get(Constants.WASTE_GROUPS_LINK);
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
@@ -336,6 +335,8 @@ public class WastageController {
 
             driver.quit();
 
+            syncJobType.getConfiguration().wastageConfiguration.wasteGroups = wasteTypes;
+            syncJobTypeRepo.save(syncJobType);
             response.put("cols", columns);
             response.put("data", wasteTypes);
             response.put("message", "Get wastes successfully.");

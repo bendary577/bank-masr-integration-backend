@@ -79,6 +79,12 @@ public class Constants {
      * */
     public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/InventoryManagement/Production/ProductionD/PrView.aspx?type=20";
 
+    /*
+    * Old OHIM waste groups
+    * wasteTypesURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/WasteGroups/WasteGroup.aspx"
+    * */
+    public static String WASTE_GROUPS_LINK =  OHIM_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     public static String MAIN_MENU_URL = OHRA_LOGIN_LINK + "servlet/PortalIfc/?portlet=InventoryPortlet&action=sidemenu&portletId=3882&options=iNVENTORY";

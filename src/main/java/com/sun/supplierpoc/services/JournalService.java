@@ -63,7 +63,7 @@ public class JournalService {
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -260,7 +260,7 @@ public class JournalService {
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)){
                 driver.quit();
 
                 response.put("status", Constants.FAILED);

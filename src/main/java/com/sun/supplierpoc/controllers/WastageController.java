@@ -157,9 +157,12 @@ public class WastageController {
 
         ArrayList<SyncJobData> addedWastes = new ArrayList<>();
         try {
-
-            HashMap<String, Object> data = wastageService.getWastageData(wastageSyncJobType, items, costCenters,
+            HashMap<String, Object> data;
+            if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE))
+                data = wastageService.getWastageData(wastageSyncJobType, items, costCenters,
                     overGroups, wasteGroups, account);
+            else
+                data = wastageService.getWastageReportData(wastageSyncJobType, generalSettings, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");

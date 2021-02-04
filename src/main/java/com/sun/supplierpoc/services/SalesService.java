@@ -56,7 +56,7 @@ public class SalesService {
         }
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)) {
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
                 driver.quit();
 
                 response.setStatus(false);

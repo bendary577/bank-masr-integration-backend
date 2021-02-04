@@ -4,10 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.Item;
-import com.sun.supplierpoc.models.configurations.OverGroup;
-import com.sun.supplierpoc.models.configurations.WasteGroup;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
@@ -19,6 +16,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.login.FailedLoginException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,6 +30,8 @@ public class WastageService {
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -283,7 +283,7 @@ public class WastageService {
                 journalEntry.put("fromLocation", costCenter.accountCode);
                 journalEntry.put("toLocation", costCenter.accountCode);
 
-                String description =  "W For " + costCenter.costCenterReference + " - " + journal.getOverGroup();
+                String description =  "F " + costCenter.costCenterReference + " - " + journal.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }
@@ -297,7 +297,7 @@ public class WastageService {
                     }
                     journalEntry.put("transactionReference", reference);
                 }else {
-                    journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                    journalEntry.put("transactionReference", "Waste");
                 }
 
                 journalEntry.put("overGroup", journal.getOverGroup());
@@ -315,7 +315,7 @@ public class WastageService {
 
 
     public ArrayList<SyncJobData> saveWastageSunData(ArrayList<HashMap<String, String>> wastes, SyncJob syncJob) {
-        ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
+        ArrayList<SyncJobData> addedWaste = new ArrayList<>();
 
         for (HashMap<String, String> waste : wastes) {
 
@@ -323,21 +323,28 @@ public class WastageService {
                     syncJob.getId());
             syncJobDataRepo.save(syncJobData);
 
-            addedTransfers.add(syncJobData);
+            addedWaste.add(syncJobData);
         }
-        return addedTransfers;
+        return addedWaste;
 
     }
 
-    @Deprecated
     public HashMap<String, Object> getWastageReportData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
 
         HashMap<String, Object> response = new HashMap<>();
+        String businessDate = syncJobType.getConfiguration().timePeriod;
+        String fromDate = syncJobType.getConfiguration().fromDate;
+        String toDate = syncJobType.getConfiguration().toDate;
+
         ArrayList<Item> items = generalSettings.getItems();
-        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
-        ArrayList<CostCenter> costCenterLocationMapping = generalSettings.getLocations();
+        ArrayList<CostCenter> locations = generalSettings.getLocations();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
+
+        ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> wastesStatus;
+        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
+
 
         WebDriver driver = null;
         try{
@@ -350,13 +357,7 @@ public class WastageService {
             return response;
         }
 
-        ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
-        ArrayList<HashMap<String, Object>> wastesStatus;
-        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
-
-        String url = "https://mte03-ohra-prod.hospitality.oracleindustry.com/servlet/PortalLogIn/";
-
-        if (!setupEnvironment.loginOHRA(driver, url, account)) {
+        if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
             driver.quit();
 
             response.put("status", Constants.FAILED);
@@ -373,18 +374,12 @@ public class WastageService {
             System.out.println("Waiting");
         }
 
-        for (CostCenter costCenter : costCenters) {
+        for (CostCenter costCenter : locations) {
             try {
-                CostCenter CostCenterData = conversions.checkCostCenterExistence(costCenterLocationMapping, costCenter.costCenter, false);
-
-                if (!CostCenterData.checked) continue;
+                if (!costCenter.checked) continue;
 
                 wastesStatus = new ArrayList<>();
-
-                String locationName = CostCenterData.locationName;
-
-                String bookedWasteUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportAction.do?method=run&reportID=497";
-                driver.get(bookedWasteUrl);
+                driver.get(Constants.BOOKED_WASTE_REPORT_LINK);
 
                 try {
                     WebDriverWait wait = new WebDriverWait(driver, 60);
@@ -392,38 +387,24 @@ public class WastageService {
                 }
                 catch (Exception ex){ }
 
-                String timePeriod = syncJobType.getConfiguration().timePeriod;
-                String fromDate = syncJobType.getConfiguration().fromDate;
-                String toDate = syncJobType.getConfiguration().toDate;
+                Response dateResponse = new Response();
+                if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)){
+                    driver.quit();
 
-                Select locationData = new Select(driver.findElement(By.id("locationData")));
-                try {
-                    locationData.selectByVisibleText(locationName);
-                } catch (Exception e) {
-                    System.out.println("Invalid location");
-                    continue;
+                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                        response.put("status", Constants.FAILED);
+                        response.put("message", dateResponse.getMessage());
+                        response.put("wastes", new ArrayList<>());
+                        return response;
+                    } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                        response.put("status", Constants.SUCCESS);
+                        response.put("message", "");
+                        response.put("wastes", new ArrayList<>());
+                        return response;
+                    }
                 }
 
-                String selectedOption = locationData.getFirstSelectedOption().getText().strip();
-                while (!selectedOption.equals(locationName)){
-                    selectedOption = locationData.getFirstSelectedOption().getText().strip();
-                }
-
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(timePeriod, fromDate, toDate,
-                        "", "", driver);
-
-                if (!dateResponse.isStatus()){
-                    response.put("status", Constants.FAILED);
-                    response.put("message", dateResponse.getMessage());
-                    response.put("wastes", journalEntries);
-                    return response;
-                }
-
-                driver.findElement(By.id("Run Report")).click();
-
-                String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";
-
-                driver.get(baseURL);
+                driver.get(Constants.WASTE_GROUPS_CONTENT_LINK);
 
                 WebElement table = driver.findElement(By.id("tableContainer"));
                 List<WebElement> rows = table.findElements(By.tagName("tr"));
@@ -439,7 +420,6 @@ public class WastageService {
                         continue;
                     }
 
-                    // check if this row in selected waste type
                     WebElement td = cols.get(columns.indexOf("waste_type"));
                     WasteGroup wasteTypeData = conversions.checkWasteTypeExistence(wasteGroups, td.getText().strip());
 
@@ -447,8 +427,21 @@ public class WastageService {
                         continue;
                     }
 
+                    td = cols.get(columns.indexOf("date"));
+                    String deliveryDate = td.getText().strip();
+
+                    SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
+                    Date deliveryDateFormatted =formatter1.parse(deliveryDate);
+
+                    SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+                    String date = simpleformat.format(deliveryDateFormatted);
+
+                    waste.put("waste_date", date);
+
                     for (int j = 0; j < cols.size(); j++) {
                         td = cols.get(j);
+                        if (j == columns.indexOf("date"))
+                            continue;
                         if (j == columns.indexOf("document_name")){
                             String extension = td.findElement(By.tagName("div")).getAttribute("onclick");
                             int index = extension.indexOf('\'');
@@ -463,7 +456,7 @@ public class WastageService {
                 }
 
                 for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteReportDetails(items, overGroups, costCenter, waste, driver, journalEntries);
+                    getWasteReportDetails(items, overGroups, costCenter, waste, syncJobType, driver, journalEntries);
                 }
 
             } catch (Exception e) {
@@ -483,15 +476,14 @@ public class WastageService {
         return response;
     }
 
-    @Deprecated
     private void getWasteReportDetails(
             ArrayList<Item> items, ArrayList<OverGroup> overGroups, CostCenter costCenter,
-            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
+            HashMap<String, Object> waste, SyncJobType syncJobType,
+            WebDriver driver, ArrayList<HashMap<String, String>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
-            String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-            driver.get(baseURL + waste.get("waste_details_link"));
+            driver.get(Constants.OHRA_LINK + waste.get("waste_details_link"));
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
@@ -530,18 +522,21 @@ public class WastageService {
             for (Journal journal : journals) {
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
 
-                if (!oldOverGroupData.getChecked()) {
+                if (!oldOverGroupData.getChecked())
                     continue;
-                }
+                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
+                    continue;
 
-                HashMap<String, Object> journalEntry = new HashMap<>();
+                HashMap<String, String> journalEntry = new HashMap<>();
+                syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(),
+                        costCenter, null, null);
 
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
-                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
-                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
+                journalEntry.put("totalCr", Float.toString(conversions.roundUpFloat(journal.getTotalWaste())));
+                journalEntry.put("totalDr", Float.toString(conversions.roundUpFloat(journal.getTotalWaste()) * -1));
 
                 journalEntry.put("fromCostCenter", costCenter.costCenter);
                 journalEntry.put("fromAccountCode", costCenter.accountCode);
@@ -552,14 +547,16 @@ public class WastageService {
                 journalEntry.put("fromLocation", costCenter.accountCode);
                 journalEntry.put("toLocation", costCenter.accountCode);
 
-                String description = "W F " + costCenter.costCenterReference + " - " + waste.get("waste_type") + " - " + journal.getOverGroup();
+                String description = waste.get("waste_type") + " - " + journal.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }
 
                 journalEntry.put("description", description);
+                journalEntry.put("transactionReference", "Waste" + " - " + costCenter.costCenterReference);
 
-                journalEntry.put("transactionReference", "Wastage Transaction Reference");
+                journalEntry.put("transactionDate", String.valueOf(waste.get("waste_date")));
+
                 journalEntry.put("overGroup", journal.getOverGroup());
 
                 journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());

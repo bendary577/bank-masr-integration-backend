@@ -47,7 +47,6 @@ public class Constants {
     public static String ORACLE_OHRA = "HospitalityOHRA";
 
     //////////////////////////////////////////////// ERD //////////////////////////////////////////////////////////////
-
     public static String EXPORT_TO_SUN_ERD = "ExportSun";
     public static String SUN_ERD = "Sun";
     public static String FUSION_ERD = "Fusion";
@@ -60,7 +59,6 @@ public class Constants {
     public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
 
     public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
-    public static String OHRA_LOGIN_LINK =  "https://mte03-ohra-prod.hospitality.oracleindustry.com/";
 
     public static String SUPPLIER_GROUPS_URL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/VendorGroups/VendorGroupsOverview.aspx";
 
@@ -78,16 +76,8 @@ public class Constants {
      * public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/Webclient/Production/ProductionD/PrView.aspx?type=20";
      * */
     public static String BOOKED_PRODUCTION_LINK =  OHIM_LINK + "/InventoryManagement/Production/ProductionD/PrView.aspx?type=20";
-
-    /*
-    * Old OHIM waste groups
-    * wasteTypesURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/WasteGroups/WasteGroup.aspx"
-    * */
-    public static String WASTE_GROUPS_LINK =  OHIM_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
-
     public static String SUPPLIER_LINK =  OHIM_LINK +  "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
-
-    public static String MAIN_MENU_URL = OHRA_LOGIN_LINK + "servlet/PortalIfc/?portlet=InventoryPortlet&action=sidemenu&portletId=3882&options=iNVENTORY";
+    public static String MAIN_MENU_URL = OHRA_LINK + "servlet/PortalIfc/?portlet=InventoryPortlet&action=sidemenu&portletId=3882&options=iNVENTORY";
     public static String COST_CENTERS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/CostCenters/OverviewCC.aspx";
     public static String OVER_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/OverGroups/OverviewOverGroup.aspx";
     public static String MAJOR_GROUPS_LINK = OHIM_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
@@ -98,39 +88,39 @@ public class Constants {
 
     // SALES LINKS
     // Daily Detail >> Tenders
-    public static String TENDERS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=19";
-    public static String TENDERS_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=19&reportID=TendersDailyDetail&method=run";
+    public static String TENDERS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=19";
+    public static String TENDERS_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=19&reportID=TendersDailyDetail&method=run";
     public static String TENDERS_PARAMETERS_XPATH = "/html/body/div[2]/div[1]";
     public static String TENDERS_PARAMETERS_TABLE_XPATH = "/html/body/div[2]/div[2]/table";
 
     // Daily Detail >> Tax
-    public static String TAXES_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=18";
-    public static String TAX_INCLUDED_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?method=run&reportID=EAME_TaxesDailyDetail_VAT&rptroot=1191";
-    public static String ADD_ON_TAX_INCLUDED_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=18&reportID=TaxesDailyDetail&method=run";
+    public static String TAXES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=18";
+    public static String TAX_INCLUDED_REPORT_LINK = OHRA_LINK + "/finengine/reportRunAction.do?method=run&reportID=EAME_TaxesDailyDetail_VAT&rptroot=1191";
+    public static String ADD_ON_TAX_INCLUDED_REPORT_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=18&reportID=TaxesDailyDetail&method=run";
 
     // Menu Engineering >> Sales Mix Summary
-    public static String ITEM_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=46";
+    public static String ITEM_GROSS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=46";
 
     // Daily Detail >> Sales Mix
-    public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=15";
-    public static String SYSTEM_SALES_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
+    public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=15";
+    public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
     // Daily Detail >> Discount
-    public static String DISCOUNT_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=13";
-    public static String DISCOUNT_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=13&reportID=DiscDailyDetail&method=run";
+    public static String DISCOUNT_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=13";
+    public static String DISCOUNT_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=13&reportID=DiscDailyDetail&method=run";
 
     // Daily Detail >> Service Charge
-    public static String SERVICE_CHARGE_REPORT_LINK = OHRA_LOGIN_LINK + "/finengine/reportAction.do?method=run&reportID=16";
-    public static String SERVICE_CHARGE_TABLE_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=16&reportID=SrvcChrgDailyDetail&method=run";
+    public static String SERVICE_CHARGE_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=16";
+    public static String SERVICE_CHARGE_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=16&reportID=SrvcChrgDailyDetail&method=run";
 
     // myInventory Reports >> COS by Cost Center
-    public static String CONSUMPTION_REPORT_LINK = OHRA_LOGIN_LINK + "finengine/reportAction.do?method=run&reportID=499";
-    public static String CONSUMPTION_TABLE_LINK = OHRA_LOGIN_LINK + "finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
+    public static String CONSUMPTION_REPORT_LINK = OHRA_LINK + "finengine/reportAction.do?method=run&reportID=499";
+    public static String CONSUMPTION_TABLE_LINK = OHRA_LINK + "finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
 
     // More Reports >> Summary >> System Sales Summary
-    public static String SALES_SUMMARY_LINK = OHRA_LOGIN_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
-    ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
+    public static String SALES_SUMMARY_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
 
+    ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
     public static String APPROVED_INVOICE = "Approved Invoices";
     public static String ACCOUNT_PAYABLE = "Account Payable";
 
@@ -138,13 +128,22 @@ public class Constants {
     public static String ACCOUNT_PAYABLE_RTV_Status = "Invoice sent to A/P (RTV)";
     public static String ACCOUNT_PAYABLE_Status = "Invoice sent to A/P";
 
-    ///////////////////////////////////////// Sales over group gross types /////////////////////////////////////////////
+    ///////////////////////////////////////// Waste Reports ////////////////////////////////////////////////////////////
+    public static String WASTE_REPORT = "Waste Reports";
+    public static String INVENTORY_WASTE = "Inventory Booked Waste";
+    public static String BOOKED_WASTE_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=497";
+    /*
+     * Old OHIM waste groups
+     * wasteTypesURL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/WasteGroups/WasteGroup.aspx"
+     * */
+    public static String WASTE_GROUPS_LINK =  OHIM_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+    public static String WASTE_GROUPS_CONTENT_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=497&reportID=myInvenItemWasteSummary&method=run";
 
+    ///////////////////////////////////////// Sales over group gross types /////////////////////////////////////////////
     public static String SALES_GROSS = "Gross";
     public static String SALES_GROSS_LESS_DISCOUNT = "Gross Less Discount";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
-
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";
     public static String PAST_7_DAYES = "Past 7 Days";

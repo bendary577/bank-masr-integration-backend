@@ -1,5 +1,4 @@
 package com.sun.supplierpoc.fileDelimiterExporters;
-import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;

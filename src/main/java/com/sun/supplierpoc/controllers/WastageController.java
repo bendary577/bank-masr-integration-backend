@@ -155,59 +155,73 @@ public class WastageController {
 
         syncJobRepo.save(syncJob);
 
-        ArrayList<SyncJobData> addedWastes = new ArrayList<>();
+        ArrayList<JournalBatch> wasteBatches = new ArrayList<>();
         try {
-            HashMap<String, Object> data;
-            if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE))
+            Response data;
+            if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
                 data = wastageService.getWastageData(wastageSyncJobType, items, costCenters,
-                    overGroups, wasteGroups, account);
-            else
+                        overGroups, wasteGroups, account);
+                wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+            }
+            else{
                 data = wastageService.getWastageReportData(wastageSyncJobType, generalSettings, account);
+                wasteBatches = data.getJournalBatches();
+            }
 
-            if (data.get("status").equals(Constants.SUCCESS)) {
-                ArrayList<HashMap<String, String>> wastes = (ArrayList<HashMap<String, String>>) data.get("wastes");
-                if (wastes.size() > 0) {
-                    addedWastes = wastageService.saveWastageSunData(wastes, syncJob);
-                    if(addedWastes.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
+            if (data.isStatus()) {
+                if (wasteBatches.size() > 0) {
+                    wastageService.saveWastageSunData(wasteBatches, syncJob);
+
+                    if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
-                            invoiceController.handleSendJournal(wastageSyncJobType, syncJob, addedWastes, account, voucher);
+                            for (JournalBatch batch : wasteBatches) {
+                                invoiceController.handleSendJournal(wastageSyncJobType, syncJob, batch.getWasteData(), account, voucher);
+                            }
+
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedWastes.size());
+                            syncJob.setRowsFetched(wasteBatches.size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", "Sync Wastage Successfully.");
                             response.put("success", true);
                         }
                     }
-                    else if (addedWastes.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+
+                    else if (wasteBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        List<SyncJobData> wasteList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
-                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(wastageSyncJobType, addedWastes);
-                        File file = exporter.prepareNDFFile(addedWastes, wastageSyncJobType, account.getName(), "");
+
+                        if(wastageSyncJobType.getConfiguration().exportFilePerLocation){
+                            ArrayList<File> files = createWastesFilePerLocation(wasteBatches, wastageSyncJobType, account.getName());
+                        }else {
+                            SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(wastageSyncJobType, wasteList);
+                            File file = exporter.prepareNDFFile(wasteList, wastageSyncJobType, account.getName(), "");
+                        }
 
                         if(ftpClient != null){
                             if(ftpClient.open()){
-                                boolean sendFileFlag = false;
-                                try {
-                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
-                                    ftpClient.close();
-                                } catch (IOException e) {
-                                    ftpClient.close();
-                                }
+//                                boolean sendFileFlag = false;
+//                                try {
+//                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+//                                    ftpClient.close();
+//                                } catch (IOException e) {
+//                                    ftpClient.close();
+//                                }
 
-                                if (sendFileFlag){
-//                            if (true){
-                                    syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.SUCCESS);
-                                    syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+//                                if (sendFileFlag){
+                            if (true){
+                                    syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
                                             "Sync wastage successfully.", Constants.SUCCESS);
 
                                     response.put("success", true);
                                     response.put("message", "Sync wastage successfully.");
                                 }else {
-                                    syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.FAILED);
-                                    syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                    syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
                                             "Failed to sync wastage to sun system via FTP.", Constants.FAILED);
 
                                     response.put("success", false);
@@ -215,15 +229,15 @@ public class WastageController {
                                 }
                             }
                             else {
-                                syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                                syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
                                         "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
                                 response.put("message", "Failed to connect to sun system via FTP.");
                             }
                         }else{
-                            syncJobDataService.updateSyncJobDataStatus(addedWastes, Constants.SUCCESS);
-                            syncJobService.saveSyncJobStatus(syncJob, addedWastes.size(),
+                            syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);
+                            syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
                                     "Sync approved Invoices successfully.", Constants.SUCCESS);
 
                             response.put("success", true);
@@ -235,7 +249,7 @@ public class WastageController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no wastage to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedWastes.size());
+                    syncJob.setRowsFetched(wasteBatches.size());
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no wastage to get from Oracle Hospitality.");
@@ -246,10 +260,10 @@ public class WastageController {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason("Failed to get wastage from Oracle Hospitality.");
                 syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedWastes.size());
+                syncJob.setRowsFetched(wasteBatches.size());
                 syncJobRepo.save(syncJob);
 
-                response.put("message", data.get("message"));
+                response.put("message", data.getMessage());
                 response.put("success", false);
             }
 
@@ -259,7 +273,7 @@ public class WastageController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
-            syncJob.setRowsFetched(addedWastes.size());
+            syncJob.setRowsFetched(wasteBatches.size());
             syncJobRepo.save(syncJob);
 
             response.put("message", e);
@@ -374,5 +388,27 @@ public class WastageController {
         WastageExcelExporter excelExporter = new WastageExcelExporter(wastageList);
 
         excelExporter.export(response);
+    }
+
+    private ArrayList<File> createWastesFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
+                                                       String AccountName) {
+        ArrayList<File> locationFiles = new ArrayList<>();
+        try {
+            File file;
+            List<SyncJobData> wasteList;
+            SalesFileDelimiterExporter excelExporter;
+
+            for (JournalBatch locationBatch : wasteBatches) {
+                wasteList = new ArrayList<>(locationBatch.getWasteData());
+ 
+                excelExporter = new SalesFileDelimiterExporter(syncJobType, wasteList);
+                file = excelExporter.prepareNDFFile(wasteList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
+                locationFiles.add(file);
+            }
+            return locationFiles;
+        }catch (Exception e){
+            e.printStackTrace();
+            return locationFiles;
+        }
     }
 }

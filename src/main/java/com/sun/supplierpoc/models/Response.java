@@ -16,10 +16,10 @@ public class Response {
     private ArrayList<Tender> salesTender = new ArrayList<>();
     private ArrayList<Discount> salesDiscount = new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
-    private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
     private ArrayList<DbMenuItemDefinition> menuItems = new ArrayList<>();
     private SalesStatistics salesStatistics = new SalesStatistics();
+    private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
     // Supplier Variables
     private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
@@ -27,6 +27,8 @@ public class Response {
 
     // Booked Production Variables
     private ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
+
+    private ArrayList<HashMap<String, String>> waste = new ArrayList<>();
 
     private ArrayList<SyncJobData> addedSyncJobData = new ArrayList<>();
     private ArrayList<OperationData> addedOperationData = new ArrayList<>();
@@ -74,6 +76,14 @@ public class Response {
         this.salesTender = salesTender;
     }
 
+    public ArrayList<Discount> getSalesDiscount() {
+        return salesDiscount;
+    }
+
+    public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
+        this.salesDiscount = salesDiscount;
+    }
+
     public ArrayList<Journal> getSalesMajorGroupGross() {
         return salesMajorGroupGross;
     }
@@ -96,6 +106,22 @@ public class Response {
 
     public void setSalesServiceCharge(ArrayList<ServiceCharge> salesServiceCharge) {
         this.salesServiceCharge = salesServiceCharge;
+    }
+
+    public ArrayList<DbMenuItemDefinition> getMenuItems() {
+        return menuItems;
+    }
+
+    public void setMenuItems(ArrayList<DbMenuItemDefinition> menuItems) {
+        this.menuItems = menuItems;
+    }
+
+    public SalesStatistics getSalesStatistics() {
+        return salesStatistics;
+    }
+
+    public void setSalesStatistics(SalesStatistics salesStatistics) {
+        this.salesStatistics = salesStatistics;
     }
 
     public ArrayList<SyncJobData> getAddedSuppliers() {
@@ -122,20 +148,12 @@ public class Response {
         this.bookedProduction = bookedProduction;
     }
 
-    public ArrayList<Discount> getSalesDiscount() {
-        return salesDiscount;
+    public ArrayList<HashMap<String, String>> getWaste() {
+        return waste;
     }
 
-    public void setSalesDiscount(ArrayList<Discount> salesDiscount) {
-        this.salesDiscount = salesDiscount;
-    }
-
-    public ArrayList<DbMenuItemDefinition> getMenuItems() {
-        return menuItems;
-    }
-
-    public void setMenuItems(ArrayList<DbMenuItemDefinition> menuItems) {
-        this.menuItems = menuItems;
+    public void setWaste(ArrayList<HashMap<String, String>> waste) {
+        this.waste = waste;
     }
 
     public ArrayList<SyncJobData> getAddedSyncJobData() {
@@ -154,11 +172,4 @@ public class Response {
         this.addedOperationData = addedOperationData;
     }
 
-    public SalesStatistics getSalesStatistics() {
-        return salesStatistics;
-    }
-
-    public void setSalesStatistics(SalesStatistics salesStatistics) {
-        this.salesStatistics = salesStatistics;
-    }
 }

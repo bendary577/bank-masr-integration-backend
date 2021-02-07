@@ -213,13 +213,6 @@ public class SalesController {
 
                         }
                         else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                            ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                            AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
-
-                            String username = sunCredentials.getUsername();
-                            String password = sunCredentials.getPassword();
-                            String host = sunCredentials.getHost();
-
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                             FtpClient ftpClient = new FtpClient();
                             ftpClient = ftpClient.createFTPClient(account);

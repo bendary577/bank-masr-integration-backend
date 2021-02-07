@@ -38,34 +38,33 @@ public class WastageService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getWastageData(SyncJobType syncJobType, ArrayList<Item> items,
+    public Response getWastageData(SyncJobType syncJobType, ArrayList<Item> items,
                                                   ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
                                                   ArrayList<WasteGroup> wasteGroups, Account account) {
 
-        HashMap<String, Object> response = new HashMap<>();
+        Response response = new Response();
 
         WebDriver driver = null;
         try{
             driver = setupEnvironment.setupSeleniumEnv(false);
         }
         catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
+            response.setStatus(false);
+            response.setMessage("Failed to establish connection with firefox driver.");
+
             return response;
         }
 
         ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
-        ArrayList<HashMap<String, Object>> wastesStatus;
-        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
+        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
 
         try{
             if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();
 
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                response.put("wastes", wastes);
+                response.setStatus(false);
+                response.setMessage("Invalid username and password.");
+
                 return response;
             }
 
@@ -84,9 +83,13 @@ public class WastageService {
                 driver.findElement(By.id("filterPanel_btnToggleFilter")).click();
             }
 
-            response = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
-            if (!response.get("status").equals(Constants.SUCCESS)){
+            HashMap<String, Object> dateResponse = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
+
+            if (!dateResponse.get("status").equals(Constants.SUCCESS)){
+                response.setStatus(false);
+                response.setMessage(String.valueOf(dateResponse.get("message")));
+
                 return response;
             }
 
@@ -98,10 +101,8 @@ public class WastageService {
 
             } catch (Exception e) {
                 driver.quit();
-
-                response.put("status", Constants.FAILED);
-                response.put("message", "Oracle Hospitality takes long time to load, Please try again after few minutes.");
-                response.put("invoices", journalEntries);
+                response.setStatus(false);
+                response.setMessage("Oracle Hospitality takes long time to load, Please try again after few minutes.");
                 return response;
             }
 
@@ -192,24 +193,25 @@ public class WastageService {
 
             driver.quit();
 
-            response.put("status", Constants.SUCCESS);
-            response.put("message", "");
-            response.put("wastes", journalEntries);
+            response.setStatus(true);
+            response.setWaste(journalEntries);
+
             return response;
+
 
         }catch (Exception e) {
             e.printStackTrace();
+
             driver.quit();
-            response.put("status", Constants.FAILED);
-            response.put("message", e.getMessage());
-            response.put("wastes", journalEntries);
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
             return response;
         }
     }
 
     private void getWasteDetails(
             ArrayList<Item> items, ArrayList<OverGroup> overGroups,
-            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
+            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, String>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
@@ -262,17 +264,17 @@ public class WastageService {
                     continue;
                 }
 
-                HashMap<String, Object> journalEntry = new HashMap<>();
+                HashMap<String, String> journalEntry = new HashMap<>();
 
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
                 journalEntry.put("accountingPeriod", ((String)waste.get("waste_date")).substring(2,6));
-                journalEntry.put("transactionDate", waste.get("waste_date"));
+                journalEntry.put("transactionDate", String.valueOf(waste.get("waste_date")));
 
-                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalWaste()));
-                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalWaste()) * -1);
+                journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalWaste())));
+                journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalWaste()) * -1));
 
                 journalEntry.put("fromCostCenter", costCenter.costCenter);
                 journalEntry.put("fromAccountCode", costCenter.accountCode);
@@ -314,24 +316,28 @@ public class WastageService {
     }
 
 
-    public ArrayList<SyncJobData> saveWastageSunData(ArrayList<HashMap<String, String>> wastes, SyncJob syncJob) {
-        ArrayList<SyncJobData> addedWaste = new ArrayList<>();
+    public void saveWastageSunData(ArrayList<JournalBatch> wasteBatches, SyncJob syncJob) {
+        ArrayList<SyncJobData> addedWaste;
+        ArrayList<HashMap<String, String>> wastes;
 
-        for (HashMap<String, String> waste : wastes) {
+        for (JournalBatch wasteBatch : wasteBatches) {
+            addedWaste = new ArrayList<>();
+            wastes = wasteBatch.getWaste();
+            for (HashMap<String, String> waste : wastes) {
+                SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
+                        syncJob.getId());
+                syncJobDataRepo.save(syncJobData);
 
-            SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-            syncJobDataRepo.save(syncJobData);
+                addedWaste.add(syncJobData);
+            }
 
-            addedWaste.add(syncJobData);
+            wasteBatch.setWasteData(addedWaste);
         }
-        return addedWaste;
-
     }
 
-    public HashMap<String, Object> getWastageReportData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
+    public Response getWastageReportData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
 
-        HashMap<String, Object> response = new HashMap<>();
+        Response response = new Response();
         String businessDate = syncJobType.getConfiguration().timePeriod;
         String fromDate = syncJobType.getConfiguration().fromDate;
         String toDate = syncJobType.getConfiguration().toDate;
@@ -341,28 +347,26 @@ public class WastageService {
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
 
-        ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
         ArrayList<HashMap<String, Object>> wastesStatus;
-        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
+        JournalBatch journalBatch;
+        ArrayList<HashMap<String, String>> journalEntries;
+        ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
-
-        WebDriver driver = null;
+        WebDriver driver;
         try{
             driver = setupEnvironment.setupSeleniumEnv(false);
         }
         catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
+            response.setStatus(false);
+            response.setMessage("Failed to establish connection with firefox driver.");
             return response;
         }
 
         if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
             driver.quit();
+            response.setStatus(false);
+            response.setMessage( "Invalid username and password.");
 
-            response.put("status", Constants.FAILED);
-            response.put("message", "Invalid username and password.");
-            response.put("wastes", wastes);
             return response;
         }
 
@@ -376,6 +380,9 @@ public class WastageService {
 
         for (CostCenter costCenter : locations) {
             try {
+                journalBatch = new JournalBatch();
+                journalEntries = new ArrayList<>();
+
                 if (!costCenter.checked) continue;
 
                 wastesStatus = new ArrayList<>();
@@ -385,22 +392,20 @@ public class WastageService {
                     WebDriverWait wait = new WebDriverWait(driver, 60);
                     wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
                 }
-                catch (Exception ex){ }
+                catch (Exception ignored){}
 
                 Response dateResponse = new Response();
                 if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)){
                     driver.quit();
 
                     if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
-                        response.put("status", Constants.FAILED);
-                        response.put("message", dateResponse.getMessage());
-                        response.put("wastes", new ArrayList<>());
+                        response.setStatus(false);
+                        response.setMessage(dateResponse.getMessage());
                         return response;
                     } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
-                        response.put("status", Constants.SUCCESS);
-                        response.put("message", "");
-                        response.put("wastes", new ArrayList<>());
-                        return response;
+                        response.setStatus(true);
+                        response.setMessage(Constants.NO_INFO);
+                        continue;
                     }
                 }
 
@@ -459,20 +464,22 @@ public class WastageService {
                     getWasteReportDetails(items, overGroups, costCenter, waste, syncJobType, driver, journalEntries);
                 }
 
+                journalBatch.setCostCenter(costCenter);
+                journalBatch.setWaste(journalEntries);
+                journalBatches.add(journalBatch);
+
             } catch (Exception e) {
                 driver.quit();
+                response.setStatus(false);
+                response.setMessage(e.getMessage());
 
-                response.put("status", Constants.FAILED);
-                response.put("message", e.getMessage());
-                response.put("wastes", journalEntries);
                 return response;
             }
         }
-        driver.quit();
 
-        response.put("status", Constants.SUCCESS);
-        response.put("message", "");
-        response.put("wastes", journalEntries);
+        driver.quit();
+        response.setStatus(true);
+        response.setJournalBatches(journalBatches);
         return response;
     }
 

@@ -72,9 +72,7 @@ public class SalesService {
 
                 Alert al = driver.switchTo().alert();
                 al.accept();
-            } catch (Exception Ex) {
-                System.out.println("No alert exits");
-            }
+            } catch (Exception Ex) { }
 
             if (costCentersLocation.size() > 0){
                 for (CostCenter costCenter : costCentersLocation) {

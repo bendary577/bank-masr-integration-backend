@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class JournalBatch {
     private CostCenter costCenter = new CostCenter();
@@ -14,6 +15,7 @@ public class JournalBatch {
     private ArrayList<Discount> salesDiscount= new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
+    private ArrayList<HashMap<String, String>> waste = new ArrayList<>();
 
     private SyncJobData salesDifferentData = new SyncJobData();
     private ArrayList<SyncJobData> salesTaxData = new ArrayList<>();
@@ -22,8 +24,14 @@ public class JournalBatch {
     private ArrayList<SyncJobData> salesMajorGroupGrossData = new ArrayList<>();
     private ArrayList<SyncJobData> salesServiceChargeData = new ArrayList<>();
     private ArrayList<SyncJobData> statisticsData = new ArrayList<>();
+    private ArrayList<SyncJobData> wasteData = new ArrayList<>();
 
     public JournalBatch() {}
+
+    public JournalBatch(CostCenter costCenter, ArrayList<HashMap<String, String>> waste) {
+        this.costCenter = costCenter;
+        this.waste = waste;
+    }
 
     public CostCenter getCostCenter() {
         return costCenter;
@@ -143,5 +151,21 @@ public class JournalBatch {
 
     public void setStatisticsData(ArrayList<SyncJobData> statisticsData) {
         this.statisticsData = statisticsData;
+    }
+
+    public ArrayList<HashMap<String, String>> getWaste() {
+        return waste;
+    }
+
+    public void setWaste(ArrayList<HashMap<String, String>> waste) {
+        this.waste = waste;
+    }
+
+    public ArrayList<SyncJobData> getWasteData() {
+        return wasteData;
+    }
+
+    public void setWasteData(ArrayList<SyncJobData> wasteData) {
+        this.wasteData = wasteData;
     }
 }

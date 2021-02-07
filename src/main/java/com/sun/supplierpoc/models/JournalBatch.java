@@ -15,7 +15,9 @@ public class JournalBatch {
     private ArrayList<Discount> salesDiscount= new ArrayList<>();
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
+
     private ArrayList<HashMap<String, String>> waste = new ArrayList<>();
+    private ArrayList<Journal> consumption = new ArrayList<>();
 
     private SyncJobData salesDifferentData = new SyncJobData();
     private ArrayList<SyncJobData> salesTaxData = new ArrayList<>();
@@ -25,6 +27,7 @@ public class JournalBatch {
     private ArrayList<SyncJobData> salesServiceChargeData = new ArrayList<>();
     private ArrayList<SyncJobData> statisticsData = new ArrayList<>();
     private ArrayList<SyncJobData> wasteData = new ArrayList<>();
+    private ArrayList<SyncJobData> consumptionData = new ArrayList<>();
 
     public JournalBatch() {}
 
@@ -167,5 +170,21 @@ public class JournalBatch {
 
     public void setWasteData(ArrayList<SyncJobData> wasteData) {
         this.wasteData = wasteData;
+    }
+
+    public ArrayList<Journal> getConsumption() {
+        return consumption;
+    }
+
+    public void setConsumption(ArrayList<Journal> consumption) {
+        this.consumption = consumption;
+    }
+
+    public ArrayList<SyncJobData> getConsumptionData() {
+        return consumptionData;
+    }
+
+    public void setConsumptionData(ArrayList<SyncJobData> consumptionData) {
+        this.consumptionData = consumptionData;
     }
 }

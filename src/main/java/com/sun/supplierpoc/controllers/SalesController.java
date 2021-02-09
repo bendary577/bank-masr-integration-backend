@@ -577,11 +577,11 @@ public class SalesController {
 
             for (JournalBatch locationBatch : salesBatches) {
                 salesList = new ArrayList<>();
-                salesList.addAll(locationBatch.getSalesTenderData());
                 salesList.addAll(locationBatch.getSalesMajorGroupGrossData());
                 salesList.addAll(locationBatch.getSalesTaxData());
-                salesList.addAll(locationBatch.getSalesDiscountData());
                 salesList.addAll(locationBatch.getSalesServiceChargeData());
+                salesList.addAll(locationBatch.getSalesDiscountData());
+                salesList.addAll(locationBatch.getSalesTenderData());
                 if(locationBatch.getSalesDifferentData().getId() != null){
                     salesList.add(locationBatch.getSalesDifferentData());
                 }

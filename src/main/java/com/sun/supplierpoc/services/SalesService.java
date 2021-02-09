@@ -884,16 +884,16 @@ public class SalesService {
             float totalServiceCharge = 0;
             float totalMajorGroupNet = 0;
 
-            // Save tenders {Debit}
-            ArrayList<Tender> tenders = journalBatch.getSalesTender();
-            for (Tender tender : tenders) {
-                if (tender.getTotal() == 0)
+            // Save majorGroup {Credit}
+            ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
+            for (Journal majorGroupJournal : majorGroupsGross) {
+                if (majorGroupJournal.getTotalCost() == 0)
                     continue;
 
-                saveTender(journalBatch, transactionDate, configuration, syncJob, tender);
+                saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
-                float tenderTotal = tender.getTotal();
-                totalTender += tenderTotal;
+                float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
+                totalMajorGroupNet += majorGroupGrossTotal;
             }
 
             // Save taxes {Credit}
@@ -906,18 +906,6 @@ public class SalesService {
 
                 float taxTotal = tax.getTotal();
                 totalTax += taxTotal;
-            }
-
-            // Save majorGroup {Credit}
-            ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
-            for (Journal majorGroupJournal : majorGroupsGross) {
-                if (majorGroupJournal.getTotalCost() == 0)
-                    continue;
-
-                saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
-
-                float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
-                totalMajorGroupNet += majorGroupGrossTotal;
             }
 
             // Save service charge {Credit}
@@ -959,9 +947,10 @@ public class SalesService {
 
                 discountData.put("fromLocation", discount.getCostCenter().accountCode);
                 discountData.put("toLocation", discount.getCostCenter().accountCode);
-                discountData.put("transactionReference", "Discount");
 
                 String description = "";
+                String reference = "Discount";
+
                 if(discount.getDiscount().equals("")){
                     description = "Discount Cost";
                 }else{
@@ -969,6 +958,7 @@ public class SalesService {
                 }
 
                 if (!discount.getCostCenter().costCenterReference.equals("")){
+                    reference = discount.getCostCenter().costCenterReference;
                     description = discount.getCostCenter().costCenterReference + " " + description;
                 }
 
@@ -977,6 +967,8 @@ public class SalesService {
                 }
 
                 discountData.put("description", description);
+                discountData.put("transactionReference", reference);
+
                 syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                 SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
@@ -1008,22 +1000,25 @@ public class SalesService {
                     discountData.put("fromLocation", discount.getCostCenter().accountCode);
                     discountData.put("toLocation", discount.getCostCenter().accountCode);
 
-                    discountData.put("transactionReference", "Discount Expense");
 
                     discountData.put("expensesAccount", discount.getAccount());
                     syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     String description = "";
+                    String reference = "Discount Expense";
                     if (discount.getCostCenter().costCenterReference.equals("")){
                         description = "Discount Expense";
                     }else{
                         description = "Discount Expense F " + discount.getCostCenter().costCenterReference;
+                        reference = discount.getCostCenter().costCenterReference;
                     }
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
                     }
 
                     discountData.put("description", description);
+                    discountData.put("transactionReference", reference);
+
 
                     SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());
@@ -1050,21 +1045,23 @@ public class SalesService {
                     discountData.put("fromLocation", discount.getCostCenter().accountCode);
                     discountData.put("toLocation", discount.getCostCenter().accountCode);
 
-                    discountData.put("transactionReference", "AR account");
-
                     discountData.put("expensesAccount", discount.getAccount());
 
                     String description = "";
+                    String reference = "AR account";
                     if (discount.getCostCenter().costCenterReference.equals("")){
                         description = "AR account";
                     }else{
                         description = "AR account F " + discount.getCostCenter().costCenterReference;
+                        reference = discount.getCostCenter().costCenterReference;
                     }
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
                     }
 
                     discountData.put("description", description);
+                    discountData.put("transactionReference", reference);
+
                     syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
@@ -1072,6 +1069,18 @@ public class SalesService {
                     syncJobDataRepo.save(syncJobData);
                     journalBatch.getSalesDiscountData().add(syncJobData);
                 }
+            }
+
+            // Save tenders {Debit}
+            ArrayList<Tender> tenders = journalBatch.getSalesTender();
+            for (Tender tender : tenders) {
+                if (tender.getTotal() == 0)
+                    continue;
+
+                saveTender(journalBatch, transactionDate, configuration, syncJob, tender);
+
+                float tenderTotal = tender.getTotal();
+                totalTender += tenderTotal;
             }
 
             float totalDr = totalTender;
@@ -1111,14 +1120,14 @@ public class SalesService {
                 differentData.put("fromLocation", journalBatch.getCostCenter().accountCode);
                 differentData.put("toLocation", journalBatch.getCostCenter().accountCode);
 
-                // 30 Char only
-                differentData.put("transactionReference", "Different");
-
                 String description = "";
+                String reference = "Different";
+
                 if (journalBatch.getCostCenter().costCenterReference.equals("")){
                     description = "Different";
                 }else{
                     description = journalBatch.getCostCenter().costCenterReference + " - different";
+                    reference = journalBatch.getCostCenter().costCenterReference;
                 }
 
                 if (description.length() > 50){
@@ -1126,6 +1135,8 @@ public class SalesService {
                 }
 
                 differentData.put("description", description);
+                differentData.put("transactionReference", reference);
+
                 syncJobDataService.prepareAnalysis(differentData, configuration, journalBatch.getCostCenter(), null, null);
 
                 SyncJobData syncJobData = new SyncJobData(differentData, Constants.RECEIVED, "", new Date(),
@@ -1163,10 +1174,13 @@ public class SalesService {
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoGuestAccount);
 
         String description = "No Guests";
+        String reference = "No Guests";
+
         if (!journalBatch.getCostCenter().costCenterReference.equals("")){
             description = journalBatch.getCostCenter().costCenterReference + " - " + description;
+            reference = journalBatch.getCostCenter().costCenterReference;
         }
-        statisticsData.put("transactionReference", "No Guests");
+        statisticsData.put("transactionReference", reference);
         statisticsData.put("description", description);
 
         syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
@@ -1192,10 +1206,12 @@ public class SalesService {
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoTablesAccount);
 
         description = "No Tables";
+        reference = "No Tables";
         if (!journalBatch.getCostCenter().costCenterReference.equals("")){
             description = journalBatch.getCostCenter().costCenterReference + " - " + description;
+            reference = journalBatch.getCostCenter().costCenterReference;
         }
-        statisticsData.put("transactionReference", "No Tables");
+        statisticsData.put("transactionReference", reference);
         statisticsData.put("description", description);
 
         syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
@@ -1221,10 +1237,12 @@ public class SalesService {
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoChecksAccount);
 
         description = "No Checks";
+        reference= "No Checks";
         if (!journalBatch.getCostCenter().costCenterReference.equals("")){
             description = journalBatch.getCostCenter().costCenterReference + " - " + description;
+            reference = journalBatch.getCostCenter().costCenterReference;
         }
-        statisticsData.put("transactionReference", "No Checks");
+        statisticsData.put("transactionReference", reference);
         statisticsData.put("description", description);
 
         syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
@@ -1239,6 +1257,8 @@ public class SalesService {
                                      SyncJob syncJob, Tender tender){
         float subTenderTotal = tender.getTotal();
         float tenderCommunicationTotal;
+
+        String reference = "Tender";
 
         if (tender.getCommunicationRate() > 0){
             tenderCommunicationTotal = (subTenderTotal * tender.getCommunicationRate())/100;
@@ -1265,15 +1285,16 @@ public class SalesService {
             tenderData.put("fromLocation", tender.getCostCenter().accountCode);
             tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
-            tenderData.put("transactionReference", "Tender");
 
             tenderData.put("expensesAccount", tender.getCommunicationAccount());
 
             String description = "";
+
             if (tender.getCostCenter().costCenterReference.equals("")){
                 description = tender.getCommunicationTender();
             }else{
                 description = tender.getCostCenter().costCenterReference + " " + tender.getCommunicationTender();
+                reference = tender.getCostCenter().costCenterReference;
             }
 
             if (description.length() > 50) {
@@ -1281,6 +1302,7 @@ public class SalesService {
             }
 
             tenderData.put("description", description);
+            tenderData.put("transactionReference", reference);
 
             if(configuration.salesConfiguration.addTenderAnalysis)
                 syncJobDataService.prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
@@ -1313,8 +1335,6 @@ public class SalesService {
         tenderData.put("fromLocation", tender.getCostCenter().accountCode);
         tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
-        tenderData.put("transactionReference", "Tender");
-
         tenderData.put("expensesAccount", tender.getAccount());
 
         String description = "";
@@ -1322,12 +1342,14 @@ public class SalesService {
             description = tender.getTender();
         }else{
             description = tender.getCostCenter().costCenterReference + " " + tender.getTender();
+            reference = tender.getCostCenter().costCenterReference;
         }
         if (description.length() > 50) {
             description = description.substring(0, 50);
         }
 
         tenderData.put("description", description);
+        tenderData.put("transactionReference", reference);
 
         if(configuration.salesConfiguration.addTenderAnalysis)
             syncJobDataService.prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
@@ -1358,10 +1380,13 @@ public class SalesService {
         taxData.put("toAccountCode", tax.getCostCenter().accountCode);
 
         String description = "";
+        String reference = "Taxes";
+
         if (tax.getCostCenter().costCenterReference.equals("")){
             description = tax.getTax();
         }else {
             description = tax.getCostCenter().costCenterReference + " " + tax.getTax();
+            reference = tax.getCostCenter().costCenterReference;
         }
 
         if (description.length() > 50) {
@@ -1369,7 +1394,7 @@ public class SalesService {
         }
 
         taxData.put("description", description);
-        taxData.put("transactionReference", "Taxes");
+        taxData.put("transactionReference", reference);
 
         syncJobDataService.prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
 
@@ -1404,8 +1429,11 @@ public class SalesService {
         majorGroupData.put("toAccountCode", majorGroupJournal.getCostCenter().accountCode);
 
         String description = "";
+        String reference = "Major Group";
+
         if (!majorGroupJournal.getCostCenter().costCenterReference.equals("")){
             description = majorGroupJournal.getCostCenter().costCenterReference;
+            reference = majorGroupJournal.getCostCenter().costCenterReference;
         }
 
         if(!configuration.salesConfiguration.syncMG){
@@ -1424,7 +1452,7 @@ public class SalesService {
         }
 
         majorGroupData.put("description", description);
-        majorGroupData.put("transactionReference", "Major Group");
+        majorGroupData.put("transactionReference", reference);
 
         SyncJobData syncJobData = new SyncJobData(majorGroupData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1450,14 +1478,16 @@ public class SalesService {
         serviceChargeData.put("fromLocation", serviceCharge.getCostCenter().accountCode);
         serviceChargeData.put("toLocation", serviceCharge.getCostCenter().accountCode);
 
-        serviceChargeData.put("transactionReference", "Service Charge");
         serviceChargeData.put("inventoryAccount", serviceCharge.getAccount());
 
         String description = "";
+        String reference = "Service Charge";
+
         if (serviceCharge.getCostCenter().costCenterReference.equals("")){
             description = "Service Charge";
         }else{
             description = serviceCharge.getCostCenter().costCenterReference + " " + serviceCharge.getServiceCharge();
+            reference = serviceCharge.getCostCenter().costCenterReference;
         }
 
         if (description.length() > 50) {
@@ -1465,6 +1495,7 @@ public class SalesService {
         }
 
         serviceChargeData.put("description", description);
+        serviceChargeData.put("transactionReference", reference);
 
         syncJobDataService.prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
 

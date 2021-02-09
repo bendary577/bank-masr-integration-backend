@@ -37,7 +37,7 @@ public class SalesFileDelimiterExporter {
         else
             this.extractInvoicesSyncJobData();
 
-        this.sortFileByAccountCode();
+//        this.sortFileByAccountCode();
         this.createFileContent();
         writer.print(this.fileContent);
     }
@@ -87,7 +87,7 @@ public class SalesFileDelimiterExporter {
     }
 
     private File createNDFFile() throws IOException {
-        this.sortFileByAccountCode();
+//        this.sortFileByAccountCode();
         this.createFileContent();
 
         File file = new File(this.fileName);
@@ -104,10 +104,22 @@ public class SalesFileDelimiterExporter {
         return file;
     }
 
+    /*
+    * Sort by account code credit accounts then debit accounts
+    * */
     private void sortFileByAccountCode(){
+//        this.syncJobDataCSVList.sort(new Comparator<>() {
+//            public int compare(SyncJobDataCSV o1, SyncJobDataCSV o2) {
+//                return o1.accountCode.compareTo(o2.accountCode);
+//            }
+//        });
+//        sortFileByCDMaker();
+    }
+
+    private void sortFileByCDMaker(){
         this.syncJobDataCSVList.sort(new Comparator<>() {
             public int compare(SyncJobDataCSV o1, SyncJobDataCSV o2) {
-                return o1.accountCode.compareTo(o2.accountCode);
+                return o1.DCMarker.compareTo(o2.DCMarker);
             }
         });
     }

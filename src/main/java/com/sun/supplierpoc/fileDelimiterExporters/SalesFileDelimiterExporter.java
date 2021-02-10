@@ -178,20 +178,30 @@ public class SalesFileDelimiterExporter {
     }
 
     private void extractSalesSyncJobData(){
+        SyncJobDataCSV syncJobDataCSV;
         for (SyncJobData syncJobData : listSyncJobData) {
             if(syncJobData.getData().containsKey("totalDr")){
-                this.syncJobDataCSVList.add(createSyncJobDataObject(syncJobData, "D"));
+                syncJobDataCSV = createSyncJobDataObject(syncJobData, "D");
+                if(syncJobDataCSV != null)
+                    this.syncJobDataCSVList.add(syncJobDataCSV);
             }else {
-                this.syncJobDataCSVList.add(createSyncJobDataObject(syncJobData, "C"));
+                syncJobDataCSV = createSyncJobDataObject(syncJobData, "C");
+                if(syncJobDataCSV != null)
+                    this.syncJobDataCSVList.add(syncJobDataCSV);
             }
 
         }
     }
 
     private void extractInvoicesSyncJobData(){
+        SyncJobDataCSV syncJobDataCSV;
         for (SyncJobData syncJobData : listSyncJobData) {
-            this.syncJobDataCSVList.add(createSyncJobDataObject(syncJobData, "D"));
-            this.syncJobDataCSVList.add(createSyncJobDataObject(syncJobData, "C"));
+            syncJobDataCSV = createSyncJobDataObject(syncJobData, "D");
+            if(syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+            syncJobDataCSV = createSyncJobDataObject(syncJobData, "C");
+            if(syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
         }
     }
 
@@ -304,7 +314,7 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.journalType = String.format("%-5s", syncJobDataCSV.journalType);
         }
 
-        // 15 char
+        /* 15 char */
         syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData);
         syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData);
         syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData);
@@ -315,6 +325,10 @@ public class SalesFileDelimiterExporter {
         syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData);
         syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData);
         syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData);
+
+        if (syncJobDataCSV.amount.equals("000000000000000000")){
+            return null;
+        }
 
         return syncJobDataCSV;
     }

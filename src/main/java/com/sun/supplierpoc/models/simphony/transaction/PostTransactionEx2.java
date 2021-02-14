@@ -17,6 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "PostTransactionEx2")
 public class PostTransactionEx2 {
+
     private pGuestCheck pGuestCheck;
 
     private ppMenuItemsEx ppMenuItemsEx;

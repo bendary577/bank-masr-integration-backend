@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.simphony.transaction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.supplierpoc.models.simphony.serviceCharge.pSvcChargeEx;
 import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 
@@ -13,12 +15,17 @@ import javax.xml.bind.annotation.*;
 })
 
 public class PostTransactionEx2Response {
+    @JsonIgnore
     @XmlElement(name = "pSvcChargeEx")
     private pSvcChargeEx pSvcChargeEx;
+
     @XmlElement(name = "pGuestCheck")
     private pGuestCheck pGuestCheck;
+
+    @JsonIgnore
     @XmlElement(name = "pTmedDetailEx2")
     private pTmedDetailEx2 pTmedDetailEx2;
+
     @XmlElement(name = "pTotalsResponseEx")
     private pTotalsResponseEx pTotalsResponseEx;
 
@@ -30,6 +37,7 @@ public class PostTransactionEx2Response {
         this.pSvcChargeEx = pSvcChargeEx;
     }
 
+    @JsonProperty(value = "guestCheck")
     public pGuestCheck getpGuestCheck() {
         return pGuestCheck;
     }
@@ -46,6 +54,7 @@ public class PostTransactionEx2Response {
         this.pTmedDetailEx2 = pTmedDetailEx2;
     }
 
+    @JsonProperty(value = "totalsResponse")
     public com.sun.supplierpoc.models.simphony.transaction.pTotalsResponseEx getpTotalsResponseEx() {
         return pTotalsResponseEx;
     }

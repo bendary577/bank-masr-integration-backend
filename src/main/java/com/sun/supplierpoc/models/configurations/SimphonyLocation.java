@@ -10,6 +10,13 @@ public class SimphonyLocation {
     public SimphonyLocation() {
     }
 
+    public SimphonyLocation(boolean checked, int employeeNumber, int revenueCenterID, String revenueCenterName) {
+        this.checked = checked;
+        this.employeeNumber = employeeNumber;
+        this.revenueCenterID = revenueCenterID;
+        this.revenueCenterName = revenueCenterName;
+    }
+
     public boolean isChecked() {
         return checked;
     }
@@ -49,4 +56,6 @@ public class SimphonyLocation {
     public void setSimphonyServer(String simphonyServer) {
         this.simphonyServer = simphonyServer;
     }
+
+
 }

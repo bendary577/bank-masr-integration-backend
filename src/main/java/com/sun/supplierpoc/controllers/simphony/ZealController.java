@@ -1,8 +1,12 @@
 package com.sun.supplierpoc.controllers.simphony;
+
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.models.simphony.ZealLoyaltyResponse;
+import com.sun.supplierpoc.models.simphony.ZealRedeemResponse;
 import com.sun.supplierpoc.models.simphony.check.ZealPayment;
 import com.sun.supplierpoc.models.simphony.check.ZealPoints;
 import com.sun.supplierpoc.models.simphony.check.ZealVoucher;
@@ -46,97 +50,97 @@ public class ZealController {
     @Autowired
     InvokerUserService invokerUserService;
 
-    @PostMapping("/zealPayment")
+    private Conversions conversions = new Conversions();
+
+    @PostMapping("/zealLoyalty")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> zealPayment(@RequestBody ZealPayment zealPayment) {
+    public ResponseEntity<?> zealPayment(@RequestHeader("Authorization") String authorization,
+                                         @RequestBody ZealPayment zealPayment) {
 
-        Response response = new Response();
+        ZealLoyaltyResponse response = new ZealLoyaltyResponse();
 
-        String username = "test1";
-        String password = "test@test";
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
+                InvokerUser user = invokerUserService.getInvokerUser(username, password);
 
-        InvokerUser user = invokerUserService.getInvokerUser(username, password);
+                //User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+                Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
-        //User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+                if (accountOptional.isPresent()) {
+                    Account account = accountOptional.get();
 
-        if (accountOptional.isPresent()) {
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                    SimphonyLocation location = generalSettings.getSimphonyLocationsByID(zealPayment.getRevenueCentreId());
 
-            Account account = accountOptional.get();
-
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-
-            ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
-
-            for (SimphonyLocation location : locations) {
-
-                if (location.isChecked()) {
-
-                    response = zealService.zealPaymentProcessor(zealPayment, user.getId(), account, location.getRevenueCenterID());
-
-                    if (!response.isStatus()) {
-
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    if (location.isChecked()) {
+                        response = zealService.zealPaymentProcessor(zealPayment, user, account, location);
+                        if (!response.isLoyalty()) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
                     }
-
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
+
+                String message = "Invalid Credentials";
+                response.setMessage(message);
+                response.setLoyalty(false);
+
             }
-
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
-
-        String message = "Invalid Credentials";
-        response.setMessage(message);
-        response.setStatus(false);
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    @PostMapping("/zealVoucher")
+    @PostMapping("/zealRedeem")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> zealVoucher(@RequestBody ZealVoucher zealVoucher) {
-        Response response = new Response();
+    public ResponseEntity<?> zealVoucher(@RequestHeader("Authorization") String authorization,
+                                         @RequestBody ZealVoucher zealVoucher) {
 
-        String username = "test1";
-        String password = "test@test";
+        ZealRedeemResponse response = new ZealRedeemResponse();
 
-        InvokerUser user = invokerUserService.getInvokerUser(username, password);
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
 
-        if (accountOptional.isPresent()) {
+                InvokerUser user = invokerUserService.getInvokerUser(username, password);
+                Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
-            Account account = accountOptional.get();
+                if (accountOptional.isPresent()) {
 
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                    Account account = accountOptional.get();
 
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                    SimphonyLocation location = generalSettings.getSimphonyLocationsByID(zealVoucher.getRevenueCentreId());
 
-            ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
-
-            for (SimphonyLocation location : locations) {
-
-                if (location.isChecked()) {
-
-                    response = zealService.zealVoucherProcessor(zealVoucher, username, user.getId(), account, location.getRevenueCenterID());
-
-                    if (!response.isStatus()) {
-
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    logger.info(location.toString());
+                    if (location.isChecked()) {
+                        response = zealService.zealVoucherProcessor(zealVoucher, user, account, location);
+                        if (!response.isStatus()) {
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
 
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
+                String message = "Invalid Credentials";
+                //response.setMessage(message);
+                response.setStatus(false);
             }
-
-
-            return ResponseEntity.status(HttpStatus.OK).body(response);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
-
-        String message = "Invalid Credentials";
-        response.setMessage(message);
-        response.setStatus(false);
-
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
     @PostMapping("/zealPoints")

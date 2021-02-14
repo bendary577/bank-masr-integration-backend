@@ -43,7 +43,8 @@ public class CreateOrder {
     @PostMapping(path ="/CreateOrder",produces= MediaType.APPLICATION_JSON)
     public ResponseEntity CreateOpenCheckRequest(@RequestHeader("Authorization") String authorization,
                                                  @RequestBody PostTransactionEx2 checkDetails) {
-        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().getCheckRevenueCenterID());
+
+        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().revenue());
         String username, password;
         try {
             final String[] values = conversions.convertBasicAuth(authorization);
@@ -59,7 +60,6 @@ public class CreateOrder {
                     if (accountOptional.isPresent()) {
                         Account account = accountOptional.get();
                         OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted(Constants.CREATE_CHECK, account.getId(), false);
-
 
                         if (!invokerUser.getTypeId().equals(operationType.getId())){
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to create check!");

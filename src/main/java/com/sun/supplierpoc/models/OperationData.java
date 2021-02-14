@@ -14,8 +14,6 @@ public class OperationData implements Serializable {
     @Id
     private String id;
     private HashMap<String, Object> data;
-    private String status;
-    private String reason;
     private Date creationDate;
     private String operationId;
     private boolean deleted;
@@ -23,10 +21,8 @@ public class OperationData implements Serializable {
     public OperationData() {
     }
 
-    public OperationData(HashMap<String, Object> data, String status, String reason, Date creationDate, String operationId) {
+    public OperationData(HashMap<String, Object> data, Date creationDate, String operationId) {
         this.data = data;
-        this.status = status;
-        this.reason = reason;
         this.creationDate = creationDate;
         this.operationId = operationId;
     }
@@ -45,22 +41,6 @@ public class OperationData implements Serializable {
 
     public void setData(HashMap<String, Object> data) {
         this.data = data;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
     }
 
     public Date getCreationDate() {

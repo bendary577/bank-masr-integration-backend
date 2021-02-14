@@ -73,7 +73,6 @@ public class MenuItemService {
             SimphonyPosApi_ConfigInfo simphonyPosApi_configInfo = new SimphonyPosApi_ConfigInfo();
             ArrayList<SimphonyPosApi_ConfigInfo> simphonyPosApi_configInfos = new ArrayList<>();
 
-
             simphonyPosApi_configInfo.setConfigurationInfoTypeID("MENUITEMDEFINITIONS");
             simphonyPosApi_configInfo.setStartIndex(startIndex);
             simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
@@ -451,7 +450,7 @@ public class MenuItemService {
         pGuestCheck.setCheckGuestCount("1");
         pGuestCheck.setCheckStatusBits("0");
         pGuestCheck.setEventObjectNum("0");
-        pGuestCheck.setCheckTableObjectNum("1");
+        pGuestCheck.setCheckTableObjectNum("0");
 
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();

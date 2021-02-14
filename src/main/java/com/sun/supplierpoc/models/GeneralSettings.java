@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class GeneralSettings {
+
     @Id
     private String id;
     private String accountId;
@@ -17,7 +18,6 @@ public class GeneralSettings {
     private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
     private ArrayList<CostCenter> locations = new ArrayList<>();
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
-    // Menu Items variables
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private Date creationDate;
     private boolean deleted;
@@ -34,11 +34,9 @@ public class GeneralSettings {
     public String getId() {
         return id;
     }
-
     public void setId(String id) {
         this.id = id;
     }
-
     public String getAccountId() {
         return accountId;
     }

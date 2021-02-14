@@ -58,7 +58,6 @@ public class MenuItemsController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-
             ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
             for (SimphonyLocation location : locations){
                 if(location.isChecked()){

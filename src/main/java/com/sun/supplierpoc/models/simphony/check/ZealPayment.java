@@ -14,6 +14,10 @@ public class ZealPayment implements Serializable {
     private int id;
     private String code = "-";
     private String totalDue = "-";
+    private String checkNumber = "-";
+    private int employeeId;
+    private String revenueCentreName;
+    private int revenueCentreId;
     private String message = "-";
     private String status = Constants.FAILED;
 
@@ -59,5 +63,37 @@ public class ZealPayment implements Serializable {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCheckNumber() {
+        return checkNumber;
+    }
+
+    public void setCheckNumber(String checkNumber) {
+        this.checkNumber = checkNumber;
+    }
+
+    public int getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(int employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getRevenueCentreName() {
+        return revenueCentreName;
+    }
+
+    public void setRevenueCentreName(String revenueCentreName) {
+        this.revenueCentreName = revenueCentreName;
+    }
+
+    public int getRevenueCentreId() {
+        return revenueCentreId;
+    }
+
+    public void setRevenueCentreId(int revenueCentreId) {
+        this.revenueCentreId = revenueCentreId;
     }
 }

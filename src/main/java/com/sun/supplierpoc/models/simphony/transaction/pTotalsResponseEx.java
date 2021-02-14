@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.simphony.transaction;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.supplierpoc.models.simphony.OperationalResult;
 
 import javax.xml.bind.annotation.XmlAccessType;
@@ -33,6 +35,8 @@ public class pTotalsResponseEx {
     @XmlElement(name = "TotalsSubTotal")
     private String TotalsSubTotal;
 
+    @JsonIgnore
+    @JsonProperty(value = "totalsServiceCharge")
     public String getTotalsOtherTotals() {
         return TotalsOtherTotals;
     }
@@ -41,6 +45,8 @@ public class pTotalsResponseEx {
         TotalsOtherTotals = totalsOtherTotals;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "totalsAutoServiceCharge")
     public String getTotalsAutoSvcChgTotals() {
         return TotalsAutoSvcChgTotals;
     }
@@ -49,6 +55,7 @@ public class pTotalsResponseEx {
         TotalsAutoSvcChgTotals = totalsAutoSvcChgTotals;
     }
 
+    @JsonIgnore
     public com.sun.supplierpoc.models.simphony.OperationalResult getOperationalResult() {
         return OperationalResult;
     }
@@ -57,6 +64,7 @@ public class pTotalsResponseEx {
         OperationalResult = operationalResult;
     }
 
+    @JsonProperty(value = "totalTax")
     public String getTotalsTaxTotals() {
         return TotalsTaxTotals;
     }
@@ -65,6 +73,8 @@ public class pTotalsResponseEx {
         TotalsTaxTotals = totalsTaxTotals;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "totalAmount")
     public String getTotalsTotalDue() {
         return TotalsTotalDue;
     }
@@ -73,6 +83,7 @@ public class pTotalsResponseEx {
         TotalsTotalDue = totalsTotalDue;
     }
 
+    @JsonProperty(value = "totalAmount")
     public String getTotalsSubTotal() {
         return TotalsSubTotal;
     }

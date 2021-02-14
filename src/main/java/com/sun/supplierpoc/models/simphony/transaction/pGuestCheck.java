@@ -1,4 +1,8 @@
 package com.sun.supplierpoc.models.simphony.transaction;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.sun.supplierpoc.models.simphony.PCheckInfoLines;
 
 import javax.xml.bind.annotation.*;
@@ -20,34 +24,49 @@ import java.util.List;
         "EventObjectNum"
 })
 public class pGuestCheck {
+
     @XmlElement(name = "CheckDateToFire")
     private String CheckDateToFire;
+
     @XmlElement(name = "CheckEmployeeObjectNum")
     private String CheckEmployeeObjectNum;
+
     @XmlElement(name = "CheckGuestCount")
     private String CheckGuestCount;
+
     @XmlElement(name = "CheckID")
     private String CheckID;
+
     @XmlElement(name = "CheckNum")
     private String CheckNum;
+
     @XmlElement(name = "CheckOrderType")
     private String CheckOrderType;
+
     @XmlElement(name = "CheckRevenueCenterID")
     private String CheckRevenueCenterID;
+
     @XmlElement(name = "CheckSeq")
     private String CheckSeq;
+
     @XmlElement(name = "CheckStatusBits")
     private String CheckStatusBits;
+
     @XmlElement(name = "CheckTableObjectNum")
     private String CheckTableObjectNum;
+
 //    @XmlElementWrapper(name="PCheckInfoLines")
 //    @XmlElement(name="string")
 //    private List<String> PCheckInfoLines;
-    @XmlElement(name="PCheckInfoLines")
+
+    @XmlElement(name = "PCheckInfoLines")
     private PCheckInfoLines PCheckInfoLines;
+
     @XmlElement(name = "EventObjectNum")
     private String EventObjectNum;
 
+    @JsonIgnore
+    @JsonProperty(value = "dateToFire")
     public String getCheckDateToFire() {
         return CheckDateToFire;
     }
@@ -56,14 +75,19 @@ public class pGuestCheck {
         CheckDateToFire = checkDateToFire;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "employeeId")
     public String getCheckEmployeeObjectNum() {
         return CheckEmployeeObjectNum;
     }
+
 
     public void setCheckEmployeeObjectNum(String checkEmployeeObjectNum) {
         CheckEmployeeObjectNum = checkEmployeeObjectNum;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "guestCount")
     public String getCheckGuestCount() {
         return CheckGuestCount;
     }
@@ -72,6 +96,8 @@ public class pGuestCheck {
         CheckGuestCount = checkGuestCount;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "checkID")
     public String getCheckID() {
         return CheckID;
     }
@@ -80,6 +106,7 @@ public class pGuestCheck {
         CheckID = checkID;
     }
 
+    @JsonProperty(value = "checkNumber")
     public String getCheckNum() {
         return CheckNum;
     }
@@ -88,6 +115,8 @@ public class pGuestCheck {
         CheckNum = checkNum;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "orderType")
     public String getCheckOrderType() {
         return CheckOrderType;
     }
@@ -96,6 +125,7 @@ public class pGuestCheck {
         CheckOrderType = checkOrderType;
     }
 
+    @JsonIgnore
     public String getCheckRevenueCenterID() {
         return CheckRevenueCenterID;
     }
@@ -104,6 +134,8 @@ public class pGuestCheck {
         CheckRevenueCenterID = checkRevenueCenterID;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "checkSequence")
     public String getCheckSeq() {
         return CheckSeq;
     }
@@ -112,6 +144,8 @@ public class pGuestCheck {
         CheckSeq = checkSeq;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "checkStatus")
     public String getCheckStatusBits() {
         return CheckStatusBits;
     }
@@ -120,6 +154,8 @@ public class pGuestCheck {
         CheckStatusBits = checkStatusBits;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "tableNumber")
     public String getCheckTableObjectNum() {
         return CheckTableObjectNum;
     }
@@ -128,6 +164,8 @@ public class pGuestCheck {
         CheckTableObjectNum = checkTableObjectNum;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "checkInfoLines")
     public com.sun.supplierpoc.models.simphony.PCheckInfoLines getPCheckInfoLines() {
         return PCheckInfoLines;
     }
@@ -136,6 +174,8 @@ public class pGuestCheck {
         this.PCheckInfoLines = PCheckInfoLines;
     }
 
+    @JsonIgnore
+    @JsonProperty(value = "eventObjectNum")
     public String getEventObjectNum() {
         return EventObjectNum;
     }

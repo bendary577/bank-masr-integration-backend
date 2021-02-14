@@ -4,11 +4,13 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.SyncJobDataController;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.Configuration;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.soapModels.Supplier;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -26,13 +28,15 @@ public class InvoiceService {
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
     private SyncJobDataController syncJobTypeController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, int typeFlag
-                                                   , SyncJobType supplierSyncJobType, ArrayList<CostCenter> costCenters,
+                                                   , ArrayList<Supplier> suppliers, ArrayList<CostCenter> costCenters,
                                                    ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account,
                                                    String timePeriod, String fromDate, String toDate){
         HashMap<String, Object> response = new HashMap<>();
@@ -63,15 +67,15 @@ public class InvoiceService {
 
             if (typeFlag == 1){
                 HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
-                        supplierSyncJobType, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
+                        suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
                         timePeriod, fromDate, toDate);
                 if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
                     return invoiceResponse;
                 }
                 invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
             }else if (typeFlag == 2){
-                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
-                        supplierSyncJobType, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
+                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, suppliers,
+                        costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
                         timePeriod, fromDate, toDate);
                 if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
                     return accountPayableResponse;
@@ -80,7 +84,7 @@ public class InvoiceService {
                 invoices.addAll(accountPayable);
             }else{
                 HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
-                        supplierSyncJobType, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
+                        suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
                         timePeriod, fromDate, toDate);
                 if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
                     return invoiceResponse;
@@ -88,7 +92,7 @@ public class InvoiceService {
                 invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
 
                 HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
-                        supplierSyncJobType, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
+                        suppliers, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
                         timePeriod, fromDate, toDate);
                 if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
                     return accountPayableResponse;
@@ -120,12 +124,11 @@ public class InvoiceService {
 
 
     private HashMap<String, Object> getAccountPayableData(Boolean creditNoteFlag,
-                                                          SyncJobType supplierSyncJobType,
+                                                          ArrayList<Supplier> suppliers,
                                                           ArrayList<CostCenter> costCenters, WebDriver driver,
                                                           String url, String timePeriod, String fromDate, String toDate){
         HashMap<String, Object> response;
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
-
         driver.get(url);
 
         Select select = new Select(driver.findElement(By.id("_ctl5")));
@@ -184,8 +187,6 @@ public class InvoiceService {
 
         ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
 
-        ArrayList<SyncJobData> suppliers =  syncJobTypeController.getSyncJobData(supplierSyncJobType.getId());
-
         while (true){
             for (int i = 1; i < rows.size(); i++) {
                 HashMap<String, Object> invoice = new HashMap<>();
@@ -209,7 +210,7 @@ public class InvoiceService {
                 // check if vendor exits in middleware
                 td = cols.get(columns.indexOf("vendor"));
 
-                SyncJobData oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+                Supplier oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
 
                 if (oldSupplierData == null) {
                     continue;
@@ -419,8 +420,8 @@ public class InvoiceService {
     //////////////////////////////////////////////// Invoices Receipts //////////////////////////////////////////////////
 
 
-    public HashMap<String, Object> getInvoicesReceiptsData(Boolean creditNoteFlag, int typeFlag
-            , SyncJobType supplierSyncJobType, ArrayList<CostCenter> costCenters,
+    public HashMap<String, Object> getInvoicesReceiptsData(Boolean creditNoteFlag, int typeFlag, Configuration configuration,
+                                                           ArrayList<CostCenter> costCenters, ArrayList<Supplier> suppliers,
                                                            ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account,
                                                            String timePeriod, String fromDate, String toDate){
 
@@ -438,7 +439,7 @@ public class InvoiceService {
         }
 
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
-        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
+        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
 
         try {
             if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK , account)){
@@ -451,6 +452,13 @@ public class InvoiceService {
             }
 
             driver.get(Constants.RECEIPTS_LINK);
+
+            // Open filter search
+            String filterStatus = driver.findElement(By.id("filterPanel_btnToggleFilter")).getAttribute("value");
+
+            if (filterStatus.equals("Show Filter")){
+                driver.findElement(By.id("filterPanel_btnToggleFilter")).click();
+            }
 
             Select select = new Select(driver.findElement(By.id("_ctl5")));
 
@@ -508,8 +516,6 @@ public class InvoiceService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
 
-            ArrayList<SyncJobData> suppliers =  syncJobTypeController.getSyncJobData(supplierSyncJobType.getId());
-
             while (true){
                 for (int i = 1; i < rows.size(); i++) {
                     HashMap<String, Object> invoice = new HashMap<>();
@@ -546,7 +552,7 @@ public class InvoiceService {
                     // check if vendor exits in middleware
                     td = cols.get(columns.indexOf("vendor"));
 
-                    SyncJobData oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+                    Supplier oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
 
                     if (oldSupplierData == null) {
                         continue;
@@ -557,7 +563,7 @@ public class InvoiceService {
                     String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
                     link = link.substring(link.indexOf("'") + 1, link.lastIndexOf("'"));
 
-                    String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Receiving/" + link;
+                    String fullLink = "https://mte3-ohim.oracleindustry.com/InventoryManagement/Purchase/Receiving/" + link;
                     invoice.put("reference_link", fullLink);
 
                     td = cols.get(columns.indexOf("delivery_date"));
@@ -595,7 +601,7 @@ public class InvoiceService {
             }
 
             for (HashMap<String, Object> invoice:invoices) {
-                getInvoiceReceiptsDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
+                getInvoiceReceiptsDetails(configuration, items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
             }
 
             driver.quit();
@@ -616,9 +622,9 @@ public class InvoiceService {
 
     }
 
-    private void getInvoiceReceiptsDetails(
+    private void getInvoiceReceiptsDetails(Configuration configuration,
             ArrayList<Item> items, ArrayList<OverGroup> overGroups, HashMap<String, Object> invoice, WebDriver driver,
-            ArrayList<HashMap<String, Object>> journalEntries, boolean flag){
+                                           ArrayList<HashMap<String, String>> journalEntries, boolean flag){
         ArrayList<Journal> journals = new ArrayList<>();
 
         // Get Receipt page
@@ -683,16 +689,24 @@ public class InvoiceService {
             }
 
             for (Journal journal : journals) {
-                HashMap<String, Object> journalEntry = new HashMap<>();
+                HashMap<String, String> journalEntry = new HashMap<>();
+
+                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+                if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
+                    continue;
 
                 CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
-                SyncJobData supplier = (SyncJobData) invoice.get("vendor");
+                Supplier supplier = (Supplier) invoice.get("vendor");
 
                 if (toCostCenter.costCenterReference.equals("")){
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
+                if(toCostCenter.location != null)
+                    syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter.location, null, null);
+                else
+                    syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter, null, null);
 
-                journalEntry.put("invoiceNo", invoice.get("document"));
+                journalEntry.put("invoiceNo", (String) invoice.get("document"));
 
                 if (reference == null || reference.equals("")){
                     reference = (String) invoice.get("document");
@@ -713,20 +727,20 @@ public class InvoiceService {
                 }
 
                 journalEntry.put("accountingPeriod", ((String)invoice.get("invoice_date")).substring(2,6));
-                journalEntry.put("transactionDate", invoice.get("invoice_date"));
+                journalEntry.put("transactionDate", (String) invoice.get("invoice_date"));
 
-                journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalCost()));
-                journalEntry.put("totalDr", conversions.roundUpFloat(journal.getTotalCost()) * -1);
+                journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
+                journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
 
                 if (!flag){
-                    journalEntry.put("fromCostCenter", supplier.getData().get("supplier"));
-                    journalEntry.put("fromAccountCode", supplier.getData().get("accountCode"));
+                    journalEntry.put("fromCostCenter", supplier.getSupplierName());
+                    journalEntry.put("fromAccountCode", supplier.getAccountCode());
 
                     journalEntry.put("toCostCenter", toCostCenter.costCenter);
                     journalEntry.put("toAccountCode", toCostCenter.accountCode);
                 }else{
-                    journalEntry.put("toCostCenter", supplier.getData().get("supplier"));
-                    journalEntry.put("toAccountCode", supplier.getData().get("accountCode"));
+                    journalEntry.put("toCostCenter", supplier.getSupplierName());
+                    journalEntry.put("toAccountCode", supplier.getAccountCode());
 
                     journalEntry.put("fromCostCenter", toCostCenter.costCenter);
                     journalEntry.put("fromAccountCode", toCostCenter.accountCode);
@@ -735,17 +749,17 @@ public class InvoiceService {
                 journalEntry.put("fromLocation", toCostCenter.accountCode);
                 journalEntry.put("toLocation", toCostCenter.accountCode);
 
-                journalEntry.put("status", invoice.get("status"));
-                journalEntry.put("invoiceDate", invoice.get("invoice_date"));
+                journalEntry.put("status", (String) invoice.get("status"));
+                journalEntry.put("invoiceDate", (String) invoice.get("invoice_date"));
 
-                journalEntry.put("createdBy", invoice.get("created_by"));
-                journalEntry.put("createdAt", invoice.get("created_at"));
+                journalEntry.put("createdBy", (String) invoice.get("created_by"));
+                journalEntry.put("createdAt", (String) invoice.get("created_at"));
 
                 String description = "";
                 if (!flag){
-                    description = "Invoice F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
+                    description = "Inv F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
                 }else{
-                    description = "Credit Note F "+ supplier.getData().get("supplier") + " T " + toCostCenter.costCenterReference;
+                    description = "CN F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
                 }
 
                 if (description.length() > 50){
@@ -755,17 +769,12 @@ public class InvoiceService {
                 journalEntry.put("description", description);
                 journalEntry.put("overGroup", journal.getOverGroup());
 
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-
-                if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
-                    continue;
-
                 if (!flag){ // Invoice from supplier to cost center
-                    journalEntry.put("inventoryAccount", supplier.getData().get("accountCode"));
+                    journalEntry.put("inventoryAccount", supplier.getAccountCode());
                     journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
                 }else{  // Credit Note from cost center to supplier
                     journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                    journalEntry.put("expensesAccount", supplier.getData().get("accountCode"));
+                    journalEntry.put("expensesAccount", supplier.getAccountCode());
                 }
 
                 journalEntries.add(journalEntry);
@@ -782,13 +791,13 @@ public class InvoiceService {
 
         for (HashMap<String, String> invoice : invoices) {
             // check existence of invoice in middleware (UNIQUE: receiptNo with over group)
-            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
-                    invoice.get("overGroup"));
-            if (oldInvoice != null){
-                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
-                    continue;
-                }
-            }
+//            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
+//                    invoice.get("overGroup"));
+//            if (oldInvoice != null){
+//                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
+//                    continue;
+//                }
+//            }
 
             // Invoice Part
             if (!flag) {

@@ -2,7 +2,7 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.excelExporters.SalesExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
@@ -12,16 +12,13 @@ import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
@@ -216,25 +213,20 @@ public class SalesController {
 
                         }
                         else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                            ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                            AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
-
-                            String username = sunCredentials.getUsername();
-                            String password = sunCredentials.getPassword();
-                            String host = sunCredentials.getHost();
-
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                            FtpClient ftpClient = new FtpClient();
+                            ftpClient = ftpClient.createFTPClient(account);
 
-                            if (!username.equals("") && !password.equals("") && !host.equals("")){
-                                FtpClient ftpClient = new FtpClient(host, username, password);
+                            SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+                            if(syncJobType.getConfiguration().exportFilePerLocation){
+                                ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
+                                        syncJobType, account.getName());
+                            }else {
+                                File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
+                            }
+
+                            if (ftpClient != null){
                                 if(ftpClient.open()){
-                                    if(syncJobType.getConfiguration().exportFilePerLocation){
-                                        ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
-                                                syncJobType, account.getName());
-                                    }else {
-                                        File file = createSalesFile(salesList, syncJobType, account.getName());
-                                    }
-
 //                                if (ftpClient.putFileToPath(file, fileName)){
                                     if (true){
                                         syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
@@ -262,13 +254,6 @@ public class SalesController {
                                 }
                             }
                             else{
-                                if(syncJobType.getConfiguration().exportFilePerLocation){
-                                    ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
-                                            syncJobType, account.getName());
-                                }else {
-                                    File file = createSalesFile(salesList, syncJobType, account.getName());
-                                }
-
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Sync sales successfully.", Constants.SUCCESS);
@@ -358,11 +343,12 @@ public class SalesController {
             String month = monthFormat.format(calendar.getTime());
             String date = fileDateFormat.format(calendar.getTime());
 
-            String path = account.getName() + "/" + month;
+            String path = account.getName();
             String fileName = date + ".ndf";
             boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
-            generateSingleFile(null, path, fileName, perLocation);
+            GeneralExporterMethods exporterMethods = new GeneralExporterMethods(fileName);
+            exporterMethods.generateSingleFile(null, path, month, fileName, perLocation);
 
             String message = "Sync sales of last month successfully";
             response.setStatus(true);
@@ -581,165 +567,21 @@ public class SalesController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @GetMapping("/sales/export/excel")
-    public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
-                              HttpServletResponse response) throws IOException {
-        response.setContentType("application/octet-stream");
-        DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
-        String currentDateTime = dateFormatter.format(new Date());
-
-        String headerKey = "Content-Disposition";
-        String headerValue = "attachment; filename=Sales" + currentDateTime + ".xlsx";
-        response.setHeader(headerKey, headerValue);
-
-        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,
-                false);
-
-        SalesExcelExporter excelExporter = new SalesExcelExporter(salesList);
-
-        excelExporter.export(response);
-    }
-
-    @GetMapping("/sales/export/csv")
-    public void exportToText(Principal principal,
-                             @RequestParam(name = "syncJobId") String syncJobId,
-                              HttpServletResponse response) throws IOException {
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
-        response.setContentType("application/octet-stream");
-
-        List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId, false);
-
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
-
-
-        String businessDate =  syncJobType.getConfiguration().timePeriod;
-        String fromDate =  syncJobType.getConfiguration().fromDate;
-        String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-
-        String fileName = "month/" + transactionDate.substring(4) + transactionDate.substring(2,4) + transactionDate.substring(0,2);
-
-        String headerKey = HttpHeaders.CONTENT_DISPOSITION;
-        String headerValue = "attachment; filename=" + fileName + ".ndf";
-        response.setHeader(headerKey, headerValue);
-        response.setContentType("text/csv");
-
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName + ".ndf", syncJobType, salesList);
-
-        excelExporter.writeSyncData(response.getWriter());
-    }
-
-    @GetMapping("/listSyncFiles")
-    public ResponseEntity listSyncFiles(Principal principal) {
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
-
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter();
-        return ResponseEntity.status(HttpStatus.OK).body(excelExporter.ListSyncFiles(account.getName()));
-    }
-
-    @GetMapping("/sales/export/generateSingleFile")
-    public void generateSingleFileRequest(Principal principal, HttpServletResponse response) throws IOException {
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
-
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES, account.getId(), false);
-        boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
-
-        DateFormat dateFormat = new SimpleDateFormat("MMyyy");
-        DateFormat monthFormat = new SimpleDateFormat("MM");
-
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MONTH, -1);
-
-        String month = monthFormat.format(calendar.getTime());
-        String date = dateFormat.format(calendar.getTime());
-
-        String fileDirectory = account.getName() + "/" + month;
-        String fileName = date + ".ndf";
-
-        String headerKey = HttpHeaders.CONTENT_DISPOSITION;
-        String headerValue = "attachment; filename=" + fileName;
-        response.setHeader(headerKey, headerValue);
-        response.setContentType("application/octet-stream");
-        response.setContentType("text/csv");
-
-        generateSingleFile(response.getWriter(), fileDirectory, fileName, perLocation);
-    }
-
-    private void generateSingleFile(PrintWriter printWriter, String path, String fileName, boolean perLocation) throws IOException {
-        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(fileName);
-        excelExporter.generateSingleFile(printWriter, path, fileName, perLocation);
-    }
-
-    private File createSalesFile(List<SyncJobData> salesList, SyncJobType syncJobType, String AccountName) {
-        try {
-            DateFormatSymbols dfs = new DateFormatSymbols();
-            String[] weekdays = dfs.getWeekdays();
-
-            String transactionDate = salesList.get(0).getData().get("transactionDate");
-            Calendar cal = Calendar.getInstance();
-            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-            cal.setTime(date);
-            int day = cal.get(Calendar.DAY_OF_WEEK);
-            int Month = cal.get(Calendar.MONTH) + 1;
-            String dayName = weekdays[day];
-            String fileExtension = ".ndf";
-
-            File file;
-            String fileName;
-            String fileDirectory = AccountName + "/" + Month + "/";
-
-            fileName = fileDirectory + transactionDate + dayName.substring(0,3)  + fileExtension;
-
-            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                    fileName, syncJobType, salesList);
-
-            file = excelExporter.createNDFFile();
-            System.out.println(fileName);
-
-            return file;
-        }catch (Exception e){
-            return new File("Sales.ndf");
-        }
-    }
-
     private ArrayList<File> createSalesFilePerLocation(List<JournalBatch> salesBatches, SyncJobType syncJobType,
                                                        String AccountName) {
         ArrayList<File> locationFiles = new ArrayList<>();
         try {
-            List<SyncJobData> salesList;
-            DateFormatSymbols dfs = new DateFormatSymbols();
-            String[] weekdays = dfs.getWeekdays();
-
-            String fileExtension = ".ndf";
-            String businessDate =  syncJobType.getConfiguration().timePeriod;
-            String fromDate =  syncJobType.getConfiguration().fromDate;
-            String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-            Calendar cal = Calendar.getInstance();
-            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-            cal.setTime(date);
-            int day = cal.get(Calendar.DAY_OF_WEEK);
-            int Month = cal.get(Calendar.MONTH) + 1;
-            String dayName = weekdays[day];
-
-            SalesFileDelimiterExporter excelExporter;
             File file;
-            String fileName;
-            String fileDirectory;
+            List<SyncJobData> salesList;
+            SalesFileDelimiterExporter excelExporter;
 
             for (JournalBatch locationBatch : salesBatches) {
-                fileDirectory = AccountName + "/" + Month + "/" + locationBatch.getCostCenter().costCenterReference + "/";
-
                 salesList = new ArrayList<>();
-                salesList.addAll(locationBatch.getSalesTenderData());
                 salesList.addAll(locationBatch.getSalesMajorGroupGrossData());
                 salesList.addAll(locationBatch.getSalesTaxData());
-                salesList.addAll(locationBatch.getSalesDiscountData());
                 salesList.addAll(locationBatch.getSalesServiceChargeData());
+                salesList.addAll(locationBatch.getSalesDiscountData());
+                salesList.addAll(locationBatch.getSalesTenderData());
                 if(locationBatch.getSalesDifferentData().getId() != null){
                     salesList.add(locationBatch.getSalesDifferentData());
                 }
@@ -747,13 +589,8 @@ public class SalesController {
                     salesList.addAll(locationBatch.getStatisticsData());
                 }
 
-                fileName = fileDirectory + transactionDate + dayName.substring(0,3) + " - " +
-                        locationBatch.getCostCenter().costCenterReference + fileExtension;
-
-                excelExporter = new SalesFileDelimiterExporter(fileName, syncJobType, salesList);
-                file = excelExporter.createNDFFile();
-
-                System.out.println(fileName);
+                excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+                file = excelExporter.prepareNDFFile(salesList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
                 locationFiles.add(file);
             }
             return locationFiles;

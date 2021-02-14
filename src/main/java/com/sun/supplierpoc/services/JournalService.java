@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
@@ -28,6 +29,8 @@ public class JournalService {
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -37,35 +40,34 @@ public class JournalService {
     /*
     * Get consumptions entries based on cost center
     * */
-    public HashMap<String, Object> getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+    public Response getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
                                                   ArrayList<ItemGroup> itemGroups, Account account){
-        HashMap<String, Object> response = new HashMap<>();
+        Response response = new Response();
 
         WebDriver driver;
         try{
             driver = setupEnvironment.setupSeleniumEnv(false);
         }
         catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
+            response.setStatus(false);
+            response.setMessage("Failed to establish connection with firefox driver.");
             return response;
         }
 
         ArrayList<Journal> journals;
-        ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
+        JournalBatch journalBatch;
+        ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
         String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)){
                 driver.quit();
 
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                response.put("journals", journalsEntries);
+                response.setStatus(false);
+                response.setMessage("Invalid username and password.");
                 return response;
             }
             // just wait to make sure credentials of user saved to be able to move to another pages.
@@ -88,30 +90,31 @@ public class JournalService {
                 System.out.println(ex.getMessage());
             }
 
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
-                    "", "", driver);
+            Response dateResponse = new Response();
+            if (setupEnvironment.runReport(businessDate, fromDate, toDate, new CostCenter(), new RevenueCenter(), driver, dateResponse)){
+                driver.quit();
 
-            if (!dateResponse.isStatus()){
-                response.put("status", Constants.FAILED);
-                response.put("message", dateResponse.getMessage());
-                response.put("journals", journalsEntries);
-                return response;
+                if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                    response.setStatus(false);
+                    response.setMessage(dateResponse.getMessage());
+                    return response;
+                } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                    response.setStatus(true);
+                    response.setMessage(dateResponse.getMessage());
+                    return response;
+                }
             }
-
-            driver.findElement(By.id("Run Report")).click();
 
             journalUrl = "https://mte03-ohra-prod.hospitality.oracleindustry.com/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
             driver.get(journalUrl);
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-
             if (rows.size() < 4){
                 driver.quit();
 
-                response.put("status", Constants.SUCCESS);
-                response.put("message", "There is no journals in selected range");
-                response.put("journals", journalsEntries);
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
                 return response;
             }
 
@@ -145,85 +148,66 @@ public class JournalService {
                 selectedCostCenters.add(journal);
             }
 
-            String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-
             for (HashMap<String, Object> costCenter : selectedCostCenters) {
-                try {
-                    journals = new ArrayList<>();
+                journalBatch = new JournalBatch();
+                journals = new ArrayList<>();
 
-                    driver.get(baseURL + costCenter.get("extensions"));
+                driver.get(Constants.OHRA_LINK + costCenter.get("extensions"));
 
-                    rows = driver.findElements(By.tagName("tr"));
+                rows = driver.findElements(By.tagName("tr"));
 
-                    if (rows.size() <= 3){
+                if (rows.size() <= 3){
+                    continue;
+                }
+
+                columns = setupEnvironment.getTableColumns(rows, false, 3);
+
+                for (int i = 6; i < rows.size(); i++) {
+                    HashMap<String, Object> transferDetails = new HashMap<>();
+                    WebElement row = rows.get(i);
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                    if (cols.size() != columns.size()) {
                         continue;
                     }
 
-                    columns = setupEnvironment.getTableColumns(rows, false, 3);
+                    WebElement td = cols.get(columns.indexOf("item_group"));
 
-                    for (int i = 6; i < rows.size(); i++) {
-                        HashMap<String, Object> transferDetails = new HashMap<>();
-                        WebElement row = rows.get(i);
-                        List<WebElement> cols = row.findElements(By.tagName("td"));
+                    ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
 
-                        if (cols.size() != columns.size()) {
-                            continue;
-                        }
-
-                        // check if this Item group belong to selected Item groups
-                        WebElement td = cols.get(columns.indexOf("item_group"));
-
-                        ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
-
-                        if (!oldItemData.getChecked()) {
-                            continue;
-                        }
-
-                        String overGroup = oldItemData.getOverGroup();
-
-
-                        for (int j = 0; j < cols.size(); j++) {
-                            transferDetails.put(columns.get(j), cols.get(j).getText().strip());
-                        }
-
-                        Journal journal = new Journal();
-                        float waste = conversions.convertStringToFloat((String) transferDetails.get("waste"));
-                        float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
-                        float variance = conversions.convertStringToFloat((String) transferDetails.get("variance"));
-                        float transfer = conversions.convertStringToFloat((String) transferDetails.get("net_transfers"));
-
-                        journals = journal.checkExistence(journals, overGroup, waste,cost, variance, transfer);
-
-                    }
-                    for (Journal journal : journals) {
-                        HashMap<String, Object> journalsEntry = new HashMap<>();
-
-                        journalsEntry.put("cost_center", costCenter.get("cost_center"));
-                        journalsEntry.put("journal", journal);
-
-                        journalsEntries.add(journalsEntry);
+                    if (!oldItemData.getChecked()) {
+                        continue;
                     }
 
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    String overGroup = oldItemData.getOverGroup();
+
+
+                    for (int j = 0; j < cols.size(); j++) {
+                        transferDetails.put(columns.get(j), cols.get(j).getText().strip());
+                    }
+
+                    Journal journal = new Journal();
+                    float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
+                    journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
                 }
-            }
 
+                journalBatch.setCostCenter((CostCenter) costCenter.get("cost_center"));
+                journalBatch.setConsumption(journals);
+                journalBatches.add(journalBatch);
+            }
 
             driver.quit();
 
-            response.put("status", Constants.SUCCESS);
-            response.put("message", "");
-            response.put("journals", journalsEntries);
+            response.setStatus(true);
+            response.setJournalBatches(journalBatches);
             return response;
 
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
 
-            response.put("status", Constants.FAILED);
-            response.put("message", e.getMessage());
-            response.put("journals", journalsEntries);
+            response.setStatus(false);
+            response.setMessage("Failed to get consumption entries from Oracle Hospitality.");
             return response;
         }
     }
@@ -232,49 +216,50 @@ public class JournalService {
     /*
      * Get consumptions entries based on location
      * */
-    public HashMap<String, Object> getJournalData(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+    public Response getJournalData(SyncJobType journalSyncJobType,
                                                   ArrayList<CostCenter> costCentersLocation,
                                                   ArrayList<ItemGroup> itemGroups, Account account){
-        HashMap<String, Object> response = new HashMap<>();
+        Response response = new Response();
 
         WebDriver driver;
         try{
             driver = setupEnvironment.setupSeleniumEnv(false);
         }
         catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
+            response.setStatus(false);
+            response.setMessage("Failed to establish connection with firefox driver.");
             return response;
         }
 
         ArrayList<Journal> journals;
-        ArrayList<HashMap<String, Object>> journalsEntries = new ArrayList<>();
+        JournalBatch journalBatch;
+        ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
         String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)){
                 driver.quit();
-
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                response.put("journals", journalsEntries);
+                response.setStatus(false);
+                response.setMessage("Invalid username and password.");
                 return response;
             }
-            // just wait to make sure credentials of user saved to be able to move to another pages.
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 5);
                 wait.until(ExpectedConditions.alertIsPresent());
             }
-            catch (Exception e) {
-                System.out.println("Waiting");
-            }
+            catch (Exception ignored) { }
 
 
-            for (CostCenter costCenter : costCenters) {
+            for (CostCenter costCenter : costCentersLocation) {
+                journalBatch = new JournalBatch();
+                journals = new ArrayList<>();
+
+                if (!costCenter.checked)
+                    continue;
+
                 if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)){
                     driver.get(Constants.CONSUMPTION_REPORT_LINK);
 
@@ -287,27 +272,18 @@ public class JournalService {
                     }
                 }
 
-                // check if cost center has location mapping
-                CostCenter costCenterLocation = conversions.checkCostCenterExistence(costCentersLocation, costCenter.costCenter, false);
+                Response dateResponse = new Response();
+                if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)){
+                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                        driver.quit();
 
-                if (!costCenterLocation.checked)
-                    continue;
-
-                Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate,
-                        costCenterLocation.locationName, "", driver);
-
-                if (!dateResponse.isStatus() && !dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
-                    driver.quit();
-
-                    response.put("status", Constants.FAILED);
-                    response.put("message", dateResponse.getMessage());
-                    response.put("journals", journalsEntries);
-                    return response;
-                }else if(!dateResponse.isStatus() && dateResponse.getMessage().equals(Constants.INVALID_LOCATION)){
-                    continue;
+                        response.setStatus(false);
+                        response.setMessage(dateResponse.getMessage());
+                        return response;
+                    } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                        continue;
+                    }
                 }
-
-                driver.findElement(By.id("Run Report")).click();
 
                 driver.get(Constants.CONSUMPTION_TABLE_LINK);
 
@@ -334,13 +310,9 @@ public class JournalService {
                     extensions.add(extension);
                 }
 
-                String baseURL = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-
-                journals = new ArrayList<>();
-
                 for (String extension : extensions) {
                     try {
-                        driver.get(baseURL + extension);
+                        driver.get(Constants.OHRA_LINK + extension);
 
                         rows = driver.findElements(By.tagName("tr"));
 
@@ -384,97 +356,103 @@ public class JournalService {
                     }
                 }
 
-                for (Journal journal : journals) {
-                    HashMap<String, Object> journalsEntry = new HashMap<>();
-
-                    journalsEntry.put("cost_center", costCenter);
-                    journalsEntry.put("journal", journal);
-
-                    journalsEntries.add(journalsEntry);
-                }
+                journalBatch.setCostCenter(costCenter);
+                journalBatch.setConsumption(journals);
+                journalBatches.add(journalBatch);
             }
 
             driver.quit();
 
-            response.put("status", Constants.SUCCESS);
-            response.put("message", "");
-            response.put("journals", journalsEntries);
+            response.setStatus(true);
+            response.setJournalBatches(journalBatches);
             return response;
 
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
-
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to get consumption entries from Oracle Hospitality.");
-            response.put("journals", journalsEntries);
+            response.setStatus(false);
+            response.setMessage("Failed to get consumption entries from Oracle Hospitality.");
             return response;
         }
     }
 
 
-    public ArrayList<SyncJobData> saveJournalData(ArrayList<HashMap<String, Object>> journals, SyncJob syncJob,
-                                                  String businessDate, String fromDate,
-                                                  ArrayList<OverGroup> overGroups){
-        ArrayList<SyncJobData> addedJournals = new ArrayList<>();
+    public ArrayList<JournalBatch> saveJournalData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
+                                                  String businessDate, String fromDate, ArrayList<OverGroup> overGroups){
+        ArrayList<SyncJobData> addedJournals;
+        ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
+        ArrayList<Journal> journals;
+        CostCenter costCenter;
 
-        for (HashMap<String, Object> journal : journals) {
-            // check zero entries (not needed)
-            CostCenter costCenter = (CostCenter) journal.get("cost_center");
-            Journal journalData = (Journal) journal.get("journal");
+        for (JournalBatch batch : journalBatches) {
+            addedJournals = new ArrayList<>();
+            journals = batch.getConsumption();
+            costCenter = batch.getCostCenter();
 
-            if (costCenter.costCenterReference.equals("")){
-                costCenter.costCenterReference = costCenter.costCenter;
-            }
-
-            if (journalData.getTotalCost() != 0){
-                HashMap<String, String> costData = new HashMap<>();
-
-                // Example: 01062020
-                String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-                costData.put("accountingPeriod", transactionDate.substring(2,6));
-                costData.put("transactionDate", transactionDate);
-
-                costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost())));
-                costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journalData.getTotalCost()) * -1));
-
-                costData.put("fromCostCenter", costCenter.costCenter);
-                costData.put("fromAccountCode", costCenter.accountCode);
-
-                costData.put("toCostCenter", costCenter.costCenter);
-                costData.put("toAccountCode", costCenter.accountCode);
-
-                costData.put("fromLocation", costCenter.accountCode);
-                costData.put("toLocation", costCenter.accountCode);
-
-                String description = "Cost Of Sales F " + costCenter.costCenterReference + " " + journalData.getOverGroup();
-                if (description.length() > 50){
-                    description = description.substring(0, 50);
+            for (Journal journal : journals) {
+                if (costCenter.costCenterReference.equals("")){
+                    costCenter.costCenterReference = costCenter.costCenter;
                 }
 
-                costData.put("description", description);
+                // check zero entries (not needed)
+                if (journal.getTotalCost() != 0){
+                    HashMap<String, String> costData = new HashMap<>();
+                    if(costCenter.location != null)
+                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
+                    else
+                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
 
-                costData.put("transactionReference", "Cost Transaction Reference");
-                costData.put("overGroup", journalData.getOverGroup());
+                    String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
+                    costData.put("accountingPeriod", transactionDate.substring(2,6));
+                    costData.put("transactionDate", transactionDate);
 
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journalData.getOverGroup());
+                    costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
+                    costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
 
-                if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
-                    && !oldOverGroupData.getExpensesAccount().equals("")){
-                    costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                    costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                    costData.put("fromCostCenter", costCenter.costCenter);
+                    costData.put("fromAccountCode", costCenter.accountCode);
 
-                    SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
-                            syncJob.getId());
-                    syncJobDataRepo.save(syncJobData);
+                    costData.put("toCostCenter", costCenter.costCenter);
+                    costData.put("toAccountCode", costCenter.accountCode);
 
-                    addedJournals.add(syncJobData);
+                    costData.put("fromLocation", costCenter.accountCode);
+                    costData.put("toLocation", costCenter.accountCode);
+
+                    String description = "F " + costCenter.costCenterReference + " " + journal.getOverGroup();
+                    if (description.length() > 50){
+                        description = description.substring(0, 50);
+                    }
+
+                    costData.put("description", description);
+
+                    if(costCenter.costCenterReference.equals(""))
+                        costData.put("transactionReference", "Consumption");
+                    else
+                        costData.put("transactionReference", "Consumption" + " - " + costCenter.costCenterReference);
+
+                    costData.put("overGroup", journal.getOverGroup());
+
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                    if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
+                            && !oldOverGroupData.getExpensesAccount().equals("")){
+                        costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                        costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+
+                        SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
+                                syncJob.getId());
+                        syncJobDataRepo.save(syncJobData);
+
+                        addedJournals.add(syncJobData);
+                    }
                 }
             }
 
+            if(addedJournals.size() >0){
+                batch.setConsumptionData(addedJournals);
+                addedJournalBatches.add(batch);
+            }
         }
-        return addedJournals;
-
+        return addedJournalBatches;
     }
-
 }

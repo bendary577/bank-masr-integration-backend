@@ -6,12 +6,12 @@ import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.soapModels.Supplier;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,8 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
-import java.text.DateFormatSymbols;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
@@ -89,11 +87,11 @@ public class CreditNoteController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType creditNoteSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CREDIT_NOTES, account.getId(), false);
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
-        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
         String invoiceTypeIncluded = creditNoteSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
+        ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
 
         String timePeriod = creditNoteSyncJobType.getConfiguration().timePeriod;
         String fromDate = creditNoteSyncJobType.getConfiguration().fromDate;
@@ -164,10 +162,8 @@ public class CreditNoteController {
                 invoiceType = 2;
             }
 
-            data = invoiceService.getInvoicesReceiptsData(true,invoiceType, supplierSyncJobType,
-                    costCenters,
-                    items, overGroups, account,
-                    timePeriod, fromDate, toDate);
+            data = invoiceService.getInvoicesReceiptsData(true,invoiceType, creditNoteSyncJobType.getConfiguration(),
+                    costCenters, suppliers, items, overGroups, account, timePeriod, fromDate, toDate);
 
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 
@@ -202,37 +198,15 @@ public class CreditNoteController {
                     }
                 }
                 else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                    ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                    AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
-
-                    String username = sunCredentials.getUsername();
-                    String password = sunCredentials.getPassword();
-                    String host = sunCredentials.getHost();
-
-                    FtpClient ftpClient = new FtpClient(host, username, password);
+                    FtpClient ftpClient = new FtpClient();
+                    ftpClient = ftpClient.createFTPClient(account);
+                    SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(creditNoteSyncJobType, addedInvoices);
+                    File file = exporter.prepareNDFFile(addedInvoices, creditNoteSyncJobType, account.getName(), "");
 
                     if(ftpClient.open()){
-                        List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                        SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                "CreditNote.ndf", invoiceSyncJobType, creditNotesList);
-
-                        DateFormatSymbols dfs = new DateFormatSymbols();
-                        String[] weekdays = dfs.getWeekdays();
-
-                        String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                        Calendar cal = Calendar.getInstance();
-                        Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                        cal.setTime(date);
-                        int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                        String dayName = weekdays[day];
-                        String fileExtension = ".ndf";
-                        String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                        File file = excelExporter.createNDFFile();
-
                         boolean sendFileFlag = false;
                         try {
-                            sendFileFlag = ftpClient.putFileToPath(file, fileName);
+                            sendFileFlag = ftpClient.putFileToPath(file, file.getName());
                             ftpClient.close();
                         } catch (IOException e) {
                             ftpClient.close();
@@ -240,14 +214,14 @@ public class CreditNoteController {
 
                         if (sendFileFlag){
 //                            if (true){
-                            syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
+                            syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                     "Sync credit notes successfully.", Constants.SUCCESS);
 
                             response.put("success", true);
                             response.put("message", "Sync credit notes successfully.");
                         }else {
-                            syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                            syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.FAILED);
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
                                     "Failed to sync credit notes to sun system via FTP.", Constants.FAILED);
 

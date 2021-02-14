@@ -7,13 +7,13 @@ import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.soapModels.Supplier;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
-import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -94,10 +93,11 @@ public class InvoiceController {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
-        SyncJobType supplierSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SUPPLIERS, account.getId(), false);
 
         String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
+        ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
+
         ArrayList<Item> items =  generalSettings.getItems();
 
         String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
@@ -172,8 +172,8 @@ public class InvoiceController {
                 invoiceType = 2;
             }
 
-            data = invoiceService.getInvoicesReceiptsData(false,invoiceType, supplierSyncJobType,
-                    costCenters, items, overGroups, account, timePeriod, fromDate, toDate);
+            data = invoiceService.getInvoicesReceiptsData(false,invoiceType, invoiceSyncJobType.getConfiguration(),
+                    costCenters, suppliers, items, overGroups, account, timePeriod, fromDate, toDate);
 
             invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
 
@@ -205,66 +205,56 @@ public class InvoiceController {
                         }
                     }
                     else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+                        FtpClient ftpClient = new FtpClient();
+                        ftpClient = ftpClient.createFTPClient(account);
 
-                        String username = sunCredentials.getUsername();
-                        String password = sunCredentials.getPassword();
-                        String host = sunCredentials.getHost();
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(invoiceSyncJobType, addedInvoices);
+                        File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName(), "");
 
-                        FtpClient ftpClient = new FtpClient(host, username, password);
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
 
-                        if(ftpClient.open()){
-                            List<SyncJobData> approvedInvoicesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "Invoices.ndf", invoiceSyncJobType, approvedInvoicesList);
+                                boolean sendFileFlag = false;
+                                try {
+                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                    ftpClient.close();
+                                } catch (IOException e) {
+                                    ftpClient.close();
+                                }
 
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
+                                if (sendFileFlag){
+                                    syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                            "Sync approved invoices successfully.", Constants.SUCCESS);
 
-                            String transactionDate = approvedInvoicesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
+                                    response.put("success", true);
+                                    response.put("message", "Sync approved invoices successfully.");
+                                }
+                                else {
+                                    syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                            "Failed to sync approved invoices to sun system via FTP.", Constants.FAILED);
 
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
-
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync approved invoices to sun system via FTP.");
+                                }
                             }
-
-                            if (sendFileFlag){
-//                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(approvedInvoicesList, Constants.SUCCESS);
+                            else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
-                                        "Sync approved invoices successfully.", Constants.SUCCESS);
-
-                                response.put("success", true);
-                                response.put("message", "Sync approved invoices successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(approvedInvoicesList, Constants.FAILED);
-                                syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
-                                        "Failed to sync approved invoices to sun system via FTP.", Constants.FAILED);
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync approved invoices to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
+                        }else {
+                            syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
+
                     }
                     else {
                         syncJob.setStatus(Constants.SUCCESS);
@@ -469,6 +459,4 @@ public class InvoiceController {
 
         excelExporter.export(response);
     }
-
-
 }

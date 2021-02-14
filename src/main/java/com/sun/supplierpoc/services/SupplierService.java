@@ -247,7 +247,7 @@ public class SupplierService {
             data.put("contactFirstName", "");
 
             // check existence of supplier in middleware (UNIQUE: supplierNumber)
-            SyncJobData oldSupplier = conversions.checkSupplierExistence(savedSuppliers, supplier.getSupplierName());
+            SyncJobData oldSupplier = conversions.checkSupplierDataExistence(savedSuppliers, supplier.getSupplierName());
             if (oldSupplier != null){
                 if (!oldSupplier.getStatus().equals(Constants.FAILED)){
                     // check if there is any change

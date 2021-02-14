@@ -7,7 +7,6 @@ import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
@@ -25,7 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
-import java.text.DateFormatSymbols;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -151,30 +149,32 @@ public class JournalController {
 
         syncJobRepo.save(syncJob);
 
-        ArrayList<SyncJobData> addedJournals = new ArrayList<>();
         String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
 
         try {
-            HashMap<String, Object> data;
+            Response data;
             if (consumptionBasedOnType.equals("Cost Center")){
-                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters
-                        ,itemGroups, account);
+                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
             }else {
-                data = journalService.getJournalData(journalSyncJobType, costCenters,
-                        costCentersLocation,itemGroups, account);
+                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, account);
             }
 
-            if (data.get("status").equals(Constants.SUCCESS)) {
-                ArrayList<HashMap<String, Object>> journals = (ArrayList<HashMap<String, Object>>) data.get("journals");
-                if (journals.size() > 0) {
-                    addedJournals = journalService.saveJournalData(journals, syncJob, businessDate, fromDate, overGroups);
-                    if (addedJournals.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
+            if (data.isStatus()) {
+                ArrayList<JournalBatch> journalBatches =  data.getJournalBatches();
+                ArrayList<JournalBatch> addedJournalBatches;
+
+                if (journalBatches.size() > 0) {
+                    addedJournalBatches = journalService.saveJournalData(journalBatches,journalSyncJobType, syncJob, businessDate, fromDate, overGroups);
+
+                    if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
-                            invoiceController.handleSendJournal(journalSyncJobType, syncJob, addedJournals, account, voucher);
+                            for (JournalBatch batch : journalBatches) {
+                                invoiceController.handleSendJournal(journalSyncJobType, syncJob, batch.getConsumptionData(), account, voucher);
+                            }
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedJournals.size());
+                            syncJob.setRowsFetched(journalBatches.size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", "Sync journals Successfully.");
@@ -184,73 +184,69 @@ public class JournalController {
                             syncJob.setStatus(Constants.FAILED);
                             syncJob.setReason("Failed to connect to Sun System.");
                             syncJob.setEndDate(new Date());
-                            syncJob.setRowsFetched(addedJournals.size());
+                            syncJob.setRowsFetched(journalBatches.size());
                             syncJobRepo.save(syncJob);
 
                             response.put("message", "Failed to connect to Sun System.");
                             response.put("success", false);
                         }
                     }
-                    else if (addedJournals.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+                    else if (addedJournalBatches.size() > 0 &&  account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        List<SyncJobData> consumptionList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
-                        String username = sunCredentials.getUsername();
-                        String password = sunCredentials.getPassword();
-                        String host = sunCredentials.getHost();
+                        File file;
+                        FtpClient ftpClient = new FtpClient();
+                        ftpClient = ftpClient.createFTPClient(account);
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-                        FtpClient ftpClient = new FtpClient(host, username, password);
+                        if(!journalSyncJobType.getConfiguration().exportFilePerLocation || !consumptionBasedOnType.equals("Cost Center")){
+                            file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
+                        }else {
+                            ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
+                        }
 
-                        if(ftpClient.open()){
-                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "Journals.ndf", journalSyncJobType, creditNotesList);
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
+//                                boolean sendFileFlag = false;
+//                                try {
+//                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+//                                    ftpClient.close();
+//                                } catch (IOException e) {
+//                                    ftpClient.close();
+//                                }
+//
+//                                if (sendFileFlag){
+                                if (true){
+                                        syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
+                                        syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                                "Sync consumption successfully.", Constants.SUCCESS);
 
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
+                                        response.put("success", true);
+                                        response.put("message", "Sync consumption successfully.");
+                                    }
+                                else {
+                                        syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.FAILED);
+                                        syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                                "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
 
-                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
-
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
+                                        response.put("success", false);
+                                        response.put("message", "Failed to sync consumption to sun system via FTP.");
+                                    }
                             }
-
-                            if (sendFileFlag){
-//                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
-                                        "Sync consumption successfully.", Constants.SUCCESS);
-
-                                response.put("success", true);
-                                response.put("message", "Sync consumption successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
-                                syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
-                                        "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
+                            else {
+                                syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync consumption to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
-                            syncJobService.saveSyncJobStatus(syncJob, addedJournals.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                        }else {
+                            syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
+                            syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
                     }
                     else {
@@ -269,7 +265,7 @@ public class JournalController {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no journals to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
-                    syncJob.setRowsFetched(addedJournals.size());
+                    syncJob.setRowsFetched(0);
                     syncJobRepo.save(syncJob);
 
                     response.put("message", "There is no journals to get from Oracle Hospitality.");
@@ -279,12 +275,12 @@ public class JournalController {
             }
             else {
                 syncJob.setStatus(Constants.FAILED);
-                syncJob.setReason((String) data.get("message"));
+                syncJob.setReason(data.getMessage());
                 syncJob.setEndDate(new Date());
-                syncJob.setRowsFetched(addedJournals.size());
+                syncJob.setRowsFetched(0);
                 syncJobRepo.save(syncJob);
 
-                response.put("message", data.get("message"));
+                response.put("message", data.getMessage());
                 response.put("success", false);
             }
             return response;
@@ -292,7 +288,7 @@ public class JournalController {
             syncJob.setStatus(Constants.FAILED);
             syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date());
-            syncJob.setRowsFetched(addedJournals.size());
+            syncJob.setRowsFetched(0);
             syncJobRepo.save(syncJob);
 
             response.put("message", e.getMessage());
@@ -317,6 +313,28 @@ public class JournalController {
         ConsumptionExcelExporter excelExporter = new ConsumptionExcelExporter(wastageList);
 
         excelExporter.export(response);
+    }
+
+    private ArrayList<File> createConsumptionFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
+                                                             String AccountName) {
+        ArrayList<File> locationFiles = new ArrayList<>();
+        try {
+            File file;
+            List<SyncJobData> consumptionList;
+            SalesFileDelimiterExporter excelExporter;
+
+            for (JournalBatch locationBatch : wasteBatches) {
+                consumptionList = new ArrayList<>(locationBatch.getConsumptionData());
+
+                excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
+                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
+                locationFiles.add(file);
+            }
+            return locationFiles;
+        }catch (Exception e){
+            e.printStackTrace();
+            return locationFiles;
+        }
     }
 
 }

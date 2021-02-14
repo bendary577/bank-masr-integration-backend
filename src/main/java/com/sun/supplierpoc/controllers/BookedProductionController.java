@@ -6,7 +6,6 @@ import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.OverGroup;
@@ -166,65 +165,52 @@ public class BookedProductionController {
                         }
                     }
                     else if (addedBookedProduction.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+                        FtpClient ftpClient = new FtpClient();
+                        ftpClient = ftpClient.createFTPClient(account);
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(bookedProductionSyncJobType, addedBookedProduction);
+                        File file = exporter.prepareNDFFile(addedBookedProduction, bookedProductionSyncJobType, account.getName(), "");
 
-                        String username = sunCredentials.getUsername();
-                        String password = sunCredentials.getPassword();
-                        String host = sunCredentials.getHost();
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
+                                boolean sendFileFlag = false;
+                                try {
+                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                    ftpClient.close();
+                                } catch (IOException e) {
+                                    ftpClient.close();
+                                }
 
-                        FtpClient ftpClient = new FtpClient(host, username, password);
-
-                        if(ftpClient.open()){
-                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "BookedProduction.ndf", bookedProductionSyncJobType, creditNotesList);
-
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
-
-                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
-
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
-                            }
-
-                            if (sendFileFlag){
+                                if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
-                                        "Sync booked production successfully.", Constants.SUCCESS);
+                                    syncJobDataService.updateSyncJobDataStatus(addedBookedProduction, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
+                                            "Sync booked production successfully.", Constants.SUCCESS);
 
-                                response.put("success", true);
-                                response.put("message", "Sync booked production successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                    response.put("success", true);
+                                    response.put("message", "Sync booked production successfully.");
+                                }else {
+                                    syncJobDataService.updateSyncJobDataStatus(addedBookedProduction, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
+                                            "Failed to sync booked production to sun system via FTP.", Constants.FAILED);
+
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync booked production to sun system via FTP.");
+                                }
+                            }
+                            else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
-                                        "Failed to sync booked production to sun system via FTP.", Constants.FAILED);
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync booked production to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
+                        }else{
+                            syncJobDataService.updateSyncJobDataStatus(addedBookedProduction, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
                     }
 

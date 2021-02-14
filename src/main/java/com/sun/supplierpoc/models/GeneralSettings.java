@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
@@ -19,6 +20,8 @@ public class GeneralSettings {
     private ArrayList<CostCenter> locations = new ArrayList<>();
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
+    private ArrayList<Supplier> suppliers = new ArrayList<>();
+
     private Date creationDate;
     private boolean deleted;
 
@@ -133,5 +136,13 @@ public class GeneralSettings {
             }
         }
         return null;
+    }
+
+    public ArrayList<Supplier> getSuppliers() {
+        return suppliers;
+    }
+
+    public void setSuppliers(ArrayList<Supplier> suppliers) {
+        this.suppliers = suppliers;
     }
 }

@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -22,6 +23,8 @@ public class SalesService {
     TransferService transferService;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -53,7 +56,7 @@ public class SalesService {
         }
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LOGIN_LINK, account)) {
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
                 driver.quit();
 
                 response.setStatus(false);
@@ -69,9 +72,7 @@ public class SalesService {
 
                 Alert al = driver.switchTo().alert();
                 al.accept();
-            } catch (Exception Ex) {
-                System.out.println("No alert exits");
-            }
+            } catch (Exception Ex) { }
 
             if (costCentersLocation.size() > 0){
                 for (CostCenter costCenter : costCentersLocation) {
@@ -253,7 +254,7 @@ public class SalesService {
         if (!driver.getCurrentUrl().equals(Constants.TENDERS_REPORT_LINK)) {
             driver.get(Constants.TENDERS_REPORT_LINK);
         }
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
@@ -329,7 +330,7 @@ public class SalesService {
         }else{
             driver.get(Constants.TAXES_REPORT_LINK);
         }
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         List<WebElement> rows;
         String taxReportLink;
@@ -429,7 +430,7 @@ public class SalesService {
         else
             driver.get(Constants.OVER_GROUP_GROSS_REPORT_LINK);
 
-        if (runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, response)) return response;
 
         String overGroupGrossLink;
         if(taxIncluded)
@@ -636,7 +637,7 @@ public class SalesService {
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         driver.get(Constants.DISCOUNT_REPORT_LINK);
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
@@ -720,7 +721,7 @@ public class SalesService {
         ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
 
         driver.get(Constants.SERVICE_CHARGE_REPORT_LINK);
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.SERVICE_CHARGE_TABLE_LINK);
@@ -794,7 +795,7 @@ public class SalesService {
         }
 
         driver.get(Constants.SYSTEM_SALES_REPORT_LINK);
-        if (runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
             driver.get(Constants.SALES_SUMMARY_LINK);
@@ -824,55 +825,6 @@ public class SalesService {
             response.setMessage(e.getMessage());
         }
         return response;
-    }
-
-    private boolean runReport(String businessDate, String fromDate, String toDate, CostCenter location,
-                              RevenueCenter revenueCenter, WebDriver driver, Response response) {
-        try{
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
-        } catch (Exception Ex) {
-            System.out.println("There is no loader");
-        }
-
-        String message = "";
-        int tryMaxCount = 2;
-
-        do{
-            Response dateResponse = setupEnvironment.selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                    revenueCenter.getRevenueCenter(), driver);
-
-            if (!dateResponse.isStatus()){
-                response.setStatus(false);
-                response.setMessage(dateResponse.getMessage());
-                return true;
-            }
-
-            driver.findElement(By.id("Run Report")).click();
-
-            try {
-                Alert locationAlert = driver.switchTo().alert();
-                message = locationAlert.getText();
-                locationAlert.accept();
-            }catch (NoAlertPresentException Ex) {
-                System.out.println("No alert exits");
-            }
-            tryMaxCount --;
-
-        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
-
-        message = checkReportParameters(driver, location.locationName, fromDate);
-
-        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
-            response.setStatus(false);
-            response.setMessage(message);
-            return true;
-        }else if(message.equals("No information is available for the selected range")){
-            response.setStatus(true);
-            response.setMessage(message);
-            return true;
-        }
-        return false;
     }
 
     public void updateJournalBatchStatus(JournalBatch journalBatch, HashMap<String, Object> response){
@@ -913,83 +865,7 @@ public class SalesService {
             syncJobDataRepo.save(data);
         }
     }
-
-    private void prepareAnalysis(HashMap<String, String> data, Configuration configuration,
-                                 CostCenter location, FamilyGroup familyGroup, Tender tender){
-        ArrayList<Analysis> analysis = configuration.analysis;
-        for (int i = 1; i <= analysis.size(); i++) {
-            data.put("analysisCodeT" + i, analysis.get(i - 1).getCodeElement());
-        }
-
-        String index;
-        if(location != null && !location.accountCode.equals("")){
-            index = configuration.locationAnalysisCode;
-            data.put("analysisCodeT" + index, location.accountCode);
-        }
-
-        if(tender != null && !tender.getAnalysisCodeT5().equals("")){
-            index = configuration.tenderAnalysisCode;
-            data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());
-        }
-
-        if(familyGroup != null && !familyGroup.departmentCode.equals("")){
-            index = configuration.familyGroupAnalysisCode;
-            data.put("analysisCodeT" + index, familyGroup.departmentCode);
-        }
-    }
-
-    private String checkReportParameters(WebDriver driver, String locationName, String fromDate){
-        int tryMaxCount = 2;
-        String message = "";
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        List<WebElement> rows;
-
-        do{
-            try{
-                if(driver.findElements(By.id("newCell0Div")).size() > 0){
-                    if(driver.findElements(By.id("newCell0Div")).get(0).getText().equals("No information is available for the selected range")){
-                        return "No information is available for the selected range";
-                    }
-                }
-
-                wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("reportsFrame")));
-                //presence in DOM
-                wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
-
-                if(driver.findElements(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).size() != 0){
-                    //scrolling
-                    WebElement element = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH));
-                    JavascriptExecutor js = ((JavascriptExecutor) driver);
-                    js.executeScript("arguments[0].scrollIntoView(true);", element);
-
-                    //clickable
-                    wait.until(ExpectedConditions.elementToBeClickable(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)));
-                    driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_XPATH)).click();
-
-                    rows = driver.findElement(By.xpath(Constants.TENDERS_PARAMETERS_TABLE_XPATH)).findElements(By.tagName("tr"));
-                    if(!setupEnvironment.checkReportParameter(rows, fromDate, locationName, "")){
-                        driver.switchTo().defaultContent();
-                        message = Constants.WRONG_BUSINESS_DATE;
-                        driver.findElement(By.id("Run Report")).click();
-                    }
-                    else {
-                        driver.switchTo().defaultContent();
-                        message = "";
-                        break;
-                    }
-                }
-            } catch (Exception Ex) {
-                System.out.println("Can not fetch parameter data.");
-                driver.switchTo().defaultContent();
-                message = Constants.WRONG_BUSINESS_DATE;
-                driver.findElement(By.id("Run Report")).click();
-            }
-            tryMaxCount--;
-        }while (message.equals(Constants.WRONG_BUSINESS_DATE) && tryMaxCount != 0);
-
-        return message;
-    }
-
+    
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob,
                                                                Configuration configuration , Account account) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
@@ -1008,16 +884,16 @@ public class SalesService {
             float totalServiceCharge = 0;
             float totalMajorGroupNet = 0;
 
-            // Save tenders {Debit}
-            ArrayList<Tender> tenders = journalBatch.getSalesTender();
-            for (Tender tender : tenders) {
-                if (tender.getTotal() == 0)
+            // Save majorGroup {Credit}
+            ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
+            for (Journal majorGroupJournal : majorGroupsGross) {
+                if (majorGroupJournal.getTotalCost() == 0)
                     continue;
 
-                saveTender(journalBatch, transactionDate, configuration, syncJob, tender);
+                saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
-                float tenderTotal = tender.getTotal();
-                totalTender += tenderTotal;
+                float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
+                totalMajorGroupNet += majorGroupGrossTotal;
             }
 
             // Save taxes {Credit}
@@ -1030,18 +906,6 @@ public class SalesService {
 
                 float taxTotal = tax.getTotal();
                 totalTax += taxTotal;
-            }
-
-            // Save majorGroup {Credit}
-            ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
-            for (Journal majorGroupJournal : majorGroupsGross) {
-                if (majorGroupJournal.getTotalCost() == 0)
-                    continue;
-
-                saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
-
-                float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
-                totalMajorGroupNet += majorGroupGrossTotal;
             }
 
             // Save service charge {Credit}
@@ -1083,9 +947,10 @@ public class SalesService {
 
                 discountData.put("fromLocation", discount.getCostCenter().accountCode);
                 discountData.put("toLocation", discount.getCostCenter().accountCode);
-                discountData.put("transactionReference", "Discount");
 
                 String description = "";
+                String reference = "Discount";
+
                 if(discount.getDiscount().equals("")){
                     description = "Discount Cost";
                 }else{
@@ -1093,6 +958,7 @@ public class SalesService {
                 }
 
                 if (!discount.getCostCenter().costCenterReference.equals("")){
+                    reference = discount.getCostCenter().costCenterReference;
                     description = discount.getCostCenter().costCenterReference + " " + description;
                 }
 
@@ -1101,7 +967,9 @@ public class SalesService {
                 }
 
                 discountData.put("description", description);
-                prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
+                discountData.put("transactionReference", reference);
+
+                syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                 SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1132,22 +1000,25 @@ public class SalesService {
                     discountData.put("fromLocation", discount.getCostCenter().accountCode);
                     discountData.put("toLocation", discount.getCostCenter().accountCode);
 
-                    discountData.put("transactionReference", "Discount Expense");
 
                     discountData.put("expensesAccount", discount.getAccount());
-                    prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
+                    syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     String description = "";
+                    String reference = "Discount Expense";
                     if (discount.getCostCenter().costCenterReference.equals("")){
                         description = "Discount Expense";
                     }else{
                         description = "Discount Expense F " + discount.getCostCenter().costCenterReference;
+                        reference = discount.getCostCenter().costCenterReference;
                     }
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
                     }
 
                     discountData.put("description", description);
+                    discountData.put("transactionReference", reference);
+
 
                     SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());
@@ -1174,28 +1045,42 @@ public class SalesService {
                     discountData.put("fromLocation", discount.getCostCenter().accountCode);
                     discountData.put("toLocation", discount.getCostCenter().accountCode);
 
-                    discountData.put("transactionReference", "AR account");
-
                     discountData.put("expensesAccount", discount.getAccount());
 
                     String description = "";
+                    String reference = "AR account";
                     if (discount.getCostCenter().costCenterReference.equals("")){
                         description = "AR account";
                     }else{
                         description = "AR account F " + discount.getCostCenter().costCenterReference;
+                        reference = discount.getCostCenter().costCenterReference;
                     }
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
                     }
 
                     discountData.put("description", description);
-                    prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
+                    discountData.put("transactionReference", reference);
+
+                    syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     SyncJobData syncJobData = new SyncJobData(discountData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());
                     syncJobDataRepo.save(syncJobData);
                     journalBatch.getSalesDiscountData().add(syncJobData);
                 }
+            }
+
+            // Save tenders {Debit}
+            ArrayList<Tender> tenders = journalBatch.getSalesTender();
+            for (Tender tender : tenders) {
+                if (tender.getTotal() == 0)
+                    continue;
+
+                saveTender(journalBatch, transactionDate, configuration, syncJob, tender);
+
+                float tenderTotal = tender.getTotal();
+                totalTender += tenderTotal;
             }
 
             float totalDr = totalTender;
@@ -1235,14 +1120,14 @@ public class SalesService {
                 differentData.put("fromLocation", journalBatch.getCostCenter().accountCode);
                 differentData.put("toLocation", journalBatch.getCostCenter().accountCode);
 
-                // 30 Char only
-                differentData.put("transactionReference", "Different");
-
                 String description = "";
+                String reference = "Different";
+
                 if (journalBatch.getCostCenter().costCenterReference.equals("")){
                     description = "Different";
                 }else{
                     description = journalBatch.getCostCenter().costCenterReference + " - different";
+                    reference = journalBatch.getCostCenter().costCenterReference;
                 }
 
                 if (description.length() > 50){
@@ -1250,7 +1135,9 @@ public class SalesService {
                 }
 
                 differentData.put("description", description);
-                prepareAnalysis(differentData, configuration, journalBatch.getCostCenter(), null, null);
+                differentData.put("transactionReference", reference);
+
+                syncJobDataService.prepareAnalysis(differentData, configuration, journalBatch.getCostCenter(), null, null);
 
                 SyncJobData syncJobData = new SyncJobData(differentData, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
@@ -1287,13 +1174,16 @@ public class SalesService {
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoGuestAccount);
 
         String description = "No Guests";
+        String reference = "No Guests";
+
         if (!journalBatch.getCostCenter().costCenterReference.equals("")){
             description = journalBatch.getCostCenter().costCenterReference + " - " + description;
+            reference = journalBatch.getCostCenter().costCenterReference;
         }
-        statisticsData.put("transactionReference", "No Guests");
+        statisticsData.put("transactionReference", reference);
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
         SyncJobData syncJobGuestsData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1316,13 +1206,15 @@ public class SalesService {
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoTablesAccount);
 
         description = "No Tables";
+        reference = "No Tables";
         if (!journalBatch.getCostCenter().costCenterReference.equals("")){
             description = journalBatch.getCostCenter().costCenterReference + " - " + description;
+            reference = journalBatch.getCostCenter().costCenterReference;
         }
-        statisticsData.put("transactionReference", "No Tables");
+        statisticsData.put("transactionReference", reference);
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
         SyncJobData syncJobTablesData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1345,13 +1237,15 @@ public class SalesService {
         statisticsData.put("inventoryAccount", journalBatch.getSalesStatistics().NoChecksAccount);
 
         description = "No Checks";
+        reference= "No Checks";
         if (!journalBatch.getCostCenter().costCenterReference.equals("")){
             description = journalBatch.getCostCenter().costCenterReference + " - " + description;
+            reference = journalBatch.getCostCenter().costCenterReference;
         }
-        statisticsData.put("transactionReference", "No Checks");
+        statisticsData.put("transactionReference", reference);
         statisticsData.put("description", description);
 
-        prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(statisticsData, configuration, journalBatch.getCostCenter(), null, null);
 
         SyncJobData syncJobChecksData = new SyncJobData(statisticsData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1363,6 +1257,8 @@ public class SalesService {
                                      SyncJob syncJob, Tender tender){
         float subTenderTotal = tender.getTotal();
         float tenderCommunicationTotal;
+
+        String reference = "Tender";
 
         if (tender.getCommunicationRate() > 0){
             tenderCommunicationTotal = (subTenderTotal * tender.getCommunicationRate())/100;
@@ -1389,15 +1285,16 @@ public class SalesService {
             tenderData.put("fromLocation", tender.getCostCenter().accountCode);
             tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
-            tenderData.put("transactionReference", "Tender");
 
             tenderData.put("expensesAccount", tender.getCommunicationAccount());
 
             String description = "";
+
             if (tender.getCostCenter().costCenterReference.equals("")){
                 description = tender.getCommunicationTender();
             }else{
                 description = tender.getCostCenter().costCenterReference + " " + tender.getCommunicationTender();
+                reference = tender.getCostCenter().costCenterReference;
             }
 
             if (description.length() > 50) {
@@ -1405,11 +1302,12 @@ public class SalesService {
             }
 
             tenderData.put("description", description);
+            tenderData.put("transactionReference", reference);
 
             if(configuration.salesConfiguration.addTenderAnalysis)
-                prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+                syncJobDataService.prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
             else
-                prepareAnalysis(tenderData, configuration, null, null, null);
+                syncJobDataService.prepareAnalysis(tenderData, configuration, null, null, null);
 
             SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
@@ -1437,8 +1335,6 @@ public class SalesService {
         tenderData.put("fromLocation", tender.getCostCenter().accountCode);
         tenderData.put("toLocation", tender.getCostCenter().accountCode);
 
-        tenderData.put("transactionReference", "Tender");
-
         tenderData.put("expensesAccount", tender.getAccount());
 
         String description = "";
@@ -1446,17 +1342,19 @@ public class SalesService {
             description = tender.getTender();
         }else{
             description = tender.getCostCenter().costCenterReference + " " + tender.getTender();
+            reference = tender.getCostCenter().costCenterReference;
         }
         if (description.length() > 50) {
             description = description.substring(0, 50);
         }
 
         tenderData.put("description", description);
+        tenderData.put("transactionReference", reference);
 
         if(configuration.salesConfiguration.addTenderAnalysis)
-            prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
+            syncJobDataService.prepareAnalysis(tenderData, configuration, tender.getCostCenter(), null, tender);
         else
-            prepareAnalysis(tenderData, configuration, null, null, null);
+            syncJobDataService.prepareAnalysis(tenderData, configuration, null, null, null);
 
         SyncJobData syncJobData = new SyncJobData(tenderData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1482,10 +1380,13 @@ public class SalesService {
         taxData.put("toAccountCode", tax.getCostCenter().accountCode);
 
         String description = "";
+        String reference = "Taxes";
+
         if (tax.getCostCenter().costCenterReference.equals("")){
             description = tax.getTax();
         }else {
             description = tax.getCostCenter().costCenterReference + " " + tax.getTax();
+            reference = tax.getCostCenter().costCenterReference;
         }
 
         if (description.length() > 50) {
@@ -1493,9 +1394,9 @@ public class SalesService {
         }
 
         taxData.put("description", description);
-        taxData.put("transactionReference", "Taxes");
+        taxData.put("transactionReference", reference);
 
-        prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(taxData, configuration, tax.getCostCenter(), null, null);
 
         SyncJobData syncJobData = new SyncJobData(taxData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1528,16 +1429,19 @@ public class SalesService {
         majorGroupData.put("toAccountCode", majorGroupJournal.getCostCenter().accountCode);
 
         String description = "";
+        String reference = "Major Group";
+
         if (!majorGroupJournal.getCostCenter().costCenterReference.equals("")){
             description = majorGroupJournal.getCostCenter().costCenterReference;
+            reference = majorGroupJournal.getCostCenter().costCenterReference;
         }
 
         if(!configuration.salesConfiguration.syncMG){
             description += " " + majorGroupJournal.getFamilyGroup().familyGroup;
-            prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), majorGroupJournal.getFamilyGroup(), null);
+            syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), majorGroupJournal.getFamilyGroup(), null);
         }else {
             description += " " + majorGroupJournal.getMajorGroup().getMajorGroup();
-            prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
+            syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
         }
 
         if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals(""))
@@ -1548,7 +1452,7 @@ public class SalesService {
         }
 
         majorGroupData.put("description", description);
-        majorGroupData.put("transactionReference", "Major Group");
+        majorGroupData.put("transactionReference", reference);
 
         SyncJobData syncJobData = new SyncJobData(majorGroupData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());
@@ -1574,14 +1478,16 @@ public class SalesService {
         serviceChargeData.put("fromLocation", serviceCharge.getCostCenter().accountCode);
         serviceChargeData.put("toLocation", serviceCharge.getCostCenter().accountCode);
 
-        serviceChargeData.put("transactionReference", "Service Charge");
         serviceChargeData.put("inventoryAccount", serviceCharge.getAccount());
 
         String description = "";
+        String reference = "Service Charge";
+
         if (serviceCharge.getCostCenter().costCenterReference.equals("")){
             description = "Service Charge";
         }else{
             description = serviceCharge.getCostCenter().costCenterReference + " " + serviceCharge.getServiceCharge();
+            reference = serviceCharge.getCostCenter().costCenterReference;
         }
 
         if (description.length() > 50) {
@@ -1589,8 +1495,9 @@ public class SalesService {
         }
 
         serviceChargeData.put("description", description);
+        serviceChargeData.put("transactionReference", reference);
 
-        prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
+        syncJobDataService.prepareAnalysis(serviceChargeData, configuration, serviceCharge.getCostCenter(), null, null);
 
         SyncJobData syncJobData = new SyncJobData(serviceChargeData, Constants.RECEIVED, "", new Date(),
                 syncJob.getId());

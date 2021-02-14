@@ -1,13 +1,17 @@
 package com.sun.supplierpoc.ftp;
 
-import org.apache.commons.net.PrintCommandListener;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPReply;
+        import com.sun.supplierpoc.Constants;
+        import com.sun.supplierpoc.models.Account;
+        import com.sun.supplierpoc.models.configurations.AccountCredential;
+        import org.apache.commons.net.PrintCommandListener;
+        import org.apache.commons.net.ftp.FTPClient;
+        import org.apache.commons.net.ftp.FTPReply;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.PrintWriter;
+        import java.io.File;
+        import java.io.FileInputStream;
+        import java.io.IOException;
+        import java.io.PrintWriter;
+        import java.util.ArrayList;
 
 public class FtpClient {
     private String server;
@@ -50,5 +54,19 @@ public class FtpClient {
     public boolean putFileToPath(File file, String path) throws IOException {
         ftp.setControlKeepAliveTimeout(120);
         return ftp.storeFile(path, new FileInputStream(file));
+    }
+
+    public FtpClient createFTPClient(Account account) {
+        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
+        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+
+        String username = sunCredentials.getUsername();
+        String password = sunCredentials.getPassword();
+        String host = sunCredentials.getHost();
+
+        if (!username.equals("") && !password.equals("") && !host.equals("")){
+            return new FtpClient(host, username, password);
+        }
+        return null;
     }
 }

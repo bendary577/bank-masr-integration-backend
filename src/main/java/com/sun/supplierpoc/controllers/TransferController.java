@@ -175,65 +175,52 @@ public class TransferController {
                         }
                     } 
                     else if (addedTransfers.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                        ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
-                        AccountCredential sunCredentials = account.getAccountCredentialByAccount(Constants.SUN, accountCredentials);
+                        FtpClient ftpClient = new FtpClient();
+                        ftpClient = ftpClient.createFTPClient(account);
+                        SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(transferSyncJobType, addedTransfers);
+                        File file = exporter.prepareNDFFile(addedTransfers, transferSyncJobType, account.getName(), "");
 
-                        String username = sunCredentials.getUsername();
-                        String password = sunCredentials.getPassword();
-                        String host = sunCredentials.getHost();
+                        if(ftpClient != null){
+                            if(ftpClient.open()){
+                                boolean sendFileFlag = false;
+                                try {
+                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                    ftpClient.close();
+                                } catch (IOException e) {
+                                    ftpClient.close();
+                                }
 
-                        FtpClient ftpClient = new FtpClient(host, username, password);
-
-                        if(ftpClient.open()){
-                            List<SyncJobData> creditNotesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter(
-                                    "Transfers.ndf", transferSyncJobType, creditNotesList);
-
-                            DateFormatSymbols dfs = new DateFormatSymbols();
-                            String[] weekdays = dfs.getWeekdays();
-
-                            String transactionDate = creditNotesList.get(0).getData().get("transactionDate");
-                            Calendar cal = Calendar.getInstance();
-                            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-                            cal.setTime(date);
-                            int day = cal.get(Calendar.DAY_OF_WEEK);
-
-                            String dayName = weekdays[day];
-                            String fileExtension = ".ndf";
-                            String fileName = dayName.substring(0,3) + transactionDate + fileExtension;
-                            File file = excelExporter.createNDFFile();
-
-                            boolean sendFileFlag = false;
-                            try {
-                                sendFileFlag = ftpClient.putFileToPath(file, fileName);
-                                ftpClient.close();
-                            } catch (IOException e) {
-                                ftpClient.close();
-                            }
-
-                            if (sendFileFlag){
+                                if (sendFileFlag){
 //                            if (true){
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
-                                        "Sync transfers successfully.", Constants.SUCCESS);
+                                    syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                            "Sync transfers successfully.", Constants.SUCCESS);
 
-                                response.put("success", true);
-                                response.put("message", "Sync transfers successfully.");
-                            }else {
-                                syncJobDataService.updateSyncJobDataStatus(creditNotesList, Constants.FAILED);
+                                    response.put("success", true);
+                                    response.put("message", "Sync transfers successfully.");
+                                }else {
+                                    syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
+                                            "Failed to sync transfers to sun system via FTP.", Constants.FAILED);
+
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync transfers to sun system via FTP.");
+                                }
+                            }
+                            else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
-                                        "Failed to sync transfers to sun system via FTP.", Constants.FAILED);
+                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
-                                response.put("message", "Failed to sync transfers to sun system via FTP.");
+                                response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }
-                        else {
+                        }else{
+                            syncJobDataService.updateSyncJobDataStatus(addedTransfers, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedTransfers.size(),
-                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                            response.put("success", false);
-                            response.put("message", "Failed to connect to sun system via FTP.");
+                            response.put("success", true);
+                            response.put("message", "Sync sales successfully.");
                         }
                     }
                 } else {
@@ -522,7 +509,7 @@ public class TransferController {
 
         SalesFileDelimiterExporter excelExporter = new SalesFileDelimiterExporter("Transfers.ndf", syncJobType, salesList);
 
-        excelExporter.writeSyncData(response.getWriter());
+//        excelExporter.writeSyncData(response.getWriter());
     }
 
 }

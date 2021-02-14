@@ -2,6 +2,7 @@ package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.soapModels.Supplier;
 
 import java.nio.charset.StandardCharsets;
 import java.text.*;
@@ -160,10 +161,19 @@ public class Conversions {
         return new CostCenter();
     }
 
-    public SyncJobData checkSupplierExistence(ArrayList<SyncJobData> suppliers, String vendorName){
+    public Supplier checkSupplierExistence(ArrayList<Supplier> suppliers, String vendorName){
+        for (Supplier supplier : suppliers) {
+            if (supplier.getSupplierName().toLowerCase().equals(vendorName.toLowerCase())) {
+                return supplier;
+            }
+        }
+        return null;
+    }
+
+    public SyncJobData checkSupplierDataExistence(ArrayList<SyncJobData> suppliers, String vendorName){
         for (SyncJobData supplier : suppliers) {
             if (supplier.getData().containsKey("supplier") && supplier.getData().get("supplier").toLowerCase().equals(vendorName.toLowerCase())
-            || supplier.getData().get("description").toLowerCase().equals(vendorName.toLowerCase())) {
+                    || supplier.getData().get("description").toLowerCase().equals(vendorName.toLowerCase())) {
                 return supplier;
             }
         }

@@ -44,7 +44,7 @@ public class CreateOrder {
     public ResponseEntity CreateOpenCheckRequest(@RequestHeader("Authorization") String authorization,
                                                  @RequestBody PostTransactionEx2 checkDetails) {
 
-        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().revenue());
+        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().getCheckRevenueCenterID());
         String username, password;
         try {
             final String[] values = conversions.convertBasicAuth(authorization);

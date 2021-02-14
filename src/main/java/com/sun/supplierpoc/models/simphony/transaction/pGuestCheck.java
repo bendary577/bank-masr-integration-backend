@@ -125,7 +125,6 @@ public class pGuestCheck {
         CheckOrderType = checkOrderType;
     }
 
-    @JsonIgnore
     public String getCheckRevenueCenterID() {
         return CheckRevenueCenterID;
     }

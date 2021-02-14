@@ -122,7 +122,7 @@ public class ZealController {
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                     SimphonyLocation location = generalSettings.getSimphonyLocationsByID(zealVoucher.getRevenueCentreId());
 
-                    logger.info(location.toString());
+//                    logger.info(location.toString());
                     if (location.isChecked()) {
                         response = zealService.zealVoucherProcessor(zealVoucher, user, account, location);
                         if (!response.isStatus()) {

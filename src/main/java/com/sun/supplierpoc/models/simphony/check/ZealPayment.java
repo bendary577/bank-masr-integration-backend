@@ -96,4 +96,19 @@ public class ZealPayment implements Serializable {
     public void setRevenueCentreId(int revenueCentreId) {
         this.revenueCentreId = revenueCentreId;
     }
+
+    @Override
+    public String toString() {
+        return "ZealPayment{" +
+                "id=" + id +
+                ", code='" + code + '\'' +
+                ", totalDue='" + totalDue + '\'' +
+                ", checkNumber='" + checkNumber + '\'' +
+                ", employeeId=" + employeeId +
+                ", revenueCentreName='" + revenueCentreName + '\'' +
+                ", revenueCentreId=" + revenueCentreId +
+                ", message='" + message + '\'' +
+                ", status='" + status + '\'' +
+                '}';
+    }
 }

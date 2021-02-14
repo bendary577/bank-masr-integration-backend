@@ -74,6 +74,8 @@ public class ZealService {
 
             operationRepo.save(operation);
 
+            logger.info(zealPayment.toString());
+
             ZealLoyaltyRequest zealLoyaltyRequest = new ZealLoyaltyRequest(zealPayment.getCode()
                     , Double.parseDouble(zealPayment.getTotalDue()), Double.parseDouble(zealPayment.getCheckNumber()));
 
@@ -122,7 +124,7 @@ public class ZealService {
         zealPaymentData.put("code", zealPayment.getCode());
         zealPaymentData.put("totalDue", zealPayment.getTotalDue());
         zealPaymentData.put("receiptNumber", zealPayment.getCheckNumber());
-
+        zealPaymentData.put("status", zealPayment.getStatus());
         zealPaymentData.put("message", zealPayment.getMessage());
 
         OperationData operationData = new OperationData(zealPaymentData, new Date(),
@@ -185,6 +187,7 @@ public class ZealService {
         zealPaymentData.put("id", Integer.toString(zealVoucher.getId()));
         zealPaymentData.put("code", zealVoucher.getCode());
         zealPaymentData.put("itemId", zealVoucher.getItemId());
+        zealPaymentData.put("status", zealVoucher.getStatus());
         zealPaymentData.put("message", zealVoucher.getMessage());
         zealPaymentData.put("data2", map1);
 
@@ -283,6 +286,7 @@ public class ZealService {
         ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
 
         HashMap<String, String> map = new HashMap<>();
+        map.put("itemObjectId", "4");
         map.put("menuFirstName", "IFC Test Item - SI 3");
         map.put("menuItemPrice", "3");
         map.put("availability", "true");

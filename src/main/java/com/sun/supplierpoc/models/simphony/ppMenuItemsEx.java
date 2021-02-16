@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.simphony;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.xml.bind.annotation.*;
 import java.util.List;
 
@@ -18,6 +20,7 @@ public class ppMenuItemsEx {
         return SimphonyPosApi_MenuItemEx;
     }
 
+    @JsonProperty(value = "simphony-pos-menuItems")
     public void setSimphonyPosApi_MenuItemEx(List<MenuItem> SimphonyPosApi_MenuItemEx) {
         this.SimphonyPosApi_MenuItemEx = SimphonyPosApi_MenuItemEx;
     }

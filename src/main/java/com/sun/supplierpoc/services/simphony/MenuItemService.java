@@ -216,6 +216,7 @@ public class MenuItemService {
                 if(responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")){
                     String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
                     return new ResponseEntity(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+
                 }else {
                     JSONObject jsonObject = xmlDocToJsonObject(responseDoc);
                     assert jsonObject != null;

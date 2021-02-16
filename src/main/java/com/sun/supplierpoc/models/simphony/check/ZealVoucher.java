@@ -15,6 +15,7 @@ public class ZealVoucher {
     private String revenueCentreName;
     private int revenueCentreId;
     private String message = "-";
+    private String checkNumber = "-";
     private String status = Constants.FAILED;
 
     public int getId() {
@@ -79,5 +80,13 @@ public class ZealVoucher {
 
     public void setRevenueCentreId(int revenueCentreId) {
         this.revenueCentreId = revenueCentreId;
+    }
+
+    public String getCheckNumber() {
+        return checkNumber;
+    }
+
+    public void setCheckNumber(String checkNumber) {
+        this.checkNumber = checkNumber;
     }
 }

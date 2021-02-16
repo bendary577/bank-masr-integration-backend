@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.simphony;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -46,6 +48,7 @@ public class MenuItem {
         this.itemDiscount = itemDiscount;
     }
 
+    @JsonProperty(value = "id")
     public String getMiObjectNum() {
         return miObjectNum;
     }
@@ -114,6 +117,7 @@ public class MenuItem {
         return MiQuantity;
     }
 
+    @JsonProperty(value = "quantity")
     public void setMiQuantity(String miQuantity) {
         MiQuantity = miQuantity;
     }

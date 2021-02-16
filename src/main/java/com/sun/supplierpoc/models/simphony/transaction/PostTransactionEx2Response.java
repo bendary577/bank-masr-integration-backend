@@ -19,6 +19,7 @@ public class PostTransactionEx2Response {
     @XmlElement(name = "pSvcChargeEx")
     private pSvcChargeEx pSvcChargeEx;
 
+
     @XmlElement(name = "pGuestCheck")
     private pGuestCheck pGuestCheck;
 
@@ -54,7 +55,7 @@ public class PostTransactionEx2Response {
         this.pTmedDetailEx2 = pTmedDetailEx2;
     }
 
-    @JsonProperty(value = "totalsResponse")
+    @JsonProperty(value = "priceResponse")
     public com.sun.supplierpoc.models.simphony.transaction.pTotalsResponseEx getpTotalsResponseEx() {
         return pTotalsResponseEx;
     }

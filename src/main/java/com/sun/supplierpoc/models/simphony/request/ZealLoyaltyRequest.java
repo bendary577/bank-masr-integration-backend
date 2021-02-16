@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models.simphony;
+package com.sun.supplierpoc.models.simphony.request;
 
 public class ZealLoyaltyRequest {
 

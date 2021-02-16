@@ -17,12 +17,11 @@ public class OperationDataController {
     @GetMapping("/getOperationDataById")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public List<OperationData> getOpertionData(@RequestParam(name = "operationId") String operationId){
+    public OperationData getOpertionData(@RequestParam(name = "operationId") String operationId){
 
-        List<OperationData> operationData = operationDataRepo.findByOperationIdAndDeleted(operationId, false);
+        OperationData operationData = operationDataRepo.findOperationDataByOperationIdAndDeleted(operationId, false);
 
         return operationData;
     }
-
 
 }

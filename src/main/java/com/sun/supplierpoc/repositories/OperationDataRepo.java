@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface OperationDataRepo extends MongoRepository<OperationData, String> {
     List<OperationData> findByOperationIdAndDeleted(String operationId, boolean b);
+
+    OperationData findOperationDataByOperationIdAndDeleted(String operationId, boolean b);
 }

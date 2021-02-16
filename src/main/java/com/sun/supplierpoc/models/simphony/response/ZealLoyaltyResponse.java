@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models.simphony;
+package com.sun.supplierpoc.models.simphony.response;
 
 import com.sun.supplierpoc.models.OperationData;
 

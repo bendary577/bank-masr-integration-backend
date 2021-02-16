@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.simphony.transaction;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.supplierpoc.models.simphony.ppMenuItemsEx;
 import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 
@@ -17,9 +18,9 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "PostTransactionEx2")
 public class PostTransactionEx2 {
-
     private pGuestCheck pGuestCheck;
 
+    @JsonProperty(value = "menuItems")
     private ppMenuItemsEx ppMenuItemsEx;
 
     private pTmedDetailEx2 pTmedDetailEx2;

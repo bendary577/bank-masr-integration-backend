@@ -65,6 +65,10 @@ public class pGuestCheck {
     @XmlElement(name = "EventObjectNum")
     private String EventObjectNum;
 
+    public String revenue(){
+        return CheckRevenueCenterID;
+    }
+
     @JsonIgnore
     @JsonProperty(value = "dateToFire")
     public String getCheckDateToFire() {
@@ -80,7 +84,6 @@ public class pGuestCheck {
     public String getCheckEmployeeObjectNum() {
         return CheckEmployeeObjectNum;
     }
-
 
     public void setCheckEmployeeObjectNum(String checkEmployeeObjectNum) {
         CheckEmployeeObjectNum = checkEmployeeObjectNum;
@@ -169,6 +172,7 @@ public class pGuestCheck {
         return PCheckInfoLines;
     }
 
+    @JsonProperty(value = "checkInfoLines")
     public void setPCheckInfoLines(com.sun.supplierpoc.models.simphony.PCheckInfoLines PCheckInfoLines) {
         this.PCheckInfoLines = PCheckInfoLines;
     }

@@ -195,7 +195,6 @@ public class MenuItemsController {
                         syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
                         ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
                         return new ResponseEntity<>(menuItems, HttpStatus.OK);
-
                     }else{
                         // Sync menu items
                         Response syncResponse = SyncSimphonyMenuItems(username, account, revenueCenterID);

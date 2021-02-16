@@ -1,10 +1,9 @@
 package com.sun.supplierpoc.services.simphony;
 
-import com.sun.supplierpoc.models.simphony.ZealLoyaltyRequest;
-import com.sun.supplierpoc.models.simphony.ZealLoyaltyResponse;
-import com.sun.supplierpoc.models.simphony.ZealRedeemRequest;
-import com.sun.supplierpoc.models.simphony.ZealRedeemResponse;
-import com.sun.supplierpoc.models.simphony.check.ZealPayment;
+import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
+import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
+import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
+import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.web.client.RestTemplateBuilder;

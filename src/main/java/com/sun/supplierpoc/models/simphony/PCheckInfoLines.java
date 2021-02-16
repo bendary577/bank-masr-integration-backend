@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.simphony;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -17,6 +19,7 @@ public class PCheckInfoLines {
         return string;
     }
 
+    @JsonProperty(value = "line")
     public void setString(String string) {
         this.string = string;
     }

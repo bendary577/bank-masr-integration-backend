@@ -17,4 +17,5 @@ public interface SyncJobRepo extends MongoRepository<SyncJob, String>{
 
 
     List<SyncJob> deleteAllBySyncJobTypeId(String syncJobTypeId);
+
 }

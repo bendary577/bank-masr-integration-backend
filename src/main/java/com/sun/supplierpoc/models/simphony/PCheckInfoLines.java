@@ -19,7 +19,7 @@ public class PCheckInfoLines {
         return string;
     }
 
-    @JsonProperty(value = "line")
+    @JsonProperty(value = "string")
     public void setString(String string) {
         this.string = string;
     }

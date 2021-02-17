@@ -8,7 +8,6 @@ import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OperationRepo;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
-import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.simphony.CreateOrderService;
@@ -49,7 +48,6 @@ public class CreateOrder {
     public ResponseEntity CreateOpenCheckRequest(@RequestHeader("Authorization") String authorization,
                                                  @RequestBody PostTransactionEx2 checkDetails) {
 
-        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().revenue());
         String username, password;
         try {
             final String[] values = conversions.convertBasicAuth(authorization);
@@ -66,9 +64,32 @@ public class CreateOrder {
                         Account account = accountOptional.get();
                         OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted(Constants.CREATE_CHECK, account.getId(), false);
 
-                        if (!invokerUser.getTypeId().equals(operationType.getId())){
+                        ///////////////////-/////////////////// Validation /////////////////////////////////////////////
+                        if (!invokerUser.getTypeId().equals(operationType.getId()))
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to create check!");
-                        }
+
+                        if (checkDetails.getpGuestCheck() == null)
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Check is a required.");
+
+                        if (checkDetails.getpGuestCheck().revenue() == null || checkDetails.getpGuestCheck().revenue().equals(""))
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Revenue center ID is a required field.");
+
+                        if (checkDetails.getpGuestCheck().getCheckOrderType() == null || checkDetails.getpGuestCheck().getCheckOrderType().equals(""))
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Check order type is a required field.");
+
+                        // ONLINE-ORDER
+                        if (checkDetails.getpGuestCheck().getCheckOrderType().equals("1") &&
+                                (checkDetails.getpGuestCheck().getPCheckInfoLines() == null
+                                        || checkDetails.getpGuestCheck().getPCheckInfoLines().getString() == null
+                                        || checkDetails.getpGuestCheck().getPCheckInfoLines().getString().equals("")))
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Address is a required field.");
+
+                        if (checkDetails.getPpMenuItemsEx() == null)
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Menu items is a required field.");
+
+                        /////////////////////////////////// End Validation /////////////////////////////////////////////
+
+                        int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().revenue());
 
                         Operation operation = new Operation(Constants.RUNNING, "", new Date(), null, invokerUser.getId(),
                                 account.getId(), operationType.getId(), revenueCenterID, false);
@@ -105,7 +126,11 @@ public class CreateOrder {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
             }
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            e.printStackTrace();
+            String message = e.getMessage();
+            if(message == null || message.equals(""))
+                message = "Please check the request data, then try again.";
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(message);
         }
     }
 }

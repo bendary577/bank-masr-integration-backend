@@ -15,7 +15,6 @@ import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;

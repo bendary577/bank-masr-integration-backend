@@ -20,7 +20,7 @@ public class ppMenuItemsEx {
         return SimphonyPosApi_MenuItemEx;
     }
 
-    @JsonProperty(value = "simphony-pos-menuItems")
+    @JsonProperty(value = "simphonyMenuItems")
     public void setSimphonyPosApi_MenuItemEx(List<MenuItem> SimphonyPosApi_MenuItemEx) {
         this.SimphonyPosApi_MenuItemEx = SimphonyPosApi_MenuItemEx;
     }

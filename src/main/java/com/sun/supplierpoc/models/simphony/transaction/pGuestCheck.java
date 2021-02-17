@@ -2,11 +2,8 @@ package com.sun.supplierpoc.models.simphony.transaction;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.sun.supplierpoc.models.simphony.PCheckInfoLines;
-
 import javax.xml.bind.annotation.*;
-import java.util.List;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
@@ -168,12 +165,12 @@ public class pGuestCheck {
 
     @JsonIgnore
     @JsonProperty(value = "checkInfoLines")
-    public com.sun.supplierpoc.models.simphony.PCheckInfoLines getPCheckInfoLines() {
+    public PCheckInfoLines getPCheckInfoLines() {
         return PCheckInfoLines;
     }
 
     @JsonProperty(value = "checkInfoLines")
-    public void setPCheckInfoLines(com.sun.supplierpoc.models.simphony.PCheckInfoLines PCheckInfoLines) {
+    public void setPCheckInfoLines(PCheckInfoLines PCheckInfoLines) {
         this.PCheckInfoLines = PCheckInfoLines;
     }
 

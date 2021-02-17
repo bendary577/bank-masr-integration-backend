@@ -478,14 +478,20 @@ public class MenuItemService {
         ItemDiscount itemDiscount = new ItemDiscount();
         itemDiscount.setSimphonyPosApi_DiscountEx(simphonyPosApi_discountEx);
 
-        for (SimphonyMenuItem items : menuItems) {
-            // Add Discount
-            items.getMenuItem().setItemDiscount(itemDiscount);
+        for (int i = 0; i < menuItems.size(); i++) {
+            SimphonyMenuItem item = menuItems.get(i);
+            if(item.getMenuItem().getMiQuantity().equals("0")){
+                menuItems.remove(item);
+                i--;
+                continue;
+            }
 
-            items.getMenuItem().setMiSubLevel("1");
-            items.getMenuItem().setMiMenuLevel("1");
-            items.getMenuItem().setMiPriceLevel("0");
-            items.getMenuItem().setMiDefinitionSeqNum("1");
+            // Add Discount
+            item.getMenuItem().setItemDiscount(itemDiscount);
+            item.getMenuItem().setMiSubLevel("1");
+            item.getMenuItem().setMiMenuLevel("1");
+            item.getMenuItem().setMiPriceLevel("0");
+            item.getMenuItem().setMiDefinitionSeqNum("1");
         }
 
         checkDetails.setpGuestCheck(pGuestCheck);

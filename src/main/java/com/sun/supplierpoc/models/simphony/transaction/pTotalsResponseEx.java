@@ -91,4 +91,6 @@ public class pTotalsResponseEx {
     public void setTotalsSubTotal(String totalsSubTotal) {
         TotalsSubTotal = totalsSubTotal;
     }
+
+
 }

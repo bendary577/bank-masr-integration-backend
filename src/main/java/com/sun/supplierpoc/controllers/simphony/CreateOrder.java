@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
+import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OperationRepo;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
@@ -109,10 +110,11 @@ public class CreateOrder {
                             operationRepo.save(operation);
                         }
                         else {
+                            PostTransactionEx2Response transactionResponse = (PostTransactionEx2Response) responseEntity.getBody();
                             operation.setStatus(Constants.SUCCESS);
                             operation.setEndDate(new Date());
                             operation.setRowsFetched(1);
-                            createOrderService.saveOrderCreation(checkDetails, operation, account.getId());
+                            createOrderService.saveOrderCreation(transactionResponse, checkDetails, operation, account.getId());
                             operationRepo.save(operation);
                         }
                         return responseEntity;

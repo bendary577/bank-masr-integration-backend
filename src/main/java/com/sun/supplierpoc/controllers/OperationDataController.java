@@ -9,8 +9,6 @@ import java.util.List;
 
 @RestController
 public class OperationDataController {
-
-
     @Autowired
     private OperationDataRepo operationDataRepo;
 
@@ -18,10 +16,7 @@ public class OperationDataController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public OperationData getOpertionData(@RequestParam(name = "operationId") String operationId){
-
-        OperationData operationData = operationDataRepo.findOperationDataByOperationIdAndDeleted(operationId, false);
-
-        return operationData;
+        return operationDataRepo.findOperationDataByOperationIdAndDeleted(operationId, false);
     }
 
 }

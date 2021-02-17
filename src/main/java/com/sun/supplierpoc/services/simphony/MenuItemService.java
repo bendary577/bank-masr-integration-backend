@@ -373,7 +373,6 @@ public class MenuItemService {
 
     private PostTransactionEx2 buildCheckObject(SimphonyLocation location){
         pGuestCheck pGuestCheck = new pGuestCheck();
-        ppMenuItemsEx ppMenuItemsEx = new ppMenuItemsEx();
         PostTransactionEx2 postTransactionEx2 = new PostTransactionEx2();
         PCheckInfoLines PCheckInfoLines = new PCheckInfoLines();
         PCheckInfoLines.setString("Online Check");
@@ -414,7 +413,6 @@ public class MenuItemService {
         menuItems.add(menuItem);
         menuItems.add(menuItem);
 
-        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
 
         pTmedDetailEx2 pTmedDetailEx2 = new pTmedDetailEx2();
         SimphonyPosApi_TmedDetailItemEx2 SimphonyPosApi_TmedDetailItemEx2 = new SimphonyPosApi_TmedDetailItemEx2();
@@ -426,7 +424,7 @@ public class MenuItemService {
         SimphonyPosApi_TmedDetailItemEx2.setTmedObjectNum("3001");
 
         postTransactionEx2.setpGuestCheck(pGuestCheck);
-        postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
+//        postTransactionEx2.setPpMenuItemsEx(ppMenuItemsEx);
         postTransactionEx2.setpTmedDetailEx2(pTmedDetailEx2);
 
         try {
@@ -471,8 +469,7 @@ public class MenuItemService {
         pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
 
         ////////////////////////////////////// Menu Items Details ///////////////////////////////////////////////////
-        ppMenuItemsEx ppMenuItemsEx = checkDetails.getPpMenuItemsEx();
-        List<MenuItem> menuItems = ppMenuItemsEx.getSimphonyPosApi_MenuItemEx();
+        List<SimphonyMenuItem> menuItems = checkDetails.getPpMenuItemsEx();
 
         // Prepare discount object
         SimphonyPosApi_DiscountEx simphonyPosApi_discountEx = new SimphonyPosApi_DiscountEx();
@@ -481,20 +478,18 @@ public class MenuItemService {
         ItemDiscount itemDiscount = new ItemDiscount();
         itemDiscount.setSimphonyPosApi_DiscountEx(simphonyPosApi_discountEx);
 
-        for (MenuItem items : menuItems) {
+        for (SimphonyMenuItem items : menuItems) {
             // Add Discount
-            items.setItemDiscount(itemDiscount);
+            items.getMenuItem().setItemDiscount(itemDiscount);
 
-            items.setMiSubLevel("1");
-            items.setMiMenuLevel("1");
-            items.setMiPriceLevel("0");
-            items.setMiDefinitionSeqNum("1");
+            items.getMenuItem().setMiSubLevel("1");
+            items.getMenuItem().setMiMenuLevel("1");
+            items.getMenuItem().setMiPriceLevel("0");
+            items.getMenuItem().setMiDefinitionSeqNum("1");
         }
 
-        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
-
         checkDetails.setpGuestCheck(pGuestCheck);
-        checkDetails.setPpMenuItemsEx(ppMenuItemsEx);
+        checkDetails.setPpMenuItemsEx(menuItems);
         checkDetails.setpTmedDetailEx2(pTmedDetailEx2);
     }
 

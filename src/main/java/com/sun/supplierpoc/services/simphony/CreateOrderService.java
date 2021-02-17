@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services.simphony;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.simphony.MenuItem;
+import com.sun.supplierpoc.models.simphony.SimphonyMenuItem;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.AccountService;
@@ -75,12 +76,12 @@ public class CreateOrderService {
         ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
         List<HashMap<String, String>> menuItemsMap = new ArrayList<>();
 
-        List<MenuItem> listMenuItem = checkDetails.getPpMenuItemsEx().getSimphonyPosApi_MenuItemEx();
+        List<SimphonyMenuItem> listMenuItem = checkDetails.getPpMenuItemsEx();
 
-        for (MenuItem menuItem : listMenuItem) {
+        for (SimphonyMenuItem menuItem : listMenuItem) {
             for (HashMap<String, String> tempItem : menuItems) {
 
-                if (tempItem.get("miObjectNum").equals(menuItem.getMiObjectNum())) {
+                if (tempItem.get("miObjectNum").equals(menuItem.getMenuItem().getMiObjectNum())) {
                     menuItemsMap.add(tempItem);
                 }
             }

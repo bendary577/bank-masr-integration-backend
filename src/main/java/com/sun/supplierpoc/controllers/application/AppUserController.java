@@ -25,7 +25,7 @@ public class AppUserController {
     public void sendQRCodeEmail()
             throws Exception {
         try {
-            emailService.sendNotificationMail();
+            emailService.sendMimeMail();
         } catch (MailException e) {
             e.printStackTrace();
         }

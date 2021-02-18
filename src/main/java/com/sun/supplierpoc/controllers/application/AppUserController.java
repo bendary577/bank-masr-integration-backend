@@ -1,8 +1,10 @@
 package com.sun.supplierpoc.controllers.application;
 import com.sun.supplierpoc.services.QRCodeGenerator;
+import com.sun.supplierpoc.services.SendEmailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.MailException;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -12,10 +14,23 @@ import org.springframework.web.bind.annotation.*;
 public class AppUserController {
     @Autowired
     QRCodeGenerator qrCodeGenerator;
+    @Autowired
+    SendEmailService emailService;
 
     private static final String QR_CODE_IMAGE_PATH = "./src/main/resources/QRCode.png";
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @GetMapping(path = "/sendQRCodeEmail")
+    public void sendQRCodeEmail()
+            throws Exception {
+        try {
+            emailService.sendNotificationMail();
+        } catch (MailException e) {
+            e.printStackTrace();
+        }
+
+    }
 
     @GetMapping(path = "/generateAndDownloadQRCode")
     public void generateAndDownloadQRCode(

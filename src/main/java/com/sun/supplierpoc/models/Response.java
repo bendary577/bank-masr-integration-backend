@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
 
 import java.util.ArrayList;
@@ -18,8 +19,10 @@ public class Response {
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
     private ArrayList<DbMenuItemDefinition> menuItems = new ArrayList<>();
+    private ArrayList<DbMenuItemClass> menuItemClasses = new ArrayList<>();
     private SalesStatistics salesStatistics = new SalesStatistics();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
+
 
     // Supplier Variables
     private ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
@@ -172,4 +175,11 @@ public class Response {
         this.addedOperationData = addedOperationData;
     }
 
+    public ArrayList<DbMenuItemClass> getMenuItemClasses() {
+        return menuItemClasses;
+    }
+
+    public void setMenuItemClasses(ArrayList<DbMenuItemClass> menuItemClasses) {
+        this.menuItemClasses = menuItemClasses;
+    }
 }

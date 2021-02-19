@@ -19,6 +19,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,15 +62,16 @@ public class MenuItemService {
     private SyncJobDataRepo syncJobDataRepo;
 
     public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter,
-                                                                      String simphonyServerIP, int startIndex, int maxCount){
+                                                                      String simphonyServerIP, int startIndex, int maxCount) {
         com.sun.supplierpoc.models.Response response = new com.sun.supplierpoc.models.Response();
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
-        try
-        {
-            GetConfigurationInfoEx getConfigurationInfoEx= new GetConfigurationInfoEx();
+        try {
+            GetConfigurationInfoEx getConfigurationInfoEx = new GetConfigurationInfoEx();
             configInfoRequest configInfoRequest = new configInfoRequest();
+
             SimphonyPosApi_ConfigInfo simphonyPosApi_configInfo = new SimphonyPosApi_ConfigInfo();
+
             ArrayList<SimphonyPosApi_ConfigInfo> simphonyPosApi_configInfos = new ArrayList<>();
 
             simphonyPosApi_configInfo.setConfigurationInfoTypeID("MENUITEMDEFINITIONS");
@@ -84,6 +86,12 @@ public class MenuItemService {
             simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
             simphonyPosApi_configInfos.add(simphonyPosApi_configInfo);
 
+            simphonyPosApi_configInfo = new SimphonyPosApi_ConfigInfo();
+
+            simphonyPosApi_configInfo.setConfigurationInfoTypeID("MENUITEMCLASS");
+            simphonyPosApi_configInfo.setStartIndex(startIndex);
+            simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
+            simphonyPosApi_configInfos.add(simphonyPosApi_configInfo);
 
             configInfoRequest.setConfigurationInfo(simphonyPosApi_configInfos);
             configInfoRequest.setEmployeeObjectNumber(empNum);
@@ -105,7 +113,7 @@ public class MenuItemService {
             dbf.setNamespaceAware(true);
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.newDocument();
-            marshaller.marshal(getConfigurationInfoEx,doc);
+            marshaller.marshal(getConfigurationInfoEx, doc);
             soapBody.addDocument(doc);
             envelope.removeNamespaceDeclaration("SOAP-ENV");
             envelope.addNamespaceDeclaration("soap", "http://schemas.xmlsoap.org/soap/envelope/");
@@ -122,19 +130,20 @@ public class MenuItemService {
 
             Document responseDoc = responseToDocument(configInfoExResponse.readEntity(String.class));
 
-            if (responseDoc != null){
-                if(responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")){
+            if (responseDoc != null) {
+                if (responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")) {
                     String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
                     response.setMessage(errorMessage);
                     response.setStatus(false);
                     return response;
                 }
 
-                if (responseDoc.getElementsByTagName("MenuItemPrice").item(0)!=null &&
-                        responseDoc.getElementsByTagName("MenuItemDefinitions").item(0)!=null
-                ){
-                    String xmlMenuItemPrice =responseDoc.getElementsByTagName("MenuItemPrice").item(0).getFirstChild().getNodeValue();
-                    String xmlMenuItem =responseDoc.getElementsByTagName("MenuItemDefinitions").item(0).getFirstChild().getNodeValue();
+                if (responseDoc.getElementsByTagName("MenuItemPrice").item(0) != null &&
+                        responseDoc.getElementsByTagName("MenuItemDefinitions").item(0) != null
+                ) {
+                    String xmlMenuItemPrice = responseDoc.getElementsByTagName("MenuItemPrice").item(0).getFirstChild().getNodeValue();
+                    String xmlMenuItem = responseDoc.getElementsByTagName("MenuItemDefinitions").item(0).getFirstChild().getNodeValue();
+                    String xmlMenuItemClass = responseDoc.getElementsByTagName("MenuItemClass").item(0).getFirstChild().getNodeValue();
 
                     jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemDefinition.class);
                     Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
@@ -144,14 +153,19 @@ public class MenuItemService {
                     jaxbUnmarshaller = jaxbContext.createUnmarshaller();
                     ArrayOfDbMenuItemPrice MenuItemPrice = (ArrayOfDbMenuItemPrice) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItemPrice));
 
+                    jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemClass.class);
+                    jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                    ArrayOfDbMenuItemClass DbMenuItemClasses = (ArrayOfDbMenuItemClass) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItemClass));
+
                     mergeMenuItemWithPrice(MenuItem, MenuItemPrice);
 
                     response.setMessage("Sync menu item successfully.");
                     response.setStatus(true);
                     response.setMenuItems(MenuItem.getDbMenuItemDefinition());
+                    response.setMenuItemClasses((ArrayList) DbMenuItemClasses.getDbMenuItemClass());
                     return response;
                 }
-            }else {
+            } else {
                 response.setMessage("Failed to sync menu items.");
                 response.setStatus(false);
                 return response;
@@ -167,15 +181,14 @@ public class MenuItemService {
     }
 
     public ResponseEntity PostTransactionEx(PostTransactionEx2 checkDetails, SimphonyLocation location,
-                                            OperationType operationType){
+                                            OperationType operationType) {
 
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
-        try
-        {
+        try {
             /*
-            * Add extra static fields to check
-            * */
+             * Add extra static fields to check
+             * */
 
             buildCheckObject(checkDetails, location, operationType);
 
@@ -193,7 +206,7 @@ public class MenuItemService {
             dbf.setNamespaceAware(true);
             DocumentBuilder db = dbf.newDocumentBuilder();
             Document doc = db.newDocument();
-            marshaller.marshal(checkDetails,doc);
+            marshaller.marshal(checkDetails, doc);
             soapBody.addDocument(doc);
             envelope.removeNamespaceDeclaration("SOAP-ENV");
             envelope.addNamespaceDeclaration("soap", "http://schemas.xmlsoap.org/soap/envelope/");
@@ -211,12 +224,12 @@ public class MenuItemService {
             String createCheckResponseText = createCheckResponse.readEntity(String.class);
             Document responseDoc = responseToDocument(createCheckResponseText);
 
-            if (responseDoc != null){
-                if(responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")){
+            if (responseDoc != null) {
+                if (responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")) {
                     String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
                     return new ResponseEntity(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
 
-                }else {
+                } else {
                     JSONObject jsonObject = xmlDocToJsonObject(responseDoc);
                     assert jsonObject != null;
                     JSONObject checkJson = jsonObject.getJSONObject("soap:Envelope").getJSONObject("soap:Body").getJSONObject("PostTransactionEx2Response");
@@ -226,13 +239,13 @@ public class MenuItemService {
 
                     try {
                         return new ResponseEntity(response, HttpStatus.OK);
-                    }catch (org.json.JSONException ex){
+                    } catch (org.json.JSONException ex) {
                         ex.printStackTrace();
                         return new ResponseEntity("Failed to create new open guest check.", HttpStatus.INTERNAL_SERVER_ERROR);
                     }
                 }
 
-            }else {
+            } else {
                 return new ResponseEntity("Failed to create new open guest check.", HttpStatus.OK);
             }
 
@@ -242,7 +255,7 @@ public class MenuItemService {
         }
     }
 
-    private Document responseToDocument(String response){
+    private Document responseToDocument(String response) {
         DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
         Document dDoc = null;
         try {
@@ -259,28 +272,18 @@ public class MenuItemService {
     private String soapMessageToString(SOAPMessage message) {
         String result = null;
 
-        if (message != null)
-        {
+        if (message != null) {
             ByteArrayOutputStream baos = null;
-            try
-            {
+            try {
                 baos = new ByteArrayOutputStream();
                 message.writeTo(baos);
                 result = baos.toString();
-            }
-            catch (Exception e)
-            {
-            }
-            finally
-            {
-                if (baos != null)
-                {
-                    try
-                    {
+            } catch (Exception e) {
+            } finally {
+                if (baos != null) {
+                    try {
                         baos.close();
-                    }
-                    catch (IOException ioe)
-                    {
+                    } catch (IOException ioe) {
                     }
                 }
             }
@@ -288,7 +291,7 @@ public class MenuItemService {
         return result;
     }
 
-    private JSONObject xmlDocToJsonObject(Document xml){
+    private JSONObject xmlDocToJsonObject(Document xml) {
 
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer transformer;
@@ -316,21 +319,21 @@ public class MenuItemService {
         return null;
     }
 
-    private static void mergeMenuItemWithPrice(ArrayOfDbMenuItemDefinition arrayOfDbMenuItemDefinition, ArrayOfDbMenuItemPrice arrayOfDbMenuItemPrice){
-        List<DbMenuItemDefinition> DbMenuItemDefinition =  arrayOfDbMenuItemDefinition.getDbMenuItemDefinition();
-        List<DbMenuItemPrice> DbMenuItemPrice =  arrayOfDbMenuItemPrice.getDbMenuItemPrice();
+    private static void mergeMenuItemWithPrice(ArrayOfDbMenuItemDefinition arrayOfDbMenuItemDefinition, ArrayOfDbMenuItemPrice arrayOfDbMenuItemPrice) {
+        List<DbMenuItemDefinition> DbMenuItemDefinition = arrayOfDbMenuItemDefinition.getDbMenuItemDefinition();
+        List<DbMenuItemPrice> DbMenuItemPrice = arrayOfDbMenuItemPrice.getDbMenuItemPrice();
 
-        for (DbMenuItemDefinition dbMenuItemDefinition: DbMenuItemDefinition) {
-            DbMenuItemPrice dbMenuItemPrice= getMenuItemPrice(DbMenuItemPrice, dbMenuItemDefinition.getMenuItemDefID());
-            if (dbMenuItemPrice != null){
+        for (DbMenuItemDefinition dbMenuItemDefinition : DbMenuItemDefinition) {
+            DbMenuItemPrice dbMenuItemPrice = getMenuItemPrice(DbMenuItemPrice, dbMenuItemDefinition.getMenuItemDefID());
+            if (dbMenuItemPrice != null) {
                 dbMenuItemDefinition.setMenuItemPrice(dbMenuItemPrice);
             }
         }
     }
 
-    private  static DbMenuItemPrice getMenuItemPrice(List<DbMenuItemPrice> DbMenuItemPrice, String menuItemDefID){
-        for (DbMenuItemPrice dbMenuItemPrice: DbMenuItemPrice) {
-            if (dbMenuItemPrice.getMenuItemDefID().equals(menuItemDefID)){
+    private static DbMenuItemPrice getMenuItemPrice(List<DbMenuItemPrice> DbMenuItemPrice, String menuItemDefID) {
+        for (DbMenuItemPrice dbMenuItemPrice : DbMenuItemPrice) {
+            if (dbMenuItemPrice.getMenuItemDefID().equals(menuItemDefID)) {
                 DbMenuItemPrice.remove(dbMenuItemPrice);
                 return dbMenuItemPrice;
             }
@@ -338,9 +341,15 @@ public class MenuItemService {
         return null;
     }
 
-    public ArrayList<SyncJobData> saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob) {
+    public ArrayList<SyncJobData> saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob, ArrayList<DbMenuItemClass> menuItemClasses) {
         ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
+
         for (DbMenuItemDefinition menuItem : menuItems) {
+
+            if (!menuItem.getMenuItemClassObjNum().equals(null) && !menuItem.getMenuItemClassObjNum().equals("0")) {
+                getCondiments(menuItem, menuItemClasses);
+            }
+
             HashMap<String, String> menuItemData = new HashMap<>();
 
             menuItemData.put("menuFirstName", menuItem.getName1().getStringText());
@@ -348,9 +357,9 @@ public class MenuItemService {
             menuItemData.put("miObjectNum", menuItem.getMiMasterObjNum());
             menuItemData.put("availability", menuItem.getCheckAvailability().toString());
 
-            if (menuItem.getMenuItemPrice() != null){
+            if (menuItem.getMenuItemPrice() != null) {
                 menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());
-            }else{
+            } else {
                 menuItemData.put("menuItemPrice", "0");
             }
 
@@ -362,16 +371,32 @@ public class MenuItemService {
         return savedMenuItems;
     }
 
+
+    private List<String> getCondiments(DbMenuItemDefinition menuItem, ArrayList<DbMenuItemClass> menuItemClasses) {
+
+        List<String> condiments = new ArrayList<>();
+        DbMenuItemClass menuItemClass = new DbMenuItemClass();
+        for (DbMenuItemClass tempMenuItemClass : menuItemClasses) {
+            if (menuItemClass.getObjectNumber() == Integer.parseInt(menuItem.getMenuItemClassObjNum())) {
+                menuItemClass = tempMenuItemClass;
+            }
+        }
+
+        double requiredCondiment = menuItemClass.getRequiredCondiments();
+
+        return condiments;
+    }
+
     public ArrayList<HashMap<String, String>> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
         ArrayList<HashMap<String, String>> menuItems = new ArrayList<>();
 
-        for (SyncJobData data : menuItemsData ) {
+        for (SyncJobData data : menuItemsData) {
             menuItems.add(data.getData());
         }
         return menuItems;
     }
 
-    private PostTransactionEx2 buildCheckObject(SimphonyLocation location){
+    private PostTransactionEx2 buildCheckObject(SimphonyLocation location) {
         pGuestCheck pGuestCheck = new pGuestCheck();
         PostTransactionEx2 postTransactionEx2 = new PostTransactionEx2();
         PCheckInfoLines PCheckInfoLines = new PCheckInfoLines();
@@ -430,7 +455,7 @@ public class MenuItemService {
         try {
             ObjectMapper mapper = new ObjectMapper();
             String json = mapper.writeValueAsString(postTransactionEx2);
-        }catch (IOException e) {
+        } catch (IOException e) {
             System.out.println("Failed to convert object to json");
         }
 
@@ -438,7 +463,7 @@ public class MenuItemService {
     }
 
     private void buildCheckObject(PostTransactionEx2 checkDetails, SimphonyLocation location,
-                                                OperationType operationType){
+                                  OperationType operationType) {
         OperationConfiguration configuration = operationType.getConfiguration();
         //////////////////////////////////////// Guest Check Details ////////////////////////////////////////////////
         pGuestCheck pGuestCheck = checkDetails.getpGuestCheck();

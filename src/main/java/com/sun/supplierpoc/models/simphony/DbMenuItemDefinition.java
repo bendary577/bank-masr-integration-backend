@@ -334,4 +334,5 @@ public class DbMenuItemDefinition {
     public void setName2(MenuItemName name2) {
         Name2 = name2;
     }
+
 }

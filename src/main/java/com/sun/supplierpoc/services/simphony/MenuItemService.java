@@ -383,7 +383,22 @@ public class MenuItemService {
             }
         }
 
-        double requiredCondiment = menuItemClass.getRequiredCondiments();
+        Character[] requiredCondimentsGroups =
+                Double.toString(menuItemClass.getRequiredCondiments()).chars().mapToObj(c -> (char)c).toArray(Character[]::new);
+
+        List<Integer> lastRequiredCondimentsGroups = new ArrayList<>();
+
+        LoggerFactory.getLogger(MenuItemService.class).info(requiredCondimentsGroups.toString());
+
+        for(int i = 1; i <= requiredCondimentsGroups.length; i++){
+
+            if( requiredCondimentsGroups[i] == '1' ){
+                lastRequiredCondimentsGroups.add(i);
+            }
+        }
+
+        LoggerFactory.getLogger(MenuItemService.class).info(lastRequiredCondimentsGroups.toString());
+
 
         return condiments;
     }

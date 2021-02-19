@@ -130,7 +130,8 @@ public class MenuItemsController {
             if(response.isStatus()){
                 // Save menu items
                 ArrayList<SyncJobData> savedMenuItems = this.menuItemService.saveMenuItemData(response.getMenuItems(),
-                        syncJob);
+                        syncJob, response.getMenuItemClasses());
+                response.setMenuItemClasses(null);
                 syncJob.setStatus(Constants.SUCCESS);
                 syncJob.setEndDate(new Date());
                 syncJob.setRowsFetched(response.getMenuItems().size());

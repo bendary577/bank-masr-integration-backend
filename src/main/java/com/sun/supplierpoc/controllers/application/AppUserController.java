@@ -22,10 +22,9 @@ public class AppUserController {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @GetMapping(path = "/sendQRCodeEmail")
-    public void sendQRCodeEmail()
-            throws Exception {
+    public void sendQRCodeEmail(){
         try {
-            emailService.sendMimeMail();
+            emailService.sendMimeMail(QR_CODE_IMAGE_PATH);
         } catch (MailException e) {
             e.printStackTrace();
         }

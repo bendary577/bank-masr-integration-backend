@@ -322,10 +322,10 @@ public class TransferService {
 
     }
 
-    public ArrayList<SyncJobData> saveTransferSunData(ArrayList<HashMap<String, String>> transfers, SyncJob syncJob) {
+    public ArrayList<SyncJobData> saveTransferSunData(ArrayList<HashMap<String, Object>> transfers, SyncJob syncJob) {
         ArrayList<SyncJobData> addedTransfers = new ArrayList<>();
 
-        for (HashMap<String, String> transfer : transfers) {
+        for (HashMap<String, Object> transfer : transfers) {
 
             SyncJobData syncJobData = new SyncJobData(transfer, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

@@ -439,7 +439,7 @@ public class InvoiceService {
         }
 
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
-        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
             if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK , account)){
@@ -624,7 +624,7 @@ public class InvoiceService {
 
     private void getInvoiceReceiptsDetails(Configuration configuration,
             ArrayList<Item> items, ArrayList<OverGroup> overGroups, HashMap<String, Object> invoice, WebDriver driver,
-                                           ArrayList<HashMap<String, String>> journalEntries, boolean flag){
+                                           ArrayList<HashMap<String, Object>> journalEntries, boolean flag){
         ArrayList<Journal> journals = new ArrayList<>();
 
         // Get Receipt page
@@ -689,7 +689,7 @@ public class InvoiceService {
             }
 
             for (Journal journal : journals) {
-                HashMap<String, String> journalEntry = new HashMap<>();
+                HashMap<String, Object> journalEntry = new HashMap<>();
 
                 OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
                 if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
@@ -784,12 +784,12 @@ public class InvoiceService {
         }
     }
 
-    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, String>> invoices, SyncJob syncJob,
+    public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
                                                    SyncJobType syncJobType, Boolean flag){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
         ArrayList<SyncJobData> savedInvoices = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
-        for (HashMap<String, String> invoice : invoices) {
+        for (HashMap<String, Object> invoice : invoices) {
             // check existence of invoice in middleware (UNIQUE: receiptNo with over group)
 //            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
 //                    invoice.get("overGroup"));
@@ -801,8 +801,8 @@ public class InvoiceService {
 
             // Invoice Part
             if (!flag) {
-                if ((invoice.get("invoiceNo")).length() >= 3){
-                    if ((invoice.get("invoiceNo")).substring(0, 3).equals("RTV")) {
+                if ((invoice.get("invoiceNo")).toString().length() >= 3){
+                    if ((invoice.get("invoiceNo")).toString().substring(0, 3).equals("RTV")) {
                         continue;
                     }
                 }

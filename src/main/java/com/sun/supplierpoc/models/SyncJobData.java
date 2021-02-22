@@ -11,7 +11,7 @@ public class SyncJobData implements Serializable {
 
     @Id
     private String id;
-    private HashMap<String, String> data;
+    private HashMap<String, Object> data;
     private String status;
     private String reason;
     private Date creationDate;
@@ -21,7 +21,7 @@ public class SyncJobData implements Serializable {
     public SyncJobData() {
     }
 
-    public SyncJobData(HashMap<String, String> data, String status, String reason, Date creationDate, String syncJobId) {
+    public SyncJobData(HashMap<String, Object> data, String status, String reason, Date creationDate, String syncJobId) {
         this.data = data;
         this.status = status;
         this.reason = reason;
@@ -38,11 +38,11 @@ public class SyncJobData implements Serializable {
         this.id = id;
     }
 
-    public HashMap<String, String> getData() {
+    public HashMap<String, Object> getData() {
         return data;
     }
 
-    public void setData(HashMap<String, String> data) {
+    public void setData(HashMap<String, Object> data) {
         this.data = data;
     }
 

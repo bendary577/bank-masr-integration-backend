@@ -48,11 +48,11 @@ public class DbMenuItemClass {
     @XmlElement(name = "PricingCalculation")
     public String PricingCalculation;
     @XmlElement(name = "MemberOfCondiments")
-    public double MemberOfCondiments;
+    public String MemberOfCondiments;
     @XmlElement(name = "RequiredCondiments")
-    public double RequiredCondiments;
+    public String RequiredCondiments;
     @XmlElement(name = "AllowedCondiments")
-    public double AllowedCondiments;
+    public String AllowedCondiments;
     @XmlElement(name = "RoutingGroupObjNum")
     public int RoutingGroupObjNum;
     @XmlElement(name = "KdsCourseNum")
@@ -258,27 +258,27 @@ public class DbMenuItemClass {
         PricingCalculation = pricingCalculation;
     }
 
-    public double getMemberOfCondiments() {
+    public String getMemberOfCondiments() {
         return MemberOfCondiments;
     }
 
-    public void setMemberOfCondiments(double memberOfCondiments) {
+    public void setMemberOfCondiments(String memberOfCondiments) {
         MemberOfCondiments = memberOfCondiments;
     }
 
-    public double getRequiredCondiments() {
+    public String getRequiredCondiments() {
         return RequiredCondiments;
     }
 
-    public void setRequiredCondiments(double requiredCondiments) {
+    public void setRequiredCondiments(String requiredCondiments) {
         RequiredCondiments = requiredCondiments;
     }
 
-    public double getAllowedCondiments() {
+    public String getAllowedCondiments() {
         return AllowedCondiments;
     }
 
-    public void setAllowedCondiments(double allowedCondiments) {
+    public void setAllowedCondiments(String allowedCondiments) {
         AllowedCondiments = allowedCondiments;
     }
 
@@ -397,8 +397,10 @@ public class DbMenuItemClass {
     @Override
     public String toString() {
         return "DbMenuItemClass{" +
-                "MenuItemClassID=" + MenuItemClassID +
-                ", HierStrucID=" + HierStrucID + '\'' +
+                "SvcChgItmzrIndex=" + SvcChgItmzrIndex +
+                ", MemberOfCondiments=" + MemberOfCondiments +
+                ", RequiredCondiments=" + RequiredCondiments +
+                ", AllowedCondiments=" + AllowedCondiments +
                 '}';
     }
 }

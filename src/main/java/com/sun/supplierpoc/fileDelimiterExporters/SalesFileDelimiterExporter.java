@@ -43,7 +43,7 @@ public class SalesFileDelimiterExporter {
     }
 
     public File prepareNDFFile(List<SyncJobData> jobData, SyncJobType syncJobType, String accountName, String location) throws ParseException {
-        String transactionDate = jobData.get(0).getData().get("transactionDate");
+        String transactionDate = jobData.get(0).getData().get("transactionDate").toString();
         Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
 
         DateFormatSymbols dfs = new DateFormatSymbols();
@@ -207,11 +207,11 @@ public class SalesFileDelimiterExporter {
 
     private SyncJobDataCSV createSyncJobDataObject(SyncJobData syncJobData, String CDMaker){
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
-        syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation");
-        syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation");
-        syncJobDataCSV.toCostCenter = syncJobData.getData().get("toCostCenter");
-        syncJobDataCSV.toAccountCode = syncJobData.getData().get("toAccountCode");
-        syncJobDataCSV.description = syncJobData.getData().get("description");
+        syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation").toString();
+        syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation").toString();
+        syncJobDataCSV.toCostCenter = syncJobData.getData().get("toCostCenter").toString();
+        syncJobDataCSV.toAccountCode = syncJobData.getData().get("toAccountCode").toString();
+        syncJobDataCSV.description = syncJobData.getData().get("description").toString();
 
         if(syncJobDataCSV.description.length() > 25){
             syncJobDataCSV.description = syncJobDataCSV.description.substring(0, 25);
@@ -219,23 +219,23 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.description = String.format("%-25s", syncJobDataCSV.description);
         }
 
-        syncJobDataCSV.transactionReference = syncJobData.getData().get("transactionReference");
+        syncJobDataCSV.transactionReference = syncJobData.getData().get("transactionReference").toString();
         if(syncJobDataCSV.transactionReference.length() > 15){
             syncJobDataCSV.transactionReference = syncJobDataCSV.transactionReference.substring(0, 15);
         }else if(syncJobDataCSV.transactionReference.length() < 15) {
             syncJobDataCSV.transactionReference = String.format("%-15s", syncJobDataCSV.transactionReference);
         }
 
-        String year = syncJobData.getData().get("transactionDate").substring(4);
-        String month = syncJobData.getData().get("transactionDate").substring(2,4);
-        String day = syncJobData.getData().get("transactionDate").substring(0,2);
+        String year = syncJobData.getData().get("transactionDate").toString().substring(4);
+        String month = syncJobData.getData().get("transactionDate").toString().substring(2,4);
+        String day = syncJobData.getData().get("transactionDate").toString().substring(0,2);
 
         syncJobDataCSV.transactionDate = year + month + day;
         syncJobDataCSV.accountingPeriod = year + "0" + month;
 
         if(CDMaker.equals("D")){
             syncJobDataCSV.DCMarker = "D";
-            String totalDr = syncJobData.getData().get("totalDr");
+            String totalDr = syncJobData.getData().get("totalDr").toString();
             if (totalDr.substring(0, 1).equals("-")){
                 totalDr = totalDr.substring(1);
             }
@@ -261,7 +261,7 @@ public class SalesFileDelimiterExporter {
 
             syncJobDataCSV.amount = amountPart + decimalPart;
 
-            String accountCode = syncJobData.getData().get("expensesAccount");
+            String accountCode = syncJobData.getData().get("expensesAccount").toString();
             if(accountCode.length() < 10){
                 accountCode = String.format("%-10s", accountCode);
             }
@@ -270,7 +270,7 @@ public class SalesFileDelimiterExporter {
         else {
             syncJobDataCSV.DCMarker = "C";
             // 18 char --> 15 char + 3 decimals
-            String totalCr = syncJobData.getData().get("totalCr");
+            String totalCr = syncJobData.getData().get("totalCr").toString();
             if (totalCr.substring(0, 1).equals("-")){
                 totalCr = totalCr.substring(1);
             }
@@ -296,7 +296,7 @@ public class SalesFileDelimiterExporter {
 
             syncJobDataCSV.amount = amountPart + decimalPart;
 
-            String accountCode = syncJobData.getData().get("inventoryAccount");
+            String accountCode = syncJobData.getData().get("inventoryAccount").toString();
             if(accountCode.length() < 10){
                 accountCode = String.format("%-10s", accountCode);
             }
@@ -339,7 +339,7 @@ public class SalesFileDelimiterExporter {
             analysisTCode = "#";
 
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")){
-            analysisTCode = syncJobData.getData().get("analysisCodeT" + index);
+            analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
         }
 
         if(analysisTCode.length() > 15){

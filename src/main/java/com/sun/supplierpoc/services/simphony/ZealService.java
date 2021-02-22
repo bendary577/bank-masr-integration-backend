@@ -205,7 +205,7 @@ public class ZealService {
         System.out.println(syncJob.getEndDate());
         ArrayList<SyncJobData> syncJobData = new ArrayList<>(syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false));
 
-        ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+        ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
 
         HashMap<String, String> menuItemsMap = new HashMap<>();
         menuItemsMap.put("itemObjectId", "4");

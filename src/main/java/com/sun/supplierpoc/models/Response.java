@@ -31,7 +31,7 @@ public class Response {
     // Booked Production Variables
     private ArrayList<BookedProduction> bookedProduction = new ArrayList<>();
 
-    private ArrayList<HashMap<String, String>> waste = new ArrayList<>();
+    private ArrayList<HashMap<String, Object>> waste = new ArrayList<>();
 
     private ArrayList<SyncJobData> addedSyncJobData = new ArrayList<>();
     private ArrayList<OperationData> addedOperationData = new ArrayList<>();
@@ -151,11 +151,11 @@ public class Response {
         this.bookedProduction = bookedProduction;
     }
 
-    public ArrayList<HashMap<String, String>> getWaste() {
+    public ArrayList<HashMap<String, Object>> getWaste() {
         return waste;
     }
 
-    public void setWaste(ArrayList<HashMap<String, String>> waste) {
+    public void setWaste(ArrayList<HashMap<String, Object>> waste) {
         this.waste = waste;
     }
 

@@ -396,7 +396,7 @@ public class JournalService {
 
                 // check zero entries (not needed)
                 if (journal.getTotalCost() != 0){
-                    HashMap<String, String> costData = new HashMap<>();
+                    HashMap<String, Object> costData = new HashMap<>();
                     if(costCenter.location != null)
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
                     else

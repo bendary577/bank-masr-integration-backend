@@ -59,7 +59,7 @@ public class CreateOrderService {
 
         ArrayList<OperationData> savedMenuItems = new ArrayList<>();
         HashMap<String, Object> zealPaymentData = new HashMap<>();
-        List<HashMap<String, String>> menuItemsMap = getItem(checkDetails);
+        List<HashMap<String, Object>> menuItemsMap = getItem(checkDetails);
 
         zealPaymentData.put("checkOrderType", checkDetails.getpGuestCheck().getCheckOrderType());
         zealPaymentData.put("checkInfoLines", checkDetails.getpGuestCheck().getPCheckInfoLines());
@@ -75,20 +75,20 @@ public class CreateOrderService {
         return savedMenuItems;
     }
 
-    public List<HashMap<String, String>> getItem(PostTransactionEx2 checkDetails) {
+    public List<HashMap<String, Object>> getItem(PostTransactionEx2 checkDetails) {
 
         List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc("5fe34649283cde246c2d7736", false);
         SyncJob syncJob = syncJobs.get(0);
         System.out.println(syncJob.getEndDate());
         ArrayList<SyncJobData> syncJobData = new ArrayList<>(syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false));
 
-        ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
-        List<HashMap<String, String>> menuItemsMap = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+        List<HashMap<String, Object>> menuItemsMap = new ArrayList<>();
 
         List<MenuItem> listMenuItem = checkDetails.getPpMenuItemsEx().getSimphonyPosApi_MenuItemEx();
 
         for (MenuItem menuItem : listMenuItem) {
-            for (HashMap<String, String> tempItem : menuItems) {
+            for (HashMap<String, Object> tempItem : menuItems) {
 
                 if (tempItem.get("miObjectNum").equals(menuItem.getMiObjectNum())) {
                     menuItemsMap.add(tempItem);

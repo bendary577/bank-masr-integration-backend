@@ -161,7 +161,7 @@ public class InvoiceController {
 
         try {
             HashMap<String, Object> data ;
-            ArrayList<HashMap<String, String>> invoices ;
+            ArrayList<HashMap<String, Object>> invoices ;
 
             int invoiceType = 3; // BOTH
 
@@ -175,7 +175,7 @@ public class InvoiceController {
             data = invoiceService.getInvoicesReceiptsData(false,invoiceType, invoiceSyncJobType.getConfiguration(),
                     costCenters, suppliers, items, overGroups, account, timePeriod, fromDate, toDate);
 
-            invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
+            invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
             if (data.get("status").equals(Constants.SUCCESS)){
                 if (invoices.size() > 0){

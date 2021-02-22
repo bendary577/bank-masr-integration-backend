@@ -7,22 +7,18 @@ import java.util.List;
 
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "", propOrder = {
-        "SimphonyPosApi_MenuItemEx"
-})
-
 public class ppMenuItemsEx {
-    @XmlElementWrapper(name = "SimphonyPosApi_MenuItemEx")
-    @XmlElement(name = "MenuItem")
-    private List<MenuItem> SimphonyPosApi_MenuItemEx;
 
-    public List<MenuItem> getSimphonyPosApi_MenuItemEx() {
+    @XmlElement(name = "SimphonyPosApi_MenuItemEx")
+    public List<SimphonyPosApi_MenuItemEx> SimphonyPosApi_MenuItemEx;
+
+    public List<com.sun.supplierpoc.models.simphony.SimphonyPosApi_MenuItemEx> getSimphonyPosApi_MenuItemEx() {
         return SimphonyPosApi_MenuItemEx;
     }
 
-    @JsonProperty(value = "simphony-pos-menuItems")
-    public void setSimphonyPosApi_MenuItemEx(List<MenuItem> SimphonyPosApi_MenuItemEx) {
-        this.SimphonyPosApi_MenuItemEx = SimphonyPosApi_MenuItemEx;
+    @JsonProperty(value = "simphony-menuItems")
+    public void setSimphonyPosApi_MenuItemEx(List<com.sun.supplierpoc.models.simphony.SimphonyPosApi_MenuItemEx> simphonyPosApi_MenuItemEx) {
+        SimphonyPosApi_MenuItemEx = simphonyPosApi_MenuItemEx;
     }
 }
 

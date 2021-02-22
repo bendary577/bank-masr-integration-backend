@@ -18,6 +18,8 @@ import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "PostTransactionEx2")
 public class PostTransactionEx2 {
+
+    @JsonProperty(value = "guestCheck")
     private pGuestCheck pGuestCheck;
 
     @JsonProperty(value = "menuItems")

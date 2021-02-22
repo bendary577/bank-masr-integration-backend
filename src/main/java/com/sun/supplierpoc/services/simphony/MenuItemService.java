@@ -8,6 +8,8 @@ import com.sun.supplierpoc.models.operationConfiguration.OperationConfiguration;
 import com.sun.supplierpoc.models.simphony.*;
 
 import com.sun.supplierpoc.models.simphony.discount.SimphonyPosApi_DiscountEx;
+import com.sun.supplierpoc.models.simphony.request.CreateCheckRequest;
+import com.sun.supplierpoc.models.simphony.request.SimphonyMenuItems;
 import com.sun.supplierpoc.models.simphony.tender.SimphonyPosApi_TmedDetailItemEx2;
 import com.sun.supplierpoc.models.simphony.tender.TmedEPayment;
 import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
@@ -15,12 +17,10 @@ import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import org.codehaus.jackson.JsonProcessingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -181,7 +181,7 @@ public class MenuItemService {
         return response;
     }
 
-    public ResponseEntity PostTransactionEx(PostTransactionEx2 checkDetails, SimphonyLocation location,
+    public ResponseEntity PostTransactionEx(CreateCheckRequest createCheckRequest, SimphonyLocation location,
                                             OperationType operationType) {
 
         Client client = ClientBuilder.newClient();
@@ -191,7 +191,7 @@ public class MenuItemService {
              * Add extra static fields to check
              * */
 
-            buildCheckObject(checkDetails, location, operationType);
+            PostTransactionEx2 checkDetails = buildCheckObject(createCheckRequest, location, operationType);
 
             jaxbContext = JAXBContext.newInstance(PostTransactionEx2.class);
 
@@ -538,7 +538,7 @@ public class MenuItemService {
         menuItems.add(menuItem);
         menuItems.add(menuItem);
 
-        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
+//        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
 
         pTmedDetailEx2 pTmedDetailEx2 = new pTmedDetailEx2();
         SimphonyPosApi_TmedDetailItemEx2 SimphonyPosApi_TmedDetailItemEx2 = new SimphonyPosApi_TmedDetailItemEx2();
@@ -563,11 +563,11 @@ public class MenuItemService {
         return postTransactionEx2;
     }
 
-    private void buildCheckObject(PostTransactionEx2 checkDetails, SimphonyLocation location,
+    private PostTransactionEx2 buildCheckObject(CreateCheckRequest createCheckRequest, SimphonyLocation location,
                                   OperationType operationType) {
         OperationConfiguration configuration = operationType.getConfiguration();
         //////////////////////////////////////// Guest Check Details ////////////////////////////////////////////////
-        pGuestCheck pGuestCheck = checkDetails.getpGuestCheck();
+        pGuestCheck pGuestCheck = createCheckRequest.getpGuestCheck();
 
         pGuestCheck.setCheckNum("0");
         pGuestCheck.setCheckSeq("0");
@@ -595,8 +595,10 @@ public class MenuItemService {
         pTmedDetailEx2.setSimphonyPosApi_TmedDetailItemEx2(SimphonyPosApi_TmedDetailItemEx2);
 
         ////////////////////////////////////// Menu Items Details ///////////////////////////////////////////////////
-        ppMenuItemsEx ppMenuItemsEx = checkDetails.getPpMenuItemsEx();
-        List<MenuItem> menuItems = ppMenuItemsEx.getSimphonyPosApi_MenuItemEx();
+        List<SimphonyMenuItems> simphonyMenuItems = createCheckRequest.getSimphonyMenuItems();
+        PostTransactionEx2 checkDetails = new PostTransactionEx2();
+        ppMenuItemsEx ppMenuItemsEx = new ppMenuItemsEx();
+        List<SimphonyPosApi_MenuItemEx> simphonyPosApi_menuItemExes = new ArrayList<>();
 
         // Prepare discount object
         SimphonyPosApi_DiscountEx simphonyPosApi_discountEx = new SimphonyPosApi_DiscountEx();
@@ -605,21 +607,44 @@ public class MenuItemService {
         ItemDiscount itemDiscount = new ItemDiscount();
         itemDiscount.setSimphonyPosApi_DiscountEx(simphonyPosApi_discountEx);
 
-        for (MenuItem items : menuItems) {
-            // Add Discount
-            items.setItemDiscount(itemDiscount);
+        for (int i = 0; i < simphonyMenuItems.size(); i++) {
 
-            items.setMiSubLevel("1");
-            items.setMiMenuLevel("1");
-            items.setMiPriceLevel("0");
-            items.setMiDefinitionSeqNum("1");
+            SimphonyPosApi_MenuItemEx simphonyPosApi_menuItemEx = new SimphonyPosApi_MenuItemEx();
+            MenuItem menuItem = new MenuItem();
+            Condiments condiments = new Condiments();
+            List<SimphonyPosApi_MenuItemDefinitionEx> simphony_menuItemDefinitions = new ArrayList<>();
+            menuItem.setMiObjectNum(simphonyMenuItems.get(i).getId());
+            menuItem.setMiQuantity(simphonyMenuItems.get(i).getQuantity());
+            menuItem.setItemDiscount(itemDiscount);
+            menuItem.setMiSubLevel("1");
+            menuItem.setMiMenuLevel("1");
+            menuItem.setMiPriceLevel("0");
+            menuItem.setMiDefinitionSeqNum("1");
+            simphonyPosApi_menuItemEx.setMenuItem(menuItem);
+
+            for (int y = 0;
+                 y < simphonyMenuItems.get(i).getCondimentItems().size(); y++) {
+
+                SimphonyPosApi_MenuItemDefinitionEx simphonyPosApi_menuItemDefinitionEx = new SimphonyPosApi_MenuItemDefinitionEx();
+                simphonyPosApi_menuItemDefinitionEx.setMiObjectNum(simphonyMenuItems.get(i).getCondimentItems().get(y).getId());
+                simphonyPosApi_menuItemDefinitionEx.setMiQuantity(Integer.parseInt(simphonyMenuItems.get(i).getCondimentItems().get(y).getQuantity()));
+                simphonyPosApi_menuItemDefinitionEx.setItemDiscount(itemDiscount);
+                simphonyPosApi_menuItemDefinitionEx.setMiSubLevel("1");
+                simphonyPosApi_menuItemDefinitionEx.setMiMenuLevel("1");
+                simphonyPosApi_menuItemDefinitionEx.setMiPriceLevel("0");
+                simphonyPosApi_menuItemDefinitionEx.setMiDefinitionSeqNum("1");
+                simphony_menuItemDefinitions.add(simphonyPosApi_menuItemDefinitionEx);
+            }
+            condiments.setSimphonyPosApi_MenuItemDefinitionEx(simphony_menuItemDefinitions);
+            simphonyPosApi_menuItemEx.setCondiments(condiments);
+            simphonyPosApi_menuItemExes.add(simphonyPosApi_menuItemEx);
         }
-
-        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(menuItems);
-
-        checkDetails.setpGuestCheck(pGuestCheck);
+        ppMenuItemsEx.setSimphonyPosApi_MenuItemEx(simphonyPosApi_menuItemExes);
         checkDetails.setPpMenuItemsEx(ppMenuItemsEx);
+        checkDetails.setpGuestCheck(pGuestCheck);
         checkDetails.setpTmedDetailEx2(pTmedDetailEx2);
+
+        return checkDetails;
     }
 
 }

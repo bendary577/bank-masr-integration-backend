@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.models.simphony.request.CreateCheckRequest;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OperationRepo;
@@ -47,7 +48,7 @@ public class CreateOrder {
 
     @PostMapping(path ="/CreateOrder",produces= MediaType.APPLICATION_JSON)
     public ResponseEntity CreateOpenCheckRequest(@RequestHeader("Authorization") String authorization,
-                                                 @RequestBody PostTransactionEx2 checkDetails) {
+                                                 @RequestBody CreateCheckRequest checkDetails) {
 
         int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().revenue());
         String username, password;
@@ -84,14 +85,14 @@ public class CreateOrder {
                             operation.setReason(responseEntity.getBody().toString());
                             operation.setEndDate(new Date());
                             operation.setRowsFetched(0);
-                            createOrderService.saveOrderCreation(checkDetails, operation);
+//                            createOrderService.saveOrderCreation(checkDetails, operation);
                             operationRepo.save(operation);
                         }
                         else {
                             operation.setStatus(Constants.SUCCESS);
                             operation.setEndDate(new Date());
                             operation.setRowsFetched(1);
-                            createOrderService.saveOrderCreation(checkDetails, operation);
+//                            createOrderService.saveOrderCreation(checkDetails, operation);
                             operationRepo.save(operation);
                         }
                         return responseEntity;
@@ -105,6 +106,7 @@ public class CreateOrder {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
             }
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }

@@ -1,19 +1,24 @@
 package com.sun.supplierpoc.models.simphony;
 
-import javax.xml.bind.annotation.*;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import java.util.List;
-@XmlRootElement(name="Condiments")
+
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Condiments {
-    @XmlElementWrapper(name="SimphonyPosApi_MenuItemDefinition")
 
-    private List<String> SimphonyPosApi_MenuItemDefinition;
+    @XmlElement(name = "SimphonyPosApi_MenuItemDefinitionEx")
+    public List<SimphonyPosApi_MenuItemDefinitionEx> SimphonyPosApi_MenuItemDefinitionEx;
 
-    public List<String> getSimphonyPosApi_MenuItemDefinition() {
-        return SimphonyPosApi_MenuItemDefinition;
+    public List<com.sun.supplierpoc.models.simphony.SimphonyPosApi_MenuItemDefinitionEx> getSimphonyPosApi_MenuItemDefinitionEx() {
+        return SimphonyPosApi_MenuItemDefinitionEx;
     }
 
-    public void setSimphonyPosApi_MenuItemDefinition(List<String> simphonyPosApi_MenuItemDefinition) {
-        SimphonyPosApi_MenuItemDefinition = simphonyPosApi_MenuItemDefinition;
+    @JsonProperty(value = "condimentItems")
+    public void setSimphonyPosApi_MenuItemDefinitionEx(List<com.sun.supplierpoc.models.simphony.SimphonyPosApi_MenuItemDefinitionEx> simphonyPosApi_MenuItemDefinitionEx) {
+        SimphonyPosApi_MenuItemDefinitionEx = simphonyPosApi_MenuItemDefinitionEx;
     }
 }

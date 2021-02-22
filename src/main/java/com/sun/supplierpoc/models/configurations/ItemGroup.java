@@ -11,6 +11,8 @@ public class ItemGroup implements Serializable {
     private String overGroup="";
     private String majorGroup="";
     private String itemGroup="";
+    private String inventoryAccount="";
+    private String expensesAccount="";
 
     public ItemGroup() {
         this.checked = false;
@@ -54,5 +56,21 @@ public class ItemGroup implements Serializable {
 
     public void setItemGroup(String itemGroup) {
         this.itemGroup = itemGroup;
+    }
+
+    public String getInventoryAccount() {
+        return inventoryAccount;
+    }
+
+    public void setInventoryAccount(String inventoryAccount) {
+        this.inventoryAccount = inventoryAccount;
+    }
+
+    public String getExpensesAccount() {
+        return expensesAccount;
+    }
+
+    public void setExpensesAccount(String expensesAccount) {
+        this.expensesAccount = expensesAccount;
     }
 }

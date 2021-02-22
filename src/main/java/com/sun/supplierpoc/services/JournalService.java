@@ -54,6 +54,7 @@ public class JournalService {
             return response;
         }
 
+        String group;
         ArrayList<Journal> journals;
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
@@ -173,14 +174,16 @@ public class JournalService {
 
                     WebElement td = cols.get(columns.indexOf("item_group"));
 
-                    ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
 
-                    if (!oldItemData.getChecked()) {
+                    if (!itemGroup.getChecked()) {
                         continue;
                     }
 
-                    String overGroup = oldItemData.getOverGroup();
-
+                    if(journalSyncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups"))
+                        group = itemGroup.getOverGroup();
+                    else
+                        group = itemGroup.getItemGroup();
 
                     for (int j = 0; j < cols.size(); j++) {
                         transferDetails.put(columns.get(j), cols.get(j).getText().strip());
@@ -188,7 +191,7 @@ public class JournalService {
 
                     Journal journal = new Journal();
                     float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
-                    journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
+                    journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
                 }
 
                 journalBatch.setCostCenter((CostCenter) costCenter.get("cost_center"));
@@ -231,6 +234,7 @@ public class JournalService {
             return response;
         }
 
+        String group;
         ArrayList<Journal> journals;
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
@@ -333,14 +337,16 @@ public class JournalService {
                             // check if this Item group belong to selected Item groups
                             WebElement td = cols.get(columns.indexOf("item_group"));
 
-                            ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+                            ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
 
-                            if (!oldItemData.getChecked()) {
+                            if (!itemGroup.getChecked()) {
                                 continue;
                             }
 
-                            String overGroup = oldItemData.getOverGroup();
-
+                            if(journalSyncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups"))
+                                group = itemGroup.getOverGroup();
+                            else
+                                group = itemGroup.getItemGroup();
 
                             for (int j = 0; j < cols.size(); j++) {
                                 transferDetails.put(columns.get(j), cols.get(j).getText().strip());
@@ -349,7 +355,7 @@ public class JournalService {
                             Journal journal = new Journal();
                             float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
 
-                            journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
+                            journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -378,7 +384,8 @@ public class JournalService {
 
 
     public ArrayList<JournalBatch> saveJournalData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
-                                                  String businessDate, String fromDate, ArrayList<OverGroup> overGroups){
+                                                  String businessDate, String fromDate, ArrayList<OverGroup> overGroups,
+                                                   ArrayList<ItemGroup> itemGroups){
         ArrayList<SyncJobData> addedJournals;
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
         ArrayList<Journal> journals;
@@ -397,6 +404,23 @@ public class JournalService {
                 // check zero entries (not needed)
                 if (journal.getTotalCost() != 0){
                     HashMap<String, String> costData = new HashMap<>();
+
+                    if(syncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups")){
+                        ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
+
+                        costData.put("inventoryAccount", itemGroup.getInventoryAccount());
+                        costData.put("expensesAccount", itemGroup.getExpensesAccount());
+                    }else {
+                        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                        if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
+                                && !oldOverGroupData.getExpensesAccount().equals("")){
+                            costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                            costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        }else
+                            continue;
+                    }
+
                     if(costCenter.location != null)
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
                     else
@@ -432,19 +456,11 @@ public class JournalService {
 
                     costData.put("overGroup", journal.getOverGroup());
 
-                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+                    SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
+                            syncJob.getId());
+                    syncJobDataRepo.save(syncJobData);
 
-                    if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
-                            && !oldOverGroupData.getExpensesAccount().equals("")){
-                        costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                        costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-
-                        SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
-                                syncJob.getId());
-                        syncJobDataRepo.save(syncJobData);
-
-                        addedJournals.add(syncJobData);
-                    }
+                    addedJournals.add(syncJobData);
                 }
             }
 

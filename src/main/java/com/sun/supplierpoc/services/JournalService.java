@@ -377,6 +377,7 @@ public class JournalService {
             e.printStackTrace();
             driver.quit();
             response.setStatus(false);
+
             response.setMessage("Failed to get consumption entries from Oracle Hospitality.");
             return response;
         }
@@ -405,7 +406,7 @@ public class JournalService {
                 if (journal.getTotalCost() != 0){
                     HashMap<String, String> costData = new HashMap<>();
 
-                    if(syncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups")){
+                    if(!syncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups")){
                         ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
 
                         costData.put("inventoryAccount", itemGroup.getInventoryAccount());
@@ -421,10 +422,7 @@ public class JournalService {
                             continue;
                     }
 
-                    if(costCenter.location != null)
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
-                    else
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
+                    syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
 
                     String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
                     costData.put("accountingPeriod", transactionDate.substring(2,6));
@@ -452,7 +450,7 @@ public class JournalService {
                     if(costCenter.costCenterReference.equals(""))
                         costData.put("transactionReference", "Consumption");
                     else
-                        costData.put("transactionReference", "Consumption" + " - " + costCenter.costCenterReference);
+                        costData.put("transactionReference", costCenter.costCenterReference);
 
                     costData.put("overGroup", journal.getOverGroup());
 

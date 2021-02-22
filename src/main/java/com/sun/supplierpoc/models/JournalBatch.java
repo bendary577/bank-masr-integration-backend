@@ -16,7 +16,7 @@ public class JournalBatch {
     private ArrayList<Journal> salesMajorGroupGross = new ArrayList<>();
     private ArrayList<ServiceCharge> salesServiceCharge = new ArrayList<>();
 
-    private ArrayList<HashMap<String, String>> waste = new ArrayList<>();
+    private ArrayList<HashMap<String, Object>> waste = new ArrayList<>();
     private ArrayList<Journal> consumption = new ArrayList<>();
 
     private SyncJobData salesDifferentData = new SyncJobData();
@@ -31,7 +31,7 @@ public class JournalBatch {
 
     public JournalBatch() {}
 
-    public JournalBatch(CostCenter costCenter, ArrayList<HashMap<String, String>> waste) {
+    public JournalBatch(CostCenter costCenter, ArrayList<HashMap<String, Object>> waste) {
         this.costCenter = costCenter;
         this.waste = waste;
     }
@@ -156,11 +156,11 @@ public class JournalBatch {
         this.statisticsData = statisticsData;
     }
 
-    public ArrayList<HashMap<String, String>> getWaste() {
+    public ArrayList<HashMap<String, Object>> getWaste() {
         return waste;
     }
 
-    public void setWaste(ArrayList<HashMap<String, String>> waste) {
+    public void setWaste(ArrayList<HashMap<String, Object>> waste) {
         this.waste = waste;
     }
 

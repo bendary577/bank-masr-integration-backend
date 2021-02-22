@@ -109,7 +109,7 @@ public class SunService {
             methodContextElement.appendChild(PostProvisionalElement);
 
             Element DescriptionElement = doc.createElement("Description");
-            DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
+            DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description").toString()));
             LedgerPostingParametersElement.appendChild(DescriptionElement);
 
             Element journalTypeElement = doc.createElement("JournalType");
@@ -262,14 +262,14 @@ public class SunService {
 //        lineElement.appendChild(AccountingPeriodElement);
 
         Element DescriptionElement = doc.createElement("Description");
-        DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description")));
+        DescriptionElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("description").toString()));
         lineElement.appendChild(DescriptionElement);
 
         Element accountCodeElement = doc.createElement("AccountCode");
         if (creditDebitFlag) // Credit
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("inventoryAccount")));
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("inventoryAccount").toString()));
         else // Debit
-            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("expensesAccount")));
+            accountCodeElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("expensesAccount").toString()));
         lineElement.appendChild(accountCodeElement);
 
         Element base2ReportingAmountElement = doc.createElement("Base2ReportingAmount");
@@ -327,7 +327,7 @@ public class SunService {
         lineElement.appendChild(transactionAmountElement);
 
         Element transactionReferenceElement = doc.createElement("TransactionReference");
-        transactionReferenceElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("transactionReference")));
+        transactionReferenceElement.appendChild(doc.createTextNode(addedJournalEntry.getData().get("transactionReference").toString()));
         lineElement.appendChild(transactionReferenceElement);
 
         Element accountsElement = doc.createElement("Accounts");
@@ -350,12 +350,12 @@ public class SunService {
             if (addedJournalEntry.getData().get("fromLocation").equals("")){
                 vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(analysis.get(Integer.parseInt(locationAnalysis)).getCodeElement()));
             }else {
-                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation")));
+                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation").toString()));
             }
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
             Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation")));
+            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("fromLocation").toString()));
             lineElement.appendChild(analysisCode2ElementT3);
         }
         else{
@@ -363,12 +363,12 @@ public class SunService {
             if (addedJournalEntry.getData().get("fromLocation").equals("")){
                 vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(analysis.get(Integer.parseInt(locationAnalysis)).getCodeElement()));
             }else {
-                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation")));
+                vAcntCatAnalysis_AnlCodeElement1.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation").toString()));
             }
             analysis2ElementT3.appendChild(vAcntCatAnalysis_AnlCodeElement1);
 
             Element analysisCode2ElementT3 = doc.createElement("AnalysisCode" + locationAnalysis);
-            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation")));
+            analysisCode2ElementT3.appendChild(doc.createTextNode(addedJournalEntry.getData().get("toLocation").toString()));
             lineElement.appendChild(analysisCode2ElementT3);
         }
 
@@ -380,7 +380,7 @@ public class SunService {
                 Element analysisCode2Element = doc.createElement("AnalysisCode"+ analysisObject.getNumber());
 
                 if (addedJournalEntry.getData().containsKey("analysisCodeT" + analysisObject.getNumber())){
-                    String analysisCode = addedJournalEntry.getData().get("analysisCodeT" + analysisObject.getNumber());
+                    String analysisCode = addedJournalEntry.getData().get("analysisCodeT" + analysisObject.getNumber()).toString();
                     analysisCode2Element.appendChild(doc.createTextNode(analysisCode));
                 }else {
                     analysisCode2Element.appendChild(doc.createTextNode(analysisObject.getCodeElement()));

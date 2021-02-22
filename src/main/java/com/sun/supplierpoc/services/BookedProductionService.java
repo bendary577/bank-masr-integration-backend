@@ -259,7 +259,7 @@ public class BookedProductionService {
         ArrayList<SyncJobData> addedBookedProduction = new ArrayList<>();
 
         for (BookedProduction bookedProduction : bookedProductions) {
-            HashMap<String, String> bookedProductionData = new HashMap<>();
+            HashMap<String, Object> bookedProductionData = new HashMap<>();
             if(bookedProduction.getCostCenter().location != null)
                 syncJobDataService.prepareAnalysis(bookedProductionData, bookedProductionSyncJobType.getConfiguration(),
                     bookedProduction.getCostCenter().location, null, null);

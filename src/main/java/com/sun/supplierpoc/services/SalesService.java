@@ -925,7 +925,7 @@ public class SalesService {
                 if (discount.getTotal() == 0)
                     continue;
 
-                HashMap<String, String> discountData = new HashMap<>();
+                HashMap<String, Object> discountData = new HashMap<>();
 
                 discountData.put("accountingPeriod", transactionDate.substring(2,6));
                 discountData.put("transactionDate", transactionDate);
@@ -983,7 +983,7 @@ public class SalesService {
             if(totalDiscount != 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                 // Add debit discount entries totalDiscount/2
                 Discount discount = conversions.checkDiscountExistence(includedDiscountTypes, "discount expense");
-                HashMap<String, String> discountData = new HashMap<>();
+                HashMap<String, Object> discountData = new HashMap<>();
 
                 if (discount.isChecked()){
                     discountData.put("accountingPeriod", transactionDate.substring(2,6));
@@ -1093,7 +1093,7 @@ public class SalesService {
             }
 
             if (totalCr != totalDr) {
-                HashMap<String, String> differentData = new HashMap<>();
+                HashMap<String, Object> differentData = new HashMap<>();
 
                 differentData.put("accountingPeriod", transactionDate.substring(2,6));
                 differentData.put("transactionDate", transactionDate);
@@ -1157,7 +1157,7 @@ public class SalesService {
 
     private void saveSalesStatistics(JournalBatch journalBatch, String transactionDate, Configuration configuration,
                                      SyncJob syncJob){
-        HashMap<String, String> statisticsData = new HashMap<>();
+        HashMap<String, Object> statisticsData = new HashMap<>();
 
         statisticsData.put("accountingPeriod", transactionDate.substring(2,6));
         statisticsData.put("transactionDate", transactionDate);
@@ -1265,7 +1265,7 @@ public class SalesService {
             subTenderTotal = subTenderTotal - tenderCommunicationTotal;
 
             // Create two entries for tender
-            HashMap<String, String> tenderData = new HashMap<>();
+            HashMap<String, Object> tenderData = new HashMap<>();
 
             tenderData.put("accountingPeriod", transactionDate.substring(2,6));
             tenderData.put("transactionDate", transactionDate);
@@ -1315,7 +1315,7 @@ public class SalesService {
             journalBatch.getSalesTenderData().add(syncJobData);
         }
 
-        HashMap<String, String> tenderData = new HashMap<>();
+        HashMap<String, Object> tenderData = new HashMap<>();
 
         tenderData.put("accountingPeriod", transactionDate.substring(2,6));
         tenderData.put("transactionDate", transactionDate);
@@ -1364,7 +1364,7 @@ public class SalesService {
 
     private void saveTax(JournalBatch journalBatch, String transactionDate, Configuration configuration,
                             SyncJob syncJob, Tax tax){
-        HashMap<String, String> taxData = new HashMap<>();
+        HashMap<String, Object> taxData = new HashMap<>();
 
         taxData.put("accountingPeriod", transactionDate.substring(2,6));
         taxData.put("transactionDate", transactionDate);
@@ -1407,7 +1407,7 @@ public class SalesService {
     private void saveMajorGroup(JournalBatch journalBatch, String transactionDate, Configuration configuration,
                                    SyncJob syncJob, Journal majorGroupJournal){
 
-        HashMap<String, String> majorGroupData = new HashMap<>();
+        HashMap<String, Object> majorGroupData = new HashMap<>();
 
         majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
         majorGroupData.put("transactionDate", transactionDate);
@@ -1462,7 +1462,7 @@ public class SalesService {
 
     private void saveServiceCharge(JournalBatch journalBatch, String transactionDate, Configuration configuration,
                          SyncJob syncJob, ServiceCharge serviceCharge){
-        HashMap<String, String> serviceChargeData = new HashMap<>();
+        HashMap<String, Object> serviceChargeData = new HashMap<>();
 
         serviceChargeData.put("accountingPeriod", transactionDate.substring(2,6));
         serviceChargeData.put("transactionDate", transactionDate);

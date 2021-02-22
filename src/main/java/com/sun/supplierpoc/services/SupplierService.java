@@ -226,7 +226,7 @@ public class SupplierService {
         ArrayList<SyncJobData> savedSuppliers = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (Supplier supplier : suppliers) {
-            HashMap<String, String> data = new HashMap<>();
+            HashMap<String, Object> data = new HashMap<>();
 
             data.put("supplierId", "");
             data.put("supplier", supplier.getSupplierName());
@@ -563,7 +563,7 @@ public class SupplierService {
         }
     }
 
-    private boolean compareSupplier (HashMap<String, String> supplier, HashMap<String, String> oldSupplier){
+    private boolean compareSupplier (HashMap<String, Object> supplier, HashMap<String, Object> oldSupplier){
         if(!supplier.get("supplierId").equals(oldSupplier.get("supplierId"))
                 || !supplier.get("supplier").equals(oldSupplier.get("supplier"))
                 || !supplier.get("description").equals(oldSupplier.get("description"))

@@ -27,7 +27,7 @@ public class SyncJobDataService {
         return (ArrayList<SyncJobData>) syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobID, false);
     }
 
-    public void prepareAnalysis(HashMap<String, String> data, Configuration configuration,
+    public void prepareAnalysis(HashMap<String, Object> data, Configuration configuration,
                                  CostCenter location, FamilyGroup familyGroup, Tender tender){
         ArrayList<Analysis> analysis = configuration.analysis;
         for (int i = 1; i <= analysis.size(); i++) {

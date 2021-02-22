@@ -344,23 +344,28 @@ public class MenuItemService {
     public ArrayList<SyncJobData> saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob, ArrayList<DbMenuItemClass> menuItemClasses) {
         ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
 
+        List<HashMap<String, Object>> syncMenuItemClasses = menuItemClassData(syncJob, menuItemClasses);
+
         for (DbMenuItemDefinition menuItem : menuItems) {
 
+            HashMap<String, Object> condiments = new HashMap<>();
             if (!menuItem.getMenuItemClassObjNum().equals(null) && !menuItem.getMenuItemClassObjNum().equals("0")) {
-                getCondiments(menuItem, menuItemClasses);
+                condiments = getCondiments(menuItem, syncMenuItemClasses, menuItems);
             }
 
-            HashMap<String, String> menuItemData = new HashMap<>();
+            HashMap<String, Object> menuItemData = new HashMap<>();
 
-            menuItemData.put("menuFirstName", menuItem.getName1().getStringText());
-            menuItemData.put("menuSecondName", menuItem.getName2().getStringText());
-            menuItemData.put("miObjectNum", menuItem.getMiMasterObjNum());
+            menuItemData.put("id", menuItem.getMiMasterObjNum());
+            menuItemData.put("firstName", menuItem.getName1().getStringText());
+            menuItemData.put("secondName", menuItem.getName2().getStringText());
             menuItemData.put("availability", menuItem.getCheckAvailability().toString());
+            menuItemData.put("requiredCondiments", condiments.get("requiredCondiments"));
+            menuItemData.put("allowedCondiments", condiments.get("allowedCondiments"));
 
             if (menuItem.getMenuItemPrice() != null) {
-                menuItemData.put("menuItemPrice", menuItem.getMenuItemPrice().getPrice());
+                menuItemData.put("price", menuItem.getMenuItemPrice().getPrice());
             } else {
-                menuItemData.put("menuItemPrice", "0");
+                menuItemData.put("price", "0");
             }
 
             SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
@@ -371,39 +376,117 @@ public class MenuItemService {
         return savedMenuItems;
     }
 
+    public List<HashMap<String, Object>> menuItemClassData(SyncJob syncJob, ArrayList<DbMenuItemClass> menuItemClasses) {
 
-    private List<String> getCondiments(DbMenuItemDefinition menuItem, ArrayList<DbMenuItemClass> menuItemClasses) {
+        List<HashMap<String, Object>> syncMenuItemClasses = new ArrayList<>();
 
-        List<String> condiments = new ArrayList<>();
-        DbMenuItemClass menuItemClass = new DbMenuItemClass();
         for (DbMenuItemClass tempMenuItemClass : menuItemClasses) {
-            if (menuItemClass.getObjectNumber() == Integer.parseInt(menuItem.getMenuItemClassObjNum())) {
-                menuItemClass = tempMenuItemClass;
+
+            HashMap<String, Object> menuItemClass = new HashMap<>();
+
+            menuItemClass.put("classNumber", tempMenuItemClass.getObjectNumber());
+            menuItemClass.put("className", tempMenuItemClass.getName().getStringText());
+
+            List<Integer> requiredCondGroupsNum = new ArrayList<>();
+            Character[] requiredCondimentsGroups =
+                    tempMenuItemClass.getRequiredCondiments().chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+            for (int i = 0; i < requiredCondimentsGroups.length; i++) {
+                if (requiredCondimentsGroups[i] == '1') {
+                    requiredCondGroupsNum.add(i + 1);
+                }
+            }
+            menuItemClass.put("requiredCondimentsG", requiredCondGroupsNum);
+
+            List<Integer> allowedCondGroupsNum = new ArrayList<>();
+            Character[] allowedCondimentsGroups =
+                    tempMenuItemClass.getAllowedCondiments().chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+            for (int i = 0; i < allowedCondimentsGroups.length; i++) {
+                if (allowedCondimentsGroups[i] == '1') {
+                    allowedCondGroupsNum.add(i + 1);
+                }
+            }
+            menuItemClass.put("allowedCondimentsG", allowedCondGroupsNum);
+
+            List<Integer> memberCondGroupsNum = new ArrayList<>();
+            Character[] memberCondimentsGroups =
+                    tempMenuItemClass.getMemberOfCondiments().chars().mapToObj(c -> (char) c).toArray(Character[]::new);
+            for (int i = 0; i < memberCondimentsGroups.length; i++) {
+                if (memberCondimentsGroups[i] == '1') {
+                    memberCondGroupsNum.add(i + 1);
+                }
+            }
+            menuItemClass.put("memberCondimentsG", memberCondGroupsNum);
+
+            syncMenuItemClasses.add(menuItemClass);
+        }
+
+        return syncMenuItemClasses;
+    }
+
+    private HashMap<String, Object> getCondiments(DbMenuItemDefinition menuItem, List<HashMap<String, Object>> menuItemClasses, ArrayList<DbMenuItemDefinition> menuItems) {
+
+        HashMap<String, Object> condiments = new HashMap<>();
+        List<HashMap<String, Object>> requiredCondiments = new ArrayList<>();
+        List<HashMap<String, Object>> allowedCondiments = new ArrayList<>();
+
+        List<Integer> requiredCondGroupsNum = new ArrayList<>();
+        List<Integer> allowedCondGroupsNum = new ArrayList<>();
+        for (HashMap<String, Object> tempMenuItemClass : menuItemClasses) {
+            if (Integer.parseInt(tempMenuItemClass.get("classNumber").toString()) == Integer.parseInt(menuItem.getMenuItemClassObjNum())) {
+                requiredCondGroupsNum = (List<Integer>) tempMenuItemClass.get("requiredCondimentsG");
+                allowedCondGroupsNum = (List<Integer>) tempMenuItemClass.get("allowedCondimentsG");
             }
         }
 
-        Character[] requiredCondimentsGroups =
-                Double.toString(menuItemClass.getRequiredCondiments()).chars().mapToObj(c -> (char)c).toArray(Character[]::new);
+        for (HashMap<String, Object> tempMenuItemClass : menuItemClasses) {
+            List<Integer> memberCondGroupsNum = (List<Integer>) tempMenuItemClass.get("memberCondimentsG");
 
-        List<Integer> lastRequiredCondimentsGroups = new ArrayList<>();
+            for (int groupNum : requiredCondGroupsNum) {
+                if (memberCondGroupsNum.contains(groupNum)) {
+                    for (DbMenuItemDefinition tempMenuItem : menuItems) {
+                        if (Integer.parseInt(tempMenuItem.getMenuItemClassObjNum()) == Integer.parseInt(tempMenuItemClass.get("classNumber").toString())) {
+                            HashMap<String, Object> requiredCondiment = new HashMap<>();
+                            requiredCondiment.put("id", tempMenuItem.getMiMasterObjNum());
+                            requiredCondiment.put("firstName", tempMenuItem.getName1().getStringText());
+                            requiredCondiment.put("secondName", tempMenuItem.getName2().getStringText());
+                            if (tempMenuItem.getMenuItemPrice() != null) {
+                                requiredCondiment.put("price", tempMenuItem.getMenuItemPrice().getPrice());
+                            } else {
+                                requiredCondiment.put("price", "0");
+                            }
+                            requiredCondiments.add(requiredCondiment);
+                        }
+                    }
+                }
+            }
 
-        LoggerFactory.getLogger(MenuItemService.class).info(requiredCondimentsGroups.toString());
-
-        for(int i = 1; i <= requiredCondimentsGroups.length; i++){
-
-            if( requiredCondimentsGroups[i] == '1' ){
-                lastRequiredCondimentsGroups.add(i);
+            for (int groupNum : allowedCondGroupsNum) {
+                if (memberCondGroupsNum.contains(groupNum)) {
+                    for (DbMenuItemDefinition tempMenuItem : menuItems) {
+                        if (Integer.parseInt(tempMenuItem.getMenuItemClassObjNum()) == Integer.parseInt(tempMenuItemClass.get("classNumber").toString())) {
+                            HashMap<String, Object> allowedCondiment = new HashMap<>();
+                            allowedCondiment.put("id", tempMenuItem.getMiMasterObjNum());
+                            allowedCondiment.put("firstName", tempMenuItem.getName1().getStringText());
+                            allowedCondiment.put("secondName", tempMenuItem.getName2().getStringText());
+                            if (tempMenuItem.getMenuItemPrice() != null) {
+                                allowedCondiment.put("price", tempMenuItem.getMenuItemPrice().getPrice());
+                            } else {
+                                allowedCondiment.put("price", "0");
+                            }
+                            allowedCondiments.add(allowedCondiment);
+                        }
+                    }
+                }
             }
         }
-
-        LoggerFactory.getLogger(MenuItemService.class).info(lastRequiredCondimentsGroups.toString());
-
+        condiments.put("requiredCondiments", requiredCondiments);
+        condiments.put("allowedCondiments", allowedCondiments);
 
         return condiments;
     }
 
-    public ArrayList<HashMap<String, String>> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
-        ArrayList<HashMap<String, String>> menuItems = new ArrayList<>();
+    public ArrayList<HashMap<String, Object>> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
+        ArrayList<HashMap<String, Object>> menuItems = new ArrayList<>();
 
         for (SyncJobData data : menuItemsData) {
             menuItems.add(data.getData());

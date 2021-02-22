@@ -15,6 +15,7 @@ import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.SyncJobDataService;
 import com.sun.supplierpoc.services.SyncJobService;
 import com.sun.supplierpoc.services.simphony.MenuItemService;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -149,6 +150,8 @@ public class MenuItemsController {
 
             return response;
         }catch (Exception e){
+            LoggerFactory.getLogger(MenuItemsController.class).info("");
+            e.printStackTrace();
             if (syncJob != null){
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(e.getMessage());
@@ -194,7 +197,7 @@ public class MenuItemsController {
 
                     if (syncJob != null){
                         syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
-                        ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                        ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
                         return new ResponseEntity<>(menuItems, HttpStatus.OK);
                     }else{
                         // Sync menu items
@@ -202,7 +205,7 @@ public class MenuItemsController {
 
                         if(syncResponse.isStatus()){
                             syncJobData = syncResponse.getAddedSyncJobData();
-                            ArrayList<HashMap<String, String>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                            ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
                             return new ResponseEntity<>(menuItems, HttpStatus.OK);
                         }else {
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());

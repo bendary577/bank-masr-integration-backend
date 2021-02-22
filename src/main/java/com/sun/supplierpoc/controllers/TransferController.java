@@ -158,7 +158,7 @@ public class TransferController {
                     overGroups, account);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
-                ArrayList<HashMap<String, String>> transfers = (ArrayList<HashMap<String, String>>) data.get("transfers");
+                ArrayList<HashMap<String, Object>> transfers = (ArrayList<HashMap<String, Object>>) data.get("transfers");
                 if (transfers.size() > 0) {
                     addedTransfers = transferService.saveTransferSunData(transfers, syncJob);
                     if(addedTransfers.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){

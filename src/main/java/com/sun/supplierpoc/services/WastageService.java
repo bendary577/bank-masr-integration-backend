@@ -56,7 +56,7 @@ public class WastageService {
         }
 
         ArrayList<HashMap<String, Object>> wastes = new ArrayList<>();
-        ArrayList<HashMap<String, String>> journalEntries = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try{
             if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
@@ -211,7 +211,7 @@ public class WastageService {
 
     private void getWasteDetails(
             ArrayList<Item> items, ArrayList<OverGroup> overGroups,
-            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, String>> journalEntries){
+            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
@@ -264,7 +264,7 @@ public class WastageService {
                     continue;
                 }
 
-                HashMap<String, String> journalEntry = new HashMap<>();
+                HashMap<String, Object> journalEntry = new HashMap<>();
 
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;
@@ -318,12 +318,12 @@ public class WastageService {
 
     public void saveWastageSunData(ArrayList<JournalBatch> wasteBatches, SyncJob syncJob) {
         ArrayList<SyncJobData> addedWaste;
-        ArrayList<HashMap<String, String>> wastes;
+        ArrayList<HashMap<String, Object>> wastes;
 
         for (JournalBatch wasteBatch : wasteBatches) {
             addedWaste = new ArrayList<>();
             wastes = wasteBatch.getWaste();
-            for (HashMap<String, String> waste : wastes) {
+            for (HashMap<String, Object> waste : wastes) {
                 SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
                         syncJob.getId());
                 syncJobDataRepo.save(syncJobData);
@@ -349,7 +349,7 @@ public class WastageService {
 
         ArrayList<HashMap<String, Object>> wastesStatus;
         JournalBatch journalBatch;
-        ArrayList<HashMap<String, String>> journalEntries;
+        ArrayList<HashMap<String, Object>> journalEntries;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
         WebDriver driver;
@@ -486,7 +486,7 @@ public class WastageService {
     private void getWasteReportDetails(
             ArrayList<Item> items, ArrayList<OverGroup> overGroups, CostCenter costCenter,
             HashMap<String, Object> waste, SyncJobType syncJobType,
-            WebDriver driver, ArrayList<HashMap<String, String>> journalEntries){
+            WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
@@ -534,7 +534,7 @@ public class WastageService {
                 if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
                     continue;
 
-                HashMap<String, String> journalEntry = new HashMap<>();
+                HashMap<String, Object> journalEntry = new HashMap<>();
                 syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(),
                         costCenter, null, null);
 

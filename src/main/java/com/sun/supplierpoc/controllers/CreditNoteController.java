@@ -151,7 +151,7 @@ public class CreditNoteController {
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
         try {
             HashMap<String, Object> data;
-            ArrayList<HashMap<String, String>> invoices ;
+            ArrayList<HashMap<String, Object>> invoices ;
 
             int invoiceType = 3; // BOTH
 
@@ -165,7 +165,7 @@ public class CreditNoteController {
             data = invoiceService.getInvoicesReceiptsData(true,invoiceType, creditNoteSyncJobType.getConfiguration(),
                     costCenters, suppliers, items, overGroups, account, timePeriod, fromDate, toDate);
 
-            invoices = (ArrayList<HashMap<String, String>>) data.get("invoices");
+            invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
             if (data.get("status").equals(Constants.SUCCESS)){
                 if (invoices.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){

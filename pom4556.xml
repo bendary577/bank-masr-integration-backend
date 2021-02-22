@@ -1,125 +1,62 @@
-<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+2021-02-22 13:01:05.993  INFO 10168 --- [nio-8081-exec-1] c.s.s.services.simphony.MenuItemService  : Entity{entity=
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Header/>
     <soap:Body>
-        <PostTransactionEx2 xmlns="http://micros-hosting.com/EGateway/">
+        <PostTransactionEx2>
             <pGuestCheck>
-                <CheckDateToFire>2019-03-06T16:58:36</CheckDateToFire>
-                <CheckEmployeeObjectNum>900000092</CheckEmployeeObjectNum>
-                <CheckGuestCount>0</CheckGuestCount>
-                <CheckID />
+                <CheckDateToFire>2021-02-22T13:01:05</CheckDateToFire>
+                <CheckEmployeeObjectNum>40</CheckEmployeeObjectNum>
+                <CheckGuestCount>1</CheckGuestCount>
                 <CheckNum>0</CheckNum>
-                <CheckOrderType>1</CheckOrderType>
-                <CheckRevenueCenterID>11</CheckRevenueCenterID>
+                <CheckOrderType>2</CheckOrderType>
+                <CheckRevenueCenterID>100</CheckRevenueCenterID>
                 <CheckSeq>0</CheckSeq>
                 <CheckStatusBits>0</CheckStatusBits>
-                <CheckTableObjectNum>1</CheckTableObjectNum>
-                <PCheckInfoLines>
-                    <string />
-                    <string />
-                </PCheckInfoLines>
+                <CheckTableObjectNum>0</CheckTableObjectNum>
                 <EventObjectNum>0</EventObjectNum>
             </pGuestCheck>
-            <ppMenuItemsEx />
-            <ppComboMealsEx>
-                <SimphonyPosApi_ComboMealEx>
-                    <ComboMealMainItem>
+            <ppMenuItemsEx>
+                <SimphonyPosApi_MenuItemEx>
+                    <SimphonyPosApi_MenuItemEx>
+                        <Condiments>
+                            <SimphonyPosApi_MenuItemDefinitionEx>
+                                <ItemDiscount>
+                                    <SimphonyPosApi_DiscountEx>
+                                        <DiscObjectNum>0</DiscObjectNum>
+                                    </SimphonyPosApi_DiscountEx>
+                                </ItemDiscount>
+                                <MiObjectNum>2</MiObjectNum>
+                                <MiQuantity>1</MiQuantity>
+                                <MiMenuLevel>1</MiMenuLevel>
+                                <MiSubLevel>1</MiSubLevel>
+                                <MiPriceLevel>0</MiPriceLevel>
+                                <MiDefinitionSeqNum>1</MiDefinitionSeqNum>
+                            </SimphonyPosApi_MenuItemDefinitionEx>
+                        </Condiments>
                         <MenuItem>
                             <ItemDiscount>
                                 <SimphonyPosApi_DiscountEx>
                                     <DiscObjectNum>0</DiscObjectNum>
                                 </SimphonyPosApi_DiscountEx>
                             </ItemDiscount>
-                            <MiObjectNum>181020001</MiObjectNum>
-                            <MiQuantity>1</MiQuantity>
-                            <MiReference />
-                            <MiWeight />
+                            <MiObjectNum>1060001</MiObjectNum>
                             <MiMenuLevel>1</MiMenuLevel>
                             <MiSubLevel>1</MiSubLevel>
                             <MiPriceLevel>0</MiPriceLevel>
                             <MiDefinitionSeqNum>1</MiDefinitionSeqNum>
-                        </MenuItem>
-                    </ComboMealMainItem>
-                    <ComboMealMenuItem>
-                        <MenuItem>
-                            <ItemDiscount>
-                                <SimphonyPosApi_DiscountEx>
-                                    <DiscObjectNum>0</DiscObjectNum>
-                                </SimphonyPosApi_DiscountEx>
-                            </ItemDiscount>
-                            <MiObjectNum>181010001</MiObjectNum>
                             <MiQuantity>1</MiQuantity>
-                            <MiReference />
-                            <MiWeight />
-                            <MiMenuLevel>1</MiMenuLevel>
-                            <MiSubLevel>1</MiSubLevel>
-                            <MiPriceLevel>0</MiPriceLevel>
-                            <MiDefinitionSeqNum>1</MiDefinitionSeqNum>
                         </MenuItem>
-                    </ComboMealMenuItem>
-                    <ComboMealObjectNum>11</ComboMealObjectNum>
-                    <SideItems>
-                        <SimphonyPosApi_MenuItemEx>
-                            <MenuItem>
-                                <ItemDiscount>
-                                    <SimphonyPosApi_DiscountEx>
-                                        <DiscObjectNum>0</DiscObjectNum>
-                                    </SimphonyPosApi_DiscountEx>
-                                </ItemDiscount>
-                                <MiObjectNum>181030001</MiObjectNum>
-                                <MiQuantity>1</MiQuantity>
-                                <MiReference />
-                                <MiWeight />
-                                <MiMenuLevel>1</MiMenuLevel>
-                                <MiSubLevel>1</MiSubLevel>
-                                <MiPriceLevel>0</MiPriceLevel>
-                                <MiDefinitionSeqNum>1</MiDefinitionSeqNum>
-                            </MenuItem>
-                        </SimphonyPosApi_MenuItemEx>
-                        <SimphonyPosApi_MenuItemEx>
-                            <MenuItem>
-                                <ItemDiscount>
-                                    <SimphonyPosApi_DiscountEx>
-                                        <DiscObjectNum>0</DiscObjectNum>
-                                    </SimphonyPosApi_DiscountEx>
-                                </ItemDiscount>
-                                <MiObjectNum>299030001</MiObjectNum>
-                                <MiQuantity>1</MiQuantity>
-                                <MiReference />
-                                <MiWeight />
-                                <MiMenuLevel>1</MiMenuLevel>
-                                <MiSubLevel>1</MiSubLevel>
-                                <MiPriceLevel>0</MiPriceLevel>
-                                <MiDefinitionSeqNum>1</MiDefinitionSeqNum>
-                            </MenuItem>
-                        </SimphonyPosApi_MenuItemEx>
-                    </SideItems>
-                </SimphonyPosApi_ComboMealEx>
-            </ppComboMealsEx>
-            <pSvcChargeEx>
-                <SvcChgObjectNum>0</SvcChgObjectNum>
-            </pSvcChargeEx>
-            <pSubTotalDiscountEx />
+                    </SimphonyPosApi_MenuItemEx>
+                </SimphonyPosApi_MenuItemEx>
+            </ppMenuItemsEx>
             <pTmedDetailEx2>
                 <SimphonyPosApi_TmedDetailItemEx2>
                     <TmedEPayment>
-                        <AccountDataSource>SOURCE_UNDEFINED</AccountDataSource>
                         <AccountType>ACCOUNT_TYPE_UNDEFINED</AccountType>
-                        <ExpirationDate>0001-01-01T00:00:00</ExpirationDate>
-                        <IssueNumber>0</IssueNumber>
-                        <PaymentCommand>NO_E_PAYMENT</PaymentCommand>
-                        <StartDate>0001-01-01T00:00:00</StartDate>
                     </TmedEPayment>
-                    <TmedObjectNum>901</TmedObjectNum>
-                    <TmedPartialPayment />
-                    <TmedReference />
+                    <TmedObjectNum>6</TmedObjectNum>
                 </SimphonyPosApi_TmedDetailItemEx2>
             </pTmedDetailEx2>
-            <pTotalsResponseEx />
-            <ppCheckPrintLines>
-                <string />
-            </ppCheckPrintLines>
-            <ppVoucherOutput>
-                <string />
-            </ppVoucherOutput>
         </PostTransactionEx2>
     </soap:Body>
-</soap:Envelope>
+</soap:Envelope>, variant=Variant[mediaType=text/plain, language=null, encoding=null], annotations=[]}

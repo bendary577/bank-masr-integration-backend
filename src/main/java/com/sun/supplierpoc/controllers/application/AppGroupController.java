@@ -2,9 +2,11 @@ package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.applications.Company;
+import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.CompanyRepo;
+import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,59 +19,57 @@ import java.util.Date;
 import java.util.Optional;
 
 @RestController
-
-public class CompanyController {
+public class AppGroupController {
     @Autowired
     AccountRepo accountRepo;
     @Autowired
-    CompanyRepo companyRepo;
+    GroupRepo groupRepo;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @RequestMapping("/getApplicationCompanies")
+    @RequestMapping("/getApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getApplicationCompanies(Principal principal){
+    public ResponseEntity getApplicationGroups(@RequestParam(name = "companyId") String companyId, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-            ArrayList<Company> companies = companyRepo.findAllByAccountID(account.getId());
+            ArrayList<Group> companies = groupRepo.findAllByAndCompanyId(companyId);
             return  ResponseEntity.status(HttpStatus.OK).body(companies);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
-    @RequestMapping("/addApplicationCompany")
+    @RequestMapping("/addApplicationGroup")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationCompany(@RequestBody Company company, Principal principal){
+    public ResponseEntity addApplicationGroup(@RequestBody Group group, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            company.setAccountID(account.getId());
-            company.setCreationDate(new Date());
-            company.setDeleted(false);
 
-            companyRepo.save(company);
+            group.setCreationDate(new Date());
+            group.setDeleted(false);
 
-            return ResponseEntity.status(HttpStatus.OK).body(company);
+            groupRepo.save(group);
+
+            return ResponseEntity.status(HttpStatus.OK).body(group);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
-    @RequestMapping("/deleteApplicationCompanies")
+    @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationCompanies(@RequestBody ArrayList<Company> companies, Principal principal){
+    public ResponseEntity deleteApplicationGroups(@RequestBody ArrayList<Group> groups, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            for (Company company : companies) {
-                company.setDeleted(true);
-                companyRepo.save(company);
+            for (Group group : groups) {
+                group.setDeleted(true);
+                groupRepo.save(group);
             }
-            return ResponseEntity.status(HttpStatus.OK).body(companies);
+            return ResponseEntity.status(HttpStatus.OK).body(groups);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }

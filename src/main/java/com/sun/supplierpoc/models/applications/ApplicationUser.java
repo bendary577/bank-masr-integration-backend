@@ -12,20 +12,28 @@ public class ApplicationUser implements Serializable {
     private String name;
 
     @DBRef
-    private Company companyId;
+    private Company company;
 
     @DBRef
-    private Group groupId;
+    private Group group;
 
     private Date creationDate;
     private boolean deleted;
 
-    public ApplicationUser(String name, Company companyId, Group groupId, Date creationDate, boolean deleted) {
+    public ApplicationUser(String name, Company company, Group group, Date creationDate, boolean deleted) {
         this.name = name;
-        this.companyId = companyId;
-        this.groupId = groupId;
+        this.company = company;
+        this.group = group;
         this.creationDate = creationDate;
         this.deleted = deleted;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -36,20 +44,20 @@ public class ApplicationUser implements Serializable {
         this.name = name;
     }
 
-    public Company getCompanyId() {
-        return companyId;
+    public Company getCompany() {
+        return company;
     }
 
-    public void setCompanyId(Company companyId) {
-        this.companyId = companyId;
+    public void setCompany(Company company) {
+        this.company = company;
     }
 
-    public Group getGroupId() {
-        return groupId;
+    public Group getGroup() {
+        return group;
     }
 
-    public void setGroupId(Group groupId) {
-        this.groupId = groupId;
+    public void setGroup(Group group) {
+        this.group = group;
     }
 
     public Date getCreationDate() {

@@ -8,16 +8,40 @@ import java.util.Date;
 public class Company implements Serializable {
     @Id
     private String id;
+
     private String name;
+    private String description;
+    private float discountRate;
     private String logoUrl;
+    private String accountID;
+
     private Date creationDate;
     private boolean deleted;
 
-    public Company(String name, String logoUrl, Date creationDate, boolean deleted) {
+    public Company(String name, String description, float discountRate, String logoUrl, String accountID, Date creationDate, boolean deleted) {
         this.name = name;
+        this.description = description;
+        this.discountRate = discountRate;
         this.logoUrl = logoUrl;
+        this.accountID = accountID;
         this.creationDate = creationDate;
         this.deleted = deleted;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getAccountID() {
+        return accountID;
+    }
+
+    public void setAccountID(String accountID) {
+        this.accountID = accountID;
     }
 
     public String getName() {
@@ -34,6 +58,22 @@ public class Company implements Serializable {
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public float getDiscountRate() {
+        return discountRate;
+    }
+
+    public void setDiscountRate(float discountRate) {
+        this.discountRate = discountRate;
     }
 
     public Date getCreationDate() {

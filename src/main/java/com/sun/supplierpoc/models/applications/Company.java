@@ -16,15 +16,17 @@ public class Company implements Serializable {
     private String accountID;
 
     private Date creationDate;
+    private Date lastUpdate;
     private boolean deleted;
 
-    public Company(String name, String description, float discountRate, String logoUrl, String accountID, Date creationDate, boolean deleted) {
+    public Company(String name, String description, float discountRate, String logoUrl, String accountID, Date creationDate, Date lastUpdate, boolean deleted) {
         this.name = name;
         this.description = description;
         this.discountRate = discountRate;
         this.logoUrl = logoUrl;
         this.accountID = accountID;
         this.creationDate = creationDate;
+        this.lastUpdate = lastUpdate;
         this.deleted = deleted;
     }
 
@@ -82,6 +84,14 @@ public class Company implements Serializable {
 
     public void setCreationDate(Date creationDate) {
         this.creationDate = creationDate;
+    }
+
+    public Date getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(Date lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 
     public boolean isDeleted() {

@@ -10,5 +10,5 @@ import java.util.ArrayList;
 @Repository
 
 public interface GroupRepo extends MongoRepository<Group, String> {
-    ArrayList<Group> findAllByAndCompanyId(String companyId);
+    ArrayList<Group> findAllByCompany(String companyId);
 }

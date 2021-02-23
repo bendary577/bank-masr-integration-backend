@@ -42,14 +42,21 @@ public class CompanyController {
     @RequestMapping("/addApplicationCompany")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationCompany(@RequestBody Company company, Principal principal){
+    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag,
+            @RequestBody Company company, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            company.setAccountID(account.getId());
-            company.setCreationDate(new Date());
-            company.setDeleted(false);
+
+            if(addFlag){
+                company.setAccountID(account.getId());
+                company.setCreationDate(new Date());
+                company.setLastUpdate(new Date());
+                company.setDeleted(false);
+            }else {
+                company.setLastUpdate(new Date());
+            }
 
             companyRepo.save(company);
 

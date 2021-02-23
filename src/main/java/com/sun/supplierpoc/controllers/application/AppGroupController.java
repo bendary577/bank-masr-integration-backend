@@ -33,7 +33,7 @@ public class AppGroupController {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            ArrayList<Group> companies = groupRepo.findAllByAndCompanyId(companyId);
+            ArrayList<Group> companies = groupRepo.findAllByCompany(companyId);
             return  ResponseEntity.status(HttpStatus.OK).body(companies);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -42,14 +42,18 @@ public class AppGroupController {
     @RequestMapping("/addApplicationGroup")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationGroup(@RequestBody Group group, Principal principal){
+    public ResponseEntity addApplicationGroup(@RequestParam(name = "addFlag") boolean addFlag,
+                                              @RequestBody Group group, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-
-            group.setCreationDate(new Date());
-            group.setDeleted(false);
+            if(addFlag){
+                group.setCreationDate(new Date());
+                group.setLastUpdate(new Date());
+                group.setDeleted(false);
+            } else {
+                group.setLastUpdate(new Date());
+            }
 
             groupRepo.save(group);
 

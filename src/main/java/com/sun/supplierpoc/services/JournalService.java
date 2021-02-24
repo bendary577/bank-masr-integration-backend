@@ -376,9 +376,9 @@ public class JournalService {
         }
     }
 
-
     public ArrayList<JournalBatch> saveJournalData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
-                                                  String businessDate, String fromDate, ArrayList<OverGroup> overGroups){
+                                                   String businessDate, String fromDate, ArrayList<OverGroup> overGroups,
+                                                   ArrayList<ItemGroup> itemGroups){
         ArrayList<SyncJobData> addedJournals;
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
         ArrayList<Journal> journals;
@@ -397,10 +397,24 @@ public class JournalService {
                 // check zero entries (not needed)
                 if (journal.getTotalCost() != 0){
                     HashMap<String, Object> costData = new HashMap<>();
-                    if(costCenter.location != null)
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
-                    else
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
+
+                    if(!syncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups")){
+                        ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
+
+                        costData.put("inventoryAccount", itemGroup.getInventoryAccount());
+                        costData.put("expensesAccount", itemGroup.getExpensesAccount());
+                    }else {
+                        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                        if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
+                                && !oldOverGroupData.getExpensesAccount().equals("")){
+                            costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                            costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        }else
+                            continue;
+                    }
+
+                    syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
 
                     String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
                     costData.put("accountingPeriod", transactionDate.substring(2,6));
@@ -428,23 +442,15 @@ public class JournalService {
                     if(costCenter.costCenterReference.equals(""))
                         costData.put("transactionReference", "Consumption");
                     else
-                        costData.put("transactionReference", "Consumption" + " - " + costCenter.costCenterReference);
+                        costData.put("transactionReference", costCenter.costCenterReference);
 
                     costData.put("overGroup", journal.getOverGroup());
 
-                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+                    SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
+                            syncJob.getId());
+                    syncJobDataRepo.save(syncJobData);
 
-                    if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
-                            && !oldOverGroupData.getExpensesAccount().equals("")){
-                        costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                        costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-
-                        SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
-                                syncJob.getId());
-                        syncJobDataRepo.save(syncJobData);
-
-                        addedJournals.add(syncJobData);
-                    }
+                    addedJournals.add(syncJobData);
                 }
             }
 

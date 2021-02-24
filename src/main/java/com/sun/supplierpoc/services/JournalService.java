@@ -404,7 +404,7 @@ public class JournalService {
 
                 // check zero entries (not needed)
                 if (journal.getTotalCost() != 0){
-                    HashMap<String, String> costData = new HashMap<>();
+                    HashMap<String, Object> costData = new HashMap<>();
 
                     if(!syncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups")){
                         ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());

@@ -164,7 +164,8 @@ public class JournalController {
                 ArrayList<JournalBatch> addedJournalBatches;
 
                 if (journalBatches.size() > 0) {
-                    addedJournalBatches = journalService.saveJournalData(journalBatches,journalSyncJobType, syncJob, businessDate, fromDate, overGroups);
+                    addedJournalBatches = journalService.saveJournalData(journalBatches,journalSyncJobType, syncJob,
+                            businessDate, fromDate, overGroups, itemGroups);
 
                     if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);

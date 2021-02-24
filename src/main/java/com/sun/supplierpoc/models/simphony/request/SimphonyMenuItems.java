@@ -1,11 +1,19 @@
 package com.sun.supplierpoc.models.simphony.request;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 public class SimphonyMenuItems {
 
+    @NotBlank(message = "Item Id can't be blank.")
     private String Id;
+
+    @NotBlank(message = "Item quantity can't be blank.")
     private String quantity;
+
+    @Valid
     private List<CondimentItems> condimentItems;
 
     public String getId() {

@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController()
@@ -186,13 +187,25 @@ public class MenuItemsController {
                     Account account = accountOptional.get();
                     SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
 
-                    if (!invokerUser.getTypeId().equals(syncJobType.getId())){
+                    if (!invokerUser.getTypeId().contains(syncJobType.getId())){
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to get menu items!");
                     }
 
                     /*
                      * Get last success sync job with revenue center ID
                      * */
+
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                    SimphonyLocation location = generalSettings.getSimphonyLocationsByID(revenueCenterID);
+
+                    if (location == null) {
+                        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                                new HashMap<String, Object>() {{
+                                    put("error", "Revenue center not found.");
+                                    put("Date", LocalDateTime.now());
+                                }});
+                    }
+
                     SyncJob syncJob = syncJobService.getSyncJobByRevenueCenterID(revenueCenterID, syncJobType.getId());
 
                     if (syncJob != null){
@@ -212,13 +225,25 @@ public class MenuItemsController {
                         }
                     }
                 }else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                            new HashMap<String, Object>() {{
+                                put("error", "Wrong username or password.");
+                                put("Date", LocalDateTime.now());
+                            }});
                 }
             }else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                        new HashMap<String, Object>() {{
+                            put("error", "Wrong username or password.");
+                            put("Date", LocalDateTime.now());
+                        }});
             }
         }else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Wrong username or password.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    new HashMap<String, Object>() {{
+                        put("error", "Wrong username or password.");
+                        put("Date", LocalDateTime.now());
+                    }});
         }
     }
 

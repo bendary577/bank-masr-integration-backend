@@ -5,22 +5,24 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Document(collection = "InvokerUser")
 public class InvokerUser implements Serializable {
+
     @Id
     private String id;
     private String username ;
     private String password;
     private String accountId;
-    private String typeId;
+    private List<String> typeId;
     private boolean deleted;
     private Date creationDate;
 
     public InvokerUser() {
     }
 
-    public InvokerUser(String username, String password, String accountId, String typeId,
+    public InvokerUser(String username, String password, String accountId, List<String> typeId,
                        Date creationDate) {
         this.username = username;
         this.password = password;
@@ -78,11 +80,11 @@ public class InvokerUser implements Serializable {
         this.creationDate = creationDate;
     }
 
-    public String getTypeId() {
+    public List<String> getTypeId() {
         return typeId;
     }
 
-    public void setTypeId(String typeId) {
+    public void setTypeId(List<String> typeId) {
         this.typeId = typeId;
     }
 }

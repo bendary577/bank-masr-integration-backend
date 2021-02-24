@@ -43,8 +43,7 @@ public class UserController {
     @RequestMapping("/addInvokerUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addInvokerUser(@RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                         @RequestBody InvokerUser invoker, Principal principal){
+    public ResponseEntity addInvokerUser(@RequestBody InvokerUser invoker, Principal principal){
         try {
             User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -52,14 +51,14 @@ public class UserController {
                 Account account = accountOptional.get();
 
                 invoker.setAccountId(account.getId());
-                invoker.setTypeId(syncJobTypeId);
+                invoker.setTypeId(invoker.getTypeId());
 
                 // check existence
                 if (invokerUserRepo.countAllByUsername(invoker.getUsername()) > 0){
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists!");
                 }else {
                     InvokerUser invokerUser = new InvokerUser(invoker.getUsername(), invoker.getPassword(), account.getId(),
-                            syncJobTypeId, new Date());
+                            invoker.getTypeId(), new Date());
                     invokerUserRepo.save(invokerUser);
                     return ResponseEntity.status(HttpStatus.OK).body("");
                 }

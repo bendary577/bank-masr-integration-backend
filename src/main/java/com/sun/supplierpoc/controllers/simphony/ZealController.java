@@ -48,6 +48,9 @@ public class ZealController {
     @Autowired
     InvokerUserService invokerUserService;
 
+    @Autowired
+    private OperationTypeRepo operationTypeRepo;
+
     private Conversions conversions = new Conversions();
 
     @PostMapping("/zealLoyalty")
@@ -74,6 +77,14 @@ public class ZealController {
 
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                     SimphonyLocation location = generalSettings.getSimphonyLocationsByID(zealPayment.getRevenueCentreId());
+
+                    OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Payment", account.getId(), false);
+
+
+                    if (!user.getTypeId().contains(operationType.getId())){
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to add loyalty!.");
+                    }
+
 
                     if (location.isChecked()) {
                         response = zealService.zealPaymentProcessor(zealPayment, user, account, location);
@@ -122,6 +133,13 @@ public class ZealController {
 
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                     SimphonyLocation location = generalSettings.getSimphonyLocationsByID(zealVoucher.getRevenueCentreId());
+
+                    OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Voucher", account.getId(), false);
+
+
+                    if (!user.getTypeId().contains(operationType.getId())){
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to redeem reward!.");
+                    }
 
                     if (location.isChecked()) {
                         response = zealService.zealVoucherProcessor(zealVoucher, user, account, location);

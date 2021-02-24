@@ -66,10 +66,6 @@ public class ZealService {
             operation = new Operation(Constants.RUNNING, "", new Date(), null, user.getId(),
                     account.getId(), operationType.getId(), location.getRevenueCenterID(), false);
 
-            if (!user.getTypeId().equals(operationType.getId())){
-                throw new Exception("You don't have role to add loyalty!");
-            }
-
             operationRepo.save(operation);
 
             ZealLoyaltyRequest zealLoyaltyRequest = new ZealLoyaltyRequest(zealPayment.getCode()
@@ -141,10 +137,6 @@ public class ZealService {
 
             operation = new Operation(Constants.RUNNING, "", new Date(), null, user.getId(),
                     account.getId(), operationType.getId(), location.getRevenueCenterID(), false);
-
-            if (!user.getTypeId().equals(operationType.getId())){
-                 throw new Exception("You don't have role to redeem reward!");
-            }
 
             operationRepo.save(operation);
 

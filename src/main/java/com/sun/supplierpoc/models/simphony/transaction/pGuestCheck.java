@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.sun.supplierpoc.models.simphony.PCheckInfoLines;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.*;
 import java.util.List;
 
@@ -41,9 +44,13 @@ public class pGuestCheck {
     private String CheckNum;
 
     @XmlElement(name = "CheckOrderType")
+    @NotBlank(message = "order type can't be blank.")
+    @NotNull(message = "order type can't be null.")
     private String CheckOrderType;
 
     @XmlElement(name = "CheckRevenueCenterID")
+    @NotBlank(message = "Revenue center can't be blank.")
+    @NotNull(message = "Revenue center can't be null.")
     private String CheckRevenueCenterID;
 
     @XmlElement(name = "CheckSeq")
@@ -59,6 +66,7 @@ public class pGuestCheck {
 //    @XmlElement(name="string")
 //    private List<String> PCheckInfoLines;
 
+    @Valid
     @XmlElement(name = "PCheckInfoLines")
     private PCheckInfoLines PCheckInfoLines;
 

@@ -21,6 +21,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;
 import org.json.XML;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -221,7 +222,6 @@ public class MenuItemService {
                     .request(MediaType.TEXT_PLAIN_TYPE)
                     .header("SOAPAction", "http://micros-hosting.com/EGateway/PostTransactionEx")
                     .post(payload);
-
             String createCheckResponseText = createCheckResponse.readEntity(String.class);
             Document responseDoc = responseToDocument(createCheckResponseText);
 
@@ -361,7 +361,7 @@ public class MenuItemService {
             menuItemData.put("secondName", menuItem.getName2().getStringText());
             menuItemData.put("availability", menuItem.getCheckAvailability().toString());
             menuItemData.put("requiredCondiments", condiments.get("requiredCondiments"));
-            menuItemData.put("allowedCondiments", condiments.get("allowedCondiments"));
+            menuItemData.put("optionalCondiments", condiments.get("optionalCondiments"));
 
             if (menuItem.getMenuItemPrice() != null) {
                 menuItemData.put("price", menuItem.getMenuItemPrice().getPrice());
@@ -481,7 +481,7 @@ public class MenuItemService {
             }
         }
         condiments.put("requiredCondiments", requiredCondiments);
-        condiments.put("allowedCondiments", allowedCondiments);
+        condiments.put("optionalCondiments", allowedCondiments);
 
         return condiments;
     }
@@ -564,7 +564,7 @@ public class MenuItemService {
     }
 
     private PostTransactionEx2 buildCheckObject(CreateCheckRequest createCheckRequest, SimphonyLocation location,
-                                  OperationType operationType) {
+                                                OperationType operationType) {
         OperationConfiguration configuration = operationType.getConfiguration();
         //////////////////////////////////////// Guest Check Details ////////////////////////////////////////////////
         pGuestCheck pGuestCheck = createCheckRequest.getpGuestCheck();
@@ -622,18 +622,20 @@ public class MenuItemService {
             menuItem.setMiDefinitionSeqNum("1");
             simphonyPosApi_menuItemEx.setMenuItem(menuItem);
 
-            for (int y = 0;
-                 y < simphonyMenuItems.get(i).getCondimentItems().size(); y++) {
+            if (simphonyMenuItems.get(i).getCondimentItems() != null) {
+                for (int y = 0;
+                     y < simphonyMenuItems.get(i).getCondimentItems().size(); y++) {
 
-                SimphonyPosApi_MenuItemDefinitionEx simphonyPosApi_menuItemDefinitionEx = new SimphonyPosApi_MenuItemDefinitionEx();
-                simphonyPosApi_menuItemDefinitionEx.setMiObjectNum(simphonyMenuItems.get(i).getCondimentItems().get(y).getId());
-                simphonyPosApi_menuItemDefinitionEx.setMiQuantity(Integer.parseInt(simphonyMenuItems.get(i).getCondimentItems().get(y).getQuantity()));
-                simphonyPosApi_menuItemDefinitionEx.setItemDiscount(itemDiscount);
-                simphonyPosApi_menuItemDefinitionEx.setMiSubLevel("1");
-                simphonyPosApi_menuItemDefinitionEx.setMiMenuLevel("1");
-                simphonyPosApi_menuItemDefinitionEx.setMiPriceLevel("0");
-                simphonyPosApi_menuItemDefinitionEx.setMiDefinitionSeqNum("1");
-                simphony_menuItemDefinitions.add(simphonyPosApi_menuItemDefinitionEx);
+                    SimphonyPosApi_MenuItemDefinitionEx simphonyPosApi_menuItemDefinitionEx = new SimphonyPosApi_MenuItemDefinitionEx();
+                    simphonyPosApi_menuItemDefinitionEx.setMiObjectNum(simphonyMenuItems.get(i).getCondimentItems().get(y).getId());
+                    simphonyPosApi_menuItemDefinitionEx.setMiQuantity(Integer.parseInt(simphonyMenuItems.get(i).getCondimentItems().get(y).getQuantity()));
+                    simphonyPosApi_menuItemDefinitionEx.setItemDiscount(itemDiscount);
+                    simphonyPosApi_menuItemDefinitionEx.setMiSubLevel("1");
+                    simphonyPosApi_menuItemDefinitionEx.setMiMenuLevel("1");
+                    simphonyPosApi_menuItemDefinitionEx.setMiPriceLevel("0");
+                    simphonyPosApi_menuItemDefinitionEx.setMiDefinitionSeqNum("1");
+                    simphony_menuItemDefinitions.add(simphonyPosApi_menuItemDefinitionEx);
+                }
             }
             condiments.setSimphonyPosApi_MenuItemDefinitionEx(simphony_menuItemDefinitions);
             simphonyPosApi_menuItemEx.setCondiments(condiments);

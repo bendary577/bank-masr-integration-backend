@@ -1,8 +1,16 @@
 package com.sun.supplierpoc.models.simphony.request;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
 public class CondimentItems {
 
+    @NotBlank(message = "Condiment Id can't be blank.")
+    @NotNull(message = "Condiment Id can't be null.")
     private String Id;
+
+    @NotBlank(message = "Condiment quantity can't be blank.")
+    @NotNull(message = "Condiment quantity can't be null.")
     private String quantity;
 
     public String getId() {

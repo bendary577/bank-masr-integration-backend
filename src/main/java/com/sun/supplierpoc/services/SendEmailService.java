@@ -34,7 +34,7 @@ public class SendEmailService {
         mailSender.send(mailMessage);
     }
 
-    public void sendMimeMail(String qrCodePath) throws MailException {
+    public void sendMimeMail(String qrCodePath, String logoPath) throws MailException {
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
         try {
@@ -43,18 +43,20 @@ public class SendEmailService {
             messageHelper.setSentDate(new Date());
             messageHelper.setTo("lyoussef@entrepreware.com");
 
+            //https://togo.ovio.eu/assets/media/uploads/ovio-logo.png
             String mailSubject = "We crafted some offers JUST FOR YOU!";
             String mailContent =
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);transition: 0.3s; width: 100%;'>" +
                     "<br>" +
-                    "<img style=\"width:20%; display: block;margin-left: auto; margin-right: auto;\"" +
-                    "   src='https://togo.ovio.eu/assets/media/uploads/ovio-logo.png'>" +
+                    "<img style=\"width:40%; display: block;margin-left: auto; margin-right: auto;\"" +
+                    "   src='cid:image000'>" +
+
                     "<br>\n" +
                     "<img style=\"width:100%\"" +
                     "   src='https://vistapointe.net/images/gift-1.jpg'>" +
-                    "<h3 style='text-align:center'>Hello Laura,</h3>" +
+                    "<h3 style='text-align:center'>Hello Ali,</h3>" +
                     "<p style='text-align:center'>" +
-                    "   Welcome to Ovio restaurant loyalty program." +
+                    "   Welcome to ACT loyalty program." +
                     "   <br>" +
                     "   Please feel free to use the below QR code in each visit to enjoy your special discount." +
                     "</p>" +
@@ -75,6 +77,9 @@ public class SendEmailService {
 
             FileSystemResource resource = new FileSystemResource(new File(qrCodePath));
             messageHelper.addInline("image001", resource);
+
+            resource = new FileSystemResource(new File(logoPath));
+            messageHelper.addInline("image000", resource);
 
             mailSender.send(mailMessage);
         } catch (MessagingException e) {

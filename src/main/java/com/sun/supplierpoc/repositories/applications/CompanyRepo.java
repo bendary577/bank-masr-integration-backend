@@ -9,7 +9,6 @@ import java.util.ArrayList;
 @Repository
 
 public interface CompanyRepo extends MongoRepository<Company, String> {
+    Company findFirstById(String id);
     ArrayList<Company> findAllByAccountID(String accountId);
-
-    ArrayList<Company> findAllByAccountIDAndDeleted(String accountId, boolean deleted);
 }

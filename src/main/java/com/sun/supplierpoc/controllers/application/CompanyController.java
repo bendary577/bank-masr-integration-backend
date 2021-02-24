@@ -51,6 +51,7 @@ public class CompanyController {
 
             if(addFlag){
                 company.setAccountID(account.getId());
+                company.setGroups(new ArrayList<>());
                 company.setCreationDate(new Date());
                 company.setLastUpdate(new Date());
                 company.setDeleted(false);

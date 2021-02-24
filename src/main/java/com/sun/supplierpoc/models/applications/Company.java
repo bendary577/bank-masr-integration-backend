@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models.applications;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class Company implements Serializable {
@@ -14,6 +15,9 @@ public class Company implements Serializable {
     private float discountRate;
     private String logoUrl;
     private String accountID;
+
+
+    private ArrayList<Group> groups = new ArrayList<>();
 
     private Date creationDate;
     private Date lastUpdate;
@@ -100,5 +104,13 @@ public class Company implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public ArrayList<Group> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(ArrayList<Group> groups) {
+        this.groups = groups;
     }
 }

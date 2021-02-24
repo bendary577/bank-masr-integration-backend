@@ -23,7 +23,7 @@ public class AppGroupController {
     @Autowired
     AccountRepo accountRepo;
     @Autowired
-    GroupRepo groupRepo;
+    CompanyRepo companyRepo;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getApplicationGroups")
@@ -33,7 +33,8 @@ public class AppGroupController {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            ArrayList<Group> companies = groupRepo.findAllByCompany(companyId);
+            Company company = companyRepo.findFirstById(companyId);
+            ArrayList<Group> companies = company.getGroups();
             return  ResponseEntity.status(HttpStatus.OK).body(companies);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -43,19 +44,23 @@ public class AppGroupController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity addApplicationGroup(@RequestParam(name = "addFlag") boolean addFlag,
-                                              @RequestBody Group group, Principal principal){
+                                              @RequestParam(name = "company") String companyId,
+                                              @RequestBody Group group,
+                                              Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
+            Company company = companyRepo.findFirstById(companyId);
             if(addFlag){
                 group.setCreationDate(new Date());
                 group.setLastUpdate(new Date());
                 group.setDeleted(false);
+
+                company.getGroups().add(group);
             } else {
                 group.setLastUpdate(new Date());
             }
-
-            groupRepo.save(group);
+            companyRepo.save(company);
 
             return ResponseEntity.status(HttpStatus.OK).body(group);
         }
@@ -71,7 +76,7 @@ public class AppGroupController {
         if (accountOptional.isPresent()) {
             for (Group group : groups) {
                 group.setDeleted(true);
-                groupRepo.save(group);
+//                groupRepo.save(group);
             }
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }

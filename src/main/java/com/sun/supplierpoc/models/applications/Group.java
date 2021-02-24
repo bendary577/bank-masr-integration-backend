@@ -9,8 +9,6 @@ public class Group implements Serializable {
     private String id;
     private String name;
     private String description;
-
-    private String company;
     private float discountRate;
 
     private Date creationDate;
@@ -40,14 +38,6 @@ public class Group implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
     }
 
     public float getDiscountRate() {

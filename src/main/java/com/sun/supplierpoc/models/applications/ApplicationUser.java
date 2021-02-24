@@ -1,8 +1,6 @@
 package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -11,20 +9,19 @@ public class ApplicationUser implements Serializable {
     private String id;
     private String name;
 
-    @DBRef
+    private Group group;
     private Company company;
 
-    @DBRef
-    private Group group;
-
     private Date creationDate;
+    private Date lastUpdate;
     private boolean deleted;
 
-    public ApplicationUser(String name, Company company, Group group, Date creationDate, boolean deleted) {
+    public ApplicationUser(String name, Group group, Company company, Date creationDate, Date lastUpdate, boolean deleted) {
         this.name = name;
-        this.company = company;
         this.group = group;
+        this.company = company;
         this.creationDate = creationDate;
+        this.lastUpdate = lastUpdate;
         this.deleted = deleted;
     }
 
@@ -66,6 +63,14 @@ public class ApplicationUser implements Serializable {
 
     public void setCreationDate(Date creationDate) {
         this.creationDate = creationDate;
+    }
+
+    public Date getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(Date lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 
     public boolean isDeleted() {

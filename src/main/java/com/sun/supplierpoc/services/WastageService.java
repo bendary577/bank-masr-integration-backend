@@ -38,13 +38,13 @@ public class WastageService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Response getWastageData(SyncJobType syncJobType, ArrayList<Item> items,
+    public Response getWastageData(SyncJobType syncJobType, ArrayList<Item> items, ArrayList<ItemGroup> itemGroups,
                                                   ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
                                                   ArrayList<WasteGroup> wasteGroups, Account account) {
 
         Response response = new Response();
 
-        WebDriver driver = null;
+        WebDriver driver;
         try{
             driver = setupEnvironment.setupSeleniumEnv(false);
         }
@@ -188,7 +188,7 @@ public class WastageService {
             }
 
             for (HashMap<String, Object> waste:wastes) {
-                getWasteDetails(items, overGroups, waste, driver, journalEntries);
+                getWasteDetails(syncJobType, items, itemGroups, overGroups, waste, driver, journalEntries);
             }
 
             driver.quit();
@@ -209,8 +209,8 @@ public class WastageService {
         }
     }
 
-    private void getWasteDetails(
-            ArrayList<Item> items, ArrayList<OverGroup> overGroups,
+    private void getWasteDetails(SyncJobType syncJobType,
+            ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
             HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
@@ -258,13 +258,29 @@ public class WastageService {
 
             CostCenter costCenter = (CostCenter) waste.get("cost_center");
             for (Journal journal : journals) {
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-
-                if (!oldOverGroupData.getChecked()) {
+                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
                     continue;
-                }
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
+
+                if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                    if (!oldOverGroupData.getChecked())
+                        continue;
+
+                    journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                }
+                else{
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
+
+                    if (!itemGroup.getChecked())
+                        continue;
+
+                    journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
+                    journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
+                }
 
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;
@@ -304,34 +320,11 @@ public class WastageService {
 
                 journalEntry.put("overGroup", journal.getOverGroup());
 
-                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-
                 journalEntries.add(journalEntry);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-
-    public void saveWastageSunData(ArrayList<JournalBatch> wasteBatches, SyncJob syncJob) {
-        ArrayList<SyncJobData> addedWaste;
-        ArrayList<HashMap<String, Object>> wastes;
-
-        for (JournalBatch wasteBatch : wasteBatches) {
-            addedWaste = new ArrayList<>();
-            wastes = wasteBatch.getWaste();
-            for (HashMap<String, Object> waste : wastes) {
-                SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
-                        syncJob.getId());
-                syncJobDataRepo.save(syncJobData);
-
-                addedWaste.add(syncJobData);
-            }
-
-            wasteBatch.setWasteData(addedWaste);
         }
     }
 
@@ -344,6 +337,7 @@ public class WastageService {
 
         ArrayList<Item> items = generalSettings.getItems();
         ArrayList<CostCenter> locations = generalSettings.getLocations();
+        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
 
@@ -461,7 +455,8 @@ public class WastageService {
                 }
 
                 for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteReportDetails(items, overGroups, costCenter, waste, syncJobType, driver, journalEntries);
+                    getWasteReportDetails(items, itemGroups, overGroups, costCenter,
+                            waste, syncJobType, driver, journalEntries);
                 }
 
                 journalBatch.setCostCenter(costCenter);
@@ -484,8 +479,8 @@ public class WastageService {
     }
 
     private void getWasteReportDetails(
-            ArrayList<Item> items, ArrayList<OverGroup> overGroups, CostCenter costCenter,
-            HashMap<String, Object> waste, SyncJobType syncJobType,
+            ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
+            CostCenter costCenter, HashMap<String, Object> waste, SyncJobType syncJobType,
             WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
@@ -495,8 +490,9 @@ public class WastageService {
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
+            String group;
             for (int i = 7; i < rows.size(); i++) {
-                HashMap<String, Object> transferDetails = new HashMap<>();
+                HashMap<String, Object> wasteDetails = new HashMap<>();
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -504,37 +500,55 @@ public class WastageService {
                     continue;
                 }
 
-                // check if this Item belong to selected items
                 WebElement td = cols.get(columns.indexOf("item"));
 
-                Item oldItemData = conversions.checkItemExistence(items, td.getText().strip());
+                Item item = conversions.checkItemExistence(items, td.getText().strip());
 
-                if (!oldItemData.isChecked()) {
+                if (!item.isChecked()) {
                     continue;
                 }
 
-                String overGroup = oldItemData.getOverGroup();
+                if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
+                    group = item.getOverGroup();
+                else
+                    group = item.getItemGroup();
 
-                transferDetails.put("Item", td.getText().strip());
+                wasteDetails.put("Item", td.getText().strip());
 
                 td = cols.get(columns.indexOf("value"));
-                transferDetails.put("value", td.getText().strip());
+                wasteDetails.put("value", td.getText().strip());
 
                 Journal journal = new Journal();
-                journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) transferDetails.get("value")),
+                journals = journal.checkExistence(journals, group, conversions.convertStringToFloat((String) wasteDetails.get("value")),
                         0,0, 0);
 
             }
 
             for (Journal journal : journals) {
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-
-                if (!oldOverGroupData.getChecked())
-                    continue;
                 if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
                     continue;
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
+
+                if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+
+                    if (!oldOverGroupData.getChecked())
+                        continue;
+
+                    journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                }
+                else{
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
+
+                    if (!itemGroup.getChecked())
+                        continue;
+
+                    journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
+                    journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
+                }
+
                 syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(),
                         costCenter, null, null);
 
@@ -566,9 +580,6 @@ public class WastageService {
 
                 journalEntry.put("overGroup", journal.getOverGroup());
 
-                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-
                 journalEntries.add(journalEntry);
             }
 
@@ -577,5 +588,24 @@ public class WastageService {
         }
     }
 
+
+    public void saveWastageSunData(ArrayList<JournalBatch> wasteBatches, SyncJob syncJob) {
+        ArrayList<SyncJobData> addedWaste;
+        ArrayList<HashMap<String, Object>> wastes;
+
+        for (JournalBatch wasteBatch : wasteBatches) {
+            addedWaste = new ArrayList<>();
+            wastes = wasteBatch.getWaste();
+            for (HashMap<String, Object> waste : wastes) {
+                SyncJobData syncJobData = new SyncJobData(waste, Constants.RECEIVED, "", new Date(),
+                        syncJob.getId());
+                syncJobDataRepo.save(syncJobData);
+
+                addedWaste.add(syncJobData);
+            }
+
+            wasteBatch.setWasteData(addedWaste);
+        }
+    }
 
 }

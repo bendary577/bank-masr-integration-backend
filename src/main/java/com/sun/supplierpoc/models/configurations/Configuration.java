@@ -35,6 +35,9 @@ public class Configuration implements Serializable {
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     public ArrayList<OverGroup> overGroups = new ArrayList<>();
 
+    // SYnc per (overGroup/itemGroup)
+    public String syncPerGroup = "";
+
     public SchedulerConfiguration schedulerConfiguration = new SchedulerConfiguration();
     public InforConfiguration inforConfiguration = new InforConfiguration();
 

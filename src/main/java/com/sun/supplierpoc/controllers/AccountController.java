@@ -14,6 +14,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.RefreshTokenResult;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
@@ -30,7 +31,6 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.*;
 
-@EnableResourceServer
 
 @RestController
 public class AccountController {
@@ -114,6 +114,7 @@ public class AccountController {
             return response;
         }
 
+        account.setERD("Sun");
         // create new account and user
         account = accountRepo.save(account);
         Set<GrantedAuthority> roles=new LinkedHashSet<>();
@@ -140,8 +141,7 @@ public class AccountController {
     }
 
     private boolean addAccountSyncType(Account account){
-        try {
-//            // suppliers
+////             suppliers
 //            String syncDescription = "Used to sync suppliers from sun to my inventory daily.";
 //            Configuration supplierConfig = new Configuration();
 //            supplierConfig.supplierConfiguration = new SupplierConfiguration();
@@ -203,6 +203,7 @@ public class AccountController {
 //                    "/bookedProductionSun", new Date(), new Configuration(), account.getId());
 //            syncJobTypeRepo.save(bookedProductionSyncType);
 
+        LoggerFactory.getLogger(AccountController.class).info(account.getERD() + "sdasd");
             // Sales
             String syncDescription = "Used to sync sales from oracle hospitality reports to sun monthly.";
             Configuration salesConfig = new Configuration();
@@ -237,9 +238,7 @@ public class AccountController {
 //            syncJobTypeRepo.save(menuItemsSyncType);
 
             return true;
-        } catch (Exception e) {
-            return false;
-        }
+
 
     }
 

@@ -11,4 +11,6 @@ import java.util.List;
 public interface UserRepo extends MongoRepository<User, String>{
 
     List<User> findByAccountIdAndDeleted(String accountId, boolean deleted);
+
+    User findByUsername(String admin);
 }

@@ -343,7 +343,7 @@ public class JournalService {
                                 continue;
                             }
 
-                            if(journalSyncJobType.getConfiguration().syncPerGroup.equals(""))
+                            if(journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
                                 group = itemGroup.getOverGroup();
                             else
                                 group = itemGroup.getItemGroup();

@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
@@ -99,6 +100,7 @@ public class InvoiceController {
         ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
 
         ArrayList<Item> items =  generalSettings.getItems();
+        ArrayList<ItemGroup> itemGroups =  generalSettings.getItemGroups();
 
         String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
         String fromDate = invoiceSyncJobType.getConfiguration().fromDate;
@@ -173,7 +175,7 @@ public class InvoiceController {
             }
 
             data = invoiceService.getInvoicesReceiptsData(false,invoiceType, invoiceSyncJobType.getConfiguration(),
-                    costCenters, suppliers, items, overGroups, account, timePeriod, fromDate, toDate);
+                    costCenters, suppliers, items, itemGroups,overGroups, account, timePeriod, fromDate, toDate);
 
             invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 

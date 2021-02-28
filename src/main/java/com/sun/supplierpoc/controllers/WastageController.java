@@ -94,6 +94,7 @@ public class WastageController {
         SyncJobType wastageSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, account.getId(), false);
 
         ArrayList<Item> items = generalSettings.getItems();
+        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<WasteGroup> wasteGroups = wastageSyncJobType.getConfiguration().wastageConfiguration.wasteGroups;
 
@@ -159,7 +160,7 @@ public class WastageController {
         try {
             Response data;
             if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
-                data = wastageService.getWastageData(wastageSyncJobType, items, costCenters,
+                data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
                         overGroups, wasteGroups, account);
                 wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
             }

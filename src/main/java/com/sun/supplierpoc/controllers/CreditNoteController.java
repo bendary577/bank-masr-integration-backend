@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
@@ -91,6 +92,7 @@ public class CreditNoteController {
         String invoiceTypeIncluded = creditNoteSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
+        ArrayList<ItemGroup> itemGroups =  generalSettings.getItemGroups();
         ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
 
         String timePeriod = creditNoteSyncJobType.getConfiguration().timePeriod;
@@ -163,7 +165,7 @@ public class CreditNoteController {
             }
 
             data = invoiceService.getInvoicesReceiptsData(true,invoiceType, creditNoteSyncJobType.getConfiguration(),
-                    costCenters, suppliers, items, overGroups, account, timePeriod, fromDate, toDate);
+                    costCenters, suppliers, items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
 
             invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 

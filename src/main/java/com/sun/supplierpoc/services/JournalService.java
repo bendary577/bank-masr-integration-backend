@@ -1,27 +1,27 @@
 package com.sun.supplierpoc.services;
 
 
-import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.controllers.InvoiceController;
-import com.sun.supplierpoc.models.*;
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.ItemGroup;
-import com.sun.supplierpoc.models.configurations.OverGroup;
-import com.sun.supplierpoc.models.configurations.RevenueCenter;
-import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import org.openqa.selenium.*;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+        import com.sun.supplierpoc.Constants;
+        import com.sun.supplierpoc.Conversions;
+        import com.sun.supplierpoc.controllers.InvoiceController;
+        import com.sun.supplierpoc.models.*;
+        import com.sun.supplierpoc.models.configurations.CostCenter;
+        import com.sun.supplierpoc.models.configurations.ItemGroup;
+        import com.sun.supplierpoc.models.configurations.OverGroup;
+        import com.sun.supplierpoc.models.configurations.RevenueCenter;
+        import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+        import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+        import org.openqa.selenium.*;
+        import org.openqa.selenium.support.ui.ExpectedConditions;
+        import org.openqa.selenium.support.ui.WebDriverWait;
+        import org.springframework.beans.factory.annotation.Autowired;
+        import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+        import java.text.ParseException;
+        import java.text.SimpleDateFormat;
+        import java.util.Date;
 
-import java.util.*;
+        import java.util.*;
 
 @Service
 public class JournalService {
@@ -38,10 +38,10 @@ public class JournalService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /*
-    * Get consumptions entries based on cost center
-    * */
+     * Get consumptions entries based on cost center
+     * */
     public Response getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
-                                                  ArrayList<ItemGroup> itemGroups, Account account){
+                                               ArrayList<ItemGroup> itemGroups, Account account){
         Response response = new Response();
 
         WebDriver driver;
@@ -162,6 +162,7 @@ public class JournalService {
 
                 columns = setupEnvironment.getTableColumns(rows, false, 3);
 
+                String group;
                 for (int i = 6; i < rows.size(); i++) {
                     HashMap<String, Object> transferDetails = new HashMap<>();
                     WebElement row = rows.get(i);
@@ -173,14 +174,16 @@ public class JournalService {
 
                     WebElement td = cols.get(columns.indexOf("item_group"));
 
-                    ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
 
-                    if (!oldItemData.getChecked()) {
+                    if (!itemGroup.getChecked()) {
                         continue;
                     }
 
-                    String overGroup = oldItemData.getOverGroup();
-
+                    if(journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
+                        group = itemGroup.getOverGroup();
+                    else
+                        group = itemGroup.getItemGroup();
 
                     for (int j = 0; j < cols.size(); j++) {
                         transferDetails.put(columns.get(j), cols.get(j).getText().strip());
@@ -188,7 +191,7 @@ public class JournalService {
 
                     Journal journal = new Journal();
                     float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
-                    journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
+                    journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
                 }
 
                 journalBatch.setCostCenter((CostCenter) costCenter.get("cost_center"));
@@ -217,8 +220,8 @@ public class JournalService {
      * Get consumptions entries based on location
      * */
     public Response getJournalData(SyncJobType journalSyncJobType,
-                                                  ArrayList<CostCenter> costCentersLocation,
-                                                  ArrayList<ItemGroup> itemGroups, Account account){
+                                   ArrayList<CostCenter> costCentersLocation,
+                                   ArrayList<ItemGroup> itemGroups, Account account){
         Response response = new Response();
 
         WebDriver driver;
@@ -310,6 +313,7 @@ public class JournalService {
                     extensions.add(extension);
                 }
 
+                String group;
                 for (String extension : extensions) {
                     try {
                         driver.get(Constants.OHRA_LINK + extension);
@@ -333,14 +337,16 @@ public class JournalService {
                             // check if this Item group belong to selected Item groups
                             WebElement td = cols.get(columns.indexOf("item_group"));
 
-                            ItemGroup oldItemData = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+                            ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
 
-                            if (!oldItemData.getChecked()) {
+                            if (!itemGroup.getChecked()) {
                                 continue;
                             }
 
-                            String overGroup = oldItemData.getOverGroup();
-
+                            if(journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
+                                group = itemGroup.getOverGroup();
+                            else
+                                group = itemGroup.getItemGroup();
 
                             for (int j = 0; j < cols.size(); j++) {
                                 transferDetails.put(columns.get(j), cols.get(j).getText().strip());
@@ -349,7 +355,7 @@ public class JournalService {
                             Journal journal = new Journal();
                             float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
 
-                            journals = journal.checkExistence(journals, overGroup, 0,cost, 0, 0);
+                            journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -398,7 +404,7 @@ public class JournalService {
                 if (journal.getTotalCost() != 0){
                     HashMap<String, Object> costData = new HashMap<>();
 
-                    if(!syncJobType.getConfiguration().consumptionConfiguration.consumptionPerGroup.equals("OverGroups")){
+                    if(!syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
                         ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
 
                         costData.put("inventoryAccount", itemGroup.getInventoryAccount());

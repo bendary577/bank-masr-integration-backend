@@ -8,7 +8,4 @@ public class ConsumptionConfiguration implements Serializable {
      * get consumption based of (Location/Cost Center)
      * */
     public String consumptionBasedOnType = "";
-
-    // get consumption per (overGroup/itemGroup)
-    public String consumptionPerGroup = "";
 }

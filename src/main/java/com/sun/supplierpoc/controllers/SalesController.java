@@ -60,7 +60,7 @@ public class SalesController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = syncPOSSagetPOSSaleslesInDayRange(user.getId(), account);
+            response = syncPOSSalesInDayRange(user.getId(), account);
             if(!response.isStatus()){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {

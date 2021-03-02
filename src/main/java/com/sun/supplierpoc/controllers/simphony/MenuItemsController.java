@@ -6,6 +6,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.models.simphony.response.MenuItemResponse;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -210,7 +211,7 @@ public class MenuItemsController {
 
                     if (syncJob != null){
                         syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
-                        ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                        ArrayList<MenuItemResponse> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
                         return new ResponseEntity<>(menuItems, HttpStatus.OK);
                     }else{
                         // Sync menu items
@@ -218,7 +219,7 @@ public class MenuItemsController {
 
                         if(syncResponse.isStatus()){
                             syncJobData = syncResponse.getAddedSyncJobData();
-                            ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                            ArrayList<MenuItemResponse> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
                             return new ResponseEntity<>(menuItems, HttpStatus.OK);
                         }else {
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());

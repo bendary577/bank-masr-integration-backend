@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models.simphony.request;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -11,6 +12,7 @@ public class SimphonyMenuItems {
     private String Id;
 
     @NotBlank(message = "Item quantity can't be blank.")
+    @Min(value=1, message = "Quantity must be positive integer value.")
     private String quantity;
 
     @Valid

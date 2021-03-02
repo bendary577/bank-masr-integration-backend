@@ -114,7 +114,6 @@ public class AccountController {
             return response;
         }
 
-        account.setERD("Sun");
         // create new account and user
         account = accountRepo.save(account);
         Set<GrantedAuthority> roles=new LinkedHashSet<>();
@@ -141,7 +140,7 @@ public class AccountController {
     }
 
     private boolean addAccountSyncType(Account account){
-////             suppliers
+//            //suppliers
 //            String syncDescription = "Used to sync suppliers from sun to my inventory daily.";
 //            Configuration supplierConfig = new Configuration();
 //            supplierConfig.supplierConfiguration = new SupplierConfiguration();
@@ -202,20 +201,19 @@ public class AccountController {
 //            SyncJobType bookedProductionSyncType = new SyncJobType(6, Constants.BOOKED_PRODUCTION, syncDescription,
 //                    "/bookedProductionSun", new Date(), new Configuration(), account.getId());
 //            syncJobTypeRepo.save(bookedProductionSyncType);
-
-        LoggerFactory.getLogger(AccountController.class).info(account.getERD() + "sdasd");
-            // Sales
-            String syncDescription = "Used to sync sales from oracle hospitality reports to sun monthly.";
-            Configuration salesConfig = new Configuration();
-            salesConfig.salesConfiguration = new SalesConfiguration();
-            if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-                salesConfig.inforConfiguration = new InforConfiguration();
-            }
-
-            SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES, syncDescription, "/posSalesSun",
-                    new Date(), salesConfig, account.getId());
-            syncJobTypeRepo.save(salesSyncType);
-
+//
+//            // Sales
+//             syncDescription = "Used to sync sales from oracle hospitality reports to sun monthly.";
+//            Configuration salesConfig = new Configuration();
+//            salesConfig.salesConfiguration = new SalesConfiguration();
+//            if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+//                salesConfig.inforConfiguration = new InforConfiguration();
+//            }
+//
+//            SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES, syncDescription, "/posSalesSun",
+//                    new Date(), salesConfig, account.getId());
+//            syncJobTypeRepo.save(salesSyncType);
+//
 //            // Consumption
 //            syncDescription = "Used to sync consumption from oracle hospitality reports to sun monthly.";
 //            Configuration consumptionConfig = new Configuration();
@@ -236,9 +234,8 @@ public class AccountController {
 //            SyncJobType menuItemsSyncType = new SyncJobType(9, Constants.MENU_ITEMS, syncDescription, "/menuItems",
 //                    new Date(), menuItemConfig, account.getId());
 //            syncJobTypeRepo.save(menuItemsSyncType);
-
+//
             return true;
-
 
     }
 

@@ -160,47 +160,4 @@ public class ZealController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
-
-//    @PostMapping("/zealPoints")
-//    @CrossOrigin(origins = "*")
-//    @ResponseBody
-//    public ResponseEntity<Response> zealPoints(@RequestBody ZealPoints zealPoints) {
-//        Response response = new Response();
-//
-//        String username = "test1";
-//        String password = "test@test";
-//
-//        InvokerUser user = invokerUserService.getInvokerUser(username, password);
-//        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-//
-//        if (accountOptional.isPresent()) {
-//
-//            Account account = accountOptional.get();
-//
-//            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-//
-//            ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
-//
-//            for (SimphonyLocation location : locations) {
-//
-//                if (location.isChecked()) {
-//
-//                    response = zealService.zealPointsProcessor(zealPoints, user.getId(), account, location.getRevenueCenterID());
-//
-//                    if (!response.isStatus()) {
-//                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-//                    }
-//                }
-//            }
-//
-//            return ResponseEntity.status(HttpStatus.OK).body(response);
-//        }
-//
-//        String message = "Invalid Credentials";
-//        response.setMessage(message);
-//        response.setStatus(false);
-//
-//        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-//    }
-
 }

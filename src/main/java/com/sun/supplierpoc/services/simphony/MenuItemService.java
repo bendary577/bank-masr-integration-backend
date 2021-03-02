@@ -10,6 +10,8 @@ import com.sun.supplierpoc.models.simphony.*;
 import com.sun.supplierpoc.models.simphony.discount.SimphonyPosApi_DiscountEx;
 import com.sun.supplierpoc.models.simphony.request.CreateCheckRequest;
 import com.sun.supplierpoc.models.simphony.request.SimphonyMenuItems;
+import com.sun.supplierpoc.models.simphony.response.CondimentResponse;
+import com.sun.supplierpoc.models.simphony.response.MenuItemResponse;
 import com.sun.supplierpoc.models.simphony.tender.SimphonyPosApi_TmedDetailItemEx2;
 import com.sun.supplierpoc.models.simphony.tender.TmedEPayment;
 import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
@@ -143,7 +145,8 @@ public class MenuItemService {
                 if (responseDoc.getElementsByTagName("MenuItemPrice").item(0) != null &&
                         responseDoc.getElementsByTagName("MenuItemDefinitions").item(0) != null
                 ) {
-                    String xmlMenuItemPrice = responseDoc.getElementsByTagName("MenuItemPrice").item(0).getFirstChild().getNodeValue();
+                    String xmlMenuItemPrice = responseDoc.getElementsByTagName("Menu" +
+                            "ItemPrice").item(0).getFirstChild().getNodeValue();
                     String xmlMenuItem = responseDoc.getElementsByTagName("MenuItemDefinitions").item(0).getFirstChild().getNodeValue();
                     String xmlMenuItemClass = responseDoc.getElementsByTagName("MenuItemClass").item(0).getFirstChild().getNodeValue();
 
@@ -228,7 +231,29 @@ public class MenuItemService {
             if (responseDoc != null) {
                 if (responseDoc.getElementsByTagName("Success").item(0).getFirstChild().getNodeValue().equals("false")) {
                     String errorMessage = responseDoc.getElementsByTagName("ErrorMessage").item(0).getFirstChild().getNodeValue();
-                    return new ResponseEntity(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+
+                    List<HashMap<String, String>> integers = new ArrayList<>();
+
+//                    for(SimphonyMenuItems simphonyMenuItems : createCheckRequest.getSimphonyMenuItems()){
+//
+//                    }
+
+                    LoggerFactory.getLogger(MenuItemService.class).info(errorMessage);
+
+                    if (errorMessage.contains("Failed to find")) {
+                        final String message = errorMessage.substring(0, errorMessage.indexOf('['));
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                                new HashMap<String, Object>() {{
+                                    put("error", "Can't create check with internal response " + message + ".");
+                                    put("Date", LocalDateTime.now());
+                                }});
+                    }
+
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                            new HashMap<String, Object>() {{
+                                put("error", "Can't create check.");
+                                put("Date", LocalDateTime.now());
+                            }});
 
                 } else {
                     JSONObject jsonObject = xmlDocToJsonObject(responseDoc);
@@ -344,33 +369,45 @@ public class MenuItemService {
 
     public ArrayList<SyncJobData> saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob, ArrayList<DbMenuItemClass> menuItemClasses) {
         ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
-
         List<HashMap<String, Object>> syncMenuItemClasses = menuItemClassData(syncJob, menuItemClasses);
 
         for (DbMenuItemDefinition menuItem : menuItems) {
 
-            HashMap<String, Object> condiments = new HashMap<>();
+            MenuItemResponse itemResponse = new MenuItemResponse();
             if (!menuItem.getMenuItemClassObjNum().equals(null) && !menuItem.getMenuItemClassObjNum().equals("0")) {
-                condiments = getCondiments(menuItem, syncMenuItemClasses, menuItems);
+                itemResponse = getCondiments(menuItem, syncMenuItemClasses, menuItems);
             }
 
             HashMap<String, Object> menuItemData = new HashMap<>();
 
             menuItemData.put("id", menuItem.getMiMasterObjNum());
+            itemResponse.setId(Integer.parseInt(menuItem.getMiMasterObjNum()));
+
             menuItemData.put("firstName", menuItem.getName1().getStringText());
+            itemResponse.setFirstName(menuItem.getName1().getStringText());
+
             menuItemData.put("secondName", menuItem.getName2().getStringText());
+            itemResponse.setSecondName(menuItem.getName2().getStringText());
+
             menuItemData.put("availability", menuItem.getCheckAvailability().toString());
-            menuItemData.put("requiredCondiments", condiments.get("requiredCondiments"));
-            menuItemData.put("optionalCondiments", condiments.get("optionalCondiments"));
+            itemResponse.setAvailability(menuItem.getCheckAvailability().toString());
+
+            menuItemData.put("requiredCondiments", itemResponse.getRequiredCondiments());
+            menuItemData.put("optionalCondiments", itemResponse.getOptionalCondiments());
 
             if (menuItem.getMenuItemPrice() != null) {
                 menuItemData.put("price", menuItem.getMenuItemPrice().getPrice());
+                itemResponse.setPrice(Double.parseDouble(menuItem.getMenuItemPrice().getPrice()));
             } else {
                 menuItemData.put("price", "0");
+                itemResponse.setPrice(Double.parseDouble("0"));
             }
 
             SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
+
+            syncJobData.setMenuItemResponse(itemResponse);
+
             syncJobDataRepo.save(syncJobData);
             savedMenuItems.add(syncJobData);
         }
@@ -424,11 +461,11 @@ public class MenuItemService {
         return syncMenuItemClasses;
     }
 
-    private HashMap<String, Object> getCondiments(DbMenuItemDefinition menuItem, List<HashMap<String, Object>> menuItemClasses, ArrayList<DbMenuItemDefinition> menuItems) {
+    private MenuItemResponse getCondiments(DbMenuItemDefinition menuItem, List<HashMap<String, Object>> menuItemClasses, ArrayList<DbMenuItemDefinition> menuItems) {
 
-        HashMap<String, Object> condiments = new HashMap<>();
-        List<HashMap<String, Object>> requiredCondiments = new ArrayList<>();
-        List<HashMap<String, Object>> allowedCondiments = new ArrayList<>();
+        MenuItemResponse itemResponse = new MenuItemResponse();
+        List<CondimentResponse> requiredCondiments = new ArrayList<>();
+        List<CondimentResponse> allowedCondiments = new ArrayList<>();
 
         List<Integer> requiredCondGroupsNum = new ArrayList<>();
         List<Integer> allowedCondGroupsNum = new ArrayList<>();
@@ -446,16 +483,17 @@ public class MenuItemService {
                 if (memberCondGroupsNum.contains(groupNum)) {
                     for (DbMenuItemDefinition tempMenuItem : menuItems) {
                         if (Integer.parseInt(tempMenuItem.getMenuItemClassObjNum()) == Integer.parseInt(tempMenuItemClass.get("classNumber").toString())) {
-                            HashMap<String, Object> requiredCondiment = new HashMap<>();
-                            requiredCondiment.put("id", tempMenuItem.getMiMasterObjNum());
-                            requiredCondiment.put("firstName", tempMenuItem.getName1().getStringText());
-                            requiredCondiment.put("secondName", tempMenuItem.getName2().getStringText());
+                            CondimentResponse condimentResponse = new CondimentResponse();
+                            condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum()));
+                            condimentResponse.setFirstName(tempMenuItem.getName1().getStringText());
+                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
+                            condimentResponse.setSecondName(tempMenuItem.getName2().getStringText());
                             if (tempMenuItem.getMenuItemPrice() != null) {
-                                requiredCondiment.put("price", tempMenuItem.getMenuItemPrice().getPrice());
+                                condimentResponse.setPrice(Double.parseDouble(tempMenuItem.getMenuItemPrice().getPrice()));
                             } else {
-                                requiredCondiment.put("price", "0");
+                                condimentResponse.setPrice(Double.parseDouble("0"));
                             }
-                            requiredCondiments.add(requiredCondiment);
+                            requiredCondiments.add(condimentResponse);
                         }
                     }
                 }
@@ -465,34 +503,35 @@ public class MenuItemService {
                 if (memberCondGroupsNum.contains(groupNum)) {
                     for (DbMenuItemDefinition tempMenuItem : menuItems) {
                         if (Integer.parseInt(tempMenuItem.getMenuItemClassObjNum()) == Integer.parseInt(tempMenuItemClass.get("classNumber").toString())) {
-                            HashMap<String, Object> allowedCondiment = new HashMap<>();
-                            allowedCondiment.put("id", tempMenuItem.getMiMasterObjNum());
-                            allowedCondiment.put("firstName", tempMenuItem.getName1().getStringText());
-                            allowedCondiment.put("secondName", tempMenuItem.getName2().getStringText());
+                            CondimentResponse condimentResponse = new CondimentResponse();
+                            condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum().toString()));
+                            condimentResponse.setFirstName(tempMenuItem.getName1().getStringText());
+                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
+                            condimentResponse.setSecondName(tempMenuItem.getName2().getStringText());
                             if (tempMenuItem.getMenuItemPrice() != null) {
-                                allowedCondiment.put("price", tempMenuItem.getMenuItemPrice().getPrice());
+                                condimentResponse.setPrice(Double.parseDouble(tempMenuItem.getMenuItemPrice().getPrice()));
                             } else {
-                                allowedCondiment.put("price", "0");
+                                condimentResponse.setPrice(Double.parseDouble("0"));
                             }
-                            allowedCondiments.add(allowedCondiment);
+                            allowedCondiments.add(condimentResponse);
                         }
                     }
                 }
             }
         }
-        condiments.put("requiredCondiments", requiredCondiments);
-        condiments.put("optionalCondiments", allowedCondiments);
+        itemResponse.setRequiredCondiments(requiredCondiments);
+        itemResponse.setOptionalCondiments(allowedCondiments);
 
-        return condiments;
+        return itemResponse;
     }
 
-    public ArrayList<HashMap<String, Object>> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
-        ArrayList<HashMap<String, Object>> menuItems = new ArrayList<>();
+    public ArrayList<MenuItemResponse> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
+        ArrayList<MenuItemResponse> menuItemResponses = new ArrayList<>();
 
-        for (SyncJobData data : menuItemsData) {
-            menuItems.add(data.getData());
+        for (SyncJobData syncJobData : menuItemsData) {
+                menuItemResponses.add(syncJobData.getMenuItemResponse());
         }
-        return menuItems;
+        return menuItemResponses;
     }
 
     private PostTransactionEx2 buildCheckObject(SimphonyLocation location) {

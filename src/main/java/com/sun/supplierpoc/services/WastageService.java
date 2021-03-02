@@ -282,6 +282,12 @@ public class WastageService {
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
                 }
 
+                if(costCenter.location != null && !costCenter.location.locationName.equals("")){
+                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), costCenter.location, null, null);
+                }else {
+                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), costCenter, null, null);
+                }
+
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
@@ -549,8 +555,11 @@ public class WastageService {
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
                 }
 
-                syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(),
-                        costCenter, null, null);
+                if(costCenter.location != null && !costCenter.location.locationName.equals("")){
+                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), costCenter.location, null, null);
+                }else {
+                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), costCenter, null, null);
+                }
 
                 if (costCenter.costCenterReference.equals("")){
                     costCenter.costCenterReference = costCenter.costCenter;

@@ -420,7 +420,11 @@ public class JournalService {
                             continue;
                     }
 
-                    syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
+                    if(costCenter.location != null && !costCenter.location.locationName.equals("")){
+                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
+                    }else {
+                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
+                    }
 
                     String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
                     costData.put("accountingPeriod", transactionDate.substring(2,6));
@@ -438,7 +442,7 @@ public class JournalService {
                     costData.put("fromLocation", costCenter.accountCode);
                     costData.put("toLocation", costCenter.accountCode);
 
-                    String description = "F " + costCenter.costCenterReference + " " + journal.getOverGroup();
+                    String description = journal.getOverGroup();
                     if (description.length() > 50){
                         description = description.substring(0, 50);
                     }

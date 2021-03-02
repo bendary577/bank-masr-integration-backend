@@ -68,6 +68,7 @@ public class pGuestCheck {
 //    private List<String> PCheckInfoLines;
 
     @Valid
+    @NotNull(message = "CheckInfoLines can't be null.")
     @XmlElement(name = "PCheckInfoLines")
     private PCheckInfoLines PCheckInfoLines;
 

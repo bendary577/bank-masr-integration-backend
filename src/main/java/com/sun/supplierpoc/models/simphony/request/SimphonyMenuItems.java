@@ -12,7 +12,7 @@ public class SimphonyMenuItems {
     private String Id;
 
     @NotBlank(message = "Item quantity can't be blank.")
-    @Min(value=1, message = "Quantity must be positive integer value.")
+    @Min(value=1, message = "Item quantity must be positive integer value.")
     private String quantity;
 
     @Valid

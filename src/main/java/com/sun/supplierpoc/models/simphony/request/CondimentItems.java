@@ -12,7 +12,7 @@ public class CondimentItems {
 
     @NotBlank(message = "Condiment quantity can't be blank.")
     @NotNull(message = "Condiment quantity can't be null.")
-    @Min(value=1, message = "Quantity must be positive integer value.")
+    @Min(value=1, message = "Condiment quantity must be positive integer value.")
     private String quantity;
 
     public String getId() {

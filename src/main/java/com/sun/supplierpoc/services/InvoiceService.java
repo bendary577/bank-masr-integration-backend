@@ -753,7 +753,7 @@ public class InvoiceService {
                 }
 
                 journalEntry.put("accountingPeriod", ((String)invoice.get("invoice_date")).substring(2,6));
-                journalEntry.put("transactionDate", (String) invoice.get("invoice_date"));
+                journalEntry.put("transactionDate", invoice.get("invoice_date"));
 
                 journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
                 journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));

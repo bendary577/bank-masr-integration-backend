@@ -1,10 +1,12 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.simphony.response.MenuItemResponse;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 
 public class SyncJobData implements Serializable {
@@ -12,6 +14,7 @@ public class SyncJobData implements Serializable {
     @Id
     private String id;
     private HashMap<String, Object> data;
+    private MenuItemResponse menuItemResponse;
     private String status;
     private String reason;
     private Date creationDate;
@@ -86,4 +89,11 @@ public class SyncJobData implements Serializable {
         this.deleted = deleted;
     }
 
+    public MenuItemResponse getMenuItemResponse() {
+        return menuItemResponse;
+    }
+
+    public void setMenuItemResponse(MenuItemResponse menuItemResponse) {
+        this.menuItemResponse = menuItemResponse;
+    }
 }

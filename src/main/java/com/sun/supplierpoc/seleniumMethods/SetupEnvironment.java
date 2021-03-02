@@ -26,6 +26,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class SetupEnvironment {
 
@@ -132,7 +133,6 @@ public class SetupEnvironment {
                 columns.add(conversions.transformColName(col.getText().strip()));
             }
         }
-
         return columns;
     }
 

@@ -60,6 +60,13 @@ public class CreateOrder {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
         }
 
+        if(Integer.parseInt(checkDetails.getpGuestCheck().getCheckOrderType()) < 1){
+            HashMap<String, Object> errors = new HashMap<>();
+            errors.put("Date", LocalDateTime.now());
+            errors.put("error", "CheckOrderType should be positive integer.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+
         int revenueCenterID = Integer.parseInt(checkDetails.getpGuestCheck().revenue());
 
         String username, password;
@@ -142,7 +149,6 @@ public class CreateOrder {
                         }});
             }
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     new HashMap<String, Object>() {{
                         put("error", "Something went wrong!.");

@@ -28,6 +28,7 @@ public class AuthorizationResourceConfiguration  extends
                 .authorizeRequests()
                 .antMatchers("/zeal/**").permitAll()
                 .antMatchers("/addAccount").authenticated()
+                .antMatchers("/opera/**").authenticated()
                 .antMatchers("/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }

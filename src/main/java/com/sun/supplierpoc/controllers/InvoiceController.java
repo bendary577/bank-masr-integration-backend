@@ -99,8 +99,8 @@ public class InvoiceController {
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
 
-        ArrayList<Item> items =  generalSettings.getItems();
-        ArrayList<ItemGroup> itemGroups =  generalSettings.getItemGroups();
+        ArrayList<Item> items = generalSettings.getItems();
+        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
 
         String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
         String fromDate = invoiceSyncJobType.getConfiguration().fromDate;
@@ -190,7 +190,6 @@ public class InvoiceController {
                             syncJob.setEndDate(new Date());
                             syncJob.setRowsFetched(addedInvoices.size());
                             syncJobRepo.save(syncJob);
-
                             response.put("success", true);
                             response.put("message", "Sync Invoices Successfully.");
                         }

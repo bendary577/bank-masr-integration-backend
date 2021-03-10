@@ -79,6 +79,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/Simphony/*");
         web.ignoring().antMatchers("/zeal/**");
         web.ignoring().antMatchers("/addAccount");
+        web.ignoring().antMatchers("/opera/**");
 
     }
 /* @Override

@@ -557,7 +557,6 @@ public class InvoiceService {
                     }
                     invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData);
 
-
                     String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
                     link = link.substring(link.indexOf("'") + 1, link.lastIndexOf("'"));
 

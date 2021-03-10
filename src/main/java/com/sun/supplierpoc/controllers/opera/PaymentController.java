@@ -70,17 +70,19 @@ public class PaymentController {
         if(transactionRequest.getTransType() == null || transactionRequest.getTransType().equals(""))
             return transactionResponse;
 
-        switch (transactionRequest.getTransType()){
-            case "23": transactionResponse=  getToken(transactionRequest);
-                break;
-            case "05":transactionResponse=  auth(transactionRequest);
-                break;
-            case "02":transactionResponse=  paymentTransaction(transactionRequest);
-                break;
-            case "07":transactionResponse=  paymentTransaction(transactionRequest);
-                break;
-
-        }
+//        switch (transactionRequest.getTransType()){
+//            case "23": transactionResponse=  getToken(transactionRequest);
+//                break;
+//            case "05":transactionResponse=  auth(transactionRequest);
+//                break;
+//            case "02":transactionResponse=  paymentTransaction(transactionRequest);
+//                break;
+//            case "07":transactionResponse=  paymentTransaction(transactionRequest);
+//                break;
+//
+//        }
+        
+        transactionResponse=  paymentTransaction(transactionRequest);
         return transactionResponse;
     }
 

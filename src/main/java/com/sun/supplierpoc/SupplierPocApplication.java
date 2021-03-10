@@ -9,11 +9,11 @@ import java.util.TimeZone;
 
 @SpringBootApplication
 @EnableScheduling
-
 public class SupplierPocApplication {
 
     public static void main(String[] args) {
         ApplicationContext context =SpringApplication.run(SupplierPocApplication.class, args);
+
 /*        if (args .length > 0 && "init".equalsIgnoreCase(args[0])) {
           //  LOGGER.info("Start initializing the sample oauth data");
 

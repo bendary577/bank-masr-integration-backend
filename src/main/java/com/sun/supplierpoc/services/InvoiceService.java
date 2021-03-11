@@ -12,11 +12,15 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Driver;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -514,88 +518,7 @@ public class InvoiceService {
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(headerRows, true, 0);
 
-            while (true){
-                for (int i = 1; i < rows.size(); i++) {
-                    HashMap<String, Object> invoice = new HashMap<>();
-
-                    WebElement row = rows.get(i);
-                    List<WebElement> cols = row.findElements(By.tagName("td"));
-                    if (cols.size() !=  columns.size()){
-                        continue;
-                    }
-
-                    WebElement status = cols.get(columns.indexOf("status"));
-
-                    if (typeFlag == 1){
-                        if(!status.getText().strip().equals(Constants.APPROVED_INVOICE_Status)){
-                            continue;
-                        }
-                    }else if (typeFlag == 2){
-                        if(!status.getText().strip().equals(Constants.ACCOUNT_PAYABLE_RTV_Status)
-                                && !status.getText().strip().equals(Constants.ACCOUNT_PAYABLE_Status)){
-                            continue;
-                        }
-                    }
-
-                    // check if cost center chosen
-                    WebElement td = cols.get(columns.indexOf("cost_center"));
-                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
-
-                    if (!oldCostCenterData.checked) {
-                        continue;
-                    }
-
-                    invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
-
-                    // check if vendor exits in middleware
-                    td = cols.get(columns.indexOf("vendor"));
-
-                    Supplier oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
-
-                    if (oldSupplierData == null) {
-                        continue;
-                    }
-                    invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData);
-
-                    String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
-                    link = link.substring(link.indexOf("'") + 1, link.lastIndexOf("'"));
-
-                    String fullLink = "https://mte3-ohim.oracleindustry.com/InventoryManagement/Purchase/Receiving/" + link;
-                    invoice.put("reference_link", fullLink);
-
-                    td = cols.get(columns.indexOf("delivery_date"));
-                    String deliveryDate = td.getText().strip();
-                    SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
-                    Date deliveryDateFormatted = null;
-                    try {
-                        deliveryDateFormatted = formatter1.parse(deliveryDate);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-
-                    SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
-                    String date = simpleformat.format(deliveryDateFormatted);
-                    invoice.put("invoice_date", date);
-
-                    for (int j = 0; j < cols.size(); j++) {
-                        if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor")
-                                || j == columns.indexOf("delivery_date"))
-                            continue;
-                        invoice.put(columns.get(j), cols.get(j).getText().strip());
-                    }
-                    invoices.add(invoice);
-                }
-
-                // check if there is other pages
-                if (driver.findElements(By.linkText("Next")).size() == 0){
-                    break;
-                }
-                else {
-                    TransferService.checkPagination(driver, "dg_rc_0_1");
-                    table = driver.findElement(By.id("G_dg"));
-                    rows = table.findElements(By.tagName("tr"));
-                }
-            }
+            getInvoices(rows, columns, typeFlag, costCenters, suppliers, driver, invoices, table);
 
             for (HashMap<String, Object> invoice:invoices) {
                 getInvoiceReceiptsDetails(configuration, items, itemGroups, overGroups, invoice, driver, journalEntries, creditNoteFlag);
@@ -617,6 +540,92 @@ public class InvoiceService {
             return response;
         }
 
+    }
+
+    private void getInvoices(List<WebElement> rows, ArrayList<String> columns, int typeFlag, ArrayList<CostCenter> costCenters
+                             , ArrayList<Supplier> suppliers, WebDriver driver, ArrayList<HashMap<String, Object>> invoices , WebElement table){
+        while (true){
+            for (int i = 1; i < rows.size(); i++) {
+                HashMap<String, Object> invoice = new HashMap<>();
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+                if (cols.size() !=  columns.size()){
+                    continue;
+                }
+
+                WebElement status = cols.get(columns.indexOf("status"));
+
+                if (typeFlag == 1){
+                    if(!status.getText().strip().equals(Constants.APPROVED_INVOICE_Status)){
+                        continue;
+                    }
+                }else if (typeFlag == 2){
+                    if(!status.getText().strip().equals(Constants.ACCOUNT_PAYABLE_RTV_Status)
+                            && !status.getText().strip().equals(Constants.ACCOUNT_PAYABLE_Status)){
+                        continue;
+                    }
+                }
+
+                // check if cost center chosen
+                WebElement td = cols.get(columns.indexOf("cost_center"));
+                CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                if (!oldCostCenterData.checked) {
+                    continue;
+                }
+
+                invoice.put(columns.get(columns.indexOf("cost_center")), oldCostCenterData);
+
+                // check if vendor exits in middleware
+                td = cols.get(columns.indexOf("vendor"));
+
+                Supplier oldSupplierData = conversions.checkSupplierExistence(suppliers, td.getText().strip());
+
+                if (oldSupplierData == null) {
+                    continue;
+                }
+                invoice.put(columns.get(columns.indexOf("vendor")), oldSupplierData);
+
+                String link = cols.get(columns.indexOf("document")).findElement(By.tagName("a")).getAttribute("href");
+                link = link.substring(link.indexOf("'") + 1, link.lastIndexOf("'"));
+
+                String fullLink = "https://mte3-ohim.oracleindustry.com/InventoryManagement/Purchase/Receiving/" + link;
+                invoice.put("reference_link", fullLink);
+
+                td = cols.get(columns.indexOf("delivery_date"));
+                String deliveryDate = td.getText().strip();
+                SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
+                Date deliveryDateFormatted = null;
+                try {
+                    deliveryDateFormatted = formatter1.parse(deliveryDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+                SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
+                String date = simpleformat.format(deliveryDateFormatted);
+                invoice.put("invoice_date", date);
+
+                for (int j = 0; j < cols.size(); j++) {
+                    if (j == columns.indexOf("cost_center") || j == columns.indexOf("vendor")
+                            || j == columns.indexOf("delivery_date"))
+                        continue;
+                    invoice.put(columns.get(j), cols.get(j).getText().strip());
+                }
+                invoices.add(invoice);
+            }
+
+            // check if there is other pages
+            if (driver.findElements(By.linkText("Next")).size() == 0){
+                break;
+            }
+            else {
+                TransferService.checkPagination(driver, "dg_rc_0_1");
+                table = driver.findElement(By.id("G_dg"));
+                rows = table.findElements(By.tagName("tr"));
+            }
+        }
     }
 
     private void getInvoiceReceiptsDetails(Configuration configuration,
@@ -651,6 +660,7 @@ public class InvoiceService {
 
             String group;
             for (int i = 1; i < rows.size(); i++) {
+
                 HashMap<String, Object> invoiceDetails = new HashMap<>();
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -680,10 +690,15 @@ public class InvoiceService {
                     invoiceDetails.put("gross", td.getText().strip());
                 }
 
+                if(columns.indexOf("vat[%]") != -1){
+                    td = cols.get(columns.indexOf("vat[%]"));
+                    invoiceDetails.put("vat", td.getText().strip());
+                }
+                LoggerFactory.getLogger(InvoiceService.class).info("Item" + item.getItem() + "vat"  +  td.getText().strip());
                 Journal journal = new Journal();
-                journals = journal.checkExistence(journals, group, 0,
-                        conversions.convertStringToFloat((String) invoiceDetails.get("gross")),0, 0);
-
+                journals = journal.checkExistenceB(journals, group, 0,
+                        conversions.convertStringToFloat((String) invoiceDetails.get("gross")),
+                        0, 0, invoiceDetails.get("vat").toString());
             }
 
             for (Journal journal : journals) {
@@ -722,14 +737,13 @@ public class InvoiceService {
                     }
                 }
 
-
                 if (toCostCenter.costCenterReference.equals("")){
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
                 if(toCostCenter.location != null)
-                    syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter, null, null);
+                    syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
                 else
-                    syncJobDataService.prepareAnalysis(journalEntry, configuration, toCostCenter, null, null);
+                    syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
 
                 journalEntry.put("invoiceNo", invoice.get("document"));
 
@@ -807,16 +821,7 @@ public class InvoiceService {
         ArrayList<SyncJobData> savedInvoices = syncJobTypeController.getSyncJobData(syncJobType.getId());
 
         for (HashMap<String, Object> invoice : invoices) {
-            // check existence of invoice in middleware (UNIQUE: receiptNo with over group)
-//            SyncJobData oldInvoice = conversions.checkInvoiceExistence(savedInvoices, invoice.get("invoiceNo"),
-//                    invoice.get("overGroup"));
-//            if (oldInvoice != null){
-//                if (!oldInvoice.getStatus().equals(Constants.FAILED)){
-//                    continue;
-//                }
-//            }
 
-            // Invoice Part
             if (!flag) {
                 if ((invoice.get("invoiceNo")).toString().length() >= 3){
                     if ((invoice.get("invoiceNo")).toString().substring(0, 3).equals("RTV")) {
@@ -839,7 +844,7 @@ public class InvoiceService {
             syncJobDataRepo.save(failedSyncJobData);
         }
         addedInvoices.addAll(failedReceipts);
-        
+
         return addedInvoices;
     }
 }

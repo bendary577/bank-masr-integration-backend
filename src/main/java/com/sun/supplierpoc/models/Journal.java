@@ -4,6 +4,7 @@ import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.FamilyGroup;
 import com.sun.supplierpoc.models.configurations.MajorGroup;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -21,6 +22,7 @@ public class Journal {
     private CostCenter costCenter;
     private RevenueCenter revenueCenter;
     private String departmentCode;
+    private String tax = "0.00";
 
     public Journal() {
     }
@@ -56,10 +58,10 @@ public class Journal {
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
                                              float waste, float cost, float variance, float transfer,
-                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode){
+                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
 
-        for (Journal journal:journals) {
-            if(journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())){
+        for (Journal journal : journals) {
+            if (journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())) {
                 // Add new value
                 journal.totalWaste += waste;
                 journal.totalCost += cost;
@@ -76,10 +78,10 @@ public class Journal {
 
     public ArrayList<Journal> checkFGExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
                                                float cost, CostCenter costCenter, RevenueCenter revenueCenter,
-                                               String departmentCode){
+                                               String departmentCode) {
 
-        for (Journal journal:journals) {
-            if(journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)){
+        for (Journal journal : journals) {
+            if (journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)) {
                 journal.totalCost += cost;
                 return journals;
             }
@@ -91,15 +93,37 @@ public class Journal {
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, String overGroup, float waste, float cost,
-                                             float variance, float transfer){
+                                             float variance, float transfer) {
 
-        for (Journal journal:journals) {
-            if(journal.overGroup.equals(overGroup)){
+        for (Journal journal : journals) {
+            if (journal.overGroup.equals(overGroup)) {
                 journal.totalCost += cost;
                 journal.totalTransfer += transfer;
                 journal.totalVariance += variance;
                 journal.totalWaste += waste;
 
+                return journals;
+            }
+        }
+        journals.add(new Journal(overGroup, waste, cost, variance, transfer));
+        return journals;
+
+    }
+
+    public ArrayList<Journal> checkExistenceB(ArrayList<Journal> journals, String overGroup, float waste, float cost,
+                                              float variance, float transfer, String tax) {
+
+        for (Journal journal : journals) {
+            if (journal.overGroup.equals(overGroup)) {
+                journal.totalCost += cost;
+                journal.totalTransfer += transfer;
+                journal.totalVariance += variance;
+                journal.totalWaste += waste;
+                if (Float.parseFloat(journal.getTax()) < Float.parseFloat(tax)) {
+                    journal.tax = String.valueOf(tax);
+                    LoggerFactory.getLogger(Journal.class).info("journal.tax :" + journal.tax);
+
+                }
                 return journals;
             }
         }
@@ -186,5 +210,13 @@ public class Journal {
 
     public void setFamilyGroup(FamilyGroup familyGroup) {
         this.familyGroup = familyGroup;
+    }
+
+    public String getTax() {
+        return tax;
+    }
+
+    public void setTax(String tax) {
+        this.tax = tax;
     }
 }

@@ -3,6 +3,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.util.SyncJobDataCSV;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.text.DateFormatSymbols;
@@ -315,16 +316,15 @@ public class SalesFileDelimiterExporter {
         }
 
         /* 15 char */
-        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData);
-        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData);
-        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData);
-        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData);
-        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData);
-        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData);
-        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData);
-        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData);
-        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData);
-        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData);
+        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker);
 
         if (syncJobDataCSV.amount.equals("000000000000000000")){
             return null;
@@ -333,13 +333,25 @@ public class SalesFileDelimiterExporter {
         return syncJobDataCSV;
     }
 
-    private String fillTCode(int index, SyncJobData syncJobData){
+    private String fillTCode(int index, SyncJobData syncJobData, String CDMaker){
         String analysisTCode = "";
         if(syncJobType.getConfiguration().analysis.get(index -1).getChecked())
             analysisTCode = "#";
 
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")){
-            analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+
+            if(!syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && !syncJobType.getName().equals("Approved Invoices")) {
+                analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+            }else {
+                if(CDMaker.equals("D")){
+                    if(!("analysisCodeT" + index).equals("analysisCodeT9") &&
+                            !("analysisCodeT" + index).equals("analysisCodeT10") ){
+                        analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+                    }
+                }else {
+                    analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+                }
+            }
         }
 
         if(analysisTCode.length() > 15){

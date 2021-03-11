@@ -27,6 +27,9 @@ public class Configuration implements Serializable {
     public String locationAnalysisCode = "";
     public String tenderAnalysisCode = "";
     public String familyGroupAnalysisCode = "";
+    public String supplierCodeAnalysisCode = "";
+    public String taxesCodeAnalysisCode = "";
+
 
     public ArrayList<Analysis> analysis = new ArrayList<>();
 

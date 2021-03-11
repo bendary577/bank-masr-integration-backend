@@ -4,8 +4,6 @@ import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.FamilyGroup;
 import com.sun.supplierpoc.models.configurations.MajorGroup;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 
 public class Journal {
@@ -25,6 +23,16 @@ public class Journal {
     private String tax = "0.00";
 
     public Journal() {
+    }
+
+    private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
+                    String tax) {
+        this.overGroup = overGroup;
+        this.totalWaste = totalWaste;
+        this.totalCost = totalCost;
+        this.totalVariance = totalVariance;
+        this.totalTransfer = totalTransfer;
+        this.tax = tax;
     }
 
     private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer) {
@@ -113,21 +121,22 @@ public class Journal {
     public ArrayList<Journal> checkExistenceB(ArrayList<Journal> journals, String overGroup, float waste, float cost,
                                               float variance, float transfer, String tax) {
 
+
         for (Journal journal : journals) {
             if (journal.overGroup.equals(overGroup)) {
                 journal.totalCost += cost;
                 journal.totalTransfer += transfer;
                 journal.totalVariance += variance;
                 journal.totalWaste += waste;
-                if (Float.parseFloat(journal.getTax()) < Float.parseFloat(tax)) {
+
+                if (Float.parseFloat(journal.tax) < Float.parseFloat(tax)) {
                     journal.tax = String.valueOf(tax);
-                    LoggerFactory.getLogger(Journal.class).info("journal.tax :" + journal.tax);
 
                 }
                 return journals;
             }
         }
-        journals.add(new Journal(overGroup, waste, cost, variance, transfer));
+        journals.add(new Journal(overGroup, waste, cost, variance, transfer, tax));
         return journals;
 
     }

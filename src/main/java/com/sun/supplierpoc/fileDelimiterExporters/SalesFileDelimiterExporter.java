@@ -3,7 +3,6 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.util.SyncJobDataCSV;
-import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.text.DateFormatSymbols;
@@ -323,13 +322,13 @@ public class SalesFileDelimiterExporter {
         syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker);
         syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker);
         syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, CDMaker);
         syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker);
         syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker);
 
         if (syncJobDataCSV.amount.equals("000000000000000000")){
             return null;
         }
-
         return syncJobDataCSV;
     }
 

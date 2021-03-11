@@ -5,7 +5,6 @@ import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.soapModels.Supplier;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -82,7 +81,6 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, supplier.getAccountCode());
         }
 
-//        LoggerFactory.getLogger(SyncJobDataService.class).info(journal.get);
         if(journal != null && !journal.getTax().equals("")){
             index = configuration.taxesCodeAnalysisCode;
             if(journal.getTax().equals("14.00")){

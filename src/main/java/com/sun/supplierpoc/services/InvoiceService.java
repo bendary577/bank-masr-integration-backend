@@ -12,7 +12,6 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -694,7 +693,7 @@ public class InvoiceService {
                     td = cols.get(columns.indexOf("vat[%]"));
                     invoiceDetails.put("vat", td.getText().strip());
                 }
-                LoggerFactory.getLogger(InvoiceService.class).info("Item" + item.getItem() + "vat"  +  td.getText().strip());
+
                 Journal journal = new Journal();
                 journals = journal.checkExistenceB(journals, group, 0,
                         conversions.convertStringToFloat((String) invoiceDetails.get("gross")),

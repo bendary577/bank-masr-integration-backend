@@ -47,13 +47,25 @@ public class SetupEnvironment {
             return new ChromeDriver(options);
         } else {
 
-            FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
-            FirefoxOptions firefoxOptions = new FirefoxOptions();
+//            FirefoxBinary firefoxBinary = new FirefoxBinary();
+//            firefoxBinary.addCommandLineOptions("--headless");
+//            FirefoxOptions firefoxOptions = new FirefoxOptions();
+//
+//            firefoxOptions.setBinary(firefoxBinary);
+//            firefoxOptions.setCapability("marionette", true);
+//            return new FirefoxDriver(firefoxOptions);
+            System.setProperty("webdriver.gecko.driver", ".\\geckodriver.exe");
 
-            firefoxOptions.setBinary(firefoxBinary);
-            firefoxOptions.setCapability("marionette", true);
-            return new FirefoxDriver(firefoxOptions);
+            //Initiating your chromedriver
+            WebDriver driver = new FirefoxDriver();
+
+            //Applied wait time
+            driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+
+            //maximize window
+            driver.manage().window().maximize();
+            return driver;
+
         }
     }
 

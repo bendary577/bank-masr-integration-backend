@@ -121,7 +121,6 @@ public class Journal {
     public ArrayList<Journal> checkExistenceB(ArrayList<Journal> journals, String overGroup, float waste, float cost,
                                               float variance, float transfer, String tax) {
 
-
         for (Journal journal : journals) {
             if (journal.overGroup.equals(overGroup)) {
                 journal.totalCost += cost;

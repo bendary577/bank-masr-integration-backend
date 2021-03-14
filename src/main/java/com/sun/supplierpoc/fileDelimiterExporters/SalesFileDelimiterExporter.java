@@ -107,6 +107,7 @@ public class SalesFileDelimiterExporter {
     /*
     * Sort by account code credit accounts then debit accounts
     * */
+
     private void sortFileByAccountCode(){
 //        this.syncJobDataCSVList.sort(new Comparator<>() {
 //            public int compare(SyncJobDataCSV o1, SyncJobDataCSV o2) {
@@ -181,11 +182,11 @@ public class SalesFileDelimiterExporter {
         SyncJobDataCSV syncJobDataCSV;
         for (SyncJobData syncJobData : listSyncJobData) {
             if(syncJobData.getData().containsKey("totalDr")){
-                syncJobDataCSV = createSyncJobDataObject(syncJobData, "D");
+                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
                 if(syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }else {
-                syncJobDataCSV = createSyncJobDataObject(syncJobData, "C");
+                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
                 if(syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
@@ -196,16 +197,16 @@ public class SalesFileDelimiterExporter {
     private void extractInvoicesSyncJobData(){
         SyncJobDataCSV syncJobDataCSV;
         for (SyncJobData syncJobData : listSyncJobData) {
-            syncJobDataCSV = createSyncJobDataObject(syncJobData, "D");
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
             if(syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
-            syncJobDataCSV = createSyncJobDataObject(syncJobData, "C");
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
             if(syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
         }
     }
 
-    private SyncJobDataCSV createSyncJobDataObject(SyncJobData syncJobData, String CDMaker){
+    private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker){
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
         syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation").toString();
         syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation").toString();
@@ -261,7 +262,14 @@ public class SalesFileDelimiterExporter {
 
             syncJobDataCSV.amount = amountPart + decimalPart;
 
-            String accountCode = syncJobData.getData().get("expensesAccount").toString();
+            String accountCode = "";
+            if(syncJobType.getConfiguration().accountCodePer.equals("OverGroups")){
+            accountCode = syncJobData.getData().get("expensesAccount").toString();
+            }
+            else{
+            accountCode = syncJobData.getData().get("toLocation").toString();
+            }
+
             if(accountCode.length() < 10){
                 accountCode = String.format("%-10s", accountCode);
             }
@@ -303,11 +311,11 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.accountCode = accountCode;
         }
 
-        syncJobDataCSV.recordType = syncJobType.getConfiguration().recordType;
-        syncJobDataCSV.conversionCode = syncJobType.getConfiguration().conversionCode;
-        syncJobDataCSV.conversionRate = syncJobType.getConfiguration().conversionRate;
+        syncJobDataCSV.recordType = this.syncJobType.getConfiguration().recordType;
+        syncJobDataCSV.conversionCode = this.syncJobType.getConfiguration().conversionCode;
+        syncJobDataCSV.conversionRate = this.syncJobType.getConfiguration().conversionRate;
 
-        syncJobDataCSV.journalType = syncJobType.getConfiguration().inforConfiguration.journalType;
+        syncJobDataCSV.journalType = this.syncJobType.getConfiguration().inforConfiguration.journalType;
         if(syncJobDataCSV.journalType.length() > 5){
             syncJobDataCSV.journalType = syncJobDataCSV.journalType.substring(0, 5);
         }else if(syncJobDataCSV.journalType.length() < 5) {

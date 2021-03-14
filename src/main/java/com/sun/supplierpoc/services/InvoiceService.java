@@ -348,6 +348,7 @@ public class InvoiceService {
                 if (reference.length() > 30){
                     reference = reference.substring(0, 30);
                 }
+
                 journalEntry.put("reference", reference);
                 journalEntry.put("transactionReference", reference);
             }

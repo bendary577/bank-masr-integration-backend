@@ -15,11 +15,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Driver;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -539,7 +536,6 @@ public class InvoiceService {
             response.put("invoices", journalEntries);
             return response;
         }
-
     }
 
     private void getInvoices(List<WebElement> rows, ArrayList<String> columns, int typeFlag, ArrayList<CostCenter> costCenters
@@ -633,6 +629,19 @@ public class InvoiceService {
                                            ArrayList<HashMap<String, Object>> journalEntries, boolean flag){
         ArrayList<Journal> journals = new ArrayList<>();
 
+        if (configuration.syncPerGroup.equals("OverGroups")) {
+            for (OverGroup overGroup : overGroups) {
+                if (overGroup.getChecked()) {
+                    journals.add(new Journal(overGroup.getOverGroup()));
+                }
+            }
+        }else{
+            for (ItemGroup itemGroup : itemGroups) {
+                if (itemGroup.getChecked()) {
+                    journals.add(new Journal(itemGroup.getItemGroup()));
+                }
+            }
+        }
         // Get Receipt page
         driver.get((String) invoice.get("reference_link"));
 
@@ -678,30 +687,39 @@ public class InvoiceService {
                     continue;
                 }
 
-                if(configuration.syncPerGroup.equals("OverGroups"))
+                if (configuration.syncPerGroup.equals("OverGroups"))
                     group = item.getOverGroup();
                 else
                     group = item.getItemGroup();
 
                 invoiceDetails.put("Item", td.getText().strip());
 
-                if(columns.indexOf("gross") != -1){
+                if (columns.indexOf("net") != -1) {
+                    td = cols.get(columns.indexOf("net"));
+                    invoiceDetails.put("net", td.getText().strip());
+                }
+                if (columns.indexOf("vat[%]") != -1) {
+                    td = cols.get(columns.indexOf("vat[%]"));
+                    invoiceDetails.put("vat[%]", td.getText().strip());
+                }
+                if (columns.indexOf("vat") != -1) {
+                    td = cols.get(columns.indexOf("vat"));
+                    invoiceDetails.put("vat", td.getText().strip());
+                }
+                if (columns.indexOf("gross") != -1) {
                     td = cols.get(columns.indexOf("gross"));
                     invoiceDetails.put("gross", td.getText().strip());
                 }
-
-                if(columns.indexOf("vat[%]") != -1){
-                    td = cols.get(columns.indexOf("vat[%]"));
-                    invoiceDetails.put("vat", td.getText().strip());
-                }
-
-                Journal journal = new Journal();
-                journals = journal.checkExistenceB(journals, group, 0,
-                        conversions.convertStringToFloat((String) invoiceDetails.get("gross")),
-                        0, 0, invoiceDetails.get("vat").toString());
+                    calculateJournal(journals, group,
+                            conversions.convertStringToFloat((String) invoiceDetails.get("gross")),
+                            conversions.convertStringToFloat((String) invoiceDetails.get("vat[%]")),
+                            conversions.convertStringToFloat((String) invoiceDetails.get("vat")),
+                            conversions.convertStringToFloat((String) invoiceDetails.get("net")));
             }
-
             for (Journal journal : journals) {
+                if(journal.getTotalCost() == 0){
+                    continue;
+                }
                 HashMap<String, Object> journalEntry = new HashMap<>();
                 Supplier supplier = (Supplier) invoice.get("vendor");
                 CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
@@ -740,6 +758,7 @@ public class InvoiceService {
                 if (toCostCenter.costCenterReference.equals("")){
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
+
                 if(toCostCenter.location != null)
                     syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
                 else
@@ -768,8 +787,11 @@ public class InvoiceService {
                 journalEntry.put("accountingPeriod", ((String)invoice.get("invoice_date")).substring(2,6));
                 journalEntry.put("transactionDate", invoice.get("invoice_date"));
 
+                journalEntry.put("vat", String.valueOf(conversions.roundUpFloat(journal.getVat())));
+                journalEntry.put("net", String.valueOf(conversions.roundUpFloat(journal.getNet())));
                 journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
                 journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
+
 
                 if (!flag){
                     journalEntry.put("fromCostCenter", supplier.getSupplierName());
@@ -812,6 +834,22 @@ public class InvoiceService {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+
+    public void calculateJournal(List<Journal> journals, String overGroup, float cost, float tax, float vat, float net) {
+
+        for (Journal journal : journals) {
+
+            if (journal.getOverGroup().equals(overGroup)) {
+                journal.setTotalCost(journal.getTotalCost() + cost);
+                journal.setNet(journal.getNet() + net);
+                journal.setVat(journal.getVat() + vat);
+                if (journal.getTax() < tax) {
+                    journal.setTax(tax);
+                }
+            }
         }
     }
 

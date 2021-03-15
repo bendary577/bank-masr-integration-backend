@@ -81,9 +81,9 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, supplier.getAccountCode());
         }
 
-        if(journal != null && !journal.getTax().equals("")){
+        if(journal != null ){
             index = configuration.taxesCodeAnalysisCode;
-            if(journal.getTax().equals("14.00")){
+            if(journal.getTax() == 14.00){
             data.put("analysisCodeT" + index, "DV114");}
             else{
             data.put("analysisCodeT" + index, "NOTAX");}

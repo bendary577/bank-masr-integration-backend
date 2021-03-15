@@ -98,13 +98,17 @@ public class GeneralExporterMethods {
             if(syncFileNames == null)
                 syncFileNames = new String[]{};
 
+            String version = "";
+
             for (String pathname : syncFileNames) {
+
                 if (new File(path, pathname).isDirectory())
                     continue;
 
                 reader = new BufferedReader(new FileReader(path + "/" + month + "/" + pathname));
 
                 String line;
+
                 String ls = System.getProperty("line.separator");
                 while ((line = reader.readLine()) != null) {
                     if (this.fileContent.length() > 0 && this.fileContent.charAt(this.fileContent.length() - 1) != '\n') {
@@ -113,9 +117,11 @@ public class GeneralExporterMethods {
                         else
                             this.fileContent.append('\n');
                     }
-
+                    if( !(line.length()<50) || !version.equals("1")){
                     this.fileContent.append(line);
-                    this.fileContent.append(ls);
+                    this.fileContent.append(ls);}
+
+                    version = "1";
                 }
 
                 // delete the last new line separator

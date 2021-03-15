@@ -121,10 +121,10 @@ public class SyncExportedFileController {
         boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
 
         DateFormat dateFormat = new SimpleDateFormat("MMyyy");
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MONTH, -1);
 
+        Calendar calendar = Calendar.getInstance();
         int month = calendar.get(Calendar.MONTH) + 1;
+
         String date = dateFormat.format(calendar.getTime());
 
         String fileDirectory = account.getName() + "/" + syncJobType.getName();

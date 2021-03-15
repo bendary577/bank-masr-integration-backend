@@ -1,9 +1,9 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.FamilyGroup;
-import com.sun.supplierpoc.models.configurations.MajorGroup;
-import com.sun.supplierpoc.models.configurations.RevenueCenter;
+import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.services.InvoiceService;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 
 public class Journal {
@@ -16,17 +16,19 @@ public class Journal {
     private float totalCost;
     private float totalVariance;
     private float totalTransfer;
+    private float tax;
+    private float vat;
+    private float net;
 
     private CostCenter costCenter;
     private RevenueCenter revenueCenter;
     private String departmentCode;
-    private String tax = "0.00";
 
     public Journal() {
     }
 
     private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
-                    String tax) {
+                    float tax) {
         this.overGroup = overGroup;
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
@@ -62,6 +64,10 @@ public class Journal {
         this.costCenter = costCenter;
         this.revenueCenter = revenueCenter;
         this.departmentCode = departmentCode;
+    }
+
+    public Journal(String group) {
+        this.overGroup = group;
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
@@ -114,28 +120,6 @@ public class Journal {
             }
         }
         journals.add(new Journal(overGroup, waste, cost, variance, transfer));
-        return journals;
-
-    }
-
-    public ArrayList<Journal> checkExistenceB(ArrayList<Journal> journals, String overGroup, float waste, float cost,
-                                              float variance, float transfer, String tax) {
-
-        for (Journal journal : journals) {
-            if (journal.overGroup.equals(overGroup)) {
-                journal.totalCost += cost;
-                journal.totalTransfer += transfer;
-                journal.totalVariance += variance;
-                journal.totalWaste += waste;
-
-                if (Float.parseFloat(journal.tax) < Float.parseFloat(tax)) {
-                    journal.tax = String.valueOf(tax);
-
-                }
-                return journals;
-            }
-        }
-        journals.add(new Journal(overGroup, waste, cost, variance, transfer, tax));
         return journals;
 
     }
@@ -220,11 +204,27 @@ public class Journal {
         this.familyGroup = familyGroup;
     }
 
-    public String getTax() {
+    public float getTax() {
         return tax;
     }
 
-    public void setTax(String tax) {
+    public void setTax(float tax) {
         this.tax = tax;
+    }
+
+    public float getVat() {
+        return vat;
+    }
+
+    public void setVat(float vat) {
+        this.vat = vat;
+    }
+
+    public float getNet() {
+        return net;
+    }
+
+    public void setNet(float net) {
+        this.net = net;
     }
 }

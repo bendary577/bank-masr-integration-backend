@@ -332,7 +332,6 @@ public class SalesController {
                 response = getPOSSales(userId, account);
                 if (response.isStatus()){
                     calendar.add(Calendar.DATE, +1);
-
                     numDays--;
                 }
             }

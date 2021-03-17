@@ -61,7 +61,6 @@ public class SyncJobTypeController {
         return (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);
     }
 
-
     @PutMapping("/updateSyncJobTypesConfiguration")
     @CrossOrigin(origins = "*")
     @ResponseBody

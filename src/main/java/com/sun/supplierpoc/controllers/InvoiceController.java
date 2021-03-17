@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.InvoicesExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
@@ -30,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -68,15 +70,15 @@ public class InvoiceController {
     @RequestMapping("/getApprovedInvoices")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> getApprovedInvoicesRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getApprovedInvoicesRequest(Principal principal) throws IOException, ParseException {
         HashMap<String, Object> response = new HashMap<>();
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getApprovedInvoices(user.getId(), account);
-            if(response.get("success").equals(false)){
+            response = syncApprovedInvoicesInDayRange(user.getId(), account);
+            if(response.get("Success").equals(false)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -96,6 +98,7 @@ public class InvoiceController {
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
+        String invoiceSyncPlace = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceSyncPlace;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
 
@@ -104,7 +107,7 @@ public class InvoiceController {
 
         String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
         String fromDate = invoiceSyncJobType.getConfiguration().fromDate;
-        String toDate = invoiceSyncJobType.getConfiguration().toDate;
+        String toDate = fromDate;
 
         ArrayList<OverGroup> overGroups ;
         if (!invoiceSyncJobType.getConfiguration().uniqueOverGroupMapping){
@@ -174,8 +177,13 @@ public class InvoiceController {
                 invoiceType = 2;
             }
 
-            data = invoiceService.getInvoicesReceiptsData(false,invoiceType, invoiceSyncJobType.getConfiguration(),
-                    costCenters, suppliers, items, itemGroups,overGroups, account, timePeriod, fromDate, toDate);
+            if(invoiceSyncPlace.equals("Invoice")) {
+                data = invoiceService.getInvoicesData(false, invoiceType, suppliers, costCenters, invoiceSyncJobType.getConfiguration(),
+                        items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            }else {
+                data = invoiceService.getInvoicesReceiptsData(false, invoiceType, invoiceSyncJobType.getConfiguration(),
+                        costCenters, suppliers, items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            }
 
             invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
@@ -299,6 +307,105 @@ public class InvoiceController {
 
             response.put("message", e);
             response.put("success", false);
+        }
+        return response;
+    }
+
+    public HashMap<String, Object> syncApprovedInvoicesInDayRange(String userId, Account account) throws ParseException, IOException {
+        HashMap<String, Object> response = new HashMap<>();
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
+
+        int tryCount = 2;
+
+        /*
+         * Sync days of last month
+         * */
+        if(syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
+            syncJobType.getConfiguration().timePeriod = Constants.USER_DEFINED;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MONTH, -1);
+            calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+            int numDays = calendar.getActualMaximum(Calendar.DATE);
+            String startDate;
+
+            while (numDays != 0){
+                startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobType.getConfiguration().toDate = startDate;
+                syncJobTypeRepo.save(syncJobType);
+
+                response = getApprovedInvoices(userId, account);
+                if (response.get("Success").toString().equals("true")){
+                    calendar.add(Calendar.DATE, +1);
+                    numDays--;
+                }
+            }
+
+            /*
+             * Generate single file
+             * */
+            String month = monthFormat.format(calendar.getTime());
+            String date = fileDateFormat.format(calendar.getTime());
+
+            String path = account.getName();
+            String fileName = date + ".ndf";
+            boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
+
+            GeneralExporterMethods exporterMethods = new GeneralExporterMethods(fileName);
+            exporterMethods.generateSingleFile(null, path, month, fileName, perLocation);
+
+            String message = "Sync approved invoices of last month successfully";
+            response.put("Success", "true");
+            response.put("message", message);
+        }
+        /*
+         * Sync days in range
+         * */
+        else if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+            String startDate = syncJobType.getConfiguration().fromDate;
+            String endDate = syncJobType.getConfiguration().toDate;
+
+            Date date= dateFormat.parse(startDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            while (!startDate.equals(endDate)){
+                response = getApprovedInvoices(userId, account);
+                if (response.get("success").toString().equals("true") || tryCount == 0){
+                    tryCount = 2;
+                    calendar.add(Calendar.DATE, +1);
+                    startDate = dateFormat.format(calendar.getTime());
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobType.getConfiguration().toDate = startDate;
+                    syncJobTypeRepo.save(syncJobType);
+                }else{
+                    tryCount = tryCount;
+                }
+                tryCount--;
+            }
+
+            String message = "Sync sales successfully.";
+            response.put("Success", "true");
+            response.put("message", message);
+        }
+        else{
+            if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.DATE, -1);
+
+                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
+                syncJobTypeRepo.save(syncJobType);
+            }
+
+            response = getApprovedInvoices(userId, account);
         }
         return response;
     }

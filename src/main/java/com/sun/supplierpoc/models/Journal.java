@@ -1,9 +1,8 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.FamilyGroup;
-import com.sun.supplierpoc.models.configurations.MajorGroup;
-import com.sun.supplierpoc.models.configurations.RevenueCenter;
+import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.services.InvoiceService;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -17,12 +16,25 @@ public class Journal {
     private float totalCost;
     private float totalVariance;
     private float totalTransfer;
+    private float tax;
+    private float vat;
+    private float net;
 
     private CostCenter costCenter;
     private RevenueCenter revenueCenter;
     private String departmentCode;
 
     public Journal() {
+    }
+
+    private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
+                    float tax) {
+        this.overGroup = overGroup;
+        this.totalWaste = totalWaste;
+        this.totalCost = totalCost;
+        this.totalVariance = totalVariance;
+        this.totalTransfer = totalTransfer;
+        this.tax = tax;
     }
 
     private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer) {
@@ -54,12 +66,16 @@ public class Journal {
         this.departmentCode = departmentCode;
     }
 
+    public Journal(String group) {
+        this.overGroup = group;
+    }
+
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
                                              float waste, float cost, float variance, float transfer,
-                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode){
+                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
 
-        for (Journal journal:journals) {
-            if(journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())){
+        for (Journal journal : journals) {
+            if (journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())) {
                 // Add new value
                 journal.totalWaste += waste;
                 journal.totalCost += cost;
@@ -76,10 +92,10 @@ public class Journal {
 
     public ArrayList<Journal> checkFGExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
                                                float cost, CostCenter costCenter, RevenueCenter revenueCenter,
-                                               String departmentCode){
+                                               String departmentCode) {
 
-        for (Journal journal:journals) {
-            if(journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)){
+        for (Journal journal : journals) {
+            if (journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)) {
                 journal.totalCost += cost;
                 return journals;
             }
@@ -91,10 +107,10 @@ public class Journal {
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, String overGroup, float waste, float cost,
-                                             float variance, float transfer){
+                                             float variance, float transfer) {
 
-        for (Journal journal:journals) {
-            if(journal.overGroup.equals(overGroup)){
+        for (Journal journal : journals) {
+            if (journal.overGroup.equals(overGroup)) {
                 journal.totalCost += cost;
                 journal.totalTransfer += transfer;
                 journal.totalVariance += variance;
@@ -185,5 +201,29 @@ public class Journal {
 
     public void setFamilyGroup(FamilyGroup familyGroup) {
         this.familyGroup = familyGroup;
+    }
+
+    public float getTax() {
+        return tax;
+    }
+
+    public void setTax(float tax) {
+        this.tax = tax;
+    }
+
+    public float getVat() {
+        return vat;
+    }
+
+    public void setVat(float vat) {
+        this.vat = vat;
+    }
+
+    public float getNet() {
+        return net;
+    }
+
+    public void setNet(float net) {
+        this.net = net;
     }
 }

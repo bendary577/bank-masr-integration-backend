@@ -27,6 +27,9 @@ public class Configuration implements Serializable {
     public String locationAnalysisCode = "";
     public String tenderAnalysisCode = "";
     public String familyGroupAnalysisCode = "";
+    public String supplierCodeAnalysisCode = "";
+    public String taxesCodeAnalysisCode = "";
+
 
     public ArrayList<Analysis> analysis = new ArrayList<>();
 
@@ -34,6 +37,9 @@ public class Configuration implements Serializable {
     public ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     public ArrayList<OverGroup> overGroups = new ArrayList<>();
+
+    // Account per (overGroup/CostCenters)
+    public String accountCodePer = "";
 
     // SYnc per (overGroup/itemGroup)
     public String syncPerGroup = "";

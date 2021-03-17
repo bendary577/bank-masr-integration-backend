@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class SyncJobService {
@@ -25,9 +26,9 @@ public class SyncJobService {
 
     public SyncJob getSyncJobByRevenueCenterID(int revenueCenterID, String syncJobTypeID){
         try {
-            SyncJob syncJob = syncJobRepo.findSyncJobByStatusAndRevenueCenterAndSyncJobTypeIdAndDeleted(Constants.SUCCESS,
+            List<SyncJob> syncJobs = syncJobRepo.findSyncJobByStatusAndRevenueCenterAndSyncJobTypeIdAndDeletedOrderByCreationDateDesc(Constants.SUCCESS,
                     revenueCenterID, syncJobTypeID, false);
-            return  syncJob;
+            return  syncJobs.get(0);
         } catch (Exception e) {
             return null;
         }

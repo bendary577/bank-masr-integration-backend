@@ -186,6 +186,7 @@ public class MenuItemsController {
 
                 if (accountOptional.isPresent()) {
                     Account account = accountOptional.get();
+
                     SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
 
                     if (!invokerUser.getTypeId().contains(syncJobType.getId())){

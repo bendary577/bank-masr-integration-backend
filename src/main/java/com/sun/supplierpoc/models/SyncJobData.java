@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.opera.Reservation;
 import com.sun.supplierpoc.models.simphony.response.MenuItemResponse;
 import org.springframework.data.annotation.Id;
 
@@ -15,6 +16,7 @@ public class SyncJobData implements Serializable {
     private String id;
     private HashMap<String, Object> data;
     private MenuItemResponse menuItemResponse;
+    private Reservation reservation;
     private String status;
     private String reason;
     private Date creationDate;
@@ -31,6 +33,15 @@ public class SyncJobData implements Serializable {
         this.creationDate = creationDate;
         this.syncJobId = syncJobId;
         this.deleted = false;
+    }
+
+    public SyncJobData(Reservation reservation, String status, String reason, Date creationDate, String syncJobId, boolean deleted) {
+        this.reservation = reservation;
+        this.status = status;
+        this.reason = reason;
+        this.creationDate = creationDate;
+        this.syncJobId = syncJobId;
+        this.deleted = deleted;
     }
 
     public String getId() {
@@ -95,5 +106,13 @@ public class SyncJobData implements Serializable {
 
     public void setMenuItemResponse(MenuItemResponse menuItemResponse) {
         this.menuItemResponse = menuItemResponse;
+    }
+
+    public Reservation getReservation() {
+        return reservation;
+    }
+
+    public void setReservation(Reservation reservation) {
+        this.reservation = reservation;
     }
 }

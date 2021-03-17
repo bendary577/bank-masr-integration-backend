@@ -20,6 +20,7 @@ public class Constants {
     public static String RUNNING = "Running";
 
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
+    public static String wLsIntegration = "2wLsIntegration";
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
     public static String CREDIT_NOTES = "Credit Notes";
@@ -62,7 +63,8 @@ public class Constants {
 
     public static String SUPPLIER_GROUPS_URL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/VendorGroups/VendorGroupsOverview.aspx";
 
-    public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+    public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+//    public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
     public static String ACCOUNT_PAYABLE_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     /*
@@ -121,7 +123,7 @@ public class Constants {
     public static String SALES_SUMMARY_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
 
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
-    public static String APPROVED_INVOICE = "Approved Invoices";
+    public static String APPROVED_INVOICE = "Approved Invoice";
     public static String ACCOUNT_PAYABLE = "Account Payable";
 
     public static String APPROVED_INVOICE_Status = "Approved Invoice";

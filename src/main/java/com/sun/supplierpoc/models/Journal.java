@@ -105,7 +105,6 @@ public class Journal {
         }
         journals.add(new Journal(overGroup, waste, cost, variance, transfer));
         return journals;
-
     }
 
     public MajorGroup getMajorGroup() {

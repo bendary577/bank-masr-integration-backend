@@ -616,7 +616,6 @@ public class InvoiceService {
             response.put("invoices", journalEntries);
             return response;
         }
-
     }
 
     private void getInvoiceReceiptsDetails(Configuration configuration,
@@ -670,8 +669,10 @@ public class InvoiceService {
 
                 if(configuration.syncPerGroup.equals("OverGroups"))
                     group = item.getOverGroup();
-                else
+                else if (configuration.syncPerGroup.equals("ItemGroups"))
                     group = item.getItemGroup();
+                else
+                    group = invoice.get("cost_center").toString();
 
                 invoiceDetails.put("Item", td.getText().strip());
 

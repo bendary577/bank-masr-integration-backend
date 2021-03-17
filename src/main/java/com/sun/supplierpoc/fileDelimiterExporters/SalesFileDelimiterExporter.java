@@ -202,7 +202,7 @@ public class SalesFileDelimiterExporter {
         SyncJobData tempSyncJobData = new SyncJobData();
         String invoiceNumber = "";
         float vat = 0;
-
+        int counter = 1;
         for (SyncJobData syncJobData : listSyncJobData) {
 
             if(invoiceNumber.equals("")){
@@ -225,9 +225,17 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
             if(syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
+
             syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
             if(syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
+
+            if (counter == listSyncJobData.size()){
+                syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
+                if (syncJobDataCSV != null)
+                    this.syncJobDataCSVList.add(syncJobDataCSV);
+            }
+            counter ++;
         }
     }
 

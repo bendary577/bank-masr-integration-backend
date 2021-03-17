@@ -7,4 +7,5 @@ public class InvoiceConfiguration implements Serializable {
      * Invoices/Credit Notes variables
      * */
     public String invoiceTypeIncluded = "";
+    public String invoiceSyncPlace = "";
 }

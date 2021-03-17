@@ -33,8 +33,8 @@ public class InvoiceService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, int typeFlag
-                                                   , ArrayList<Supplier> suppliers, ArrayList<CostCenter> costCenters,
-                                                   ArrayList<Item> items, ArrayList<OverGroup> overGroups, Account account,
+            , ArrayList<Supplier> suppliers, ArrayList<CostCenter> costCenters,
+                                                   Configuration configuration, ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups, Account account,
                                                    String timePeriod, String fromDate, String toDate){
         HashMap<String, Object> response = new HashMap<>();
 
@@ -61,7 +61,6 @@ public class InvoiceService {
                 response.put("invoices", journalEntries);
                 return response;
             }
-
             if (typeFlag == 1){
                 HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
                         suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
@@ -86,6 +85,7 @@ public class InvoiceService {
                 if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
                     return invoiceResponse;
                 }
+
                 invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
 
                 HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
@@ -99,7 +99,8 @@ public class InvoiceService {
             }
 
             for (HashMap<String, Object> invoice:invoices) {
-                getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
+                getInvoiceReceiptsDetails(configuration, items, itemGroups, overGroups, invoice, driver, journalEntries, creditNoteFlag);
+//                getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
             }
 
             driver.quit();
@@ -111,14 +112,12 @@ public class InvoiceService {
         } catch (Exception e) {
             e.printStackTrace();
             driver.quit();
-
             response.put("status", Constants.FAILED);
             response.put("message", e.getMessage());
             response.put("invoices", journalEntries);
             return response;
         }
     }
-
 
     private HashMap<String, Object> getAccountPayableData(Boolean creditNoteFlag,
                                                           ArrayList<Supplier> suppliers,
@@ -217,7 +216,7 @@ public class InvoiceService {
 
                 String link = cols.get(columns.indexOf("invoice_no.")).findElement(By.tagName("a")).getAttribute("href");
                 link = link.substring(link.indexOf('(') + 1, link.indexOf(','));
-                String fullLink = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
+                String fullLink = "https://mte3-ohim.oracleindustry.com/InventoryManagement/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
                 invoice.put("reference_link", fullLink);
 
 
@@ -409,7 +408,6 @@ public class InvoiceService {
                 journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                 journalEntry.put("expensesAccount", supplier.getData().get("accountCode"));
             }
-
             journalEntries.add(journalEntry);
         }
 
@@ -642,10 +640,18 @@ public class InvoiceService {
                 }
             }
         }
-        // Get Receipt page
+
         driver.get((String) invoice.get("reference_link"));
 
         WebDriverWait wait = new WebDriverWait(driver, 20);
+
+        wait.until(ExpectedConditions.presenceOfElementLocated(By.className("DGSUSPENDED")));
+        if(configuration.invoiceConfiguration.invoiceSyncPlace.equals("Invoice")){
+            driver.findElement(By.className("DGSUSPENDED")).click();
+        }
+
+        // Get Receipt page
+
 
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id("igtxttbxReference")));
         String reference = driver.findElement(By.id("igtxttbxReference")).getAttribute("value");
@@ -730,7 +736,6 @@ public class InvoiceService {
                         continue;
                     if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
                         continue;
-
                     if (!flag){ // Invoice from supplier to cost center
                         journalEntry.put("inventoryAccount", supplier.getAccountCode());
                         journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
@@ -764,10 +769,19 @@ public class InvoiceService {
                 else
                     syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
 
-                journalEntry.put("invoiceNo", invoice.get("document"));
+                if(!configuration.invoiceConfiguration.invoiceSyncPlace.equals("Invoice")){
+                journalEntry.put("invoiceNo", invoice.get("document"));}
+                else {
+                    journalEntry.put("invoiceNo", invoice.get("invoice_no."));
+                    }
 
                 if (reference == null || reference.equals("")){
-                    reference = (String) invoice.get("document");
+
+                    if(!configuration.invoiceConfiguration.invoiceSyncPlace.equals("Invoice")) {
+                        reference = (String) invoice.get("document");
+                    }else {
+                        reference = (String) invoice.get("invoice_no.");
+                    }
                     //  internal field length is 30).
                     if (reference.length() > 30){
                         reference = reference.substring(0, 30);

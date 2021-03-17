@@ -98,6 +98,7 @@ public class InvoiceController {
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         String invoiceTypeIncluded = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
+        String invoiceSyncPlace = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceSyncPlace;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Supplier> suppliers = generalSettings.getSuppliers();
 
@@ -176,8 +177,13 @@ public class InvoiceController {
                 invoiceType = 2;
             }
 
-            data = invoiceService.getInvoicesReceiptsData(false,invoiceType, invoiceSyncJobType.getConfiguration(),
-                    costCenters, suppliers, items, itemGroups,overGroups, account, timePeriod, fromDate, toDate);
+            if(invoiceSyncPlace.equals("Invoice")) {
+                data = invoiceService.getInvoicesData(false, invoiceType, suppliers, costCenters, invoiceSyncJobType.getConfiguration(),
+                        items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            }else {
+                data = invoiceService.getInvoicesReceiptsData(false, invoiceType, invoiceSyncJobType.getConfiguration(),
+                        costCenters, suppliers, items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            }
 
             invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
@@ -372,7 +378,6 @@ public class InvoiceController {
 
             while (!startDate.equals(endDate)){
                 response = getApprovedInvoices(userId, account);
-                System.out.println("");
                 if (response.get("success").toString().equals("true") || tryCount == 0){
                     tryCount = 2;
                     calendar.add(Calendar.DATE, +1);
@@ -380,6 +385,8 @@ public class InvoiceController {
                     syncJobType.getConfiguration().fromDate = startDate;
                     syncJobType.getConfiguration().toDate = startDate;
                     syncJobTypeRepo.save(syncJobType);
+                }else{
+                    tryCount = tryCount;
                 }
                 tryCount--;
             }

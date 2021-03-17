@@ -20,6 +20,7 @@ public class Constants {
     public static String RUNNING = "Running";
 
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
+    public static String wLsIntegration = "2wLsIntegration";
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
     public static String CREDIT_NOTES = "Credit Notes";

@@ -231,6 +231,7 @@ public class SalesFileDelimiterExporter {
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
             if (counter == listSyncJobData.size()){
+                tempSyncJobData.getData().put("vat", vat);
                 syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);

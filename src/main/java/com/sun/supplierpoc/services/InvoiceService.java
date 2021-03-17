@@ -100,7 +100,6 @@ public class InvoiceService {
 
             for (HashMap<String, Object> invoice:invoices) {
                 getInvoiceReceiptsDetails(configuration, items, itemGroups, overGroups, invoice, driver, journalEntries, creditNoteFlag);
-//                getInvoiceDetails(items, overGroups, invoice, driver, journalEntries, creditNoteFlag);
             }
 
             driver.quit();
@@ -123,6 +122,7 @@ public class InvoiceService {
                                                           ArrayList<Supplier> suppliers,
                                                           ArrayList<CostCenter> costCenters, WebDriver driver,
                                                           String url, String timePeriod, String fromDate, String toDate){
+
         HashMap<String, Object> response;
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
         driver.get(url);

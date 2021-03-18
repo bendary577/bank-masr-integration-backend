@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.controllers.opera;
+package com.sun.supplierpoc.models.opera;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

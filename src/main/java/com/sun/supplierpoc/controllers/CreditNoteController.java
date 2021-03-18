@@ -81,7 +81,6 @@ public class CreditNoteController {
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
-
     public HashMap<String, Object> getCreditNotes(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
@@ -90,6 +89,7 @@ public class CreditNoteController {
         SyncJobType invoiceSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
 
         String invoiceTypeIncluded = creditNoteSyncJobType.getConfiguration().invoiceConfiguration.invoiceTypeIncluded;
+        String invoiceSyncPlace = invoiceSyncJobType.getConfiguration().invoiceConfiguration.invoiceSyncPlace;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
         ArrayList<ItemGroup> itemGroups =  generalSettings.getItemGroups();
@@ -125,7 +125,7 @@ public class CreditNoteController {
             return response;
         }else if (timePeriod.equals("UserDefined")){
             if (fromDate.equals("")
-            || toDate.equals("")){
+                    || toDate.equals("")){
                 String message = "Map time period before sync credit notes.";
                 response.put("message", message);
                 response.put("success", false);
@@ -164,8 +164,13 @@ public class CreditNoteController {
                 invoiceType = 2;
             }
 
-            data = invoiceService.getInvoicesReceiptsData(true,invoiceType, creditNoteSyncJobType.getConfiguration(),
-                    costCenters, suppliers, items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            if(invoiceSyncPlace.equals("Invoice")) {
+                data = invoiceService.getInvoicesData(true, invoiceType, suppliers, costCenters, invoiceSyncJobType.getConfiguration(),
+                        items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            }else {
+                data = invoiceService.getInvoicesReceiptsData(true,invoiceType, creditNoteSyncJobType.getConfiguration(),
+                        costCenters, suppliers, items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
+            }
 
             invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
@@ -264,5 +269,6 @@ public class CreditNoteController {
 
         return response;
     }
+
 
 }

@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 
 public class BookedProduction {
@@ -15,6 +16,7 @@ public class BookedProduction {
     private String detailsLink;
 
     private OverGroup overGroup;
+    private ItemGroup itemGroup;
     private CostCenter costCenter;
 
     public BookedProduction() {
@@ -98,6 +100,14 @@ public class BookedProduction {
 
     public void setOverGroup(OverGroup overGroup) {
         this.overGroup = overGroup;
+    }
+
+    public ItemGroup getItemGroup() {
+        return itemGroup;
+    }
+
+    public void setItemGroup(ItemGroup itemGroup) {
+        this.itemGroup = itemGroup;
     }
 
     public CostCenter getCostCenter() {

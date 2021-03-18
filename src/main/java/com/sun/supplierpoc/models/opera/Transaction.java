@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.controllers.opera;
+package com.sun.supplierpoc.models.opera;
 
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -42,6 +42,21 @@ public class Transaction {
     private String transactionSource;
     @JsonProperty("items")
     private List<Item> items = null;
+
+    public Transaction(String purchaseCode, String customerCard, String attendantCard, String hotelID,
+                       String transactionMode, String transactionDate, String paiementmode, String transactionType,
+                       String transactionSource){
+    this.attendantCard = attendantCard;
+    this.customerCard = customerCard;
+    this.transactionDate = transactionDate;
+    this.transactionType = transactionType;
+    this.transactionMode = transactionMode;
+    this.hotelID = hotelID;
+    this.items = items;
+    this.purchaseCode = purchaseCode;
+    this.paiementmode = paiementmode;
+    this.transactionSource = transactionSource;
+    }
 
     @JsonProperty("purchaseCode")
     public String getPurchaseCode() {

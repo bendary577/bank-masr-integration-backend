@@ -34,8 +34,9 @@ public class wlsIntegrationController {
     private UserRepo userRepo;
 
     @PostMapping("/syncExcel")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
-                                        Principal Principal) {
+    public ResponseEntity<?> uploadFile() {
+
+        //@RequestParam("file") MultipartFile file,
 
         String message = "";
 
@@ -46,20 +47,20 @@ public class wlsIntegrationController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
 
-            if (ExcelHelper.hasExcelFormat(file)) {
-                try {
-                    Response response = reservationService.syncReservation(user.getId(), account, file);
-                    message = "Uploaded the file successfully: " + file.getOriginalFilename();
-                    response.setStatus(true);
-                    return ResponseEntity.status(HttpStatus.OK).body(message);
-                } catch (Exception e) {
-                    message = "Could not upload the file: " + file.getOriginalFilename() + "!";
-                    return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(message);
-                }
-            }
+//            if (ExcelHelper.hasExcelFormat(file)) {
+//                try {
+//                    Response response = reservationService.syncReservation(user.getId(), account, file);
+//                    message = "Uploaded the file successfully: " + file.getOriginalFilename();
+//                    response.setStatus(true);
+//                    return ResponseEntity.status(HttpStatus.OK).body(message);
+//                } catch (Exception e) {
+//                    message = "Could not upload the file: " + file.getOriginalFilename() + "!";
+//                    return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(message);
+//                }
+//            }
         }
         message = "Please upload an excel file!";
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+        return ResponseEntity.status(HttpStatus.OK).body(message);
     }
 
 }

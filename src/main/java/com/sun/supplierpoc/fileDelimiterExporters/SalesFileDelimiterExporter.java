@@ -37,8 +37,6 @@ public class SalesFileDelimiterExporter {
          * */
         if(syncJobType.getName().equals(Constants.SALES))
             this.extractSalesSyncJobData();
-        else if(syncJobType.getName().equals(Constants.APPROVED_INVOICE))
-            this.extractInvoicesSyncJobData();
         else
             this.extractInvoicesSyncJobData();
 
@@ -79,10 +77,8 @@ public class SalesFileDelimiterExporter {
             * */
             if(syncJobType.getName().equals(Constants.SALES))
                 this.extractSalesSyncJobData();
-            else if(syncJobType.getName().equals(Constants.APPROVED_INVOICE))
-                this.extractInvoicesSyncJobData();
             else
-                this.extractConsumptionSyncJobData();
+                this.extractInvoicesSyncJobData();
 
             file = createNDFFile();
             System.out.println(file.getName());
@@ -197,21 +193,7 @@ public class SalesFileDelimiterExporter {
                 if(syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
-        }
-    }
 
-    private void extractConsumptionSyncJobData(){
-        SyncJobDataCSV syncJobDataCSV;
-        for (SyncJobData syncJobData : listSyncJobData) {
-            if(syncJobData.getData().containsKey("totalDr")){
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
-                if(syncJobDataCSV != null)
-                    this.syncJobDataCSVList.add(syncJobDataCSV);
-            }else {
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
-                if(syncJobDataCSV != null)
-                    this.syncJobDataCSVList.add(syncJobDataCSV);
-            }
         }
     }
 
@@ -249,7 +231,6 @@ public class SalesFileDelimiterExporter {
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
             if (counter == listSyncJobData.size()){
-                tempSyncJobData.getData().put("vat", vat);
                 syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);

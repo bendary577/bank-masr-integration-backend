@@ -16,11 +16,13 @@ public class TransWebServ {
     }
 
     public Transaction transactionService(Transaction transaction) {
-        String url = "http://localhost:8081/reservation/transaction";
-        Transaction transaction1 =
-                this.restTemplate.postForObject(url, transaction, Transaction.class);
 
-        return transaction1;
+        String url = "http://localhost:8081/2wlsIntegration/transaction";
+
+//        Transaction transaction1 =
+//                this.restTemplate.postForObject(url, transaction, Transaction.class);
+
+        return transaction;
     }
 }
 

@@ -1,29 +1,27 @@
 package com.sun.supplierpoc.controllers.opera;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.sun.supplierpoc.components.ExcelHelper;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.opera.Item;
-import com.sun.supplierpoc.models.opera.Reservation;
 import com.sun.supplierpoc.models.opera.Transaction;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.services.ReservationService;
 import com.sun.supplierpoc.services.opera.TransWebServ;
-import org.apache.tomcat.util.http.parser.Authorization;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.json.JSONObject;
+import org.apache.commons.compress.utils.IOUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -31,7 +29,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/reservation")
+@RequestMapping("/2wlsIntegration")
 public class wlsIntegrationController {
 
     @Autowired
@@ -41,49 +39,38 @@ public class wlsIntegrationController {
     private AccountRepo accountRepo;
 
     @Autowired
-    private UserRepo userRepo;
-
-    @Autowired
     private TransWebServ transWebServ;
 
-    @PostMapping("/syncExcel")
-    public ResponseEntity<?> uploadFile(Principal Principal) {
+    @RequestMapping("/syncExcel")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<?> uploadFile(Principal principal) throws IOException {
 
-        String message = "";
+        Response response = new Response();
 
-//        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        User user = userRepo.findByUsername("adminReservation");
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-
-
-
-            if (ExcelHelper.hasExcelFormat(file)) {
-                try {
-                    Response response = reservationService.syncReservation(user.getId(), account, file);
-                    message = "Uploaded the file successfully: " + file.getOriginalFilename();
-                    response.setStatus(true);
-                    return ResponseEntity.status(HttpStatus.OK).body(message);
+             try {
+                    response = reservationService.syncReservation(user.getId(), account);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 } catch (Exception e) {
-                    message = "Could not upload the file: " + file.getOriginalFilename() + "!";
-                    return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(message);
+                    response.setStatus(false);
+                    response.setMessage("Could not upload the file");
+                    return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(response);
                 }
             }
-        }
-        message = "Please upload an excel file!";
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
-    }
-
-    @RequestMapping("/transaction")
-    public Transaction transaction(@RequestBody Transaction transaction) throws IOException {
-
-        return transaction;
+        response.setMessage("Please upload an excel file!");
+        response.setStatus(false);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @RequestMapping("/getTransaction")
-    public Transaction getTransaction(){
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public Transaction getTransaction(Principal principal){
         Item item = new Item("9", "34A", "10", "1120.22");
         List<Item> items = new ArrayList<Item>();
         items.add(item);

@@ -21,18 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 
 public class ExcelHelper {
-    public static String TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    static String[] HEADERs = { "No.", "Number", "Full Name", "Adults",  };
-    static String SHEET = "Tutorials";
-
-    public static boolean hasExcelFormat(MultipartFile file) {
-
-        if (!TYPE.equals(file.getContentType())) {
-            return false;
-        }
-
-        return true;
-    }
 
     public static List<SyncJobData> excelToTutorials(SyncJob syncJob, InputStream is) {
 

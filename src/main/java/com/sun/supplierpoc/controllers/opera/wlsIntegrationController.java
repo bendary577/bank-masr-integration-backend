@@ -47,8 +47,7 @@ public class wlsIntegrationController {
     private TransWebServ transWebServ;
 
     @PostMapping("/syncExcel")
-    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
-                                        Principal Principal) {
+    public ResponseEntity<?> uploadFile(Principal Principal) {
 
         String message = "";
 
@@ -58,6 +57,8 @@ public class wlsIntegrationController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
+
+
 
             if (ExcelHelper.hasExcelFormat(file)) {
                 try {
@@ -83,9 +84,11 @@ public class wlsIntegrationController {
 
     @RequestMapping("/getTransaction")
     public Transaction getTransaction(){
+        Item item = new Item("9", "34A", "10", "1120.22");
         List<Item> items = new ArrayList<Item>();
-        Transaction transaction = new Transaction("A", "B", "G", "C" +
-                items, "W", "r", "q", "e", "g");
+        items.add(item);
+        Transaction transaction = new Transaction("1001", "2041 2578 3654 9876", "Gaad2", "110",
+                "online", "10/3/2021", "MC", "Resa/checkout", "OTA/Direct", items);
         Transaction transaction1 = transWebServ.transactionService(transaction);
 
     return transaction1;

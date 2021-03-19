@@ -14,6 +14,13 @@ public class Item {
     @JsonProperty("amount")
     private String amount;
 
+    public Item(String lineNumber, String productCode, String quantity, String amount) {
+        this.lineNumber = lineNumber;
+        this.productCode = productCode;
+        this.quantity = quantity;
+        this.amount = amount;
+    }
+
     @JsonProperty("lineNumber")
     public String getLineNumber() {
         return lineNumber;

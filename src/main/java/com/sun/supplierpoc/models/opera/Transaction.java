@@ -45,17 +45,17 @@ public class Transaction {
 
     public Transaction(String purchaseCode, String customerCard, String attendantCard, String hotelID,
                        String transactionMode, String transactionDate, String paiementmode, String transactionType,
-                       String transactionSource){
+                       String transactionSource, List<Item> items){
     this.attendantCard = attendantCard;
     this.customerCard = customerCard;
     this.transactionDate = transactionDate;
     this.transactionType = transactionType;
     this.transactionMode = transactionMode;
     this.hotelID = hotelID;
-    this.items = items;
     this.purchaseCode = purchaseCode;
     this.paiementmode = paiementmode;
     this.transactionSource = transactionSource;
+    this.items = items;
     }
 
     @JsonProperty("purchaseCode")

@@ -42,29 +42,29 @@ public class ReservationService {
 
         syncJobRepo.save(syncJob);
 
-            try {
+        try {
 
-                File file = new File("src/main/resources/reserv.xlsx");
-                FileInputStream input = new FileInputStream(file);
-                MultipartFile multipartFile = new MockMultipartFile("file",
-                        file.getName(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
+            File file = new File("src/main/resources/reserv.xlsx");
+            FileInputStream input = new FileInputStream(file);
+            MultipartFile multipartFile = new MockMultipartFile("file",
+                    file.getName(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
 
-                List<SyncJobData> syncJobData = ExcelHelper.excelToTutorials(syncJob, multipartFile.getInputStream());
+            List<SyncJobData> syncJobData = ExcelHelper.getReservationFromExcel(syncJob, multipartFile.getInputStream());
 
-                syncJob.setEndDate(new Date(System.currentTimeMillis()));
-                syncJob.setRowsFetched(syncJobData.size());
-                syncJobDataRepo.saveAll(syncJobData);
-                response.setStatus(true);
-                response.setMessage("Sync the file successfully");
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJob.setRowsFetched(syncJobData.size());
+            syncJobDataRepo.saveAll(syncJobData);
+            response.setStatus(true);
+            response.setMessage("Sync the file successfully");
 
-            } catch (IOException e) {
-                syncJob.setStatus("Failed");
-                syncJob.setEndDate(new Date(System.currentTimeMillis()));
-                response.setStatus(true);
-                response.setMessage("fail to store excel data: " + e.getMessage());
-            }
-
-            syncJobRepo.save(syncJob);
-            return response;
+        } catch (IOException e) {
+            syncJob.setStatus("Failed");
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            response.setStatus(true);
+            response.setMessage("fail to store excel data: " + e.getMessage());
         }
+
+        syncJobRepo.save(syncJob);
+        return response;
+    }
 }

@@ -2,27 +2,23 @@ package com.sun.supplierpoc.components;
 
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.opera.BookingDetails;
 import com.sun.supplierpoc.models.opera.Reservation;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.util.*;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.web.multipart.MultipartFile;
 
+import javax.xml.crypto.Data;
 
 public class ExcelHelper {
 
-    public static List<SyncJobData> excelToTutorials(SyncJob syncJob, InputStream is) {
+    public static List<SyncJobData> getReservationFromExcel(SyncJob syncJob, InputStream is) {
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -115,5 +111,111 @@ public class ExcelHelper {
         } catch (IOException e) {
             throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
         }
+    }
+
+    public static List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, InputStream is) {
+        List<SyncJobData> syncJobDataList = new ArrayList<>();
+
+        try {
+            XSSFWorkbook workbook = new XSSFWorkbook(is);
+
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rows = sheet.iterator();
+
+            int rowNumber = 0;
+            Row currentRow;
+            Iterator<Cell> cellsInRow;
+            BookingDetails bookingDetails;
+
+            while (rows.hasNext()) {
+                currentRow = rows.next();
+
+                // skip header
+                if (rowNumber == 0) {
+                    rowNumber += 2;
+                    rows.next();
+                    continue;
+                }
+
+                cellsInRow = currentRow.iterator();
+                bookingDetails = new BookingDetails();
+
+                int cellIdx = 0;
+                while (cellsInRow.hasNext()) {
+                    Cell currentCell = cellsInRow.next();
+
+                    switch (cellIdx) {
+                        case 0:
+                            bookingDetails.setBookingNo((int) currentCell.getNumericCellValue());
+                            break;
+                        case 1:
+                            bookingDetails.setNationalityCode(currentCell.getStringCellValue());
+                            break;
+                        case 2:
+                            bookingDetails.setArrivalDate(String.valueOf(currentCell.getDateCellValue()));
+                            break;
+                        case 3:
+                            bookingDetails.setDepartureDate(String.valueOf(currentCell.getDateCellValue()));
+                            break;
+                        case 4:
+                            bookingDetails.setNumberOfNights((int) currentCell.getNumericCellValue());
+                            break;
+                        case 5:
+                            bookingDetails.setRoomNumber((int) currentCell.getNumericCellValue());
+                            break;
+                        case 6:
+                            bookingDetails.setRoomType(currentCell.getStringCellValue());
+                            break;
+                        case 7:
+                            bookingDetails.setFullRateAmount((float) currentCell.getNumericCellValue());
+                            break;
+                        case 8:
+                            bookingDetails.setTotalRoom((float) currentCell.getNumericCellValue());
+                            break;
+                        case 9:
+                            bookingDetails.setGender(currentCell.getStringCellValue());
+                            break;
+                        case 10:
+                            bookingDetails.setAdults((int) currentCell.getNumericCellValue());
+                            break;
+                        case 11:
+                            bookingDetails.setDateOfBirth(String.valueOf(currentCell.getDateCellValue()));
+                            break;
+                        case 12:
+                            bookingDetails.setPaymentMethods(currentCell.getStringCellValue());
+                            break;
+                        case 13:
+                            bookingDetails.setNumberOfRoom((int) currentCell.getNumericCellValue());
+                            break;
+                        default:
+                            break;
+                    }
+                    cellIdx++;
+                }
+
+                HashMap<String, Object> data = new HashMap<>();
+                Field[] allFields = bookingDetails.getClass().getDeclaredFields();
+                for (Field field : allFields) {
+                    field.setAccessible(true);
+                    Object value = field.get(bookingDetails);
+                    if(value != null && !value.equals("null")){
+                        data.put(field.getName(), value);
+                    }else{
+                        data.put(field.getName(), "");
+                    }
+                }
+
+                SyncJobData syncJobData = new SyncJobData(data, "success", "",  new Date(), syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }
+            workbook.close();
+
+            return syncJobDataList;
+        } catch (IOException e) {
+            throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return syncJobDataList;
     }
 }

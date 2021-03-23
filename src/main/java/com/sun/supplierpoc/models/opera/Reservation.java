@@ -1,7 +1,5 @@
 package com.sun.supplierpoc.models.opera;
 
-import org.springframework.data.mongodb.core.mapping.Document;
-
 public class Reservation {
     private String id;
     private int room;

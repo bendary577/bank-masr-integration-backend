@@ -7,11 +7,9 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 
 
 public class SyncJobData implements Serializable {
-
     @Id
     private String id;
     private HashMap<String, Object> data;

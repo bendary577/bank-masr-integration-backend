@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.opera.Reservation;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -118,6 +119,7 @@ public class ExcelHelper {
 
     public List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -149,52 +151,67 @@ public class ExcelHelper {
 
                     switch (cellIdx) {
                         case 0:
-                            bookingDetails.setBookingNo((int) currentCell.getNumericCellValue());
+                            bookingDetails.bookingNo = String.valueOf((int)(currentCell.getNumericCellValue()));
                             break;
                         case 1:
-                            bookingDetails.setNationalityCode(currentCell.getStringCellValue());
+                            bookingDetails.nationalityCode = currentCell.getStringCellValue();
                             break;
                         case 2:
-                            bookingDetails.setArrivalDate(String.valueOf(currentCell.getDateCellValue()));
+                            Date arrival = currentCell.getDateCellValue();
+                            bookingDetails.checkInDate = (dateFormat.format(arrival));
                             break;
                         case 3:
-                            bookingDetails.setDepartureDate(String.valueOf(currentCell.getDateCellValue()));
+                            Date departure = currentCell.getDateCellValue();
+                            bookingDetails.checkOutDate = dateFormat.format(departure);
                             break;
                         case 4:
-                            bookingDetails.setNumberOfNights((int) currentCell.getNumericCellValue());
+                            bookingDetails.totalDurationDays = String.valueOf((int)(currentCell.getNumericCellValue()));
                             break;
                         case 5:
-                            bookingDetails.setRoomNumber((int) currentCell.getNumericCellValue());
+                            bookingDetails.allotedRoomNo = String.valueOf((int)(currentCell.getNumericCellValue()));
                             break;
                         case 6:
-                            bookingDetails.setRoomType(currentCell.getStringCellValue());
+                            bookingDetails.roomType = currentCell.getStringCellValue();
                             break;
                         case 7:
-                            bookingDetails.setFullRateAmount(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
+                            bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
                             break;
                         case 8:
-                            bookingDetails.setTotalRoom(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
+                            bookingDetails.grandTotal = String.valueOf((conversions.roundUpFloat((float) currentCell.getNumericCellValue())));
                             break;
                         case 9:
-                            bookingDetails.setGender(currentCell.getStringCellValue());
+                            bookingDetails.gender = currentCell.getStringCellValue();
                             break;
                         case 10:
-                            bookingDetails.setAdults((int) currentCell.getNumericCellValue());
+                            bookingDetails.noOfGuest = String.valueOf((int)(currentCell.getNumericCellValue()));
                             break;
                         case 11:
-                            bookingDetails.setDateOfBirth(String.valueOf(currentCell.getDateCellValue()));
+                            bookingDetails.dateOfBirth = String.valueOf(currentCell.getDateCellValue());
                             break;
                         case 12:
-                            bookingDetails.setPaymentMethods(currentCell.getStringCellValue());
+                            bookingDetails.paymentType = currentCell.getStringCellValue();
                             break;
                         case 13:
-                            bookingDetails.setNumberOfRoom((int) currentCell.getNumericCellValue());
+                            bookingDetails.noOfRooms = String.valueOf((int)(currentCell.getNumericCellValue()));
                             break;
                         default:
                             break;
                     }
                     cellIdx++;
                 }
+
+                // Static Value
+                bookingDetails.transactionID = "";
+                bookingDetails.transactionTypeId = "1";
+                bookingDetails.cuFlag = "1";
+                bookingDetails.customerType = "1";
+
+                // Fetch from database
+                bookingDetails.dailyRoomRate = "1000";
+                bookingDetails.vat = "10";
+                bookingDetails.municipalityTax = "5";
+                bookingDetails.discount = "5";
+                bookingDetails.purposeOfVisit = "1";
 
                 HashMap<String, Object> data = new HashMap<>();
                 Field[] allFields = bookingDetails.getClass().getDeclaredFields();

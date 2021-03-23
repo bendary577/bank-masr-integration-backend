@@ -1,130 +1,52 @@
 package com.sun.supplierpoc.models.opera;
 
 public class BookingDetails {
-    private int bookingNo;
-    private String nationalityCode;
-    private String arrivalDate;
-    private String departureDate;
-    private int numberOfNights;
-    private int roomNumber;
-    private String roomType;
-    private float fullRateAmount;
-    private float totalRoom;
-    private String gender;
-    private int adults;
-    private String dateOfBirth;
-    private String paymentMethods;
-    private int numberOfRoom;
+    public String transactionID = "";
+    public String bookingNo = "";
+    public String nationalityCode = "";
+    public String checkInDate = "";
 
-    public int getBookingNo() {
-        return bookingNo;
-    }
+    // departureDate
+    public String checkOutDate = "";
 
-    public void setBookingNo(int bookingNo) {
-        this.bookingNo = bookingNo;
-    }
+    // totalDurationDays
+    public String totalDurationDays = "";
 
-    public String getNationalityCode() {
-        return nationalityCode;
-    }
+    // roomNumber
+    public String allotedRoomNo = "";
 
-    public void setNationalityCode(String nationalityCode) {
-        this.nationalityCode = nationalityCode;
-    }
+    public String roomRentType = "";
 
-    public String getArrivalDate() {
-        return arrivalDate;
-    }
+    public  String dailyRoomRate = ""; // not in excel file
 
-    public void setArrivalDate(String arrivalDate) {
-        this.arrivalDate = arrivalDate;
-    }
+    // fullRateAmount
+    public String totalRoomRate = "";
 
-    public String getDepartureDate() {
-        return departureDate;
-    }
+    public  String vat = ""; // not in excel file
+    public  String municipalityTax = ""; // not in excel file
+    public  String discount = ""; // not in excel file
 
-    public void setDepartureDate(String departureDate) {
-        this.departureDate = departureDate;
-    }
+    // totalRoom
+    public String grandTotal = "";
 
-    public int getNumberOfNights() {
-        return numberOfNights;
-    }
+    public  String transactionTypeId = ""; // not in excel file
+    public String gender = "";
 
-    public void setNumberOfNights(int numberOfNights) {
-        this.numberOfNights = numberOfNights;
-    }
+    public  String checkInTime = "";
+    public  String checkOutTime = "";
+    public  String customerType = "";
 
-    public int getRoomNumber() {
-        return roomNumber;
-    }
+    // adults
+    public  String noOfGuest = "";
+    public String roomType = "";
+    public String purposeOfVisit = ""; // not in excel file
+    public String dateOfBirth = "";
 
-    public void setRoomNumber(int roomNumber) {
-        this.roomNumber = roomNumber;
-    }
+    // paymentMethods
+    public String paymentType = "";
 
-    public String getRoomType() {
-        return roomType;
-    }
+    // noOfRooms
+    public String noOfRooms = "";
 
-    public void setRoomType(String roomType) {
-        this.roomType = roomType;
-    }
-
-    public float getFullRateAmount() {
-        return fullRateAmount;
-    }
-
-    public void setFullRateAmount(float fullRateAmount) {
-        this.fullRateAmount = fullRateAmount;
-    }
-
-    public float getTotalRoom() {
-        return totalRoom;
-    }
-
-    public void setTotalRoom(float totalRoom) {
-        this.totalRoom = totalRoom;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public int getAdults() {
-        return adults;
-    }
-
-    public void setAdults(int adults) {
-        this.adults = adults;
-    }
-
-    public String getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(String dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getPaymentMethods() {
-        return paymentMethods;
-    }
-
-    public void setPaymentMethods(String paymentMethods) {
-        this.paymentMethods = paymentMethods;
-    }
-
-    public int getNumberOfRoom() {
-        return numberOfRoom;
-    }
-
-    public void setNumberOfRoom(int numberOfRoom) {
-        this.numberOfRoom = numberOfRoom;
-    }
+    public String cuFlag = "";
 }

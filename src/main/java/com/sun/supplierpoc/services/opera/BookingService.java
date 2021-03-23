@@ -57,7 +57,9 @@ public class BookingService {
             MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
 
-            List<SyncJobData> syncJobData = ExcelHelper.getNewBookingFromExcel(syncJob, multipartFile.getInputStream());
+            ExcelHelper excelHelper = new ExcelHelper();
+
+            List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, multipartFile.getInputStream());
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

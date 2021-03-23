@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.components;
 
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.opera.BookingDetails;
@@ -14,9 +15,11 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import javax.xml.crypto.Data;
-
 public class ExcelHelper {
+
+    private Conversions conversions = new Conversions();
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public static List<SyncJobData> getReservationFromExcel(SyncJob syncJob, InputStream is) {
 
@@ -113,7 +116,7 @@ public class ExcelHelper {
         }
     }
 
-    public static List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, InputStream is) {
+    public List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
 
         try {
@@ -167,10 +170,10 @@ public class ExcelHelper {
                             bookingDetails.setRoomType(currentCell.getStringCellValue());
                             break;
                         case 7:
-                            bookingDetails.setFullRateAmount((float) currentCell.getNumericCellValue());
+                            bookingDetails.setFullRateAmount(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
                             break;
                         case 8:
-                            bookingDetails.setTotalRoom((float) currentCell.getNumericCellValue());
+                            bookingDetails.setTotalRoom(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
                             break;
                         case 9:
                             bookingDetails.setGender(currentCell.getStringCellValue());

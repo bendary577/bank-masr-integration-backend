@@ -324,10 +324,8 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-test</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-test</artifactId>
+            <version>5.2.3.RELEASE</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 

@@ -107,48 +107,55 @@ public class AccountController {
     public HashMap<String, Object> addAccount(@RequestBody Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
-//        // check existence of account name
-//        if (accountRepo.existsAccountByNameAndDeleted(account.getName(), false)){
-//            response.put("message", "Account name already exits.");
-//            response.put("success", false);
-//            return response;
-//        }
-//
-//        // create new account and user
-//        account = accountRepo.save(account);
-//        Set<GrantedAuthority> roles=new LinkedHashSet<>();
-//        roles.add(new SimpleGrantedAuthority("ROLE_USER"));
-//        User user = new User("admin", account.getId(), "","admin" + account.getName() ,"password",roles,true,
-//                true,true,true);
-//        userRepo.save(user);
-//
-//        // Create General Settings
-//        GeneralSettings generalSettings = new GeneralSettings(account.getId(), new Date());
-//        generalSettingsRepo.save(generalSettings);
-//
-//        // add default sync jobs to account
-//        boolean addingStatus = addAccountSyncType(account);
-//
-//        if(addingStatus){
-//            response.put("message", "Account added successfully.");
-//            response.put("success", true);
-//        }else{
-//            response.put("message", "Failed to add new account.");
-//            response.put("success", false);
-//        }
+        // check existence of account name
+        if (accountRepo.existsAccountByNameAndDeleted(account.getName(), false)){
+            response.put("message", "Account name already exits.");
+            response.put("success", false);
+            return response;
+        }
+
+        // create new account and user
+        account = accountRepo.save(account);
+        Set<GrantedAuthority> roles=new LinkedHashSet<>();
+        roles.add(new SimpleGrantedAuthority("ROLE_USER"));
+        User user = new User("admin", account.getId(), "","admin" + account.getName() ,"password",roles,true,
+                true,true,true);
+        userRepo.save(user);
+
+        // Create General Settings
+        GeneralSettings generalSettings = new GeneralSettings(account.getId(), new Date());
+        generalSettingsRepo.save(generalSettings);
+
+        // add default sync jobs to account
+        boolean addingStatus = addAccountSyncType(account);
+
+        if(addingStatus){
+            response.put("message", "Account added successfully.");
+            response.put("success", true);
+        }else{
+            response.put("message", "Failed to add new account.");
+            response.put("success", false);
+        }
         return response;
     }
 
     private boolean addAccountSyncType(Account account){
+        // OPERA Reservation
+        String syncDescription = "Used to sync reservation from opera.";
+        Configuration wlsIntegration = new Configuration();
+        wlsIntegration.supplierConfiguration = new SupplierConfiguration();
 
-            //2wls integration
-            String syncDescription = "Used to sync reservation from opera.";
-            Configuration wlsIntegration = new Configuration();
-            wlsIntegration.supplierConfiguration = new SupplierConfiguration();
+        SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wLsIntegration",
+                new Date(), wlsIntegration, account.getId());
+        syncJobTypeRepo.save(supplierSyncType);
 
-            SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wsLsIntegration",
-                    new Date(), wlsIntegration, account.getId());
-            syncJobTypeRepo.save(supplierSyncType);
+        // OPERA New Booking
+        syncDescription = "Used to sync new booking from opera.";
+        Configuration newBookingConfig = new Configuration();
+
+        SyncJobType newBookingSyncType = new SyncJobType(10, Constants.NEW_BOOKING_REPORT, syncDescription,
+                "/newBookingReport", new Date(), newBookingConfig, account.getId());
+        syncJobTypeRepo.save(newBookingSyncType);
 
 //            //suppliers
 //            String syncDescription = "Used to sync suppliers from sun to my inventory daily.";

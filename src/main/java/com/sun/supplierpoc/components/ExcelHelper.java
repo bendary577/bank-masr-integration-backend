@@ -1,40 +1,28 @@
 package com.sun.supplierpoc.components;
 
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.opera.BookingDetails;
 import com.sun.supplierpoc.models.opera.Reservation;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.web.multipart.MultipartFile;
-
 
 public class ExcelHelper {
-    public static String TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    static String[] HEADERs = { "No.", "Number", "Full Name", "Adults",  };
-    static String SHEET = "Tutorials";
 
-    public static boolean hasExcelFormat(MultipartFile file) {
+    private Conversions conversions = new Conversions();
 
-        if (!TYPE.equals(file.getContentType())) {
-            return false;
-        }
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        return true;
-    }
-
-    public static List<SyncJobData> excelToTutorials(SyncJob syncJob, InputStream is) {
+    public static List<SyncJobData> getReservationFromExcel(SyncJob syncJob, InputStream is) {
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -127,5 +115,127 @@ public class ExcelHelper {
         } catch (IOException e) {
             throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
         }
+    }
+
+    public List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, InputStream is) {
+        List<SyncJobData> syncJobDataList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+        try {
+            XSSFWorkbook workbook = new XSSFWorkbook(is);
+
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rows = sheet.iterator();
+
+            int rowNumber = 0;
+            Row currentRow;
+            Iterator<Cell> cellsInRow;
+            BookingDetails bookingDetails;
+
+            while (rows.hasNext()) {
+                currentRow = rows.next();
+
+                // skip header
+                if (rowNumber == 0) {
+                    rowNumber += 2;
+                    rows.next();
+                    continue;
+                }
+
+                cellsInRow = currentRow.iterator();
+                bookingDetails = new BookingDetails();
+
+                int cellIdx = 0;
+                while (cellsInRow.hasNext()) {
+                    Cell currentCell = cellsInRow.next();
+
+                    switch (cellIdx) {
+                        case 0:
+                            bookingDetails.bookingNo = String.valueOf((int)(currentCell.getNumericCellValue()));
+                            break;
+                        case 1:
+                            bookingDetails.nationalityCode = currentCell.getStringCellValue();
+                            break;
+                        case 2:
+                            Date arrival = currentCell.getDateCellValue();
+                            bookingDetails.checkInDate = (dateFormat.format(arrival));
+                            break;
+                        case 3:
+                            Date departure = currentCell.getDateCellValue();
+                            bookingDetails.checkOutDate = dateFormat.format(departure);
+                            break;
+                        case 4:
+                            bookingDetails.totalDurationDays = String.valueOf((int)(currentCell.getNumericCellValue()));
+                            break;
+                        case 5:
+                            bookingDetails.allotedRoomNo = String.valueOf((int)(currentCell.getNumericCellValue()));
+                            break;
+                        case 6:
+                            bookingDetails.roomType = currentCell.getStringCellValue();
+                            break;
+                        case 7:
+                            bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
+                            break;
+                        case 8:
+                            bookingDetails.grandTotal = String.valueOf((conversions.roundUpFloat((float) currentCell.getNumericCellValue())));
+                            break;
+                        case 9:
+                            bookingDetails.gender = currentCell.getStringCellValue();
+                            break;
+                        case 10:
+                            bookingDetails.noOfGuest = String.valueOf((int)(currentCell.getNumericCellValue()));
+                            break;
+                        case 11:
+                            bookingDetails.dateOfBirth = String.valueOf(currentCell.getDateCellValue());
+                            break;
+                        case 12:
+                            bookingDetails.paymentType = currentCell.getStringCellValue();
+                            break;
+                        case 13:
+                            bookingDetails.noOfRooms = String.valueOf((int)(currentCell.getNumericCellValue()));
+                            break;
+                        default:
+                            break;
+                    }
+                    cellIdx++;
+                }
+
+                // Static Value
+                bookingDetails.transactionID = "";
+                bookingDetails.transactionTypeId = "1";
+                bookingDetails.cuFlag = "1";
+                bookingDetails.customerType = "1";
+
+                // Fetch from database
+                bookingDetails.dailyRoomRate = "1000";
+                bookingDetails.vat = "10";
+                bookingDetails.municipalityTax = "5";
+                bookingDetails.discount = "5";
+                bookingDetails.purposeOfVisit = "1";
+
+                HashMap<String, Object> data = new HashMap<>();
+                Field[] allFields = bookingDetails.getClass().getDeclaredFields();
+                for (Field field : allFields) {
+                    field.setAccessible(true);
+                    Object value = field.get(bookingDetails);
+                    if(value != null && !value.equals("null")){
+                        data.put(field.getName(), value);
+                    }else{
+                        data.put(field.getName(), "");
+                    }
+                }
+
+                SyncJobData syncJobData = new SyncJobData(data, "success", "",  new Date(), syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }
+            workbook.close();
+
+            return syncJobDataList;
+        } catch (IOException e) {
+            throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return syncJobDataList;
     }
 }

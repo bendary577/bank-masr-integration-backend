@@ -21,6 +21,8 @@ public class Constants {
 
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
     public static String wLsIntegration = "2wLsIntegration";
+    public static String NEW_BOOKING_REPORT = "New Booking Report";
+
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
     public static String CREDIT_NOTES = "Credit Notes";

@@ -334,7 +334,7 @@ public class WastageService {
         }
     }
 
-    public Response getWastageReportData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
+    public Response  getWastageReportData(SyncJobType syncJobType, GeneralSettings generalSettings, Account account) {
 
         Response response = new Response();
         String businessDate = syncJobType.getConfiguration().timePeriod;
@@ -343,6 +343,7 @@ public class WastageService {
 
         ArrayList<Item> items = generalSettings.getItems();
         ArrayList<CostCenter> locations = generalSettings.getLocations();
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
@@ -378,12 +379,12 @@ public class WastageService {
             System.out.println("Waiting");
         }
 
-        for (CostCenter costCenter : locations) {
+        for (CostCenter location : locations) {
             try {
                 journalBatch = new JournalBatch();
                 journalEntries = new ArrayList<>();
 
-                if (!costCenter.checked) continue;
+                if (!location.checked) continue;
 
                 wastesStatus = new ArrayList<>();
                 driver.get(Constants.BOOKED_WASTE_REPORT_LINK);
@@ -395,7 +396,7 @@ public class WastageService {
                 catch (Exception ignored){}
 
                 Response dateResponse = new Response();
-                if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)){
+                if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, dateResponse)){
                     driver.quit();
 
                     if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
@@ -461,11 +462,11 @@ public class WastageService {
                 }
 
                 for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteReportDetails(items, itemGroups, overGroups, costCenter,
+                    getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
                             waste, syncJobType, driver, journalEntries);
                 }
 
-                journalBatch.setCostCenter(costCenter);
+                journalBatch.setLocation(location);
                 journalBatch.setWaste(journalEntries);
                 journalBatches.add(journalBatch);
 
@@ -486,7 +487,7 @@ public class WastageService {
 
     private void getWasteReportDetails(
             ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
-            CostCenter costCenter, HashMap<String, Object> waste, SyncJobType syncJobType,
+            CostCenter location, List<CostCenter> costCenters, HashMap<String, Object> waste, SyncJobType syncJobType,
             WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
@@ -555,35 +556,44 @@ public class WastageService {
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
                 }
 
-                if(costCenter.location != null && !costCenter.location.locationName.equals("")){
-                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), costCenter.location, null, null);
+                if(location.location != null && !location.location.locationName.equals("")){
+                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), location.location, null, null);
                 }else {
-                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), costCenter, null, null);
+                    syncJobDataService.prepareAnalysis(journalEntry, syncJobType.getConfiguration(), location, null, null);
                 }
 
-                if (costCenter.costCenterReference.equals("")){
-                    costCenter.costCenterReference = costCenter.costCenter;
+                if (location.costCenterReference.equals("")){
+                    location.costCenterReference = location.costCenter;
                 }
 
                 journalEntry.put("totalCr", Float.toString(conversions.roundUpFloat(journal.getTotalWaste())));
                 journalEntry.put("totalDr", Float.toString(conversions.roundUpFloat(journal.getTotalWaste()) * -1));
 
+                CostCenter costCenter = new CostCenter();
+
+                for(CostCenter tempCostCenter : costCenters){
+                    if(tempCostCenter.costCenter.equals(waste.get("location"))){
+                        costCenter = tempCostCenter;
+                        break;
+                    }
+                }
+
                 journalEntry.put("fromCostCenter", costCenter.costCenter);
                 journalEntry.put("fromAccountCode", costCenter.accountCode);
 
-                journalEntry.put("toCostCenter", costCenter.costCenter);
-                journalEntry.put("toAccountCode", costCenter.accountCode);
+                journalEntry.put("toCostCenter", "Waste");
+                journalEntry.put("toAccountCode", "4110006");
 
                 journalEntry.put("fromLocation", costCenter.accountCode);
-                journalEntry.put("toLocation", costCenter.accountCode);
-
-                String description = waste.get("waste_type") + " - " + journal.getOverGroup();
+                journalEntry.put("toLocation", "4110006");
+                // waste.get("waste_type") + " - " +
+                String description =  journal.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
                 }
 
                 journalEntry.put("description", description);
-                journalEntry.put("transactionReference", "Waste" + " - " + costCenter.costCenterReference);
+                journalEntry.put("transactionReference", "Waste" + " - " + location.costCenterReference);
 
                 journalEntry.put("transactionDate", String.valueOf(waste.get("waste_date")));
 

@@ -221,7 +221,7 @@ public class JournalService {
      * */
     public Response getJournalData(SyncJobType journalSyncJobType,
                                    ArrayList<CostCenter> costCentersLocation,
-                                   ArrayList<ItemGroup> itemGroups, Account account){
+                                   ArrayList<ItemGroup> itemGroups,List<CostCenter> costCenters, Account account){
         Response response = new Response();
 
         WebDriver driver;
@@ -254,7 +254,6 @@ public class JournalService {
                 wait.until(ExpectedConditions.alertIsPresent());
             }
             catch (Exception ignored) { }
-
 
             for (CostCenter costCenter : costCentersLocation) {
                 journalBatch = new JournalBatch();
@@ -297,7 +296,7 @@ public class JournalService {
 
                 ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
-                ArrayList<String> extensions  = new ArrayList<>();
+                ArrayList<HashMap<String, String>> costExtensions  = new ArrayList<>();
 
                 for (int i = 6; i < rows.size(); i++) {
 
@@ -308,15 +307,19 @@ public class JournalService {
                     }
 
                     String extension = cols.get(0).findElement(By.tagName("div")).getAttribute("onclick").substring(7);
+                    String costCenterName = cols.get(0).findElement(By.tagName("div")).getText();
                     int index = extension.indexOf('\'');
                     extension = extension.substring(0, index);
-                    extensions.add(extension);
+                    HashMap<String, String> map = new HashMap<>();
+                    map.put("extension" , extension);
+                    map.put("costCenterName", costCenterName);
+                    costExtensions.add(map);
                 }
 
                 String group;
-                for (String extension : extensions) {
+                for (HashMap<String, String> extension : costExtensions) {
                     try {
-                        driver.get(Constants.OHRA_LINK + extension);
+                        driver.get(Constants.OHRA_LINK + extension.get("extension"));
 
                         rows = driver.findElements(By.tagName("tr"));
 
@@ -353,6 +356,13 @@ public class JournalService {
                             }
 
                             Journal journal = new Journal();
+
+                            for(CostCenter tempCostCenter: costCenters) {
+                                if(tempCostCenter.costCenter.equals(extension.get("costCenterName"))){
+                                    journal.setCostCenter(tempCostCenter);
+                                    break;
+                                }
+                            }
                             float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
 
                             journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
@@ -433,8 +443,8 @@ public class JournalService {
                     costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
                     costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
 
-                    costData.put("fromCostCenter", costCenter.costCenter);
-                    costData.put("fromAccountCode", costCenter.accountCode);
+                    costData.put("fromCostCenter", batch.getCostCenter().costCenter);
+                    costData.put("fromAccountCode", batch.getCostCenter().accountCode);
 
                     costData.put("toCostCenter", costCenter.costCenter);
                     costData.put("toAccountCode", costCenter.accountCode);

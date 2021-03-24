@@ -6,5 +6,4 @@ import java.util.ArrayList;
 public class WastageConfiguration implements Serializable {
     public ArrayList<WasteGroup> wasteGroups = new ArrayList<>();
     public String wasteReport = "";
-
 }

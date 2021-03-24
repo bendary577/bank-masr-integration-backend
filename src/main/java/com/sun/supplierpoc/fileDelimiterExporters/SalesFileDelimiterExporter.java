@@ -77,8 +77,10 @@ public class SalesFileDelimiterExporter {
             * */
             if(syncJobType.getName().equals(Constants.SALES))
                 this.extractSalesSyncJobData();
-            else
+            else if(syncJobType.getName().equals(Constants.APPROVED_INVOICES))
                 this.extractInvoicesSyncJobData();
+            else
+                this.extractWastageSyncJobData();
 
             file = createNDFFile();
             System.out.println(file.getName());
@@ -239,6 +241,21 @@ public class SalesFileDelimiterExporter {
         }
     }
 
+    private void extractWastageSyncJobData(){
+        SyncJobDataCSV syncJobDataCSV;
+
+        for (SyncJobData syncJobData : listSyncJobData) {
+
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+            if(syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
+            if(syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+        }
+    }
+
     private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker){
 
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
@@ -270,10 +287,17 @@ public class SalesFileDelimiterExporter {
 
         if(CDMaker.equals("D")){
             syncJobDataCSV.DCMarker = "D";
-            String totalDr = syncJobData.getData().get("net").toString();
+
+            if(syncJobType.getName().equals(Constants.APPROVED_INVOICE)) {
+                String totalDr = syncJobData.getData().get("net").toString();
+            }
+
+            String totalDr = syncJobData.getData().get("totalDr").toString();
+
             if (totalDr.substring(0, 1).equals("-")){
                 totalDr = totalDr.substring(1);
             }
+
             String[] amountArray = totalDr.split("\\.");
 
             String amountPart = amountArray[0];
@@ -297,11 +321,13 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.amount = amountPart + decimalPart;
 
             String accountCode = "";
-            if(syncJobType.getConfiguration().accountCodePer.equals("OverGroups")){
+
+            if(syncJobType.getConfiguration().accountCodePer.equals("OverGroups") && syncJobType.getName().equals(Constants.SALES)){
             accountCode = syncJobData.getData().get("expensesAccount").toString();
-            }
-            else{
-            accountCode = syncJobData.getData().get("toLocation").toString();
+            } else if (syncJobType.getName().equals(Constants.CONSUMPTION)){
+                accountCode = syncJobData.getData().get("inventoryAccount").toString();
+            } else {
+                accountCode = syncJobData.getData().get("toLocation").toString();
             }
 
             if(accountCode.length() < 10){
@@ -309,6 +335,7 @@ public class SalesFileDelimiterExporter {
             }
             syncJobDataCSV.accountCode = accountCode;
         }
+
         else if(CDMaker.equals("DV")){
             syncJobDataCSV.DCMarker = "D";
             String totalDr = syncJobData.getData().get("vat").toString();
@@ -323,11 +350,9 @@ public class SalesFileDelimiterExporter {
                 amountPart = "0";
             if (decimalPart.equals(""))
                 decimalPart = "0";
-
             if(amountPart.length() < 15){
                 amountPart = String.format("%0"+ 15 + "d", Integer.parseInt(amountPart));
             }
-
             if(decimalPart.length() > 3){
                 decimalPart = decimalPart.substring(0, 3);
             }else if (decimalPart.length() < 3){
@@ -347,6 +372,7 @@ public class SalesFileDelimiterExporter {
         }
         else {
             syncJobDataCSV.DCMarker = "C";
+
             // 18 char --> 15 char + 3 decimals
             String totalCr = syncJobData.getData().get("totalCr").toString();
             if (totalCr.substring(0, 1).equals("-")){
@@ -373,7 +399,15 @@ public class SalesFileDelimiterExporter {
 
             syncJobDataCSV.amount = amountPart + decimalPart;
 
+
             String accountCode = syncJobData.getData().get("inventoryAccount").toString();
+
+            if(syncJobType.getName().equals(Constants.WASTAGE)){
+                accountCode = syncJobData.getData().get("fromLocation").toString();
+            }else if (syncJobType.getName().equals(Constants.CONSUMPTION)){
+                accountCode = syncJobData.getData().get("fromAccountCode").toString();
+            }
+
             if(accountCode.length() < 10){
                 accountCode = String.format("%-10s", accountCode);
             }
@@ -417,8 +451,18 @@ public class SalesFileDelimiterExporter {
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")){
 
             if(!syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && !syncJobType.getName().equals("Approved Invoices")) {
+
                 analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
-            }else {
+
+            }else if(syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && syncJobType.getName().equals(Constants.WASTAGE)) {
+                if(("analysisCodeT" + index).equals("analysisCodeT1") && CDMaker.equals("D")) {
+                    analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+                }
+            }else if(syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && syncJobType.getName().equals(Constants.CONSUMPTION)) {
+                if(("analysisCodeT" + index).equals("analysisCodeT1") && CDMaker.equals("D")) {
+                    analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+                }
+            } else {
                 if(CDMaker.equals("D") || CDMaker.equals("DV")){
                     if(!("analysisCodeT" + index).equals("analysisCodeT9") &&
                             !("analysisCodeT" + index).equals("analysisCodeT10") ){

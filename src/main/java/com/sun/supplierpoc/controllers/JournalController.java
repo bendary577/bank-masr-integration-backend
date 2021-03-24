@@ -67,7 +67,7 @@ public class JournalController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = syncApprovedInvoicesInDayRange(user.getId(), account);
+            response = getJournals(user.getId(), account);
             if(response.get("success").equals(false)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -158,7 +158,7 @@ public class JournalController {
             if (consumptionBasedOnType.equals("Cost Center")){
                 data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
             }else {
-                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, account);
+                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, costCenters, account);
             }
 
             if (data.isStatus()) {
@@ -338,7 +338,7 @@ public class JournalController {
             }
 
             String message = "Sync sales successfully.";
-            response.put("Success", "true");
+            response.put("success", "true");
             response.put("message", message);
         }
         else{

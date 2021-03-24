@@ -7,6 +7,7 @@ import java.util.HashMap;
 
 public class JournalBatch {
     private CostCenter costCenter = new CostCenter();
+    private CostCenter location = new CostCenter();
     private double salesDifferent = 0.0;
     private SalesStatistics salesStatistics = new SalesStatistics();
 
@@ -186,5 +187,13 @@ public class JournalBatch {
 
     public void setConsumptionData(ArrayList<SyncJobData> consumptionData) {
         this.consumptionData = consumptionData;
+    }
+
+    public CostCenter getLocation() {
+        return location;
+    }
+
+    public void setLocation(CostCenter location) {
+        this.location = location;
     }
 }

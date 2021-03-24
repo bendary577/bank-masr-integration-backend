@@ -50,7 +50,7 @@ public class BookingService {
 
         try{
             String fileName = "New Booking Details.xlsx";
-            String filePath = "src/main/resources/";
+            String filePath = "Saudi/";
             File file = new File(filePath + fileName);
 
             FileInputStream input = new FileInputStream(file);

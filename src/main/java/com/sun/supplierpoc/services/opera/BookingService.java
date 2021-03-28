@@ -85,4 +85,60 @@ public class BookingService {
 
         return response;
     }
+
+    public Response fetchCancelBookingFromReport(String userId, Account account){
+        String message = "";
+        Response response = new Response();
+
+        SyncJob syncJob;
+        try{
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+
+            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
+                    userId, account.getId(), syncJobType.getId(), 0);
+            syncJobRepo.save(syncJob);
+        } catch (Exception e) {
+            message = "Failed to establish a connection with the database.";
+            response.setMessage(message);
+            response.setStatus(false);
+            return response;
+        }
+
+        try{
+            String fileName = "Cancel Booking Details.xlsx";
+            String filePath = "Saudi/";
+            File file = new File(filePath + fileName);
+
+            FileInputStream input = new FileInputStream(file);
+            MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
+
+            ExcelHelper excelHelper = new ExcelHelper();
+
+            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob, multipartFile.getInputStream());
+
+            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJob.setRowsFetched(syncJobData.size());
+            syncJobRepo.save(syncJob);
+
+            syncJobDataRepo.saveAll(syncJobData);
+
+            message = "Sync cancel booking successfully.";
+            response.setStatus(true);
+            response.setMessage(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            syncJob.setStatus(Constants.FAILED);
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJobRepo.save(syncJob);
+
+            message = "Failed to sync cancel booking.";
+            response.setMessage(message);
+            response.setStatus(false);
+        }
+
+        return response;
+    }
 }

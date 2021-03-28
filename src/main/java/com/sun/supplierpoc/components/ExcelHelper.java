@@ -238,4 +238,86 @@ public class ExcelHelper {
         }
         return syncJobDataList;
     }
+
+    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, InputStream is) {
+        List<SyncJobData> syncJobDataList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+        try {
+            XSSFWorkbook workbook = new XSSFWorkbook(is);
+
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rows = sheet.iterator();
+
+            int rowNumber = 0;
+            Row currentRow;
+            Iterator<Cell> cellsInRow;
+            BookingDetails bookingDetails;
+
+            while (rows.hasNext()) {
+                currentRow = rows.next();
+
+                // skip header
+                if (rowNumber == 0) {
+                    rowNumber += 2;
+                    rows.next();
+                    continue;
+                }
+
+                cellsInRow = currentRow.iterator();
+                bookingDetails = new BookingDetails();
+
+                int cellIdx = 0;
+                while (cellsInRow.hasNext()) {
+                    Cell currentCell = cellsInRow.next();
+
+                    switch (cellIdx) {
+                        case 0:
+                            bookingDetails.bookingNo = String.valueOf((int)(currentCell.getNumericCellValue()));
+                            break;
+
+                        default:
+                            break;
+                    }
+                    cellIdx++;
+                }
+
+                // Static Value
+                bookingDetails.transactionID = "";
+                bookingDetails.transactionTypeId = "1";
+                bookingDetails.cuFlag = "1";
+                bookingDetails.customerType = "1";
+
+                // Fetch from database
+                bookingDetails.dailyRoomRate = "1000";
+                bookingDetails.vat = "10";
+                bookingDetails.municipalityTax = "5";
+                bookingDetails.discount = "5";
+                bookingDetails.purposeOfVisit = "1";
+
+                HashMap<String, Object> data = new HashMap<>();
+                Field[] allFields = bookingDetails.getClass().getDeclaredFields();
+                for (Field field : allFields) {
+                    field.setAccessible(true);
+                    Object value = field.get(bookingDetails);
+                    if(value != null && !value.equals("null")){
+                        data.put(field.getName(), value);
+                    }else{
+                        data.put(field.getName(), "");
+                    }
+                }
+
+                SyncJobData syncJobData = new SyncJobData(data, "success", "",  new Date(), syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }
+            workbook.close();
+
+            return syncJobDataList;
+        } catch (IOException e) {
+            throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return syncJobDataList;
+    }
 }

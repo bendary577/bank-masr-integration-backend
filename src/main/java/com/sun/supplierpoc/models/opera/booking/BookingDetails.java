@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models.opera;
+package com.sun.supplierpoc.models.opera.booking;
 
 public class BookingDetails {
     public String transactionID = "";

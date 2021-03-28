@@ -3,7 +3,7 @@ package com.sun.supplierpoc.components;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.opera.BookingDetails;
+import com.sun.supplierpoc.models.opera.booking.BookingDetails;
 import com.sun.supplierpoc.models.opera.Reservation;
 import java.io.IOException;
 import java.io.InputStream;

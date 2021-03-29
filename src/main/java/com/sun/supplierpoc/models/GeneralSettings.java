@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.opera.booking.PaymentType;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
@@ -21,6 +22,7 @@ public class GeneralSettings {
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private ArrayList<Supplier> suppliers = new ArrayList<>();
+    private ArrayList<PaymentType> paymentTypes = new ArrayList<>();
 
     private Date creationDate;
     private boolean deleted;
@@ -144,5 +146,13 @@ public class GeneralSettings {
 
     public void setSuppliers(ArrayList<Supplier> suppliers) {
         this.suppliers = suppliers;
+    }
+
+    public ArrayList<PaymentType> getPaymentTypes() {
+        return paymentTypes;
+    }
+
+    public void setPaymentTypes(ArrayList<PaymentType> paymentTypes) {
+        this.paymentTypes = paymentTypes;
     }
 }

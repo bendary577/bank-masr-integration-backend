@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models.opera.booking;
 
 public class PaymentType {
+    public boolean checked = false;
     public String typeId = "";
     public String paymentMethod = "";
     public String paymentDescription = "";

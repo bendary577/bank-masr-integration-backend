@@ -41,7 +41,7 @@ public class Configuration implements Serializable {
     // Account per (overGroup/CostCenters)
     public String accountCodePer = "";
 
-    // SYnc per (overGroup/itemGroup)
+    // Sync per (overGroup/itemGroup)
     public String syncPerGroup = "";
 
     public SchedulerConfiguration schedulerConfiguration = new SchedulerConfiguration();
@@ -54,4 +54,5 @@ public class Configuration implements Serializable {
     public ConsumptionConfiguration consumptionConfiguration = new ConsumptionConfiguration();
     public TransferConfiguration transferConfiguration;
     public MenuItemConfiguration menuItemConfiguration = new MenuItemConfiguration();
+    public BookingConfiguration bookingConfiguration = new BookingConfiguration();
 }

@@ -131,6 +131,7 @@ public class BookingService {
             e.printStackTrace();
 
             syncJob.setStatus(Constants.FAILED);
+            syncJob.setReason(e.getMessage());
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
             syncJobRepo.save(syncJob);
 

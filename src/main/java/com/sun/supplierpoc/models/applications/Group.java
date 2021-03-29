@@ -1,20 +1,33 @@
 package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
+
 import java.io.Serializable;
 import java.util.Date;
 
 public class Group implements Serializable {
     @Id
     private String id;
+    private String parentGroupId;
     private String name;
     private String description;
     private float discountRate;
-
+    private String logoUrl;
+    private String accountID;
     private Date creationDate;
     private Date lastUpdate;
     private boolean deleted;
 
+    public Group(String name, String description, float discountRate, String logoUrl, String accountID, Date creationDate, Date lastUpdate, boolean deleted) {
+        this.name = name;
+        this.description = description;
+        this.discountRate = discountRate;
+        this.logoUrl = logoUrl;
+        this.accountID = accountID;
+        this.creationDate = creationDate;
+        this.lastUpdate = lastUpdate;
+        this.deleted = deleted;
+    }
 
     public String getId() {
         return id;
@@ -24,12 +37,28 @@ public class Group implements Serializable {
         this.id = id;
     }
 
+    public String getAccountID() {
+        return accountID;
+    }
+
+    public void setAccountID(String accountID) {
+        this.accountID = accountID;
+    }
+
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
     }
 
     public String getDescription() {
@@ -70,5 +99,13 @@ public class Group implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getParentGroupId() {
+        return parentGroupId;
+    }
+
+    public void setParentGroupId(String parentGroupId) {
+        this.parentGroupId = parentGroupId;
     }
 }

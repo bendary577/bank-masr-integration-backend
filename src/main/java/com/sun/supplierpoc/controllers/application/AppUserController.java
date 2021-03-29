@@ -1,8 +1,7 @@
 package com.sun.supplierpoc.controllers.application;
+import com.google.zxing.WriterException;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.applications.Company;
-import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -15,11 +14,12 @@ import org.springframework.mail.MailException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
-
+import java.util.Random;
 
 @RestController
 
@@ -45,8 +45,8 @@ public class AppUserController {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            ArrayList<ApplicationUser> companies = userRepo.findAll();
-            return  ResponseEntity.status(HttpStatus.OK).body(companies);
+            ArrayList<ApplicationUser> applicationUsers = userRepo.findAll();
+            return  ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
@@ -69,7 +69,21 @@ public class AppUserController {
                 applicationUser.setLastUpdate(new Date());
             }
 
+            Random random = new Random();
+            String code = applicationUser.getName() +random.nextInt();
+            String path = "./src/main/resources/"+ code +".png" ;
+
+            applicationUser.setCode(code);
+
             userRepo.save(applicationUser);
+
+            try {
+                qrCodeGenerator.generateQRCodeImage(code,200, 200, path );
+                emailService.sendMimeMail(path, LOGO_IMAGE_PATH, applicationUser);
+            } catch (WriterException | IOException e) {
+                e.printStackTrace();
+            }
+
             return ResponseEntity.status(HttpStatus.OK).body(applicationUser);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -77,9 +91,9 @@ public class AppUserController {
 
 
     @GetMapping(path = "/Simphony/sendQRCodeEmail")
-    public void sendQRCodeEmail(){
+    public void sendQRCodeEmail(ApplicationUser user){
         try {
-            emailService.sendMimeMail(QR_CODE_IMAGE_PATH, LOGO_IMAGE_PATH);
+            emailService.sendMimeMail(QR_CODE_IMAGE_PATH, LOGO_IMAGE_PATH,user);
         } catch (MailException e) {
             e.printStackTrace();
         }

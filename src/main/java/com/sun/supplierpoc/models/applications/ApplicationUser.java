@@ -8,22 +8,12 @@ public class ApplicationUser implements Serializable {
     @Id
     private String id;
     private String name;
-
+    private String email;
     private Group group;
-    private Company company;
-
     private Date creationDate;
+    private String code;
     private Date lastUpdate;
     private boolean deleted;
-
-    public ApplicationUser(String name, Group group, Company company, Date creationDate, Date lastUpdate, boolean deleted) {
-        this.name = name;
-        this.group = group;
-        this.company = company;
-        this.creationDate = creationDate;
-        this.lastUpdate = lastUpdate;
-        this.deleted = deleted;
-    }
 
     public String getId() {
         return id;
@@ -39,14 +29,6 @@ public class ApplicationUser implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
     }
 
     public Group getGroup() {
@@ -79,5 +61,21 @@ public class ApplicationUser implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 }

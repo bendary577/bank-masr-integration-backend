@@ -1,4 +1,5 @@
 package com.sun.supplierpoc.services;
+import com.sun.supplierpoc.models.applications.ApplicationUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
@@ -34,14 +35,14 @@ public class SendEmailService {
         mailSender.send(mailMessage);
     }
 
-    public void sendMimeMail(String qrCodePath, String logoPath) throws MailException {
+    public void sendMimeMail(String qrCodePath, String logoPath, ApplicationUser user) throws MailException {
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
 
             messageHelper.setSentDate(new Date());
-            messageHelper.setTo("lyoussef@entrepreware.com");
+            messageHelper.setTo(user.getEmail());
 
             //https://togo.ovio.eu/assets/media/uploads/ovio-logo.png
             String mailSubject = "We crafted some offers JUST FOR YOU!";
@@ -54,7 +55,7 @@ public class SendEmailService {
                     "<br>\n" +
                     "<img style=\"width:100%\"" +
                     "   src='https://vistapointe.net/images/gift-1.jpg'>" +
-                    "<h3 style='text-align:center'>Hello Ali,</h3>" +
+                    "<h3 style='text-align:center'>Hello"+ user.getName() +",</h3>" +
                     "<p style='text-align:center'>" +
                     "   Welcome to ACT loyalty program." +
                     "   <br>" +
@@ -64,7 +65,7 @@ public class SendEmailService {
                     "<p style=\"text-align: center;font-weight: bold;\"> Show this code to our staff</p>" +
                     "<img src='cid:image001' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
                     "<p style='text-align:center'>Look forward to seeing you at out store</p>" +
-
+                    "<p style='text-align:center'>"+ user.getCode() +"</p>" +
                     "<br>" +
                     "<br>" +
                     "<div style=\"display: table;margin-left: auto; margin-right: auto;\">" +

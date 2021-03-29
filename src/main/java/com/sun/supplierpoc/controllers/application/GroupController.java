@@ -1,11 +1,9 @@
 package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.applications.Company;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.applications.CompanyRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,23 +17,25 @@ import java.util.Date;
 import java.util.Optional;
 
 @RestController
-public class AppGroupController {
+
+public class GroupController {
+
     @Autowired
     AccountRepo accountRepo;
     @Autowired
-    CompanyRepo companyRepo;
+    GroupRepo groupRepo;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getApplicationGroups(@RequestParam(name = "companyId") String companyId, Principal principal){
+    public ResponseEntity getApplicationCompanies(Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Company company = companyRepo.findFirstById(companyId);
-            ArrayList<Group> companies = company.getGroups();
-            return  ResponseEntity.status(HttpStatus.OK).body(companies);
+            Account account = accountOptional.get();
+            ArrayList<Group> groups = groupRepo.findAllByAccountID(account.getId());
+            return  ResponseEntity.status(HttpStatus.OK).body(groups);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
@@ -43,25 +43,24 @@ public class AppGroupController {
     @RequestMapping("/addApplicationGroup")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationGroup(@RequestParam(name = "addFlag") boolean addFlag,
-                                              @RequestParam(name = "company") String companyId,
-                                              @RequestBody Group group,
-                                              Principal principal){
+    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag,
+            @RequestBody Group group, Principal principal){
+
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            Company company = companyRepo.findFirstById(companyId);
+            Account account = accountOptional.get();
+
             if(addFlag){
+                group.setAccountID(account.getId());
                 group.setCreationDate(new Date());
                 group.setLastUpdate(new Date());
                 group.setDeleted(false);
-
-                company.getGroups().add(group);
-            } else {
+            }else {
                 group.setLastUpdate(new Date());
             }
-            companyRepo.save(company);
 
+            groupRepo.save(group);
             return ResponseEntity.status(HttpStatus.OK).body(group);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -70,13 +69,13 @@ public class AppGroupController {
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationGroups(@RequestBody ArrayList<Group> groups, Principal principal){
+    public ResponseEntity deleteApplicationCompanies(@RequestBody ArrayList<Group> groups, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             for (Group group : groups) {
                 group.setDeleted(true);
-//                groupRepo.save(group);
+                groupRepo.save(group);
             }
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }

@@ -6,6 +6,8 @@ public class PaymentType {
     public String paymentMethod = "";
     public String paymentDescription = "";
 
+    public PaymentType() {}
+
     public String getTypeId() {
         return typeId;
     }

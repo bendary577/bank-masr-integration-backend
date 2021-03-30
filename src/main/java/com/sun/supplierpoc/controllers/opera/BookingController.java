@@ -1,9 +1,13 @@
 package com.sun.supplierpoc.controllers.opera;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.opera.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +26,9 @@ import java.util.Optional;
 public class BookingController {
     @Autowired
     private AccountRepo accountRepo;
+
+    @Autowired
+    private SyncJobTypeRepo syncJobTypeRepo;
 
     @Autowired
     private BookingService bookingService;
@@ -76,8 +83,11 @@ public class BookingController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
+            SyncJobType cancelBookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            BookingConfiguration bookingConfiguration = cancelBookingSyncType.getConfiguration().bookingConfiguration;
+
             try {
-                response = bookingService.fetchCancelBookingFromReport(user.getId(), account);
+                response = bookingService.fetchCancelBookingFromReport(user.getId(), account, bookingConfiguration);
 
                 if(response.isStatus()){
                     return ResponseEntity.status(HttpStatus.OK).body(response);

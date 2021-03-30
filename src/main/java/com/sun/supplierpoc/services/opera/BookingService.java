@@ -3,6 +3,8 @@ package com.sun.supplierpoc.services.opera;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.components.ExcelHelper;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.BookingConfiguration;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -28,6 +30,9 @@ public class BookingService {
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
 
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response fetchNewBookingFromReport(String userId, Account account){
@@ -36,6 +41,8 @@ public class BookingService {
 
         SyncJob syncJob;
         try{
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
@@ -86,12 +93,14 @@ public class BookingService {
         return response;
     }
 
-    public Response fetchCancelBookingFromReport(String userId, Account account){
+    public Response fetchCancelBookingFromReport(String userId, Account account, BookingConfiguration bookingConfiguration){
         String message = "";
         Response response = new Response();
 
         SyncJob syncJob;
+        GeneralSettings generalSettings;
         try{
+            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
@@ -105,9 +114,9 @@ public class BookingService {
         }
 
         try{
-            String fileName = "Cancel Booking Details.xlsx";
-            String filePath = "Saudi/";
-            File file = new File(filePath + fileName);
+            String filePath = bookingConfiguration.filePath;
+            String municipalityTax = bookingConfiguration.municipalityTax;
+            File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
             MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
@@ -115,7 +124,8 @@ public class BookingService {
 
             ExcelHelper excelHelper = new ExcelHelper();
 
-            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob, multipartFile.getInputStream());
+            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob, municipalityTax,
+                    generalSettings.getPaymentTypes(), multipartFile.getInputStream());
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

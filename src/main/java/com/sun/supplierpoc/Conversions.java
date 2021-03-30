@@ -2,6 +2,7 @@ package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.opera.booking.PaymentType;
 import com.sun.supplierpoc.soapModels.Supplier;
 
 import java.nio.charset.StandardCharsets;
@@ -269,6 +270,15 @@ public class Conversions {
             }
         }
         return null;
+    }
+
+    public PaymentType checkPaymentTypeExistence(ArrayList<PaymentType> paymentTypes, String paymentTypeName){
+        for (PaymentType paymentType : paymentTypes) {
+            if (paymentType.getPaymentMethod().toLowerCase().equals(paymentTypeName.toLowerCase())) {
+                return paymentType;
+            }
+        }
+        return new PaymentType();
     }
 
     public String filterString(String value){

@@ -8,7 +8,7 @@ import java.util.Date;
 public class Group implements Serializable {
     @Id
     private String id;
-    private String parentGroupId;
+    private Group parentGroup;
     private String name;
     private String description;
     private float discountRate;
@@ -101,11 +101,11 @@ public class Group implements Serializable {
         this.deleted = deleted;
     }
 
-    public String getParentGroupId() {
-        return parentGroupId;
+    public Group getParentGroup() {
+        return parentGroup;
     }
 
-    public void setParentGroupId(String parentGroupId) {
-        this.parentGroupId = parentGroupId;
+    public void setParentGroup(Group parentGroup) {
+        this.parentGroup = parentGroup;
     }
 }

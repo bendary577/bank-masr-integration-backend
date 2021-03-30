@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -69,7 +70,7 @@ public class GroupController {
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationCompanies(@RequestBody ArrayList<Group> groups, Principal principal){
+    public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {

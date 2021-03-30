@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models.configurations;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class ConsumptionConfiguration implements Serializable {
     /*
@@ -8,4 +9,6 @@ public class ConsumptionConfiguration implements Serializable {
      * get consumption based of (Location/Cost Center)
      * */
     public String consumptionBasedOnType = "";
+    public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
+
 }

@@ -90,6 +90,25 @@ public class Journal {
 
     }
 
+    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
+                                             String group ,float waste, float cost, float variance, float transfer,
+                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
+
+        for (Journal journal : journals) {
+            if (journal.majorGroup.getMajorGroup().equals(group)) {
+                // Add new value
+                journal.totalWaste += waste;
+                journal.totalCost += cost;
+                journal.totalVariance += variance;
+                journal.totalTransfer += transfer;
+                return journals;
+            }
+        }
+
+        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter, revenueCenter, departmentCode));
+        return journals;
+
+    }
     public ArrayList<Journal> checkFGExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
                                                float cost, CostCenter costCenter, RevenueCenter revenueCenter,
                                                String departmentCode) {

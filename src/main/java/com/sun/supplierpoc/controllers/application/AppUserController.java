@@ -23,7 +23,7 @@ import java.util.Random;
 
 @RestController
 
-public class AppUserController {
+public class    AppUserController {
     @Autowired
     ApplicationUserRepo userRepo;
     @Autowired

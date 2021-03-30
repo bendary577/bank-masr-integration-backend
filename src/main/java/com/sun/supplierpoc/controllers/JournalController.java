@@ -8,9 +8,7 @@ import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.ItemGroup;
-import com.sun.supplierpoc.models.configurations.OverGroup;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -91,10 +89,14 @@ public class JournalController {
         ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
         ArrayList<CostCenter> costCentersLocation = generalSettings.getLocations();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
+        ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
         String timePeriod = journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
         String toDate =fromDate;
+
+        ConsumptionConfiguration configuration = journalSyncJobType.getConfiguration().consumptionConfiguration;
+        ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
 
         String consumptionBasedOnType = journalSyncJobType.getConfiguration().consumptionConfiguration.consumptionBasedOnType;
 
@@ -155,13 +157,16 @@ public class JournalController {
 
         try {
             Response data;
+
             if (consumptionBasedOnType.equals("Cost Center")){
                 data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
-            }else {
+            }else if(consumptionBasedOnType.equals("Location")){
                 data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, costCenters, account);
+            }else {
+                data = journalService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation, itemGroups, majorGroups, revenueCenters, account);
             }
 
-            if (data.isStatus()) {
+                if (data.isStatus()) {
                 ArrayList<JournalBatch> journalBatches =  data.getJournalBatches();
                 ArrayList<JournalBatch> addedJournalBatches;
 
@@ -397,4 +402,30 @@ public class JournalController {
         }
     }
 
+    @RequestMapping("/addConsumptionMajorGroup")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addMajorGroup(@RequestBody ArrayList<MajorGroup> majorGroups,
+                                                  @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                  Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().consumptionConfiguration.majorGroups = majorGroups;
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update consumption major groups successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update consumption major groups.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

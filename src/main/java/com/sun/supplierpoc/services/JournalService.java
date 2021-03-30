@@ -1,27 +1,24 @@
 package com.sun.supplierpoc.services;
 
 
-        import com.sun.supplierpoc.Constants;
-        import com.sun.supplierpoc.Conversions;
-        import com.sun.supplierpoc.controllers.InvoiceController;
-        import com.sun.supplierpoc.models.*;
-        import com.sun.supplierpoc.models.configurations.CostCenter;
-        import com.sun.supplierpoc.models.configurations.ItemGroup;
-        import com.sun.supplierpoc.models.configurations.OverGroup;
-        import com.sun.supplierpoc.models.configurations.RevenueCenter;
-        import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-        import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-        import org.openqa.selenium.*;
-        import org.openqa.selenium.support.ui.ExpectedConditions;
-        import org.openqa.selenium.support.ui.WebDriverWait;
-        import org.springframework.beans.factory.annotation.Autowired;
-        import org.springframework.stereotype.Service;
+import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.controllers.InvoiceController;
+import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-        import java.text.ParseException;
-        import java.text.SimpleDateFormat;
-        import java.util.Date;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-        import java.util.*;
+import java.util.*;
 
 @Service
 public class JournalService {
@@ -32,8 +29,8 @@ public class JournalService {
     @Autowired
     private SyncJobDataService syncJobDataService;
 
-    private Conversions conversions = new Conversions();
-    private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private final Conversions conversions = new Conversions();
+    private final SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,14 +38,13 @@ public class JournalService {
      * Get consumptions entries based on cost center
      * */
     public Response getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
-                                               ArrayList<ItemGroup> itemGroups, Account account){
+                                               ArrayList<ItemGroup> itemGroups, Account account) {
         Response response = new Response();
 
         WebDriver driver;
-        try{
+        try {
             driver = setupEnvironment.setupSeleniumEnv(false);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             response.setStatus(false);
             response.setMessage("Failed to establish connection with firefox driver.");
             return response;
@@ -58,12 +54,12 @@ public class JournalService {
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
-        String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
+        String businessDate = journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
                 driver.quit();
 
                 response.setStatus(false);
@@ -74,8 +70,7 @@ public class JournalService {
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 5);
                 wait.until(ExpectedConditions.alertIsPresent());
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 System.out.println("Waiting");
             }
 
@@ -85,16 +80,15 @@ public class JournalService {
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 60);
                 wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
-            }
-            catch (Exception ex){
+            } catch (Exception ex) {
                 System.out.println(ex.getMessage());
             }
 
             Response dateResponse = new Response();
-            if (setupEnvironment.runReport(businessDate, fromDate, toDate, new CostCenter(), new RevenueCenter(), driver, dateResponse)){
+            if (setupEnvironment.runReport(businessDate, fromDate, toDate, new CostCenter(), new RevenueCenter(), driver, dateResponse)) {
                 driver.quit();
 
-                if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                     response.setStatus(false);
                     response.setMessage(dateResponse.getMessage());
                     return response;
@@ -110,7 +104,7 @@ public class JournalService {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            if (rows.size() < 4){
+            if (rows.size() < 4) {
                 driver.quit();
 
                 response.setStatus(true);
@@ -156,7 +150,7 @@ public class JournalService {
 
                 rows = driver.findElements(By.tagName("tr"));
 
-                if (rows.size() <= 3){
+                if (rows.size() <= 3) {
                     continue;
                 }
 
@@ -180,7 +174,7 @@ public class JournalService {
                         continue;
                     }
 
-                    if(journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
+                    if (journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
                         group = itemGroup.getOverGroup();
                     else
                         group = itemGroup.getItemGroup();
@@ -191,7 +185,7 @@ public class JournalService {
 
                     Journal journal = new Journal();
                     float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
-                    journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
+                    journals = journal.checkExistence(journals, group, 0, cost, 0, 0);
                 }
 
                 journalBatch.setCostCenter((CostCenter) costCenter.get("cost_center"));
@@ -219,16 +213,16 @@ public class JournalService {
     /*
      * Get consumptions entries based on location
      * */
+
     public Response getJournalData(SyncJobType journalSyncJobType,
                                    ArrayList<CostCenter> costCentersLocation,
-                                   ArrayList<ItemGroup> itemGroups,List<CostCenter> costCenters, Account account){
+                                   ArrayList<ItemGroup> itemGroups, List<CostCenter> costCenters, Account account) {
         Response response = new Response();
 
         WebDriver driver;
-        try{
+        try {
             driver = setupEnvironment.setupSeleniumEnv(false);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             response.setStatus(false);
             response.setMessage("Failed to establish connection with firefox driver.");
             return response;
@@ -238,12 +232,12 @@ public class JournalService {
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
-        String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
+        String businessDate = journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)){
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
                 driver.quit();
                 response.setStatus(false);
                 response.setMessage("Invalid username and password.");
@@ -252,8 +246,8 @@ public class JournalService {
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 5);
                 wait.until(ExpectedConditions.alertIsPresent());
+            } catch (Exception ignored) {
             }
-            catch (Exception ignored) { }
 
             for (CostCenter costCenter : costCentersLocation) {
                 journalBatch = new JournalBatch();
@@ -262,21 +256,20 @@ public class JournalService {
                 if (!costCenter.checked)
                     continue;
 
-                if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)){
+                if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)) {
                     driver.get(Constants.CONSUMPTION_REPORT_LINK);
 
                     try {
                         WebDriverWait wait = new WebDriverWait(driver, 60);
                         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
-                    }
-                    catch (Exception ex){
+                    } catch (Exception ex) {
                         System.out.println(ex.getMessage());
                     }
                 }
 
                 Response dateResponse = new Response();
-                if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)){
-                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+                if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, new RevenueCenter(), driver, dateResponse)) {
+                    if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                         driver.quit();
 
                         response.setStatus(false);
@@ -296,7 +289,7 @@ public class JournalService {
 
                 ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
 
-                ArrayList<HashMap<String, String>> costExtensions  = new ArrayList<>();
+                ArrayList<HashMap<String, String>> costExtensions = new ArrayList<>();
 
                 for (int i = 6; i < rows.size(); i++) {
 
@@ -311,7 +304,7 @@ public class JournalService {
                     int index = extension.indexOf('\'');
                     extension = extension.substring(0, index);
                     HashMap<String, String> map = new HashMap<>();
-                    map.put("extension" , extension);
+                    map.put("extension", extension);
                     map.put("costCenterName", costCenterName);
                     costExtensions.add(map);
                 }
@@ -346,7 +339,7 @@ public class JournalService {
                                 continue;
                             }
 
-                            if(journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
+                            if (journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
                                 group = itemGroup.getOverGroup();
                             else
                                 group = itemGroup.getItemGroup();
@@ -357,15 +350,15 @@ public class JournalService {
 
                             Journal journal = new Journal();
 
-                            for(CostCenter tempCostCenter: costCenters) {
-                                if(tempCostCenter.costCenter.equals(extension.get("costCenterName"))){
+                            for (CostCenter tempCostCenter : costCenters) {
+                                if (tempCostCenter.costCenter.equals(extension.get("costCenterName"))) {
                                     journal.setCostCenter(tempCostCenter);
                                     break;
                                 }
                             }
                             float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
 
-                            journals = journal.checkExistence(journals, group, 0,cost, 0, 0);
+                            journals = journal.checkExistence(journals, group, 0, cost, 0, 0);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -392,9 +385,196 @@ public class JournalService {
         }
     }
 
+
+    public Response getJournalDataByRevenueCenter(SyncJobType journalSyncJobType,
+                                                  ArrayList<CostCenter> costCentersLocation,
+                                                  ArrayList<ItemGroup> itemGroups, ArrayList<MajorGroup> majorGroups, List<RevenueCenter> revenueCenters, Account account) throws CloneNotSupportedException {
+        Response response = new Response();
+        WebDriver driver;
+        try {
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        } catch (Exception ex) {
+            response.setStatus(false);
+            response.setMessage("Failed to establish connection with firefox driver.");
+            return response;
+        }
+
+        ArrayList<Journal> journals;
+        JournalBatch journalBatch;
+        ArrayList<JournalBatch> journalBatches = new ArrayList<>();
+
+        String businessDate = journalSyncJobType.getConfiguration().timePeriod;
+        String fromDate = journalSyncJobType.getConfiguration().fromDate;
+        String toDate = journalSyncJobType.getConfiguration().toDate;
+
+        try {
+            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
+                driver.quit();
+                response.setStatus(false);
+                response.setMessage("Invalid username and password.");
+                return response;
+            }
+
+            try {
+                WebDriverWait wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            } catch (Exception ignored) {
+            }
+
+            for (CostCenter costCenter : costCentersLocation) {
+                journalBatch = new JournalBatch();
+                journals = new ArrayList<>();
+
+                if (!costCenter.checked)
+                    continue;
+
+                if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
+                    driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+
+                    try {
+                        WebDriverWait wait = new WebDriverWait(driver, 60);
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                    }
+                }
+
+                for (RevenueCenter revenueCenter : revenueCenters) {
+
+                    Response dateResponse = new Response();
+
+                    if (!revenueCenter.isChecked())
+                        continue;
+
+                    if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, revenueCenter, driver, dateResponse)) {
+                        if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
+                            driver.quit();
+
+                            response.setStatus(false);
+                            response.setMessage(dateResponse.getMessage());
+                            return response;
+                        } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                            continue;
+                        }
+                    }
+
+                    driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
+
+                    List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+                    if (rows.size() < 5)
+                        continue;
+
+                    ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+
+                    MajorGroup majorGroup;
+                    RevenueCenter MGRevenueCenter;
+                    String majorGroupName = "";
+
+                    for (int i = 1; i < rows.size(); i++) {
+
+                        WebElement row = rows.get(i);
+                        List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                        if (cols.size() != columns.size())
+                            continue;
+
+                        WebElement col;
+
+                        col = cols.get(columns.indexOf("item_group"));
+
+                        if (col.getAttribute("class").equals("header_1") || col.getAttribute("class").equals("header_2")) {
+                            majorGroupName = col.getText().strip().toLowerCase();
+                            majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+
+                            if (!majorGroup.getChecked()) {
+                                continue;
+                            }
+
+                            if (!revenueCenter.getRevenueCenter().equals("")) {
+
+                                MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+
+                                int j = i+1;
+                                boolean flag = true;
+                                row = rows.get(j);
+                                cols = row.findElements(By.tagName("td"));
+
+                                while (cols.get(columns.indexOf("item_group")).getAttribute("class").equals("normal")){
+
+                                    if(flag){
+                                        j--;
+                                        row = rows.get(j);
+                                        cols = row.findElements(By.tagName("td"));
+                                    }
+
+                                    HashMap<String, Object> transferDetails = new HashMap<>();
+                                    List<WebElement> newCols = row.findElements(By.tagName("td"));
+
+                                    if (cols.size() != columns.size()) {
+                                        continue;
+                                    }
+
+                                    String group;
+
+                                    if (!flag) {
+
+                                    WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
+                                    FamilyGroup familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                                            , familyGroupName.getText().strip());
+
+                                    group = familyGroup.familyGroup;
+                                    }else {
+                                        group = majorGroup.getMajorGroup() + "cost - " + revenueCenter.getRevenueCenter();
+                                    }
+
+                                    for (int y = 0; y < cols.size(); y++) {
+                                        transferDetails.put(columns.get(y), cols.get(y).getText().strip());
+                                    }
+
+                                    Journal journal = new Journal();
+
+                                    float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
+
+                                    journals = journal.checkExistence(journals, majorGroup,  group, 0, cost, 0, 0,
+                                            costCenter, revenueCenter, "");
+
+                                    j++;
+                                    flag = false;
+                                    row = rows.get(j);
+                                    cols = row.findElements(By.tagName("td"));
+                                }
+                            }
+                        }
+                    }
+                    driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+                }
+
+                journalBatch.setLocation(costCenter);
+                journalBatch.setConsumption(journals);
+                journalBatches.add(journalBatch);
+
+            }
+
+            driver.quit();
+
+            response.setStatus(true);
+            response.setJournalBatches(journalBatches);
+            return response;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+            response.setStatus(false);
+            response.setMessage("Failed to get consumption entries from Oracle Hospitality.");
+            return response;
+        }
+    }
+
+
     public ArrayList<JournalBatch> saveJournalData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
                                                    String businessDate, String fromDate, ArrayList<OverGroup> overGroups,
-                                                   ArrayList<ItemGroup> itemGroups){
+                                                   ArrayList<ItemGroup> itemGroups) {
         ArrayList<SyncJobData> addedJournals;
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
         ArrayList<Journal> journals;
@@ -406,38 +586,38 @@ public class JournalService {
             costCenter = batch.getCostCenter();
 
             for (Journal journal : journals) {
-                if (costCenter.costCenterReference.equals("")){
+                if (costCenter.costCenterReference.equals("")) {
                     costCenter.costCenterReference = costCenter.costCenter;
                 }
 
                 // check zero entries (not needed)
-                if (journal.getTotalCost() != 0){
+                if (journal.getTotalCost() != 0) {
                     HashMap<String, Object> costData = new HashMap<>();
 
-                    if(!syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
+                    if (!syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")) {
                         ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
 
                         costData.put("inventoryAccount", itemGroup.getInventoryAccount());
                         costData.put("expensesAccount", itemGroup.getExpensesAccount());
-                    }else {
+                    } else {
                         OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
 
                         if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
-                                && !oldOverGroupData.getExpensesAccount().equals("")){
+                                && !oldOverGroupData.getExpensesAccount().equals("")) {
                             costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                             costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-                        }else
+                        } else
                             continue;
                     }
 
-                    if(costCenter.location != null && !costCenter.location.locationName.equals("")){
+                    if (costCenter.location != null && !costCenter.location.locationName.equals("")) {
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
-                    }else {
+                    } else {
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
                     }
 
                     String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
-                    costData.put("accountingPeriod", transactionDate.substring(2,6));
+                    costData.put("accountingPeriod", transactionDate.substring(2, 6));
                     costData.put("transactionDate", transactionDate);
 
                     costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
@@ -453,13 +633,13 @@ public class JournalService {
                     costData.put("toLocation", costCenter.accountCode);
 
                     String description = journal.getOverGroup();
-                    if (description.length() > 50){
+                    if (description.length() > 50) {
                         description = description.substring(0, 50);
                     }
 
                     costData.put("description", description);
 
-                    if(costCenter.costCenterReference.equals(""))
+                    if (costCenter.costCenterReference.equals(""))
                         costData.put("transactionReference", "Consumption");
                     else
                         costData.put("transactionReference", costCenter.costCenterReference);
@@ -474,7 +654,7 @@ public class JournalService {
                 }
             }
 
-            if(addedJournals.size() >0){
+            if (addedJournals.size() > 0) {
                 batch.setConsumptionData(addedJournals);
                 addedJournalBatches.add(batch);
             }

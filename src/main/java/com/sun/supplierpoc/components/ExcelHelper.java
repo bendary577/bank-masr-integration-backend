@@ -259,6 +259,8 @@ public class ExcelHelper {
 
             float paymentAmount;
             String paymentTypeName;
+            Date arrivalDate = null;
+            Date departureDate = null;
             PaymentType paymentType;
 
             ArrayList<String> columnsName = new ArrayList<>();
@@ -273,7 +275,7 @@ public class ExcelHelper {
                         Cell currentCell = cellsInRow.next();
                         columnsName.add(currentCell.getStringCellValue());
                     }
-                    rowNumber ++;
+                    rowNumber++;
                     continue;
                 }
 
@@ -288,19 +290,10 @@ public class ExcelHelper {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Cancellation Reason")) {
                         bookingDetails.cancelReason = (currentCell.getStringCellValue());
-                    } else if (cellIdx == columnsName.indexOf("Payment Amount")) {
-                        paymentAmount = (float) (currentCell.getNumericCellValue());
-
-                        if(paymentAmount > 0)
-                            bookingDetails.cancelWithCharges = "1";
-                        else{
-                            bookingDetails.cancelWithCharges = "0";
-                        }
-
                     } else if (cellIdx == columnsName.indexOf("Number of Nights")) {
                         bookingDetails.chargeableDays = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Full Rate Amount")) {
-                        bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float)(currentCell.getNumericCellValue())));
+                        bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float) (currentCell.getNumericCellValue())));
                     } else if (cellIdx == columnsName.indexOf("Discount Amount")) {
                         bookingDetails.discount = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Payment Method")) {
@@ -308,8 +301,21 @@ public class ExcelHelper {
                         paymentType = conversions.checkPaymentTypeExistence(getPaymentTypes, paymentTypeName);
 
                         bookingDetails.paymentType = paymentType.typeId;
+                    } else if (cellIdx == columnsName.indexOf("Payment Amount")) {
+                        paymentAmount = (float) (currentCell.getNumericCellValue());
+
+                        if (paymentAmount > 0)
+                            bookingDetails.cancelWithCharges = "1";
+                        else {
+                            bookingDetails.cancelWithCharges = "0";
+                        }
+
                     } else if (cellIdx == columnsName.indexOf("Total")) {
                         bookingDetails.grandTotal = String.valueOf(conversions.roundUpFloat((float) (currentCell.getNumericCellValue())));
+                    } else if (cellIdx == columnsName.indexOf("Arrival Date")) {
+                        arrivalDate = currentCell.getDateCellValue();
+                    } else if (cellIdx == columnsName.indexOf("Departure Date")) {
+                        departureDate = currentCell.getDateCellValue();
                     }
 
                     cellIdx++;
@@ -321,13 +327,17 @@ public class ExcelHelper {
                 bookingDetails.transactionId = "";
 
                 bookingDetails.municipalityTax = municipalityTax;
-                if(bookingDetails.discount.equals(""))
+                if (bookingDetails.discount.equals(""))
                     bookingDetails.discount = "0";
 
-                if(Float.parseFloat(bookingDetails.chargeableDays) != 0){
+                if(arrivalDate != null && departureDate != null){
+                    bookingDetails.roomRentType = bookingDetails.checkRoomRentType(arrivalDate, departureDate);
+                }
+
+                if (Float.parseFloat(bookingDetails.chargeableDays) != 0) {
                     float dailyRate = Float.parseFloat(bookingDetails.totalRoomRate) / Float.parseFloat(bookingDetails.chargeableDays);
                     bookingDetails.dailyRoomRate = String.valueOf(conversions.roundUpFloat(dailyRate));
-                }else {
+                } else {
                     bookingDetails.dailyRoomRate = bookingDetails.totalRoomRate;
                 }
 

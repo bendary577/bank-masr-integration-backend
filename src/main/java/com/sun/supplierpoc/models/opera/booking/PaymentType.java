@@ -3,7 +3,7 @@ package com.sun.supplierpoc.models.opera.booking;
 public class PaymentType {
     public boolean checked = false;
     public String typeId = "";
-    public String paymentMethod = "";
+    public String paymentType = "";
     public String paymentDescription = "";
 
     public PaymentType() {}
@@ -16,12 +16,12 @@ public class PaymentType {
         this.typeId = typeId;
     }
 
-    public String getPaymentMethod() {
-        return paymentMethod;
+    public String getPaymentType() {
+        return paymentType;
     }
 
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
+    public void setPaymentType(String paymentType) {
+        this.paymentType = paymentType;
     }
 
     public String getPaymentDescription() {

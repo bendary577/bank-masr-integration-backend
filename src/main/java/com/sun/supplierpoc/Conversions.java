@@ -274,7 +274,7 @@ public class Conversions {
 
     public PaymentType checkPaymentTypeExistence(ArrayList<PaymentType> paymentTypes, String paymentTypeName){
         for (PaymentType paymentType : paymentTypes) {
-            if (paymentType.getPaymentMethod().toLowerCase().equals(paymentTypeName.toLowerCase())) {
+            if (paymentType.getPaymentType().toLowerCase().equals(paymentTypeName.toLowerCase())) {
                 return paymentType;
             }
         }

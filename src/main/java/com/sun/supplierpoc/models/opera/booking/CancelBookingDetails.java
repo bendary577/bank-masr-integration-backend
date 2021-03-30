@@ -1,5 +1,8 @@
 package com.sun.supplierpoc.models.opera.booking;
 
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 public class CancelBookingDetails {
     public String transactionId = "";
     public String bookingNo = "";
@@ -17,14 +20,17 @@ public class CancelBookingDetails {
     public String paymentType = "";
     public String cuFlag = "";
 
-    public String checkRoomRentType(){
-        /*
-        * 1 Daily
-        * 2 Hourly
-        * 3 Weekly
-        * 4 Monthly
-        * */
+    public String checkRoomRentType(Date arrivalDate, Date departureDate){
+        long diff = departureDate.getTime() - arrivalDate.getTime();
+        long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+        System.out.println ("Days: " + numberOfDays);
 
-        return "";
+        if(numberOfDays % 7 == 0){
+            return "3"; //Weekly
+        }else if(numberOfDays % 30 == 0){
+            return "4"; // Monthly
+        }
+
+        return "1"; //Daily
     }
 }

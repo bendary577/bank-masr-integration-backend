@@ -30,7 +30,7 @@ public class SyncJobDataService {
     }
 
     public ArrayList<SyncJobData> getSyncJobDataByBookingNo(String bookingNo){
-        return (ArrayList<SyncJobData>) syncJobDataRepo.findByData(bookingNo);
+        return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNo(bookingNo);
     }
 
     public void prepareAnalysis(HashMap<String, Object> data, Configuration configuration,

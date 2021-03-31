@@ -54,6 +54,18 @@ public class Journal {
         this.departmentCode = departmentCode;
     }
 
+    private Journal(String overGroup,MajorGroup majorGroup, FamilyGroup familyGroup, float totalCost, CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
+        this.majorGroup = majorGroup;
+        this.overGroup = overGroup;
+        this.familyGroup = familyGroup;
+        this.totalCost = totalCost;
+        this.costCenter = costCenter;
+        this.revenueCenter = revenueCenter;
+        this.departmentCode = departmentCode;
+    }
+
+
+
     private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
                     CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
         this.majorGroup = majorGroup;
@@ -90,22 +102,19 @@ public class Journal {
 
     }
 
-    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
-                                             String group ,float waste, float cost, float variance, float transfer,
-                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
+    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
+                                             String group , float cost,  CostCenter costCenter, RevenueCenter revenueCenter,
+                                             String departmentCode) {
 
         for (Journal journal : journals) {
             if (journal.majorGroup.getMajorGroup().equals(group)) {
                 // Add new value
-                journal.totalWaste += waste;
                 journal.totalCost += cost;
-                journal.totalVariance += variance;
-                journal.totalTransfer += transfer;
                 return journals;
             }
         }
 
-        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter, revenueCenter, departmentCode));
+        journals.add(new Journal(group, majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
         return journals;
 
     }
@@ -119,6 +128,7 @@ public class Journal {
                 return journals;
             }
         }
+
 
         journals.add(new Journal(majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
         return journals;

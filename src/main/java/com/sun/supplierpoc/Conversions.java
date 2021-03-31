@@ -62,6 +62,7 @@ public class Conversions {
                 mj.setChildren(majorGroup.getChildren());
                 mj.setAccount(majorGroup.getAccount());
                 mj.setDiscountAccount(majorGroup.getDiscountAccount());
+                mj.setCostCenters(majorGroup.getCostCenters());
                 return mj;
             }
         }

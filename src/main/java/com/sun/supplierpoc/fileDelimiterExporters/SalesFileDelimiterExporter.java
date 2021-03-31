@@ -79,6 +79,8 @@ public class SalesFileDelimiterExporter {
                 this.extractSalesSyncJobData();
             else if(syncJobType.getName().equals(Constants.APPROVED_INVOICES))
                 this.extractInvoicesSyncJobData();
+            else if(syncJobType.getName().equals(Constants.CONSUMPTION))
+                this.extractConsumptionSyncJobData();
             else
                 this.extractWastageSyncJobData();
 
@@ -256,7 +258,35 @@ public class SalesFileDelimiterExporter {
         }
     }
 
-    private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker){
+    private void extractConsumptionSyncJobData() {
+        SyncJobDataCSV syncJobDataCSV;
+
+        for (SyncJobData syncJobData : listSyncJobData) {
+
+            SyncJobData tempSyncJobData = new SyncJobData();
+
+            if(syncJobData.getData().get("overGroup").equals("Food") || syncJobData.getData().get("overGroup").equals("Bar")){
+
+                if(tempSyncJobData != null){
+
+                    syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "C");
+                    if (syncJobDataCSV != null)
+                        this.syncJobDataCSVList.add(syncJobDataCSV);
+
+                    tempSyncJobData = syncJobData;
+
+                }else{
+                    tempSyncJobData = syncJobData;
+                }
+            }else {
+                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+                if (syncJobDataCSV != null)
+                    this.syncJobDataCSVList.add(syncJobDataCSV);
+            }
+        }
+    }
+
+        private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker){
 
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
         syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation").toString();
@@ -306,18 +336,15 @@ public class SalesFileDelimiterExporter {
                 amountPart = "0";
             if (decimalPart.equals(""))
                 decimalPart = "0";
-
             if(amountPart.length() < 15){
                 amountPart = String.format("%0"+ 15 + "d", Integer.parseInt(amountPart));
             }
-
             if(decimalPart.length() > 3){
                 decimalPart = decimalPart.substring(0, 3);
             }else if (decimalPart.length() < 3){
                 decimalPart = decimalPart +
                         String.format("%0"+ (3 - decimalPart.length()) +"d", 0);
             }
-
             syncJobDataCSV.amount = amountPart + decimalPart;
 
             String accountCode = "";

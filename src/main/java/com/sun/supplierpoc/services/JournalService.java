@@ -399,7 +399,7 @@ public class JournalService {
             return response;
         }
 
-        ArrayList<Journal> journals;
+        ArrayList<Journal> journals  = new ArrayList<>();
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
@@ -414,18 +414,16 @@ public class JournalService {
                 response.setMessage("Invalid username and password.");
                 return response;
             }
-
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 5);
                 wait.until(ExpectedConditions.alertIsPresent());
             } catch (Exception ignored) {
             }
 
-            for (CostCenter costCenter : costCentersLocation) {
-                journalBatch = new JournalBatch();
-                journals = new ArrayList<>();
+            for (CostCenter location : costCentersLocation) {
 
-                if (!costCenter.checked)
+                journalBatch = new JournalBatch();
+                if (!location.checked)
                     continue;
 
                 if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
@@ -440,16 +438,15 @@ public class JournalService {
                 }
 
                 for (RevenueCenter revenueCenter : revenueCenters) {
-
+                    journals = new ArrayList<>();
                     Response dateResponse = new Response();
 
-                    if (!revenueCenter.isChecked())
+                    if (!revenueCenter.isChecked() || revenueCenter.getRevenueCenter().equals("Dine In") )
                         continue;
 
-                    if (setupEnvironment.runReport(businessDate, fromDate, toDate, costCenter, revenueCenter, driver, dateResponse)) {
+                    if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
                         if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                             driver.quit();
-
                             response.setStatus(false);
                             response.setMessage(dateResponse.getMessage());
                             return response;
@@ -515,17 +512,21 @@ public class JournalService {
                                         continue;
                                     }
 
-                                    String group;
+                                    FamilyGroup familyGroup = new FamilyGroup();
+                                    String group = "";
 
                                     if (!flag) {
 
-                                    WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
-                                    FamilyGroup familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
-                                            , familyGroupName.getText().strip());
+                                        WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
+                                        familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                                                , familyGroupName.getText().strip());
 
-                                    group = familyGroup.familyGroup;
-                                    }else {
-                                        group = majorGroup.getMajorGroup() + "cost - " + revenueCenter.getRevenueCenter();
+                                        if (newCols.get(columns.indexOf("item_group")).getText().equals("Highest Cost Menu Items")) {
+                                            break;
+                                        }
+                                        group = familyGroup.familyGroup;
+                                    }else{
+                                        group = majorGroup.getMajorGroup();
                                     }
 
                                     for (int y = 0; y < cols.size(); y++) {
@@ -536,8 +537,24 @@ public class JournalService {
 
                                     float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
 
-                                    journals = journal.checkExistence(journals, majorGroup,  group, 0, cost, 0, 0,
-                                            costCenter, revenueCenter, "");
+                                    if(cost == 0 || cost == -00) {
+                                        j++;
+                                        flag = false;
+                                        row = rows.get(j);
+                                        cols = row.findElements(By.tagName("td"));
+                                        continue;
+                                    }
+
+                                    CostCenter costCenter = new CostCenter();
+                                    List<CostCenter> costCenters = majorGroup.getCostCenters();
+                                    for(CostCenter costCenter1 : costCenters) {
+                                        if (location.locationName.equals(costCenter1.locationName)) {
+                                            costCenter = costCenter1;
+                                        }
+                                    }
+
+                                    journals = journal.checkExistence(journals, majorGroup, familyGroup, group, cost,
+                                            costCenter, MGRevenueCenter, "");
 
                                     j++;
                                     flag = false;
@@ -550,10 +567,9 @@ public class JournalService {
                     driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
                 }
 
-                journalBatch.setLocation(costCenter);
+                journalBatch.setLocation(location);
                 journalBatch.setConsumption(journals);
                 journalBatches.add(journalBatch);
-
             }
 
             driver.quit();
@@ -571,7 +587,6 @@ public class JournalService {
         }
     }
 
-
     public ArrayList<JournalBatch> saveJournalData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
                                                    String businessDate, String fromDate, ArrayList<OverGroup> overGroups,
                                                    ArrayList<ItemGroup> itemGroups) {
@@ -583,37 +598,50 @@ public class JournalService {
         for (JournalBatch batch : journalBatches) {
             addedJournals = new ArrayList<>();
             journals = batch.getConsumption();
-            costCenter = batch.getCostCenter();
 
             for (Journal journal : journals) {
+                costCenter = journal.getCostCenter();
+                FamilyGroup familyGroup = journal.getFamilyGroup();
+                RevenueCenter revenueCenter = journal.getRevenueCenter();
+
                 if (costCenter.costCenterReference.equals("")) {
-                    costCenter.costCenterReference = costCenter.costCenter;
+                    costCenter.costCenterReference = journal.getCostCenter().costCenter;
                 }
 
                 // check zero entries (not needed)
                 if (journal.getTotalCost() != 0) {
                     HashMap<String, Object> costData = new HashMap<>();
 
-                    if (!syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")) {
-                        ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
+//                    if (!syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")) {
+//                        ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
+//
+//                        costData.put("inventoryAccount", itemGroup.getInventoryAccount());
+//                        costData.put("expensesAccount", itemGroup.getExpensesAccount());
+//                    } else {
+//                        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+//
+//                        if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
+//                                && !oldOverGroupData.getExpensesAccount().equals("")) {
+//                            costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+//                            costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+//                        } else
+//                            continue;
+//                    }
 
-                        costData.put("inventoryAccount", itemGroup.getInventoryAccount());
-                        costData.put("expensesAccount", itemGroup.getExpensesAccount());
-                    } else {
-                        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
 
-                        if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
-                                && !oldOverGroupData.getExpensesAccount().equals("")) {
-                            costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                            costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-                        } else
-                            continue;
+                    costData.put("inventoryAccount", costCenter.accountCode);
+                    costData.put("expensesAccount", costCenter.costCenter);
+
+                    if(!familyGroup.familyGroup.equals(""))
+                    {
+                        costData.put("inventoryAccount", revenueCenter.getAccountCode());
+                        costData.put("expensesAccount", revenueCenter.getAccountCode());
                     }
 
                     if (costCenter.location != null && !costCenter.location.locationName.equals("")) {
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter.location, null, null);
+                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), journal.getCostCenter(), null, null);
                     } else {
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);
+                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), batch.getLocation(), familyGroup, null);
                     }
 
                     String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
@@ -628,11 +656,14 @@ public class JournalService {
 
                     costData.put("toCostCenter", costCenter.costCenter);
                     costData.put("toAccountCode", costCenter.accountCode);
+                    if(!familyGroup.familyGroup.equals(""))
+                    costData.put("toAccountCode", revenueCenter.getAccountCode());
 
                     costData.put("fromLocation", costCenter.accountCode);
                     costData.put("toLocation", costCenter.accountCode);
 
                     String description = journal.getOverGroup();
+
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
                     }

@@ -16,7 +16,7 @@ public class MajorGroup {
     private ArrayList<String> children = new ArrayList<>();
     private ArrayList<FamilyGroup> familyGroups = new ArrayList<>();
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
-
+    private ArrayList<CostCenter> costCenters = new ArrayList<>();
 
     public MajorGroup() {
         this.checked = false;
@@ -101,5 +101,13 @@ public class MajorGroup {
 
     public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
         this.revenueCenters = revenueCenters;
+    }
+
+    public ArrayList<CostCenter> getCostCenters() {
+        return costCenters;
+    }
+
+    public void setCostCenters(ArrayList<CostCenter> costCenters) {
+        this.costCenters = costCenters;
     }
 }

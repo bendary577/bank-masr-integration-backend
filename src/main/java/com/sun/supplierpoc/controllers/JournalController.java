@@ -163,7 +163,8 @@ public class JournalController {
             }else if(consumptionBasedOnType.equals("Location")){
                 data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, costCenters, account);
             }else {
-                data = journalService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation, itemGroups, majorGroups, revenueCenters, account);
+                data = journalService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation,
+                        itemGroups, majorGroups, revenueCenters, account);
             }
 
                 if (data.isStatus()) {
@@ -180,6 +181,7 @@ public class JournalController {
                             for (JournalBatch batch : journalBatches) {
                                 invoiceController.handleSendJournal(journalSyncJobType, syncJob, batch.getConsumptionData(), account, voucher);
                             }
+
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
                             syncJob.setRowsFetched(journalBatches.size());
@@ -195,7 +197,7 @@ public class JournalController {
                             syncJob.setRowsFetched(journalBatches.size());
                             syncJobRepo.save(syncJob);
 
-                            response.put("message", "Failed to connect to Sun System.");
+                            response.put("message", "Failed  to connect to Sun System.");
                             response.put("success", false);
                         }
                     }

@@ -51,6 +51,7 @@ public class SyncJobDataService {
             index = configuration.familyGroupAnalysisCode;
             data.put("analysisCodeT" + index, familyGroup.departmentCode);
         }
+
     }
 
     public void prepareAnalysisForInvoices(HashMap<String, Object> data, Configuration configuration,

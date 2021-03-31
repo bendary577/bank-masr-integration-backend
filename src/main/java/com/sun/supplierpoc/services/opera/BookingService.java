@@ -33,6 +33,9 @@ public class BookingService {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
 
+    @Autowired
+    ExcelHelper excelHelper;
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response fetchNewBookingFromReport(String userId, Account account){
@@ -63,8 +66,6 @@ public class BookingService {
             FileInputStream input = new FileInputStream(file);
             MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
-
-            ExcelHelper excelHelper = new ExcelHelper();
 
             List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, multipartFile.getInputStream());
 
@@ -121,8 +122,6 @@ public class BookingService {
             FileInputStream input = new FileInputStream(file);
             MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
-
-            ExcelHelper excelHelper = new ExcelHelper();
 
             List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob, municipalityTax,
                     generalSettings.getPaymentTypes(), generalSettings.getCancelReasons(),

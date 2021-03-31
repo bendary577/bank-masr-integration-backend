@@ -15,12 +15,18 @@ import java.util.*;
 import com.sun.supplierpoc.models.opera.booking.CancelBookingDetails;
 import com.sun.supplierpoc.models.opera.booking.CancelReason;
 import com.sun.supplierpoc.models.opera.booking.PaymentType;
+import com.sun.supplierpoc.services.SyncJobDataService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ExcelHelper {
+    @Autowired
+    SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
 
@@ -330,10 +336,19 @@ public class ExcelHelper {
                     cellIdx++;
                 }
 
-                bookingDetails.vat = "10";
+                // check if it was new booking or update
+                ArrayList<SyncJobData> list = syncJobDataService.getSyncJobDataByBookingNo(bookingDetails.bookingNo);
+                if(list.size() > 0){
+                    // Update
+                    bookingDetails.cuFlag = "2";
+                    bookingDetails.transactionId = (String) list.get(0).getData().get("transactionId");
+                }else {
+                    // New
+                    bookingDetails.cuFlag = "1";
+                    bookingDetails.transactionId = "";
+                }
 
-                bookingDetails.cuFlag = "1";
-                bookingDetails.transactionId = "";
+                bookingDetails.vat = "10";
 
                 bookingDetails.municipalityTax = municipalityTax;
                 if (bookingDetails.discount.equals(""))

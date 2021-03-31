@@ -312,6 +312,8 @@ public class Conversions {
         return "1"; //Daily
     }
 
+    // ==> END of OPERA Report Functions
+
     public String filterString(String value){
         value = value.toLowerCase().replaceAll(",", "");
         return value;

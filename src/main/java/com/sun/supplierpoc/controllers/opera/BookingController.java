@@ -47,8 +47,12 @@ public class BookingController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
+            SyncJobType newBookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
+
+            BookingConfiguration bookingConfiguration = newBookingSyncType.getConfiguration().bookingConfiguration;
+
             try {
-                response = bookingService.fetchNewBookingFromReport(user.getId(), account);
+                response = bookingService.fetchNewBookingFromReport(user.getId(), account, bookingConfiguration);
 
                 if(response.isStatus()){
                     return ResponseEntity.status(HttpStatus.OK).body(response);

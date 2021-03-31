@@ -38,7 +38,7 @@ public class BookingService {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Response fetchNewBookingFromReport(String userId, Account account){
+    public Response fetchNewBookingFromReport(String userId, Account account, BookingConfiguration bookingConfiguration){
         String message = "";
         Response response = new Response();
 
@@ -59,15 +59,16 @@ public class BookingService {
         }
 
         try{
-            String fileName = "New Booking Details.xlsx";
-            String filePath = "Saudi/";
-            File file = new File(filePath + fileName);
+            String filePath = bookingConfiguration.filePath;
+            String municipalityTax = bookingConfiguration.municipalityTax;
+            File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
             MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
 
-            List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, multipartFile.getInputStream());
+            List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, municipalityTax,
+                    multipartFile.getInputStream());
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

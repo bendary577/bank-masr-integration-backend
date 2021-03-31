@@ -1,7 +1,7 @@
 package com.sun.supplierpoc.models.opera.booking;
 
 public class BookingDetails {
-    public String transactionID = "";
+    public String transactionId = "";
     public String bookingNo = "";
     public String nationalityCode = "";
     public String checkInDate = "";
@@ -22,9 +22,9 @@ public class BookingDetails {
     // fullRateAmount
     public String totalRoomRate = "";
 
-    public String vat = ""; // not in excel file
-    public String municipalityTax = ""; // not in excel file
-    public String discount = ""; // not in excel file
+    public String vat = "";
+    public String municipalityTax = "";
+    public String discount = "";
 
     // totalRoom
     public String grandTotal = "";

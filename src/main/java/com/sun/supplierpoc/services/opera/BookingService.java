@@ -125,7 +125,8 @@ public class BookingService {
             ExcelHelper excelHelper = new ExcelHelper();
 
             List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob, municipalityTax,
-                    generalSettings.getPaymentTypes(), multipartFile.getInputStream());
+                    generalSettings.getPaymentTypes(), generalSettings.getCancelReasons(),
+                    multipartFile.getInputStream());
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

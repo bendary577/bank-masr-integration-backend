@@ -19,18 +19,4 @@ public class CancelBookingDetails {
     public String grandTotal = "";
     public String paymentType = "";
     public String cuFlag = "";
-
-    public String checkRoomRentType(Date arrivalDate, Date departureDate){
-        long diff = departureDate.getTime() - arrivalDate.getTime();
-        long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
-        System.out.println ("Days: " + numberOfDays);
-
-        if(numberOfDays % 7 == 0){
-            return "3"; //Weekly
-        }else if(numberOfDays % 30 == 0){
-            return "4"; // Monthly
-        }
-
-        return "1"; //Daily
-    }
 }

@@ -2,6 +2,7 @@ package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.opera.booking.CancelReason;
 import com.sun.supplierpoc.models.opera.booking.PaymentType;
 import com.sun.supplierpoc.soapModels.Supplier;
 
@@ -9,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.util.*;
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 public class Conversions {
     public Conversions() {
@@ -272,13 +274,42 @@ public class Conversions {
         return null;
     }
 
+
+    // ==> OPERA Report Functions
+
     public PaymentType checkPaymentTypeExistence(ArrayList<PaymentType> paymentTypes, String paymentTypeName){
         for (PaymentType paymentType : paymentTypes) {
             if (paymentType.getPaymentType().toLowerCase().equals(paymentTypeName.toLowerCase())) {
                 return paymentType;
             }
         }
-        return new PaymentType();
+        return new PaymentType("0");
+    }
+
+    public CancelReason checkCancelReasonExistence(ArrayList<CancelReason> cancelReasons, String cancelReasonName){
+        if(cancelReasonName.equals("")){
+            return new CancelReason("0"); // Not applicable
+        }
+        for (CancelReason cancelReason : cancelReasons) {
+            if (cancelReason.getReason().toLowerCase().equals(cancelReasonName.toLowerCase())) {
+                return cancelReason;
+            }
+        }
+        return new CancelReason("0");
+    }
+
+    public String checkRoomRentType(Date arrivalDate, Date departureDate){
+        long diff = departureDate.getTime() - arrivalDate.getTime();
+        long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+        System.out.println ("Days: " + numberOfDays);
+
+        if(numberOfDays % 7 == 0){
+            return "3"; //Weekly
+        }else if(numberOfDays % 30 == 0){
+            return "4"; // Monthly
+        }
+
+        return "1"; //Daily
     }
 
     public String filterString(String value){

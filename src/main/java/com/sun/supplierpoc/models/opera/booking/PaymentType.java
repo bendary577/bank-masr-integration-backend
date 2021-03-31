@@ -1,12 +1,16 @@
 package com.sun.supplierpoc.models.opera.booking;
 
 public class PaymentType {
-    public boolean checked = false;
-    public String typeId = "";
-    public String paymentType = "";
-    public String paymentDescription = "";
+    private boolean checked = false;
+    private String typeId = "";
+    private String paymentType = "";
+    private String paymentDescription = "";
 
     public PaymentType() {}
+
+    public PaymentType(String typeId) {
+        this.typeId = typeId;
+    }
 
     public String getTypeId() {
         return typeId;

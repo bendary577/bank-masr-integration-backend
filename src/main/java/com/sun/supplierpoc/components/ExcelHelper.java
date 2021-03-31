@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.sun.supplierpoc.models.opera.booking.CancelBookingDetails;
+import com.sun.supplierpoc.models.opera.booking.CancelReason;
 import com.sun.supplierpoc.models.opera.booking.PaymentType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -243,7 +244,8 @@ public class ExcelHelper {
     }
 
     public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, String municipalityTax,
-                                                       ArrayList<PaymentType> getPaymentTypes, InputStream is) {
+                                                       ArrayList<PaymentType> paymentTypes,
+                                                       ArrayList<CancelReason> cancelReasons, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
 
         try {
@@ -259,9 +261,13 @@ public class ExcelHelper {
 
             float paymentAmount;
             String paymentTypeName;
+            PaymentType paymentType;
+
+            String cancelReasonName;
+            CancelReason cancelReason;
+
             Date arrivalDate = null;
             Date departureDate = null;
-            PaymentType paymentType;
 
             ArrayList<String> columnsName = new ArrayList<>();
 
@@ -289,7 +295,10 @@ public class ExcelHelper {
                     if (cellIdx == columnsName.indexOf("Booking No")) {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Cancellation Reason")) {
-                        bookingDetails.cancelReason = (currentCell.getStringCellValue());
+                        cancelReasonName = (currentCell.getStringCellValue());
+                        cancelReason = conversions.checkCancelReasonExistence(cancelReasons, cancelReasonName);
+
+                        bookingDetails.cancelReason = cancelReason.getReasonId();
                     } else if (cellIdx == columnsName.indexOf("Number of Nights")) {
                         bookingDetails.chargeableDays = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Full Rate Amount")) {
@@ -298,9 +307,9 @@ public class ExcelHelper {
                         bookingDetails.discount = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Payment Method")) {
                         paymentTypeName = (currentCell.getStringCellValue());
-                        paymentType = conversions.checkPaymentTypeExistence(getPaymentTypes, paymentTypeName);
+                        paymentType = conversions.checkPaymentTypeExistence(paymentTypes, paymentTypeName);
 
-                        bookingDetails.paymentType = paymentType.typeId;
+                        bookingDetails.paymentType = paymentType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Payment Amount")) {
                         paymentAmount = (float) (currentCell.getNumericCellValue());
 
@@ -330,8 +339,8 @@ public class ExcelHelper {
                 if (bookingDetails.discount.equals(""))
                     bookingDetails.discount = "0";
 
-                if(arrivalDate != null && departureDate != null){
-                    bookingDetails.roomRentType = bookingDetails.checkRoomRentType(arrivalDate, departureDate);
+                if (arrivalDate != null && departureDate != null) {
+                    bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);
                 }
 
                 if (Float.parseFloat(bookingDetails.chargeableDays) != 0) {
@@ -340,7 +349,6 @@ public class ExcelHelper {
                 } else {
                     bookingDetails.dailyRoomRate = bookingDetails.totalRoomRate;
                 }
-
 
                 HashMap<String, Object> data = new HashMap<>();
                 Field[] allFields = bookingDetails.getClass().getDeclaredFields();
@@ -367,4 +375,5 @@ public class ExcelHelper {
         }
         return syncJobDataList;
     }
+
 }

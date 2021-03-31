@@ -3,7 +3,7 @@ package com.sun.supplierpoc.components;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
-import com.sun.supplierpoc.models.opera.booking.BookingDetails;
+import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.models.opera.Reservation;
 
 import java.io.IOException;
@@ -12,9 +12,6 @@ import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.sun.supplierpoc.models.opera.booking.CancelBookingDetails;
-import com.sun.supplierpoc.models.opera.booking.CancelReason;
-import com.sun.supplierpoc.models.opera.booking.PaymentType;
 import com.sun.supplierpoc.services.SyncJobDataService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -159,6 +156,7 @@ public class ExcelHelper {
                         columnsName.add(currentCell.getStringCellValue());
                     }
                     rowNumber++;
+                    rows.next();
                     continue;
                 }
 
@@ -262,8 +260,8 @@ public class ExcelHelper {
     }
 
     public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, String municipalityTax,
-                                                       ArrayList<PaymentType> paymentTypes,
-                                                       ArrayList<CancelReason> cancelReasons, InputStream is) {
+                                                       ArrayList<BookingType> paymentTypes,
+                                                       ArrayList<BookingType> cancelReasons, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
 
         try {
@@ -279,10 +277,10 @@ public class ExcelHelper {
 
             float paymentAmount;
             String paymentTypeName;
-            PaymentType paymentType;
+            BookingType paymentType;
 
             String cancelReasonName;
-            CancelReason cancelReason;
+            BookingType cancelReason;
 
             Date arrivalDate = null;
             Date departureDate = null;
@@ -314,9 +312,9 @@ public class ExcelHelper {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Cancellation Reason")) {
                         cancelReasonName = (currentCell.getStringCellValue());
-                        cancelReason = conversions.checkCancelReasonExistence(cancelReasons, cancelReasonName);
+                        cancelReason = conversions.checkBookingTypeExistence(cancelReasons, cancelReasonName);
 
-                        bookingDetails.cancelReason = cancelReason.getReasonId();
+                        bookingDetails.cancelReason = cancelReason.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Number of Nights")) {
                         bookingDetails.chargeableDays = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Full Rate Amount")) {
@@ -325,7 +323,7 @@ public class ExcelHelper {
                         bookingDetails.discount = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Payment Method")) {
                         paymentTypeName = (currentCell.getStringCellValue());
-                        paymentType = conversions.checkPaymentTypeExistence(paymentTypes, paymentTypeName);
+                        paymentType = conversions.checkBookingTypeExistence(paymentTypes, paymentTypeName);
 
                         bookingDetails.paymentType = paymentType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Payment Amount")) {

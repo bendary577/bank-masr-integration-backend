@@ -1,8 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.*;
-import com.sun.supplierpoc.models.opera.booking.CancelReason;
-import com.sun.supplierpoc.models.opera.booking.PaymentType;
+import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
@@ -23,8 +22,15 @@ public class GeneralSettings {
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private ArrayList<Supplier> suppliers = new ArrayList<>();
-    private ArrayList<PaymentType> paymentTypes = new ArrayList<>();
-    private ArrayList<CancelReason> cancelReasons = new ArrayList<>();
+
+    private ArrayList<BookingType> cancelReasons = new ArrayList<>();
+    private ArrayList<BookingType> paymentTypes = new ArrayList<>();
+    private ArrayList<BookingType> roomTypes = new ArrayList<>();
+    private ArrayList<BookingType> nationalities = new ArrayList<>();
+    private ArrayList<BookingType> purposeOfVisit = new ArrayList<>();
+    private ArrayList<BookingType> genders = new ArrayList<>();
+    private ArrayList<BookingType> customerTypes = new ArrayList<>();
+    private ArrayList<BookingType> transactionTypes = new ArrayList<>();
 
     private Date creationDate;
     private boolean deleted;
@@ -150,19 +156,67 @@ public class GeneralSettings {
         this.suppliers = suppliers;
     }
 
-    public ArrayList<PaymentType> getPaymentTypes() {
+    public ArrayList<BookingType> getPaymentTypes() {
         return paymentTypes;
     }
 
-    public void setPaymentTypes(ArrayList<PaymentType> paymentTypes) {
+    public void setPaymentTypes(ArrayList<BookingType> paymentTypes) {
         this.paymentTypes = paymentTypes;
     }
 
-    public ArrayList<CancelReason> getCancelReasons() {
+    public ArrayList<BookingType> getCancelReasons() {
         return cancelReasons;
     }
 
-    public void setCancelReasons(ArrayList<CancelReason> cancelReasons) {
+    public void setCancelReasons(ArrayList<BookingType> cancelReasons) {
         this.cancelReasons = cancelReasons;
+    }
+
+    public ArrayList<BookingType> getRoomTypes() {
+        return roomTypes;
+    }
+
+    public void setRoomTypes(ArrayList<BookingType> roomTypes) {
+        this.roomTypes = roomTypes;
+    }
+
+    public ArrayList<BookingType> getNationalities() {
+        return nationalities;
+    }
+
+    public void setNationalities(ArrayList<BookingType> nationalities) {
+        this.nationalities = nationalities;
+    }
+
+    public ArrayList<BookingType> getPurposeOfVisit() {
+        return purposeOfVisit;
+    }
+
+    public void setPurposeOfVisit(ArrayList<BookingType> purposeOfVisit) {
+        this.purposeOfVisit = purposeOfVisit;
+    }
+
+    public ArrayList<BookingType> getGenders() {
+        return genders;
+    }
+
+    public void setGenders(ArrayList<BookingType> genders) {
+        this.genders = genders;
+    }
+
+    public ArrayList<BookingType> getCustomerTypes() {
+        return customerTypes;
+    }
+
+    public void setCustomerTypes(ArrayList<BookingType> customerTypes) {
+        this.customerTypes = customerTypes;
+    }
+
+    public ArrayList<BookingType> getTransactionTypes() {
+        return transactionTypes;
+    }
+
+    public void setTransactionTypes(ArrayList<BookingType> transactionTypes) {
+        this.transactionTypes = transactionTypes;
     }
 }

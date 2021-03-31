@@ -30,8 +30,6 @@ public class BookedProductionService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
-    private SyncJobDataController syncJobTypeController;
-    @Autowired
     private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
@@ -307,7 +305,7 @@ public class BookedProductionService {
         }
 
         // Get Failed entries
-        ArrayList<SyncJobData>  failedBookedProduction = syncJobTypeController.getFailedSyncJobData(bookedProductionSyncJobType.getId());
+        ArrayList<SyncJobData>  failedBookedProduction = syncJobDataService.getFailedSyncJobData(bookedProductionSyncJobType.getId());
         for (SyncJobData failedSyncJobData : failedBookedProduction ) {
             failedSyncJobData.setStatus(Constants.RETRY_TO_SEND);
             failedSyncJobData.setSyncJobId(syncJob.getId());

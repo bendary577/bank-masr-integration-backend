@@ -1,9 +1,12 @@
 package com.sun.supplierpoc.services;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Journal;
+import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,8 @@ import java.util.List;
 
 @Service
 public class SyncJobDataService {
+    @Autowired
+    private SyncJobRepo syncJobRepo;
 
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
@@ -31,6 +36,27 @@ public class SyncJobDataService {
 
     public ArrayList<SyncJobData> getSyncJobDataByBookingNo(String bookingNo){
         return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNo(bookingNo);
+    }
+
+    public ArrayList<SyncJobData> getSyncJobDataByTypeId(String syncJobTypeId)  {
+        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
+        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
+        for (SyncJob syncJob : syncJobs) {
+            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+            syncJobsData.addAll(syncJobData);
+        }
+        return syncJobsData;
+    }
+
+    public ArrayList<SyncJobData> getFailedSyncJobData(String syncJobTypeId)  {
+        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
+        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
+        for (SyncJob syncJob : syncJobs) {
+            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeletedAndStatus(syncJob.getId(),
+                    false, Constants.FAILED);
+            syncJobsData.addAll(syncJobData);
+        }
+        return syncJobsData;
     }
 
     public void prepareAnalysis(HashMap<String, Object> data, Configuration configuration,

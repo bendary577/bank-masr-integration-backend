@@ -24,8 +24,6 @@ public class InvoiceService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
-    private SyncJobDataController syncJobTypeController;
-    @Autowired
     private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
@@ -870,7 +868,7 @@ public class InvoiceService {
     public ArrayList<SyncJobData> saveInvoicesData(ArrayList<HashMap<String, Object>> invoices, SyncJob syncJob,
                                                    SyncJobType syncJobType, Boolean flag){
         ArrayList<SyncJobData> addedInvoices = new ArrayList<>();
-        ArrayList<SyncJobData> savedInvoices = syncJobTypeController.getSyncJobData(syncJobType.getId());
+        ArrayList<SyncJobData> savedInvoices = syncJobDataService.getSyncJobDataByTypeId(syncJobType.getId());
 
         for (HashMap<String, Object> invoice : invoices) {
 
@@ -889,7 +887,7 @@ public class InvoiceService {
         }
 
         // Get Failed entries
-        ArrayList<SyncJobData>  failedReceipts = syncJobTypeController.getFailedSyncJobData(syncJobType.getId());
+        ArrayList<SyncJobData>  failedReceipts = syncJobDataService.getFailedSyncJobData(syncJobType.getId());
         for (SyncJobData failedSyncJobData : failedReceipts ) {
             failedSyncJobData.setStatus(Constants.RETRY_TO_SEND);
             failedSyncJobData.setSyncJobId(syncJob.getId());

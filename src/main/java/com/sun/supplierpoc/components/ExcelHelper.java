@@ -136,6 +136,7 @@ public class ExcelHelper {
         ArrayList<BookingType> nationalities = generalSettings.getNationalities();
         ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
         ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
+        ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -252,8 +253,13 @@ public class ExcelHelper {
                 }
 
                 // Static Value
-                bookingDetails.transactionTypeId = "1";
-                bookingDetails.customerType = "1";
+                typeName = "Room Types";
+                bookingType = conversions.checkBookingTypeExistence(transactionTypes, typeName);
+                bookingDetails.transactionTypeId = bookingType.getTypeId();
+
+                typeName = "Visitor";
+                bookingType = conversions.checkBookingTypeExistence(customerTypes, typeName);
+                bookingDetails.customerType = bookingType.getTypeId();
 
                 // Fetch from database
                 bookingDetails.dailyRoomRate = "1000";

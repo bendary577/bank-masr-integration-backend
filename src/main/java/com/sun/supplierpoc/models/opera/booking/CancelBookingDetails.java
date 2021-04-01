@@ -1,8 +1,4 @@
 package com.sun.supplierpoc.models.opera.booking;
-
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
 public class CancelBookingDetails {
     public String transactionId = "";
     public String bookingNo = "";

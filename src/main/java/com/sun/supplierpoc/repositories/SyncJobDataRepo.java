@@ -14,6 +14,9 @@ public interface SyncJobDataRepo extends MongoRepository<SyncJobData, String>{
     @Query("{'data.bookingNo' : ?0}")
     List<SyncJobData> findByDataByBookingNo(String bookingNumber);
 
+    @Query("{'data.bookingNo' : ?0}")
+    List<SyncJobData> findByDataByBookingNoAndSyncJobId(String bookingNumber, String syncJobId);
+
     List<SyncJobData> findBySyncJobIdAndDeleted(String syncJobId, boolean deleted);
     List<SyncJobData> findBySyncJobIdAndDeletedAndStatus(String syncJobId, boolean deleted, String status);
     List<SyncJobData> deleteAllBySyncJobId(String syncJobId);

@@ -44,26 +44,31 @@ public class SyncJobDataController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public List<SyncJobData> getSyncJobDataByBookingNo(@RequestParam(name = "bookingNo", required=false) String bookingNo,
+                                                       @RequestParam(name = "bookingStatus", required=false) String bookingStatus,
                                                        Principal principal)  {
+        SyncJobType bookingSyncType;
         List<SyncJobData> syncJobData = new ArrayList<>();
+        List<SyncJobData> data;
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
 
-            if(bookingNo == null || bookingNo.equals("")){
-                // Get all booking entries
-                SyncJobType cancelBookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(
-                        Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            // Get all booking entries
+            if(bookingStatus.equals("cancel"))
+                bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            else
+                bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
 
-                List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(cancelBookingSyncType.getId(), false);
-                for (SyncJob syncJob : syncJobs) {
-                    List<SyncJobData> data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                    syncJobData.addAll(data);
+            List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(bookingSyncType.getId(), false);
+            for (SyncJob syncJob : syncJobs) {
+                if(bookingNo == null || bookingNo.equals("")){
+                    data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                }else {
+                    data = syncJobDataRepo.findByDataByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
                 }
-            }else {
-                syncJobData = syncJobDataRepo.findByDataByBookingNo(bookingNo);
+                syncJobData.addAll(data);
             }
         }
         return syncJobData;

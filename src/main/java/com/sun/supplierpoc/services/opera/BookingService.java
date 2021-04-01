@@ -43,8 +43,9 @@ public class BookingService {
         Response response = new Response();
 
         SyncJob syncJob;
+        GeneralSettings generalSettings;
         try{
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
 
@@ -68,7 +69,7 @@ public class BookingService {
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
 
             List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, municipalityTax,
-                    multipartFile.getInputStream());
+                    generalSettings, multipartFile.getInputStream());
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.components;
 
 import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.opera.booking.*;
@@ -124,10 +125,17 @@ public class ExcelHelper {
         }
     }
 
-    public List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, String municipalityTax,
+    public List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, String municipalityTax, GeneralSettings generalSettings,
                                                     InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> roomTypes = generalSettings.getRoomTypes();
+        ArrayList<BookingType> genders = generalSettings.getGenders();
+        ArrayList<BookingType> nationalities = generalSettings.getNationalities();
+        ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
+        ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -139,6 +147,9 @@ public class ExcelHelper {
             Row currentRow;
             Iterator<Cell> cellsInRow;
             BookingDetails bookingDetails;
+
+            String typeName;
+            BookingType bookingType;
 
             Date arrivalDate = null;
             Date departureDate = null;
@@ -156,7 +167,6 @@ public class ExcelHelper {
                         columnsName.add(currentCell.getStringCellValue());
                     }
                     rowNumber++;
-                    rows.next();
                     continue;
                 }
 
@@ -170,7 +180,10 @@ public class ExcelHelper {
                     if (cellIdx == columnsName.indexOf("Booking No")) {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Nationality Code")) {
-                        bookingDetails.nationalityCode = currentCell.getStringCellValue();
+                        typeName = currentCell.getStringCellValue();
+                        bookingType = conversions.checkBookingTypeExistence(nationalities, typeName);
+
+                        bookingDetails.nationalityCode = bookingType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Arrival Date")) {
                         arrivalDate = currentCell.getDateCellValue();
                         bookingDetails.checkInDate = (dateFormat.format(arrivalDate));
@@ -182,23 +195,35 @@ public class ExcelHelper {
                     } else if (cellIdx == columnsName.indexOf("Room No.")) {
                         bookingDetails.allotedRoomNo = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Room Type")) {
-                        bookingDetails.roomType = currentCell.getStringCellValue();
+                        typeName = (currentCell.getStringCellValue());
+                        bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
+
+                        bookingDetails.roomType = bookingType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Full Rate Amount")) {
                         bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Total Room")) {
                         bookingDetails.grandTotal = String.valueOf((conversions.roundUpFloat((float) currentCell.getNumericCellValue())));
                     } else if (cellIdx == columnsName.indexOf("Gender")) {
-                        bookingDetails.gender = currentCell.getStringCellValue();
+                        typeName = currentCell.getStringCellValue();
+                        bookingType = conversions.checkBookingTypeExistence(genders, typeName);
+
+                        bookingDetails.gender = bookingType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Adults")) {
                         bookingDetails.noOfGuest = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Date of Birth")) {
                         bookingDetails.dateOfBirth = String.valueOf(currentCell.getDateCellValue());
                     } else if (cellIdx == columnsName.indexOf("Payment Method")) {
-                        bookingDetails.paymentType = currentCell.getStringCellValue();
+                        typeName = (currentCell.getStringCellValue());
+                        bookingType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
+
+                        bookingDetails.paymentType = bookingType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("No. of Rooms")) {
                         bookingDetails.noOfRooms = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Purpose of Stay")) {
-                        bookingDetails.purposeOfVisit = currentCell.getStringCellValue();
+                        typeName = (currentCell.getStringCellValue());
+                        bookingType = conversions.checkBookingTypeExistence(purposeOfVisit, typeName);
+
+                        bookingDetails.purposeOfVisit = bookingType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Room Tax")) {
                         bookingDetails.vat = String.valueOf((float) (currentCell.getNumericCellValue()));
                     }

@@ -66,7 +66,7 @@ public class SyncJobDataController {
                 if(bookingNo == null || bookingNo.equals("")){
                     data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
                 }else {
-                    data = syncJobDataRepo.findByDataByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
+                    data = syncJobDataRepo.findByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
                 }
                 syncJobData.addAll(data);
             }

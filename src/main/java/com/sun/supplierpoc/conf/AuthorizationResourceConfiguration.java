@@ -30,7 +30,7 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/addAccount").authenticated()
                 .antMatchers("/opera/**").authenticated()
                 .antMatchers("/**").authenticated()
-//                .antMatchers("/reservation/**").authenticated()
+                .antMatchers("/activity/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }
 

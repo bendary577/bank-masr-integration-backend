@@ -1,13 +1,18 @@
 package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.io.Serializable;
 import java.util.Date;
 
+@Document
 public class ApplicationUser implements Serializable {
+
     @Id
     private String id;
     private String name;
+    private int top;
     private String email;
     private Group group;
     private Date creationDate;
@@ -77,5 +82,13 @@ public class ApplicationUser implements Serializable {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public int getTop() {
+        return top;
+    }
+
+    public void setTop(int top) {
+        this.top = top;
     }
 }

@@ -8,9 +8,12 @@ public class Constants {
     public static String RETRY_TO_SEND = "Retry to Send";
 
     public static String INVALID_LOCATION = "Invalid location";
+    public static String INVALID_USER = "Invalid user.";
+
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
     public static String EMPTY_REVENUE_CENTER = "Revenue Centers parameter is empty. Please make a selection.";
+    public static  String WRONG_REVENUE_CENTER = "wrong revenue center, please configure this RC";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
     public static String EMPTY_BUSINESS_DATE = "Business Dates parameter is empty. Please make a selection.";
     public static String WRONG_BUSINESS_DATE = "Wrong Business Dates Chosen.";
@@ -42,6 +45,9 @@ public class Constants {
     public static String WEEKLY = "Weekly";
     public static String MONTHLY = "Monthly";
     public static String DAILY_PER_MONTH = "DailyPerMonth";
+
+    ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
+    public static String REDEEM_VOUCHER = "Redeem Voucher";
 
     ////////////////////////////////////////// Accounts ////////////////////////////////////////////////////////////////
     public static String SUN = "Sun";
@@ -107,6 +113,7 @@ public class Constants {
 
     // Daily Detail >> Sales Mix
     public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=15";
+
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
     // Daily Detail >> Discount

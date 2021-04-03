@@ -1,12 +1,14 @@
 package com.sun.supplierpoc.controllers.application;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
+import com.sun.supplierpoc.services.application.AppUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @RestController
 
@@ -32,6 +31,8 @@ public class    AppUserController {
     QRCodeGenerator qrCodeGenerator;
     @Autowired
     SendEmailService emailService;
+    @Autowired
+    private AppUserService appUserService;
 
     private static final String QR_CODE_IMAGE_PATH = "./src/main/resources/QRCode.png";
     private static final String LOGO_IMAGE_PATH = "./src/main/resources/logo.png";
@@ -78,7 +79,7 @@ public class    AppUserController {
             userRepo.save(applicationUser);
 
             try {
-                qrCodeGenerator.generateQRCodeImage(code,200, 200, path );
+                qrCodeGenerator.generateQRCodeImage(code,200, 200, path);
                 emailService.sendMimeMail(path, LOGO_IMAGE_PATH, applicationUser);
             } catch (WriterException | IOException e) {
                 e.printStackTrace();
@@ -89,6 +90,24 @@ public class    AppUserController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
+    @RequestMapping("/getTopUser")
+    public List getTransactionByType(Principal principal) {
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            List<ApplicationUser> applicationUsers = appUserService.getTopUsers();
+
+            return applicationUsers;
+        }else{
+            return new ArrayList<>();
+        }
+    }
 
     @GetMapping(path = "/Simphony/sendQRCodeEmail")
     public void sendQRCodeEmail(ApplicationUser user){

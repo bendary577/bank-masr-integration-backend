@@ -209,7 +209,8 @@ public class JournalController {
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-                        if(journalSyncJobType.getConfiguration().exportFilePerLocation && consumptionBasedOnType.equals("Location")) {
+                        if(journalSyncJobType.getConfiguration().exportFilePerLocation &&
+                                ( consumptionBasedOnType.equals("Location") || consumptionBasedOnType.equals("Location And RevenuCenter"))) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
                         }else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
@@ -394,7 +395,8 @@ public class JournalController {
                 consumptionList = new ArrayList<>(locationBatch.getConsumptionData());
 
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
-                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
+
+                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getLocation().costCenterReference);
                 locationFiles.add(file);
             }
             return locationFiles;

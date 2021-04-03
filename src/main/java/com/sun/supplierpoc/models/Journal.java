@@ -106,13 +106,13 @@ public class Journal {
                                              String group , float cost,  CostCenter costCenter, RevenueCenter revenueCenter,
                                              String departmentCode) {
 
-        for (Journal journal : journals) {
-            if (journal.majorGroup.getMajorGroup().equals(group)) {
-                // Add new value
-                journal.totalCost += cost;
-                return journals;
-            }
-        }
+//        for (Journal journal : journals) {
+//            if (journal.majorGroup.getMajorGroup().equals(group)) {
+//                // Add new value
+//                journal.totalCost += cost;
+//                return journals;
+//            }
+//        }
 
         journals.add(new Journal(group, majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
         return journals;

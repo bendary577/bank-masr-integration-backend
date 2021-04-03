@@ -421,7 +421,7 @@ public class JournalService {
             }
 
             for (CostCenter location : costCentersLocation) {
-
+                journals = new ArrayList<>();
                 journalBatch = new JournalBatch();
                 if (!location.checked)
                     continue;
@@ -438,7 +438,6 @@ public class JournalService {
                 }
 
                 for (RevenueCenter revenueCenter : revenueCenters) {
-                    journals = new ArrayList<>();
                     Response dateResponse = new Response();
 
                     if (!revenueCenter.isChecked() || revenueCenter.getRevenueCenter().equals("Dine In") )
@@ -648,21 +647,46 @@ public class JournalService {
                     costData.put("accountingPeriod", transactionDate.substring(2, 6));
                     costData.put("transactionDate", transactionDate);
 
-                    costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
-                    costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
+                    costData.put("totalCr", String.valueOf(journal.getTotalCost()));
+                    costData.put("totalDr", String.valueOf(journal.getTotalCost()* -1));
 
                     costData.put("fromCostCenter", batch.getCostCenter().costCenter);
                     costData.put("fromAccountCode", batch.getCostCenter().accountCode);
 
                     costData.put("toCostCenter", costCenter.costCenter);
                     costData.put("toAccountCode", costCenter.accountCode);
-                    if(!familyGroup.familyGroup.equals(""))
-                    costData.put("toAccountCode", revenueCenter.getAccountCode());
+
+                    if(!familyGroup.familyGroup.equals("")) {
+                        costData.put("toAccountCode", revenueCenter.getAccountCode());
+                        costData.put("toAccountCode", revenueCenter.getAccountCode());
+                    }
 
                     costData.put("fromLocation", costCenter.accountCode);
                     costData.put("toLocation", costCenter.accountCode);
 
-                    String description = journal.getOverGroup();
+                    String loc = "";
+                    String cost = "";
+
+                    if(batch.getLocation().locationName.equals("Nisantasi CFC")) {
+                        loc = "CFC";
+                    }else{
+                        loc = "City";
+                    }
+
+                    if(journal.getOverGroup().equals("Food")) {
+                        cost =" Kitchen";
+                    }else{
+                        cost = " Bar";
+                    }
+
+                    String description = "";
+
+
+                    if(!familyGroup.familyGroup.equals("")) {
+                        description = journal.getMajorGroup().getMajorGroup() +" Cost-Home " + revenueCenter.getRevenueCenter();
+                    }else{
+                         description = loc + cost;
+                    }
 
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
@@ -672,8 +696,9 @@ public class JournalService {
 
                     if (costCenter.costCenterReference.equals(""))
                         costData.put("transactionReference", "Consumption");
-                    else
-                        costData.put("transactionReference", costCenter.costCenterReference);
+                    else{
+                        costData.put("transactionReference", loc);
+                    }
 
                     costData.put("overGroup", journal.getOverGroup());
 

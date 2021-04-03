@@ -44,7 +44,6 @@ public class SendEmailService {
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(user.getEmail());
 
-            //https://togo.ovio.eu/assets/media/uploads/ovio-logo.png
             String mailSubject = "We crafted some offers JUST FOR YOU!";
             String mailContent =
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);transition: 0.3s; width: 100%;'>" +
@@ -83,6 +82,9 @@ public class SendEmailService {
             messageHelper.addInline("image000", resource);
 
             mailSender.send(mailMessage);
+
+            new File(logoPath).delete();
+
         } catch (MessagingException e) {
             e.printStackTrace();
         }

@@ -184,11 +184,11 @@ public class SalesFileDelimiterExporter {
         SyncJobDataCSV syncJobDataCSV;
         for (SyncJobData syncJobData : listSyncJobData) {
             if (syncJobData.getData().containsKey("totalDr")) {
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+                syncJobDataCSV = createSyncJobDataObject(syncJobData, "D");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             } else {
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
+                syncJobDataCSV = createSyncJobDataObject(syncJobData, "C");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
@@ -211,27 +211,27 @@ public class SalesFileDelimiterExporter {
 
             if (!syncJobData.getData().get("invoiceNo").toString().equals(invoiceNumber)) {
                 tempSyncJobData.getData().put("vat", vat);
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
+                syncJobDataCSV = createSyncJobDataObject(tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
                 tempSyncJobData = syncJobData;
                 invoiceNumber = syncJobData.getData().get("invoiceNo").toString();
-                vat = conversions.convertStringToFloat((String) syncJobData.getData().get("vat").toString());
+                vat = conversions.convertStringToFloat(syncJobData.getData().get("vat").toString());
             } else {
-                vat = vat + conversions.convertStringToFloat((String) syncJobData.getData().get("vat").toString());
+                vat = vat + conversions.convertStringToFloat(syncJobData.getData().get("vat").toString());
             }
 
-            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+            syncJobDataCSV = createSyncJobDataObject(syncJobData, "D");
             if (syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
-            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
+            syncJobDataCSV = createSyncJobDataObject(syncJobData, "C");
             if (syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
             if (counter == listSyncJobData.size()) {
                 tempSyncJobData.getData().put("vat", vat);
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
+                syncJobDataCSV = createSyncJobDataObject(tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
@@ -239,7 +239,7 @@ public class SalesFileDelimiterExporter {
         }
     }
 
-    private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker) {
+    private SyncJobDataCSV createSyncJobDataObject(SyncJobData syncJobData, String CDMaker) {
 
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
         syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation").toString();
@@ -302,10 +302,11 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.amount = amountPart + decimalPart;
 
             String accountCode = "";
-            if (syncJobData.getData().containsKey("toLocation") && !syncJobData.getData().get("toLocation").equals("")) {
-                accountCode = syncJobData.getData().get("toLocation").toString();
-            } else {
+
+            if(syncJobData.getData().containsKey("expensesAccount") && !syncJobData.getData().get("expensesAccount").equals("")){
                 accountCode = syncJobData.getData().get("expensesAccount").toString();
+            }else if(syncJobData.getData().containsKey("toLocation") && !syncJobData.getData().get("toLocation").equals("")){
+                accountCode = syncJobData.getData().get("toLocation").toString();
             }
 
             if (accountCode.length() < 10) {
@@ -419,19 +420,20 @@ public class SalesFileDelimiterExporter {
             analysisTCode = "#";
 
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")) {
+            analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
 
-            if (!syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && !syncJobType.getName().equals("Approved Invoices")) {
-                analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
-            } else {
-                if (CDMaker.equals("D") || CDMaker.equals("DV")) {
-                    if (!("analysisCodeT" + index).equals("analysisCodeT9") &&
-                            !("analysisCodeT" + index).equals("analysisCodeT10")) {
-                        analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
-                    }
-                } else {
-                    analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
-                }
-            }
+//            if (!syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && !syncJobType.getName().equals("Approved Invoices")) {
+//                analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+//            } else {
+//                if (CDMaker.equals("D") || CDMaker.equals("DV")) {
+//                    if (!("analysisCodeT" + index).equals("analysisCodeT9") &&
+//                            !("analysisCodeT" + index).equals("analysisCodeT10")) {
+//                        analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+//                    }
+//                } else {
+//                    analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
+//                }
+//            }
         }
 
         if (analysisTCode.length() > 15) {

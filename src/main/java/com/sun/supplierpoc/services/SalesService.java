@@ -128,9 +128,12 @@ public class SalesService {
         }
 
         // Get tender
-        Response tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-                costCenter, includedTenders, driver);
-        if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+        Response tenderResponse = new Response();
+        if(includedTenders.size() > 0){
+            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
+                    costCenter, includedTenders, driver);
+            if (checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+        }
 
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;

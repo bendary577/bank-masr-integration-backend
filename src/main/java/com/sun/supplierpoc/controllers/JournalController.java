@@ -28,7 +28,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
-// @RequestMapping(path = "server")
 
 public class JournalController {
     @Autowired
@@ -200,7 +199,8 @@ public class JournalController {
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-                        if(journalSyncJobType.getConfiguration().exportFilePerLocation && consumptionBasedOnType.equals("Location")) {
+//                         && consumptionBasedOnType.equals("Location")
+                        if(journalSyncJobType.getConfiguration().exportFilePerLocation) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
                         }else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
@@ -316,7 +316,7 @@ public class JournalController {
         excelExporter.export(response);
     }
 
-    private ArrayList<File> createConsumptionFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
+    private ArrayList<File> createConsumptionFilePerLocation(List<JournalBatch> journalBatches, SyncJobType syncJobType,
                                                              String AccountName) {
         ArrayList<File> locationFiles = new ArrayList<>();
         try {
@@ -324,7 +324,7 @@ public class JournalController {
             List<SyncJobData> consumptionList;
             SalesFileDelimiterExporter excelExporter;
 
-            for (JournalBatch locationBatch : wasteBatches) {
+            for (JournalBatch locationBatch : journalBatches) {
                 consumptionList = new ArrayList<>(locationBatch.getConsumptionData());
 
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);

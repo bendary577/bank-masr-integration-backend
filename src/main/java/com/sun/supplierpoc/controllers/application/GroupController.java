@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,16 +34,48 @@ public class GroupController {
     private AppGroupService appGroupService;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    @RequestMapping("/getAllApplicationGroups")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getAllApplicationCompanies(Principal principal){
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+                    ArrayList<Group> groups = groupRepo.findAllByAccountID(account.getId());
+
+            return  ResponseEntity.status(HttpStatus.OK).body(groups);
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
     @RequestMapping("/getApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getApplicationCompanies(Principal principal){
+    public ResponseEntity getApplicationCompanies(Principal principal, @RequestParam("parentId") String parentId,
+                                                  @RequestParam("isParent") boolean isParent){
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            ArrayList<Group> groups = groupRepo.findAllByAccountID(account.getId());
+            ArrayList<Group> groups;
+
+            if(isParent) {
+                Optional<Group> groupOptional = groupRepo.findById(parentId);
+                if(groupOptional.isPresent()) {
+                    Group group = groupOptional.get();
+                    groups = groupRepo.findAllByAccountIDAndParentGroup(account.getId(), group);
+
+                }else {
+                    return new ResponseEntity(HttpStatus.BAD_REQUEST);
+                }
+            }else {
+                groups = groupRepo.findAllByAccountIDAndParentGroup(account.getId(), null);
+            }
+
             return  ResponseEntity.status(HttpStatus.OK).body(groups);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -50,8 +84,8 @@ public class GroupController {
     @RequestMapping("/addApplicationGroup")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag,
-            @RequestBody Group group, Principal principal){
+    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag, @RequestParam("image") MultipartFile image,
+                                                @RequestBody Group group, Principal principal){
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());

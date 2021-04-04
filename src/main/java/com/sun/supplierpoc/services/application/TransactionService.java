@@ -38,6 +38,7 @@ public class TransactionService {
             TransactionType transactionType = transactionTypeRepo.findByName(Constants.REDEEM_VOUCHER);
 
             List<Transactions> transactions = transactionRepo.findAllByTransactionTypeId(transactionType.getId());
+
             return transactions;
 
     }
@@ -56,5 +57,21 @@ public class TransactionService {
         }catch(Exception e){
             LoggerFactory.getLogger(TransactionService.class).info(e.getMessage());
         }
+    }
+
+    public double getTotalSpendTransactions(String dateFlag, String transactionTypeName) {
+
+        TransactionType transactionType = transactionTypeRepo.findByName(Constants.REDEEM_VOUCHER);
+
+        List<Transactions> transactions = transactionRepo.findAllByTransactionTypeId(transactionType.getId());
+
+        if(dateFlag.equals("Today")){
+            return transactions.get(0).getAfterDiscount();
+        }else if(dateFlag.equals("Last Week")){
+            return transactions.get(1).getAfterDiscount();
+        }else{
+            return transactions.get(2).getAfterDiscount();
+        }
+
     }
 }

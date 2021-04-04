@@ -14,6 +14,7 @@ public class ApplicationUser implements Serializable {
     private String name;
     private int top;
     private String email;
+    private String imageUrl;
     private Group group;
     private Date creationDate;
     private String code;
@@ -90,5 +91,13 @@ public class ApplicationUser implements Serializable {
 
     public void setTop(int top) {
         this.top = top;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

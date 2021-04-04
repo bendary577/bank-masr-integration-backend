@@ -55,6 +55,29 @@ public class TransactionController {
         }
     }
 
+    @RequestMapping("/getTotalSpendTransactions")
+    public ResponseEntity getTotalSpendTransactions(Principal principal,@RequestParam("transactionType") String transactionType,
+                                                   @RequestParam("dateFlag") String dateFlag) {
+
+        HashMap response = new HashMap();
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            double totalSpend = transactionService.getTotalSpendTransactions(dateFlag, transactionType);
+
+            response.put("totalSpend", totalSpend);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+        }
+    }
+
     @PostMapping("/createTransactionType")
     public ResponseEntity<?> createTransactionType(Principal principal,
                                                    @RequestBody TransactionType transactionType, BindingResult result) {
@@ -85,7 +108,6 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 
         }
-
     }
 
 

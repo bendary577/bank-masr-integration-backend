@@ -13,6 +13,6 @@ public interface GroupRepo extends MongoRepository<Group, String> {
     Group findFirstById(String id);
     ArrayList<Group> findAllByAccountID(String accountId);
     ArrayList<Group> findAllByAccountIDAndDeleted(String accountId, boolean deleted);
-
     List<Group> findTop3ByOrderByTopDesc();
+    ArrayList<Group> findAllByAccountIDAndParentGroup(String id, Group group);
 }

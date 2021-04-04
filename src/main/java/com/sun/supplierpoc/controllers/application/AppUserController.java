@@ -3,6 +3,7 @@ import com.google.zxing.WriterException;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -86,6 +87,22 @@ public class    AppUserController {
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(applicationUser);
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
+    @RequestMapping("/deleteApplicationUsers")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity deleteApplicationCompanies(@RequestBody List<ApplicationUser> applicationUsers, Principal principal){
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            for (ApplicationUser applicationUser : applicationUsers) {
+                applicationUser.setDeleted(true);
+                userRepo.save(applicationUser);
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }

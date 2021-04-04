@@ -1432,20 +1432,20 @@ public class SalesService {
         String reference = "Major Group";
 
         if (!majorGroupJournal.getCostCenter().costCenterReference.equals("")){
-            description = majorGroupJournal.getCostCenter().costCenterReference;
-            reference = majorGroupJournal.getCostCenter().costCenterReference;
+            description = majorGroupJournal.getCostCenter().costCenterReference + " ";
+            reference = majorGroupJournal.getCostCenter().costCenterReference + " ";
         }
 
         if(!configuration.salesConfiguration.syncMG){
-            description += " " + majorGroupJournal.getFamilyGroup().familyGroup;
+            description += majorGroupJournal.getFamilyGroup().familyGroup + " ";
             syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), majorGroupJournal.getFamilyGroup(), null);
         }else {
-            description += " " + majorGroupJournal.getMajorGroup().getMajorGroup();
+            description += majorGroupJournal.getMajorGroup().getMajorGroup() + " ";
             syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
         }
 
         if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals(""))
-            description += " " + majorGroupJournal.getRevenueCenter().getRevenueCenter();
+            description += majorGroupJournal.getRevenueCenter().getRevenueCenter();
 
         if (description.length() > 50) {
             description = description.substring(0, 50);

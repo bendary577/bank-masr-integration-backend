@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-
 public class GroupController {
 
     @Autowired
@@ -84,7 +83,7 @@ public class GroupController {
     @RequestMapping("/addApplicationGroup")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag, @RequestParam("image") MultipartFile image,
+    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag,
                                                 @RequestBody Group group, Principal principal){
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -126,6 +125,49 @@ public class GroupController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
+    @RequestMapping("/addApplicationGroupImage")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity addApplicationGroupImage(@RequestPart("image") MultipartFile image, Principal principal){
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+
+//            if(addFlag) {
+
+//                if(group.getParentGroup() != null) {
+//
+//                    if (group.getParentGroup().getParentGroup() != null) {
+//                        return new ResponseEntity("Parent group is already child for another group," +
+//                                "\n Please select valid parent group.",
+//                                HttpStatus.BAD_REQUEST);
+//                    }
+//                }
+//                group.setAccountID(account.getId());
+//                group.setCreationDate(new Date());
+//                group.setLastUpdate(new Date());
+//                group.setDeleted(false);
+//            }else {
+//
+//                if(group.getParentGroup() != null) {
+//                    if (group.getParentGroup().getParentGroup() != null) {
+//                        return new ResponseEntity("Parent group is already child for another group," +
+//                                "\n Please select valid parent group.",
+//                                HttpStatus.BAD_REQUEST);
+//                    }
+//                }
+//
+//                group.setLastUpdate(new Date());
+//
+//            }
+//            }
+            groupRepo.save(new Group());
+            return ResponseEntity.status(HttpStatus.OK).body(new Group());
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
 
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")

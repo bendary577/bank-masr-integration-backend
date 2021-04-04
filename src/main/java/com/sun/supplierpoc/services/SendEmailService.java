@@ -54,7 +54,7 @@ public class SendEmailService {
                     "<br>\n" +
                     "<img style=\"width:100%\"" +
                     "   src='https://vistapointe.net/images/gift-1.jpg'>" +
-                    "<h3 style='text-align:center'>Hello"+ user.getName() +",</h3>" +
+                    "<h3 style='text-align:center'>Hello "+ user.getName() +",</h3>" +
                     "<p style='text-align:center'>" +
                     "   Welcome to ACT loyalty program." +
                     "   <br>" +
@@ -63,8 +63,8 @@ public class SendEmailService {
 
                     "<p style=\"text-align: center;font-weight: bold;\"> Show this code to our staff</p>" +
                     "<img src='cid:image001' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
+                            "<p style='text-align:center'>"+ " code : "+ user.getCode() +"</p>" +
                     "<p style='text-align:center'>Look forward to seeing you at out store</p>" +
-                    "<p style='text-align:center'>"+ user.getCode() +"</p>" +
                     "<br>" +
                     "<br>" +
                     "<div style=\"display: table;margin-left: auto; margin-right: auto;\">" +

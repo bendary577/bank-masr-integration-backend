@@ -15,9 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Service;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class TransactionService {
@@ -63,14 +63,66 @@ public class TransactionService {
 
         TransactionType transactionType = transactionTypeRepo.findByName(Constants.REDEEM_VOUCHER);
 
-        List<Transactions> transactions = transactionRepo.findAllByTransactionTypeId(transactionType.getId());
+        List<Transactions> transactions = new ArrayList<>();
 
         if(dateFlag.equals("Today")){
-            return transactions.get(0).getAfterDiscount();
+
+            double totalSpend = 0;
+
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 59);
+            calendar.set(Calendar.SECOND, 59);
+            Date date = calendar.getTime();
+
+            transactions = transactionRepo.findByTransactionDateBetween(date, new Date());
+
+            for(Transactions transaction : transactions){
+                totalSpend = totalSpend + transaction.getAfterDiscount();
+            }
+
+            return totalSpend;
+
         }else if(dateFlag.equals("Last Week")){
-            return transactions.get(1).getAfterDiscount();
+
+            double totalSpend = 0;
+
+            Date date = new Date();
+            Calendar c = Calendar.getInstance();
+            c.setTime(date);
+            int i = c.get(Calendar.DAY_OF_WEEK) - c.getFirstDayOfWeek();
+            c.add(Calendar.DATE, -i - 7);
+            Date start = c.getTime();
+            c.add(Calendar.DATE, 6);
+            Date end = c.getTime();
+
+            transactions = transactionRepo.findByTransactionDateBetween(start, end);
+
+            for(Transactions transaction : transactions){
+                totalSpend = totalSpend + transaction.getAfterDiscount();
+            }
+
+            return totalSpend;
         }else{
-            return transactions.get(2).getAfterDiscount();
+
+            double totalSpend = 0;
+
+            Date date = new Date();
+            Calendar c = Calendar.getInstance();
+            c.setTime(date);
+            int i = c.get(Calendar.DAY_OF_WEEK) - c.getFirstDayOfWeek();
+            c.add(Calendar.DATE, -i - 30);
+            Date start = c.getTime();
+            c.add(Calendar.DATE, 29);
+            Date end = c.getTime();
+
+            transactions = transactionRepo.findByTransactionDateBetween(start, end);
+
+            for(Transactions transaction : transactions){
+                totalSpend = totalSpend + transaction.getAfterDiscount();
+            }
+
+            return totalSpend;
         }
 
     }

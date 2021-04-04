@@ -40,7 +40,7 @@ public class ActivityService {
 
             double discount = group.getDiscountRate();
             double amount = transaction.getTotalPayment();
-            double amountAfterDiscount = amount - (amount / (discount/100));
+            double amountAfterDiscount = amount - (amount * (discount/100));
 
             transaction.setUser(user);
             transaction.setGroup(group);
@@ -48,6 +48,9 @@ public class ActivityService {
             transaction.setAfterDiscount(amountAfterDiscount);
             transaction.setTransactionDate(new Date());
             transaction.setTransactionTypeId(transactionType.getId());
+
+            userRepo.save(user);
+            groupRepo.save(group);
 
             transactionRepo.save(transaction);
 

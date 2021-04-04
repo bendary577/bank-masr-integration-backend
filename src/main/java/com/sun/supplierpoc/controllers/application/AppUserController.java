@@ -73,15 +73,20 @@ public class    AppUserController {
 
             Random random = new Random();
             String code = applicationUser.getName() +random.nextInt();
-            String path = "./src/main/resources/"+ code +".png" ;
+            String QRPath = "./src/main/resources/"+ code +".png" ;
+            String logoPath = "";
+
+            if(account.getImageUrl() != null) {
+                logoPath = account.getImageUrl();
+            }
 
             applicationUser.setCode(code);
 
             userRepo.save(applicationUser);
 
             try {
-                qrCodeGenerator.generateQRCodeImage(code,200, 200, path);
-                emailService.sendMimeMail(path, LOGO_IMAGE_PATH, applicationUser);
+                qrCodeGenerator.generateQRCodeImage(code,200, 200, QRPath);
+                emailService.sendMimeMail(QRPath, logoPath, applicationUser);
             } catch (WriterException | IOException e) {
                 e.printStackTrace();
             }
@@ -94,7 +99,7 @@ public class    AppUserController {
     @RequestMapping("/deleteApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationCompanies(@RequestBody List<ApplicationUser> applicationUsers, Principal principal){
+    public ResponseEntity deleteApplicationUsers(@RequestBody List<ApplicationUser> applicationUsers, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {

@@ -20,6 +20,9 @@ public class Group implements Serializable {
     private Date lastUpdate;
     private boolean deleted;
 
+    public Group() {
+    }
+
     public Group(String name, String description, float discountRate, String logoUrl, String accountID, Date creationDate, Date lastUpdate, boolean deleted) {
         this.name = name;
         this.description = description;

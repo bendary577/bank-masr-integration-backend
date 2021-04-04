@@ -1,7 +1,7 @@
-package com.sun.supplierpoc.models.opera;
+package com.sun.supplierpoc.models.opera.booking;
 
 public class BookingDetails {
-    public String transactionID = "";
+    public String transactionId = "";
     public String bookingNo = "";
     public String nationalityCode = "";
     public String checkInDate = "";
@@ -17,27 +17,27 @@ public class BookingDetails {
 
     public String roomRentType = "";
 
-    public  String dailyRoomRate = ""; // not in excel file
+    public String dailyRoomRate = ""; // not in excel file
 
     // fullRateAmount
     public String totalRoomRate = "";
 
-    public  String vat = ""; // not in excel file
-    public  String municipalityTax = ""; // not in excel file
-    public  String discount = ""; // not in excel file
+    public String vat = "";
+    public String municipalityTax = "";
+    public String discount = "";
 
     // totalRoom
     public String grandTotal = "";
 
-    public  String transactionTypeId = ""; // not in excel file
+    public String transactionTypeId = ""; // not in excel file
     public String gender = "";
 
-    public  String checkInTime = "";
-    public  String checkOutTime = "";
-    public  String customerType = "";
+    public String checkInTime = "";
+    public String checkOutTime = "";
+    public String customerType = "";
 
     // adults
-    public  String noOfGuest = "";
+    public String noOfGuest = "";
     public String roomType = "";
     public String purposeOfVisit = ""; // not in excel file
     public String dateOfBirth = "";

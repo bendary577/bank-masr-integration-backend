@@ -68,6 +68,14 @@ public class AccountController {
         return account != null;
     }
 
+    @RequestMapping("/updateAccountSyncTypes")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public boolean updateAccountSyncTypes(Principal principal, @RequestBody Account account){
+        addAccountSyncType(account);
+        return true;
+    }
+
     @RequestMapping(value = "/clientDetails")
     @ResponseBody
     public ResponseEntity<RefreshTokenResult> clientDetails(Authentication authentication) {
@@ -140,23 +148,6 @@ public class AccountController {
     }
 
     private boolean addAccountSyncType(Account account){
-        // OPERA Reservation
-        String syncDescription = "Used to sync reservation from opera.";
-        Configuration wlsIntegration = new Configuration();
-        wlsIntegration.supplierConfiguration = new SupplierConfiguration();
-
-        SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wLsIntegration",
-                new Date(), wlsIntegration, account.getId());
-        syncJobTypeRepo.save(supplierSyncType);
-
-        // OPERA New Booking
-        syncDescription = "Used to sync new booking from opera.";
-        Configuration newBookingConfig = new Configuration();
-
-        SyncJobType newBookingSyncType = new SyncJobType(10, Constants.NEW_BOOKING_REPORT, syncDescription,
-                "/newBookingReport", new Date(), newBookingConfig, account.getId());
-        syncJobTypeRepo.save(newBookingSyncType);
-
 //            //suppliers
 //            String syncDescription = "Used to sync suppliers from sun to my inventory daily.";
 //            Configuration supplierConfig = new Configuration();
@@ -251,8 +242,41 @@ public class AccountController {
 //            SyncJobType menuItemsSyncType = new SyncJobType(9, Constants.MENU_ITEMS, syncDescription, "/menuItems",
 //                    new Date(), menuItemConfig, account.getId());
 //            syncJobTypeRepo.save(menuItemsSyncType);
-//
-            return true;
+
+        // OPERA Reservation
+/*        String syncDescription = "Used to sync reservation from opera.";
+        Configuration wlsIntegration = new Configuration();
+        wlsIntegration.supplierConfiguration = new SupplierConfiguration();
+
+        SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wLsIntegration",
+                new Date(), wlsIntegration, account.getId());
+        syncJobTypeRepo.save(supplierSyncType);
+
+        // OPERA New Booking
+        syncDescription = "Used to sync new booking from opera.";
+        Configuration newBookingConfig = new Configuration();
+
+        SyncJobType newBookingSyncType = new SyncJobType(10, Constants.NEW_BOOKING_REPORT, syncDescription,
+                "/newBookingReport", new Date(), newBookingConfig, account.getId());
+        syncJobTypeRepo.save(newBookingSyncType);*/
+
+        // OPERA Cancel Booking
+        String syncDescription = "Used to sync cancel booking from opera.";
+        Configuration cancelBookingConfig = new Configuration();
+
+        SyncJobType cancelBookingSyncType = new SyncJobType(11, Constants.CANCEL_BOOKING_REPORT, syncDescription,
+                "/cancelBookingReport", new Date(), cancelBookingConfig, account.getId());
+        syncJobTypeRepo.save(cancelBookingSyncType);
+
+        // OPERA Occupancy Update
+        syncDescription = "Used to sync occupancy update from opera.";
+        Configuration occupancyUpdateConfig = new Configuration();
+
+        SyncJobType occupancyUpdateSyncType = new SyncJobType(11, Constants.OCCUPANCY_UPDATE_REPORT, syncDescription,
+                "/occupancyUpdateReport", new Date(), occupancyUpdateConfig, account.getId());
+        syncJobTypeRepo.save(occupancyUpdateSyncType);
+
+        return true;
 
     }
 

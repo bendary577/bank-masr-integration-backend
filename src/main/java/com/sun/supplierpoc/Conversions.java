@@ -2,12 +2,14 @@ package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.soapModels.Supplier;
 
 import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.util.*;
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 public class Conversions {
     public Conversions() {
@@ -270,6 +272,34 @@ public class Conversions {
         }
         return null;
     }
+
+
+    // ==> OPERA Report Functions
+
+    public BookingType checkBookingTypeExistence(ArrayList<BookingType> bookingTypes, String typeName){
+        for (BookingType paymentType : bookingTypes) {
+            if (paymentType.getType().toLowerCase().equals(typeName.toLowerCase())) {
+                return paymentType;
+            }
+        }
+        return new BookingType("0");
+    }
+
+    public String checkRoomRentType(Date arrivalDate, Date departureDate){
+        long diff = departureDate.getTime() - arrivalDate.getTime();
+        long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+        System.out.println ("Days: " + numberOfDays);
+
+        if(numberOfDays % 7 == 0){
+            return "3"; //Weekly
+        }else if(numberOfDays % 30 == 0){
+            return "4"; // Monthly
+        }
+
+        return "1"; //Daily
+    }
+
+    // ==> END of OPERA Report Functions
 
     public String filterString(String value){
         value = value.toLowerCase().replaceAll(",", "");

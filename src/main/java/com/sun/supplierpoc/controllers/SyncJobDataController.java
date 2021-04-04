@@ -22,9 +22,6 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-// @RequestMapping(path = "server")
-
-
 public class SyncJobDataController {
     @Autowired
     private SyncJobRepo syncJobRepo;
@@ -43,27 +40,39 @@ public class SyncJobDataController {
         return syncJobData;
     }
 
-    public ArrayList<SyncJobData> getSyncJobData(String syncJobTypeId)  {
-        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
-        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
-        for (SyncJob syncJob : syncJobs) {
-            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-            syncJobsData.addAll(syncJobData);
-        }
-        return syncJobsData;
-    }
+    @GetMapping("/getSyncJobDataByBookingNo")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public List<SyncJobData> getSyncJobDataByBookingNo(@RequestParam(name = "bookingNo", required=false) String bookingNo,
+                                                       @RequestParam(name = "bookingStatus", required=false) String bookingStatus,
+                                                       Principal principal)  {
+        SyncJobType bookingSyncType;
+        List<SyncJobData> syncJobData = new ArrayList<>();
+        List<SyncJobData> data;
 
-    public ArrayList<SyncJobData> getFailedSyncJobData(String syncJobTypeId)  {
-        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
-        ArrayList<SyncJobData> syncJobsData = new ArrayList<>();
-        for (SyncJob syncJob : syncJobs) {
-            List<SyncJobData> syncJobData = syncJobDataRepo.findBySyncJobIdAndDeletedAndStatus(syncJob.getId(),
-                    false, Constants.FAILED);
-            syncJobsData.addAll(syncJobData);
-        }
-        return syncJobsData;
-    }
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
 
+            // Get all booking entries
+            if(bookingStatus.equals("cancel"))
+                bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            else
+                bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
+
+            List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(bookingSyncType.getId(), false);
+            for (SyncJob syncJob : syncJobs) {
+                if(bookingNo == null || bookingNo.equals("")){
+                    data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+                }else {
+                    data = syncJobDataRepo.findByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
+                }
+                syncJobData.addAll(data);
+            }
+        }
+        return syncJobData;
+    }
 
     /*
     *

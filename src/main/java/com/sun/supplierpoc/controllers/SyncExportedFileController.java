@@ -124,6 +124,7 @@ public class SyncExportedFileController {
 
         Calendar calendar = Calendar.getInstance();
         int month = calendar.get(Calendar.MONTH) ;
+        calendar.add(Calendar.MONTH, -1);
 
         String date = dateFormat.format(calendar.getTime());
 

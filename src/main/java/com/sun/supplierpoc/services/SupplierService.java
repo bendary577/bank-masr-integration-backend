@@ -41,7 +41,7 @@ public class SupplierService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
     @Autowired
-    private SyncJobDataController syncJobTypeController;
+    private SyncJobDataService syncJobDataService;
 
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
     public Conversions conversions = new Conversions();
@@ -223,7 +223,7 @@ public class SupplierService {
         ArrayList<SyncJobData> addedSuppliers = new ArrayList<>();
         ArrayList<SyncJobData> updatedSuppliers = new ArrayList<>();
 
-        ArrayList<SyncJobData> savedSuppliers = syncJobTypeController.getSyncJobData(syncJobType.getId());
+        ArrayList<SyncJobData> savedSuppliers = syncJobDataService.getSyncJobDataByTypeId(syncJobType.getId());
 
         for (Supplier supplier : suppliers) {
             HashMap<String, Object> data = new HashMap<>();

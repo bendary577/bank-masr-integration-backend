@@ -33,9 +33,9 @@ public class GroupController {
     GroupRepo groupRepo;
     @Autowired
     private AppGroupService appGroupService;
-
     @Autowired
     private HttpServletRequest request;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getAllApplicationGroups")
@@ -133,39 +133,113 @@ public class GroupController {
     @RequestMapping("/addApplicationGroupImage")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationGroupImage(@RequestPart("image") MultipartFile image,
-                                                   @RequestPart("groupID") String groupID,
-                                                   Principal principal) throws IOException {
+    public ResponseEntity addApplicationGroupImage(@RequestPart(name = "groupId", required = false) String groupId,
+                                                   @RequestPart(name = "image", required = false) MultipartFile image,
+                                                   Principal principal) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-
             Account account = accountOptional.get();
 
-            Optional<Group> groupOptional = groupRepo.findById(groupID);
-            Group group = new Group();
+            Optional<Group> groupOptional = groupRepo.findById(groupId);
+
+
             if (groupOptional.isPresent()) {
 
-                group = groupOptional.get();
+                Group group = groupOptional.get();
 
-                String filePath = "scr/main/resources" + image.getName();
-                image.transferTo(new File(filePath));
+                String filePath = "F:\\oracle-hospitality-frontend\\src\\assets\\" + group.getName() + ".jpg";
 
+                try {
+                    image.transferTo(new File(filePath));
+                } catch (IOException e) {}
 
-                group.setLastUpdate(new Date());
-                group.setDeleted(false);
-            } else {
-
-                group.setLastUpdate(new Date());
+                group.setLogoUrl("../../../assets/" + group.getName() + ".jpg");
+                groupRepo.save(group);
 
             }
+            return ResponseEntity.status(HttpStatus.OK).body(new Group());
         }
-        groupRepo.save(new Group());
-        return ResponseEntity.status(HttpStatus.OK).body(new Group());
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
-
+//    @RequestMapping("/addApplicationGroupImage")
+//    @CrossOrigin(origins = "*")
+//    @ResponseBody
+//    public ResponseEntity addApplicationGroupImage(@RequestPart(name = "groupId", required = false) String groupId,
+//                                                   @RequestPart("groupName") String groupName,
+//                                                   @RequestPart("description") String description,
+//                                                   @RequestPart("discountRate") float discountRate,
+//                                                   @RequestPart("discountId") String discountId,
+//                                                   @RequestPart("parentGroupId") String parentGroupId,
+//                                                   @RequestPart(name = "image", required = false) MultipartFile image,
+//                                                   Principal principal){
+//
+//        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+//        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+//        if (accountOptional.isPresent()) {
+//            Account account = accountOptional.get();
+//
+//            String filePath = "D:\\1.Bassel\\simphony\\infor-sun-poc\\src\\main\\resources\\"+groupName+".jpg";
+//            try {
+//                image.transferTo(new File(filePath));
+//            } catch (IOException e) {
+//            }
+//
+//            Group group = new Group();
+//            Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
+//            Group parentGroup = new Group();
+//
+//            if(group.getParentGroup() != null) {
+//
+//                if (groupId.equals(null)) {
+//
+//
+//                    if (parentGroupOptional.isPresent()) {
+//                        parentGroup = parentGroupOptional.get();
+//                        if (group.getParentGroup().getParentGroup() != null) {
+//                            return new ResponseEntity("Parent group is already child for another group," +
+//                                    "\n Please select valid parent group.",
+//                                    HttpStatus.BAD_REQUEST);
+//                        }
+//                    }
+//                    group.setName(groupName);
+//                    group.setDescription(description);
+//                    group.setDiscountRate(discountRate);
+//                    group.setAccountID(discountId);
+//                    group.setParentGroup(parentGroup);
+//                    group.setAccountID(account.getId());
+//                    group.setLogoUrl(filePath);
+//                    group.setCreationDate(new Date());
+//                    group.setLastUpdate(new Date());
+//                    group.setDeleted(false);
+//                } else {
+//                    group = groupRepo.findById(groupId).get();
+//                    if (parentGroupOptional.isPresent()) {
+//                        parentGroup = parentGroupOptional.get();
+//                        if (group.getParentGroup().getParentGroup() != null) {
+//                            return new ResponseEntity("Parent group is already child for another group," +
+//                                    "\n Please select valid parent group.",
+//                                    HttpStatus.BAD_REQUEST);
+//                        }
+//                    }
+//                    group.setName(groupName);
+//                    group.setDescription(description);
+//                    group.setDiscountRate(discountRate);
+//                    group.setAccountID(discountId);
+//                    group.setParentGroup(parentGroup);
+//                    group.setAccountID(account.getId());
+//                    group.setLastUpdate(new Date());
+//
+//                }
+//            }
+//
+//            groupRepo.save(new Group());
+//            return ResponseEntity.status(HttpStatus.OK).body(new Group());
+//        }
+//        return new ResponseEntity(HttpStatus.FORBIDDEN);
+//    }
 
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")

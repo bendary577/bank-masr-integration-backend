@@ -65,11 +65,9 @@ public class BookingService {
             File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
-            MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
 
             List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, municipalityTax,
-                    generalSettings, multipartFile.getInputStream());
+                    generalSettings, input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -122,12 +120,9 @@ public class BookingService {
             File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
-            MultipartFile multipartFile = new MockMultipartFile("file", file.getName(),
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", IOUtils.toByteArray(input));
 
             List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob, municipalityTax,
-                    generalSettings.getPaymentTypes(), generalSettings.getCancelReasons(),
-                    multipartFile.getInputStream());
+                    generalSettings.getPaymentTypes(), generalSettings.getCancelReasons(), input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -148,6 +143,57 @@ public class BookingService {
             syncJobRepo.save(syncJob);
 
             message = "Failed to sync cancel booking.";
+            response.setMessage(message);
+            response.setStatus(false);
+        }
+
+        return response;
+    }
+
+    public Response fetchOccupancyFromReport(String userId, Account account, BookingConfiguration bookingConfiguration){
+        String message = "";
+        Response response = new Response();
+
+        SyncJob syncJob;
+        try{
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
+
+            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
+                    userId, account.getId(), syncJobType.getId(), 0);
+            syncJobRepo.save(syncJob);
+        } catch (Exception e) {
+            message = "Failed to establish a connection with the database.";
+            response.setMessage(message);
+            response.setStatus(false);
+            return response;
+        }
+
+        try{
+            String filePath = bookingConfiguration.filePath;
+            File file = new File(filePath);
+
+            FileInputStream input = new FileInputStream(file);
+            List<SyncJobData> syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
+
+            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJob.setRowsFetched(syncJobData.size());
+            syncJobRepo.save(syncJob);
+
+            syncJobDataRepo.saveAll(syncJobData);
+
+            message = "Sync occupancy Updates successfully.";
+            response.setStatus(true);
+            response.setMessage(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            syncJob.setStatus(Constants.FAILED);
+            syncJob.setReason(e.getMessage());
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJobRepo.save(syncJob);
+
+            message = "Failed to sync occupancy Updates.";
             response.setMessage(message);
             response.setStatus(false);
         }

@@ -165,7 +165,7 @@ public class ExcelHelper {
                     cellsInRow = currentRow.iterator();
                     while (cellsInRow.hasNext()) {
                         Cell currentCell = cellsInRow.next();
-                        columnsName.add(currentCell.getStringCellValue());
+                        columnsName.add(currentCell.getStringCellValue().trim());
                     }
                     rowNumber++;
                     continue;
@@ -326,7 +326,7 @@ public class ExcelHelper {
                     cellsInRow = currentRow.iterator();
                     while (cellsInRow.hasNext()) {
                         Cell currentCell = cellsInRow.next();
-                        columnsName.add(currentCell.getStringCellValue());
+                        columnsName.add(currentCell.getStringCellValue().trim());
                     }
                     rowNumber++;
                     continue;
@@ -432,8 +432,9 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
-    public List<SyncJobData> getOccupancyFromExcel(SyncJob syncJob, String municipalityTax, InputStream is) {
+    public List<SyncJobData> getOccupancyFromExcel(SyncJob syncJob, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -444,6 +445,8 @@ public class ExcelHelper {
             int rowNumber = 0;
             Row currentRow;
             Iterator<Cell> cellsInRow;
+
+            int totalRooms = 0;
             OccupancyDetails occupancyDetails;
 
             ArrayList<String> columnsName = new ArrayList<>();
@@ -456,7 +459,7 @@ public class ExcelHelper {
                     cellsInRow = currentRow.iterator();
                     while (cellsInRow.hasNext()) {
                         Cell currentCell = cellsInRow.next();
-                        columnsName.add(currentCell.getStringCellValue());
+                        columnsName.add(currentCell.getStringCellValue().strip());
                     }
                     rowNumber++;
                     continue;
@@ -469,19 +472,25 @@ public class ExcelHelper {
                 while (cellsInRow.hasNext()) {
                     Cell currentCell = cellsInRow.next();
                     if (cellIdx == columnsName.indexOf("Rooms Occupied")) {
-                        occupancyDetails.roomsOccupied = currentCell.getStringCellValue();
+                        occupancyDetails.roomsOccupied = (int) currentCell.getNumericCellValue();
                     } else if (cellIdx == columnsName.indexOf("Rooms Available")) {
-                        occupancyDetails.roomsAvailable = currentCell.getStringCellValue();
-                    } else if (cellIdx == columnsName.indexOf("Rooms Booked")) {
-                        occupancyDetails.roomsBooked = currentCell.getStringCellValue();
+                        occupancyDetails.roomsAvailable = (int) currentCell.getNumericCellValue();
                     } else if (cellIdx == columnsName.indexOf("Rooms On Maintenance")) {
-                        occupancyDetails.roomsOnMaintenance = currentCell.getStringCellValue();
+                        occupancyDetails.roomsOnMaintenance = (int) currentCell.getNumericCellValue();
+                    } else if (cellIdx == columnsName.indexOf("Total Rooms")) {
+                        totalRooms = (int)currentCell.getNumericCellValue();
                     }
                     cellIdx++;
                 }
 
+                if(totalRooms == 0)
+                    continue;
+
+                occupancyDetails.roomsBooked = totalRooms -
+                        (occupancyDetails.roomsOccupied + occupancyDetails.roomsAvailable + occupancyDetails.roomsOnMaintenance);
+
                 Date updateDate = new Date();
-                occupancyDetails.updateDate = "";
+                occupancyDetails.updateDate = dateFormat.format(updateDate);
 
                 HashMap<String, Object> data = new HashMap<>();
                 Field[] allFields = occupancyDetails.getClass().getDeclaredFields();

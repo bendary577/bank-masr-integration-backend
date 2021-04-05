@@ -1,13 +1,12 @@
 package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.AppGroupService;
-import com.sun.supplierpoc.services.application.AppUserService;
+import com.sun.supplierpoc.services.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +34,9 @@ public class GroupController {
     private AppGroupService appGroupService;
     @Autowired
     private HttpServletRequest request;
+
+    @Autowired
+    private ImageService imageService;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -106,6 +108,13 @@ public class GroupController {
                                 HttpStatus.BAD_REQUEST);
                     }
                 }
+
+                Optional<Group> testNameGroupOptional = groupRepo.findByName(group.getName());
+
+                if(testNameGroupOptional.isPresent()){
+                    return new ResponseEntity("Group is already exist with this name.", HttpStatus.BAD_REQUEST);
+                }
+
                 group.setAccountID(account.getId());
                 group.setCreationDate(new Date());
                 group.setLastUpdate(new Date());
@@ -148,6 +157,8 @@ public class GroupController {
             if (groupOptional.isPresent()) {
 
                 Group group = groupOptional.get();
+
+                imageService.store(image);
 
                 String filePath = "F:\\oracle-hospitality-frontend\\src\\assets\\" + group.getName() + ".jpg";
 

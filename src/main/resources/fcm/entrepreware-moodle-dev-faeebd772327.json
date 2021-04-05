@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "entrepreware-moodle-dev",
+  "private_key_id": "faeebd772327e063342ccf8a2f4f026ff86f0101",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD7g2gg8ADfaKh0\nb4Jy7e9lHNjD7s+nHArTh02DiG+q6g5Hmim9NfszBLFipmzuu9DEC3kOtJegE9Iq\n7YNWVpQCC6EjVj7tMqr2q7QlC+8IREjhN5pn2BtQ66MX9+k3gl4OUzqMtFQ0yPh2\nHv6oTaxMkP6hDCWYwntKwjuJDVI3tbSKOTb5Z5jMZy0J0aoZS+ju7EmNhXPE1xSY\n0ghMh1p2O9hO9XEtYxRtrjZLv1o2bS7k58PPKlTBQhySfTUYxNF1goOHHTCM+X02\nZ9GGJYUkQpwctroHTwMWXFAKthGWkz/KE9b4kWmpORfC6tnkpKeSAwMJ0R+YX29s\n3jvwphnvAgMBAAECggEAe/jcKSwTygssyWOzgZHtZ8INyJocaarlXTl6iCSGolDH\nJB0FiNmkTZP5GX6eABi8gP2EuK5kdIeAlx9GlxaK0u1HioL29nT8lySwYXhd5I2/\n/J8rMRdw83SKigRtRKqyUM5OdE9omDIdYh/J90x96qmnkNtLZt4p5oIR1W6nAYTJ\nZn/pkW9xK2UkfFgp3nsudYxmreaRAkK2llXthZLqA/EoJ6qjkyDs11twQMPgs/my\nEkjWqKULBr6LO2Th3/GC3TZCFwdVadAiqkpn9PD7TlGOEiy04t6iYDrQ9CUQEyRX\nuBKsWAIMjaHJUZZQArt2ULnmlmVSZHsd9jXUOFolbQKBgQD/boC93nkYGI1iV0O9\nH/QQzqeXPn3zMc4cYlPP9VV8Quwsoom+b01TYq++LUG9ZdB31NBmlS1RXHlSyqvo\nmKSOHOmab9tzcnnLTUIqyuPqdaQKNm7tW4AyNNy4ukcoobcvlCRHmN3GYsU/+766\n9nU4es/YrQXJ8Yy6slfCVEC69QKBgQD8EqwCvrfZKCtGolXEwh1S4UVdRtpW3QP+\ndhHnjwqovJV5y8Xiif+9NofmoBmxRyoiKcnL2noBo9h90EO5Mu5boUZoFotOL7KG\naXET8+pWgZ2IWzB++7vRctSacuLncvroa7XrXi1RuSVgIDf/10ZZJjMqvZK3nbio\nUNNRm9660wKBgCzVSXWKCfknvhEnvfUBGcalbxcF2feIo2OqAon6xsFjwa5n7QNm\n58yeAri/ms1ShI+z48xNnMGuGIFmn1vZBvEGtB3uSjduPWBotBdsuypY8az1Nu0k\nZVDqpF8sGvdPwyZvuxpyA2MhzPtZBXYtcg+yxq6CWATFB+1xBiROw3nNAoGBAIZU\nuP/5fOYn5vAMYKKrQ49AZ4Ou13pE6/T2HNKGwwpq/Ulb04fHPNcrsT6xASAdKZHt\nLRIKyswG8b8SdpTCVI3WIzwjD3fKKVxB4rXcXXxeNIJO/kgdhNi4Vh48rTjkaFvl\n0puso4ASp51TbiRUJ7QojEnxnrdlQNvJvuOVqhtrAoGAIDZD50hEpm3lmL77OoIY\n+CtNprAb1yQb5urI6tPVvlyRTUh5soyXZx9wrhYio9wN7hzS7J2Yuv200ZvYT6Xi\nSFUrUJ/XgVoy4B8IWu7pluwrrVrotNbvkzRMeP6jldzxgBjziwqFMP8kdg9u5uoA\nRceHL2Ex4zzk340l6wY6MxE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "accor123@entrepreware-moodle-dev.iam.gserviceaccount.com",
+  "client_id": "111728500538105013453",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accor123%40entrepreware-moodle-dev.iam.gserviceaccount.com"
+}

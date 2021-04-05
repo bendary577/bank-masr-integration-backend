@@ -520,4 +520,77 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
+    public List<SyncJobData> getExpensesUpdateFromExcel(SyncJob syncJob, InputStream is) {
+        List<SyncJobData> syncJobDataList = new ArrayList<>();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+        try {
+            XSSFWorkbook workbook = new XSSFWorkbook(is);
+
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rows = sheet.iterator();
+
+            int rowNumber = 0;
+            Row currentRow;
+            Iterator<Cell> cellsInRow;
+
+            OccupancyDetails occupancyDetails;
+
+            ArrayList<String> columnsName = new ArrayList<>();
+
+            while (rows.hasNext()) {
+                currentRow = rows.next();
+
+                // skip header
+                if (rowNumber == 0) {
+                    cellsInRow = currentRow.iterator();
+                    while (cellsInRow.hasNext()) {
+                        Cell currentCell = cellsInRow.next();
+                        columnsName.add(currentCell.getStringCellValue().strip());
+                    }
+                    rowNumber++;
+                    continue;
+                }
+
+                cellsInRow = currentRow.iterator();
+                occupancyDetails = new OccupancyDetails();
+
+                int cellIdx = 0;
+                while (cellsInRow.hasNext()) {
+                    Cell currentCell = cellsInRow.next();
+                    if (cellIdx == columnsName.indexOf("Rooms Occupied")) {
+                        occupancyDetails.roomsOccupied = (int) currentCell.getNumericCellValue();
+                    }
+                    cellIdx++;
+                }
+
+
+                Date updateDate = new Date();
+                occupancyDetails.updateDate = dateFormat.format(updateDate);
+
+                HashMap<String, Object> data = new HashMap<>();
+                Field[] allFields = occupancyDetails.getClass().getDeclaredFields();
+                for (Field field : allFields) {
+                    field.setAccessible(true);
+                    Object value = field.get(occupancyDetails);
+                    if (value != null && !value.equals("null")) {
+                        data.put(field.getName(), value);
+                    } else {
+                        data.put(field.getName(), "");
+                    }
+                }
+
+                SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }
+            workbook.close();
+
+            return syncJobDataList;
+        } catch (IOException e) {
+            throw new RuntimeException("fail to parse Excel file: " + e.getMessage());
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return syncJobDataList;
+    }
 }

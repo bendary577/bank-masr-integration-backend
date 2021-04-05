@@ -180,6 +180,8 @@ public class ExcelHelper {
 
                     if (cellIdx == columnsName.indexOf("Booking No")) {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
+                    } else if (cellIdx == columnsName.indexOf("Resv Status")) {
+                        bookingDetails.reservationStatus = currentCell.getStringCellValue();
                     } else if (cellIdx == columnsName.indexOf("Nationality Code")) {
                         typeName = currentCell.getStringCellValue();
                         bookingType = conversions.checkBookingTypeExistence(nationalities, typeName);

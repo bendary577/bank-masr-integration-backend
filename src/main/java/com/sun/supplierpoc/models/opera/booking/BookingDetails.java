@@ -45,8 +45,8 @@ public class BookingDetails {
     // paymentMethods
     public String paymentType = "";
 
-    // noOfRooms
     public String noOfRooms = "";
+    public String reservationStatus = "";
 
     public String cuFlag = "";
 }

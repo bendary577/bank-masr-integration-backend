@@ -277,12 +277,28 @@ public class Conversions {
     // ==> OPERA Report Functions
 
     public BookingType checkBookingTypeExistence(ArrayList<BookingType> bookingTypes, String typeName){
+        if(typeName.equals("")){
+            return new BookingType("0");
+        }
         for (BookingType paymentType : bookingTypes) {
             if (paymentType.getType().toLowerCase().equals(typeName.toLowerCase())) {
                 return paymentType;
             }
         }
         return new BookingType("0");
+    }
+
+    public BookingType checkExpenseTypeExistence(ArrayList<BookingType> expenseTypes, String typeName){
+        if(typeName.equals("")){
+            return new BookingType("1");
+        }
+        for (BookingType paymentType : expenseTypes) {
+            if(typeName.toLowerCase().contains(paymentType.getType().toLowerCase())){
+                return paymentType;
+            }
+        }
+
+        return new BookingType("1");
     }
 
     public String checkRoomRentType(Date arrivalDate, Date departureDate){

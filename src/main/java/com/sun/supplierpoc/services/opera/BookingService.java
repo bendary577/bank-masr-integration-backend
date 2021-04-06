@@ -240,7 +240,7 @@ public class BookingService {
 
             FileInputStream input = new FileInputStream(file);
             List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcel(syncJob, input,
-                    generalSettings);
+                    generalSettings, bookingConfiguration);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.models.opera.Reservation;
 
@@ -520,11 +521,17 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
-    public List<SyncJobData> getExpensesUpdateFromExcel(SyncJob syncJob, InputStream is, GeneralSettings generalSettings) {
+    public List<SyncJobData> getExpensesUpdateFromExcel(SyncJob syncJob, InputStream is, GeneralSettings generalSettings,
+                                                        BookingConfiguration configuration) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
+        int municipalityTaxRate = configuration.municipalityTaxRate;
+        int vatRate = configuration.vatRate;
+        int serviceChargeRate = configuration.serviceChargeRate;
+
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> expenseTypes = generalSettings.getExpenseTypes();
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -539,15 +546,16 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
-            String paymentTypeName;
+            String transactionGroup = "";
+            float serviceCharge;
+            float transactionAmount = 0;
+            String typeName;
             BookingType paymentType;
 
             ArrayList<String> columnsName = new ArrayList<>();
 
             while (rows.hasNext()) {
                 currentRow = rows.next();
-
-                // skip header
                 if (rowNumber == 0) {
                     cellsInRow = currentRow.iterator();
                     while (cellsInRow.hasNext()) {
@@ -568,7 +576,7 @@ public class ExcelHelper {
                     if (cellIdx == columnsName.indexOf("Booking No")) {
                         String bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
 
-                        ArrayList<SyncJobData> list = syncJobDataService.getSyncJobDataByBookingNo(bookingNo);
+                        ArrayList<SyncJobData> list = syncJobDataService.getSyncJobDataByBookingNo(bookingNo.strip());
                         if (list.size() > 0) {
                             expenseObject.transactionId = (String) list.get(0).getData().get("transactionId");
                         } else {
@@ -578,35 +586,57 @@ public class ExcelHelper {
 
                     } else if (cellIdx == columnsName.indexOf("Transaction Date")) {
                         Date updateDate = currentCell.getDateCellValue();
-
-                        expenseItem.expenseDate = dateFormat.format(updateDate);
+                        if(updateDate != null)
+                            expenseItem.expenseDate = dateFormat.format(updateDate);
                     } else if (cellIdx == columnsName.indexOf("Transaction Amount")) {
-                        expenseItem.unitPrice = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
+                        transactionAmount = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
+                        expenseItem.unitPrice = String.valueOf(transactionAmount);
                     } else if (cellIdx == columnsName.indexOf("Payment Method")) {
-                        paymentTypeName = (currentCell.getStringCellValue());
-                        paymentType = conversions.checkBookingTypeExistence(paymentTypes, paymentTypeName);
+                        typeName = (currentCell.getStringCellValue());
+                        paymentType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
 
                         expenseItem.paymentType = paymentType.getTypeId();
+                    } else if (cellIdx == columnsName.indexOf("Transaction Code Description")) {
+                        typeName = (currentCell.getStringCellValue());
+                        if(typeName.toLowerCase().contains("vat") || typeName.toLowerCase().contains("muncipality") ||
+                                typeName.toLowerCase().contains("service charge") || typeName.toLowerCase().contains("tdf")){
+                            break;
+                        }
+                        paymentType = conversions.checkExpenseTypeExistence(expenseTypes, typeName);
+
+                        expenseItem.expenseTypeId = paymentType.getTypeId();
                     }
+
+                    serviceCharge = (transactionAmount * serviceChargeRate) / 100;
+                    expenseItem.municipalityTax = String.valueOf(conversions.roundUpFloat((transactionAmount * municipalityTaxRate)/100));
+                    expenseItem.vat = String.valueOf(conversions.roundUpFloat(((transactionAmount + serviceCharge) * vatRate)/100));
+
+                    expenseItem.cuFlag = "1";
+
+                    expenseItem.discount = "0";
+                    expenseItem.grandTotal = String.valueOf(transactionAmount + serviceCharge);
+
                     cellIdx++;
                 }
 
-                expenseObject.items.add(expenseItem);
+                if(!expenseItem.expenseTypeId.equals("") && !expenseItem.unitPrice.equals("0.0")){
+                    expenseObject.items.add(expenseItem);
 
-                HashMap<String, Object> data = new HashMap<>();
-                Field[] allFields = expenseObject.getClass().getDeclaredFields();
-                for (Field field : allFields) {
-                    field.setAccessible(true);
-                    Object value = field.get(expenseObject);
-                    if (value != null && !value.equals("null")) {
-                        data.put(field.getName(), value);
-                    } else {
-                        data.put(field.getName(), "");
+                    HashMap<String, Object> data = new HashMap<>();
+                    Field[] allFields = expenseObject.getClass().getDeclaredFields();
+                    for (Field field : allFields) {
+                        field.setAccessible(true);
+                        Object value = field.get(expenseObject);
+                        if (value != null && !value.equals("null")) {
+                            data.put(field.getName(), value);
+                        } else {
+                            data.put(field.getName(), "");
+                        }
                     }
-                }
 
-                SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
-                syncJobDataList.add(syncJobData);
+                    SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+                    syncJobDataList.add(syncJobData);
+                }
             }
             workbook.close();
 

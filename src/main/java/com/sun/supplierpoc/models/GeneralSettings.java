@@ -31,6 +31,7 @@ public class GeneralSettings {
     private ArrayList<BookingType> genders = new ArrayList<>();
     private ArrayList<BookingType> customerTypes = new ArrayList<>();
     private ArrayList<BookingType> transactionTypes = new ArrayList<>();
+    private ArrayList<BookingType> expenseTypes = new ArrayList<>();
 
     private Date creationDate;
     private boolean deleted;
@@ -218,5 +219,13 @@ public class GeneralSettings {
 
     public void setTransactionTypes(ArrayList<BookingType> transactionTypes) {
         this.transactionTypes = transactionTypes;
+    }
+
+    public ArrayList<BookingType> getExpenseTypes() {
+        return expenseTypes;
+    }
+
+    public void setExpenseTypes(ArrayList<BookingType> expenseTypes) {
+        this.expenseTypes = expenseTypes;
     }
 }

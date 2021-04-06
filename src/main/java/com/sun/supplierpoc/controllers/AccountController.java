@@ -260,21 +260,29 @@ public class AccountController {
                 "/newBookingReport", new Date(), newBookingConfig, account.getId());
         syncJobTypeRepo.save(newBookingSyncType);*/
 
-        // OPERA Cancel Booking
-        String syncDescription = "Used to sync cancel booking from opera.";
-        Configuration cancelBookingConfig = new Configuration();
+//        // OPERA Cancel Booking
+//        String syncDescription = "Used to sync cancel booking from opera.";
+//        Configuration cancelBookingConfig = new Configuration();
+//
+//        SyncJobType cancelBookingSyncType = new SyncJobType(11, Constants.CANCEL_BOOKING_REPORT, syncDescription,
+//                "/cancelBookingReport", new Date(), cancelBookingConfig, account.getId());
+//        syncJobTypeRepo.save(cancelBookingSyncType);
 
-        SyncJobType cancelBookingSyncType = new SyncJobType(11, Constants.CANCEL_BOOKING_REPORT, syncDescription,
-                "/cancelBookingReport", new Date(), cancelBookingConfig, account.getId());
-        syncJobTypeRepo.save(cancelBookingSyncType);
+//        // OPERA Occupancy Update
+//        syncDescription = "Used to sync occupancy update from opera.";
+//        Configuration occupancyUpdateConfig = new Configuration();
+//
+//        SyncJobType occupancyUpdateSyncType = new SyncJobType(11, Constants.OCCUPANCY_UPDATE_REPORT, syncDescription,
+//                "/occupancyUpdateReport", new Date(), occupancyUpdateConfig, account.getId());
+//        syncJobTypeRepo.save(occupancyUpdateSyncType);
 
         // OPERA Occupancy Update
-        syncDescription = "Used to sync occupancy update from opera.";
-        Configuration occupancyUpdateConfig = new Configuration();
+        String syncDescription = "Used to sync expenses details from opera.";
+        Configuration expensesDetailsConfig = new Configuration();
 
-        SyncJobType occupancyUpdateSyncType = new SyncJobType(11, Constants.OCCUPANCY_UPDATE_REPORT, syncDescription,
-                "/occupancyUpdateReport", new Date(), occupancyUpdateConfig, account.getId());
-        syncJobTypeRepo.save(occupancyUpdateSyncType);
+        SyncJobType expensesDetailsSyncType = new SyncJobType(11, Constants.EXPENSES_DETAILS_REPORT, syncDescription,
+                "/expensesDetailsReport", new Date(), expensesDetailsConfig, account.getId());
+        syncJobTypeRepo.save(expensesDetailsSyncType);
 
         return true;
 

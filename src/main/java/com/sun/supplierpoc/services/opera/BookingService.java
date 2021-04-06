@@ -38,16 +38,19 @@ public class BookingService {
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Response fetchNewBookingFromReport(String userId, Account account, BookingConfiguration bookingConfiguration){
+    public Response fetchNewBookingFromReport(String userId, Account account){
         String message = "";
         Response response = new Response();
 
         SyncJob syncJob;
         GeneralSettings generalSettings;
+        BookingConfiguration bookingConfiguration;
+
         try{
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
+            bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
                     userId, account.getId(), syncJobType.getId(), 0);
@@ -94,15 +97,18 @@ public class BookingService {
         return response;
     }
 
-    public Response fetchCancelBookingFromReport(String userId, Account account, BookingConfiguration bookingConfiguration){
+    public Response fetchCancelBookingFromReport(String userId, Account account){
         String message = "";
         Response response = new Response();
 
         SyncJob syncJob;
         GeneralSettings generalSettings;
+        BookingConfiguration bookingConfiguration;
         try{
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
+
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
                     userId, account.getId(), syncJobType.getId(), 0);
@@ -150,13 +156,15 @@ public class BookingService {
         return response;
     }
 
-    public Response fetchOccupancyFromReport(String userId, Account account, BookingConfiguration bookingConfiguration){
+    public Response fetchOccupancyFromReport(String userId, Account account){
         String message = "";
         Response response = new Response();
 
         SyncJob syncJob;
+        BookingConfiguration bookingConfiguration;
         try{
             SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
+            bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
                     userId, account.getId(), syncJobType.getId(), 0);
@@ -194,6 +202,65 @@ public class BookingService {
             syncJobRepo.save(syncJob);
 
             message = "Failed to sync occupancy Updates.";
+            response.setMessage(message);
+            response.setStatus(false);
+        }
+
+        return response;
+    }
+
+    public Response fetchExpensesDetailsFromReport(String userId, Account account){
+        String message = "";
+        Response response = new Response();
+
+        SyncJob syncJob;
+        BookingConfiguration bookingConfiguration;
+        SyncJobType expensesDetailsSyncType;
+        GeneralSettings generalSettings;
+
+        try{
+            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            expensesDetailsSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.EXPENSES_DETAILS_REPORT, account.getId(), false);
+            bookingConfiguration = expensesDetailsSyncType.getConfiguration().bookingConfiguration;
+
+            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
+                    userId, account.getId(), expensesDetailsSyncType.getId(), 0);
+            syncJobRepo.save(syncJob);
+
+        } catch (Exception e) {
+            message = "Failed to establish a connection with the database.";
+            response.setMessage(message);
+            response.setStatus(false);
+            return response;
+        }
+
+        try{
+            String filePath = bookingConfiguration.filePath;
+            File file = new File(filePath);
+
+            FileInputStream input = new FileInputStream(file);
+            List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcel(syncJob, input,
+                    generalSettings);
+
+            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJob.setRowsFetched(syncJobData.size());
+            syncJobRepo.save(syncJob);
+
+            syncJobDataRepo.saveAll(syncJobData);
+
+            message = "Sync expenses details successfully.";
+            response.setStatus(true);
+            response.setMessage(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            syncJob.setStatus(Constants.FAILED);
+            syncJob.setReason(e.getMessage());
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJobRepo.save(syncJob);
+
+            message = "Failed to sync expenses details.";
             response.setMessage(message);
             response.setStatus(false);
         }

@@ -19,5 +19,7 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     ApplicationUser findByCode(String code);
 
 //    @Query(value = "SELECT * u from ApplicationUser ORDER BY u.top DESC LIMIT ?")
-    List<ApplicationUser> findTop3ByOrderByTopDesc();
+    List<ApplicationUser> findTop3ByAccountIdOrderByTopDesc(String accountId);
+
+    ArrayList<ApplicationUser> findAllByAccountId(String accountId);
 }

@@ -11,6 +11,7 @@ public class ApplicationUser implements Serializable {
 
     @Id
     private String id;
+    private String accountId;
     private String name;
     private int top;
     private String email;
@@ -99,5 +100,13 @@ public class ApplicationUser implements Serializable {
 
     public void setLogoUrl(String logoUrl) {
         this.logoUrl = logoUrl;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 }

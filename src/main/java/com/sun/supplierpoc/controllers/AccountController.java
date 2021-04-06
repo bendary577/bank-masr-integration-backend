@@ -145,17 +145,17 @@ public class AccountController {
         Configuration wlsIntegration = new Configuration();
         wlsIntegration.supplierConfiguration = new SupplierConfiguration();
 
-        SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wLsIntegration",
-                new Date(), wlsIntegration, account.getId());
-        syncJobTypeRepo.save(supplierSyncType);
+//        SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wLsIntegration",
+//                new Date(), wlsIntegration, account.getId());
+//        syncJobTypeRepo.save(supplierSyncType);
 
-        // OPERA New Booking
-        syncDescription = "Used to sync new booking from opera.";
-        Configuration newBookingConfig = new Configuration();
-
-        SyncJobType newBookingSyncType = new SyncJobType(10, Constants.NEW_BOOKING_REPORT, syncDescription,
-                "/newBookingReport", new Date(), newBookingConfig, account.getId());
-        syncJobTypeRepo.save(newBookingSyncType);
+//        // OPERA New Booking
+//        syncDescription = "Used to sync new booking from opera.";
+//        Configuration newBookingConfig = new Configuration();
+//
+//        SyncJobType newBookingSyncType = new SyncJobType(10, Constants.NEW_BOOKING_REPORT, syncDescription,
+//                "/newBookingReport", new Date(), newBookingConfig, account.getId());
+//        syncJobTypeRepo.save(newBookingSyncType);
 
 //            //suppliers
 //            String syncDescription = "Used to sync suppliers from sun to my inventory daily.";

@@ -33,9 +33,9 @@ public class TransactionService {
     @Autowired
     private AccountRepo accountRepo;
 
-    public List<Transactions> getTransactionByType(String transactionTypeId) {
+    public List<Transactions> getTransactionByType(String transactionTypeId, Account account) {
 
-            TransactionType transactionType = transactionTypeRepo.findByName(Constants.REDEEM_VOUCHER);
+            TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
             List<Transactions> transactions = transactionRepo.findAllByTransactionTypeId(transactionType.getId());
 
@@ -59,9 +59,9 @@ public class TransactionService {
         }
     }
 
-    public double getTotalSpendTransactions(String dateFlag, String transactionTypeName) {
+    public double getTotalSpendTransactions(String dateFlag, String transactionTypeName, Account account) {
 
-        TransactionType transactionType = transactionTypeRepo.findByName(Constants.REDEEM_VOUCHER);
+        TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
         List<Transactions> transactions = new ArrayList<>();
 

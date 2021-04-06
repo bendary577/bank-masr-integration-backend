@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -30,9 +31,11 @@ public class ImageService {
             e.printStackTrace();
         }
         System.out.println(fileImage.toPath());
-        String projectId = "entrepreware-moodle-dev";
-        String bucketName = "accor123";
-        String objectName = image.getOriginalFilename();
+        Random random = new Random();
+        int rand = random.nextInt();
+        String projectId = "oracle-symphony-integrator";
+        String bucketName = "oracle-integrator-bucket";
+        String objectName = image.getOriginalFilename() + rand;
 
         StorageOptions storageOptions = null;
         try {
@@ -64,11 +67,11 @@ public class ImageService {
     }
 
     public String downloadFile(Storage storage, String fileName) {
-        Blob blob = storage.get("accor123", fileName);
+        Blob blob = storage.get("oracle-integrator-bucket", fileName);
         String PATH_TO_JSON_KEY = baseConfigPath;
         URL signedUrl = null;
         try {
-            signedUrl = storage.signUrl(BlobInfo.newBuilder("accor123", fileName).build(),
+            signedUrl = storage.signUrl(BlobInfo.newBuilder("oracle-integrator-bucket", fileName).build(),
                     1, TimeUnit.DAYS, Storage.SignUrlOption.signWith(ServiceAccountCredentials.fromStream(
                             new FileInputStream(PATH_TO_JSON_KEY))));
         } catch (IOException e) {

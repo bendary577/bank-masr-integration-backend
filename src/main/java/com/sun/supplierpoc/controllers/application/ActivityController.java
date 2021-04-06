@@ -69,19 +69,19 @@ public class ActivityController {
 
             if (account != null) {
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-                SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
+//                SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
 
                 //Constants.REDEEM_VOUCHER)
 
-                TransactionType transactionType = transactionTypeRepo.findByName(Constants.REDEEM_VOUCHER);
+                TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
                 if (!user.getTypeId().contains(transactionType.getId())) {
                     response.put("isSuccess", Constants.FAILED);
                     response.put("message", "You don't have role to redeem reward!.");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                 }
-
-                if (location.isChecked()) {
+//                location.isChecked()
+                if (true) {
                     response = activityService.createTransaction(transactionType, transaction);
 
                     if (response.get("isSuccess").equals(Constants.SUCCESS)) {

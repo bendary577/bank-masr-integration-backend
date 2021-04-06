@@ -7,6 +7,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TransactionTypeRepo extends MongoRepository<TransactionType, String> {
 
-    TransactionType findByName(String name);
+    TransactionType findByNameAndAccountId(String name, String accountId);
 
 }

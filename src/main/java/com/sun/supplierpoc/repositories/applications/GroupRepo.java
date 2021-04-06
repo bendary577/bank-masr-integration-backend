@@ -13,10 +13,10 @@ import java.util.Optional;
 @Repository
 public interface GroupRepo extends MongoRepository<Group, String> {
     Group findFirstById(String id);
-    ArrayList<Group> findAllByAccountID(String accountId);
-    ArrayList<Group> findAllByAccountIDAndDeleted(String accountId, boolean deleted);
-    List<Group> findTop3ByOrderByTopDesc();
-    ArrayList<Group> findAllByAccountIDAndParentGroup(String id, Group group);
+    ArrayList<Group> findAllByAccountId(String accountId);
+    ArrayList<Group> findAllByAccountIdAndDeleted(String accountId, boolean deleted);
+    List<Group> findTop3ByAccountIdOrderByTopDesc(String accountId);
+    ArrayList<Group> findAllByAccountIdAndParentGroup(String id, Group group);
 
     boolean existsByName(String name);
 

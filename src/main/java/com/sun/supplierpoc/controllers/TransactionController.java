@@ -47,7 +47,7 @@ public class TransactionController {
 
             Account account = accountOptional.get();
 
-            List<Transactions> transactions = transactionService.getTransactionByType(transactionType);
+            List<Transactions> transactions = transactionService.getTransactionByType(transactionType, account);
 
             return transactions;
         }else{
@@ -69,7 +69,7 @@ public class TransactionController {
 
             Account account = accountOptional.get();
 
-            double totalSpend = transactionService.getTotalSpendTransactions(dateFlag, transactionType);
+            double totalSpend = transactionService.getTotalSpendTransactions(dateFlag, transactionType, account);
 
             response.put("totalSpend", totalSpend);
             return ResponseEntity.status(HttpStatus.OK).body(response);

@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services.application;
 
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,9 @@ public class AppUserService {
     private ApplicationUserRepo userRepo;
 
 
-    public List<ApplicationUser> getTopUsers() {
+    public List<ApplicationUser> getTopUsers(Account account) {
 
-            List<ApplicationUser> applicationUsers = userRepo.findTop3ByOrderByTopDesc();
+            List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdOrderByTopDesc(account.getId());
 
             return applicationUsers;
     }

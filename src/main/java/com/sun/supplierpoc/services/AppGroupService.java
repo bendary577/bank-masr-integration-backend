@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services;
 
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
@@ -15,9 +16,9 @@ public class AppGroupService {
     GroupRepo groupRepo;
 
 
-    public List<Group> getTopGroups() {
+    public List<Group> getTopGroups(Account account) {
 
-        List<Group> groups = groupRepo.findTop3ByOrderByTopDesc();
+        List<Group> groups = groupRepo.findTop3ByAccountIdOrderByTopDesc(account.getId());
 
         return groups;
     }

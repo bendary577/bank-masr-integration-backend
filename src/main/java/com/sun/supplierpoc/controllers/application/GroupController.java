@@ -33,9 +33,6 @@ public class GroupController {
     @Autowired
     private AppGroupService appGroupService;
     @Autowired
-    private HttpServletRequest request;
-
-    @Autowired
     private ImageService imageService;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +47,7 @@ public class GroupController {
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
-            ArrayList<Group> groups = groupRepo.findAllByAccountID(account.getId());
+            ArrayList<Group> groups = groupRepo.findAllByAccountId(account.getId());
 
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }
@@ -73,13 +70,13 @@ public class GroupController {
                 Optional<Group> groupOptional = groupRepo.findById(parentId);
                 if (groupOptional.isPresent()) {
                     Group group = groupOptional.get();
-                    groups = groupRepo.findAllByAccountIDAndParentGroup(account.getId(), group);
+                    groups = groupRepo.findAllByAccountIdAndParentGroup(account.getId(), group);
 
                 } else {
                     return new ResponseEntity(HttpStatus.BAD_REQUEST);
                 }
             } else {
-                groups = groupRepo.findAllByAccountIDAndParentGroup(account.getId(), null);
+                groups = groupRepo.findAllByAccountIdAndParentGroup(account.getId(), null);
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(groups);
@@ -115,7 +112,7 @@ public class GroupController {
                     return new ResponseEntity("Group is already exist with this name.", HttpStatus.BAD_REQUEST);
                 }
 
-                group.setAccountID(account.getId());
+                group.setAccountId(account.getId());
                 group.setCreationDate(new Date());
                 group.setLastUpdate(new Date());
                 group.setDeleted(false);
@@ -158,15 +155,9 @@ public class GroupController {
 
                 Group group = groupOptional.get();
 
-                imageService.store(image);
+                String logoUrl = imageService.store(image);
 
-                String filePath = "F:\\oracle-hospitality-frontend\\src\\assets\\" + group.getName() + ".jpg";
-
-                try {
-                    image.transferTo(new File(filePath));
-                } catch (IOException e) {}
-
-                group.setLogoUrl("../../../assets/" + group.getName() + ".jpg");
+                group.setLogoUrl(logoUrl);
                 groupRepo.save(group);
 
             }
@@ -175,82 +166,6 @@ public class GroupController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
-//    @RequestMapping("/addApplicationGroupImage")
-//    @CrossOrigin(origins = "*")
-//    @ResponseBody
-//    public ResponseEntity addApplicationGroupImage(@RequestPart(name = "groupId", required = false) String groupId,
-//                                                   @RequestPart("groupName") String groupName,
-//                                                   @RequestPart("description") String description,
-//                                                   @RequestPart("discountRate") float discountRate,
-//                                                   @RequestPart("discountId") String discountId,
-//                                                   @RequestPart("parentGroupId") String parentGroupId,
-//                                                   @RequestPart(name = "image", required = false) MultipartFile image,
-//                                                   Principal principal){
-//
-//        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-//        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-//        if (accountOptional.isPresent()) {
-//            Account account = accountOptional.get();
-//
-//            String filePath = "D:\\1.Bassel\\simphony\\infor-sun-poc\\src\\main\\resources\\"+groupName+".jpg";
-//            try {
-//                image.transferTo(new File(filePath));
-//            } catch (IOException e) {
-//            }
-//
-//            Group group = new Group();
-//            Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
-//            Group parentGroup = new Group();
-//
-//            if(group.getParentGroup() != null) {
-//
-//                if (groupId.equals(null)) {
-//
-//
-//                    if (parentGroupOptional.isPresent()) {
-//                        parentGroup = parentGroupOptional.get();
-//                        if (group.getParentGroup().getParentGroup() != null) {
-//                            return new ResponseEntity("Parent group is already child for another group," +
-//                                    "\n Please select valid parent group.",
-//                                    HttpStatus.BAD_REQUEST);
-//                        }
-//                    }
-//                    group.setName(groupName);
-//                    group.setDescription(description);
-//                    group.setDiscountRate(discountRate);
-//                    group.setAccountID(discountId);
-//                    group.setParentGroup(parentGroup);
-//                    group.setAccountID(account.getId());
-//                    group.setLogoUrl(filePath);
-//                    group.setCreationDate(new Date());
-//                    group.setLastUpdate(new Date());
-//                    group.setDeleted(false);
-//                } else {
-//                    group = groupRepo.findById(groupId).get();
-//                    if (parentGroupOptional.isPresent()) {
-//                        parentGroup = parentGroupOptional.get();
-//                        if (group.getParentGroup().getParentGroup() != null) {
-//                            return new ResponseEntity("Parent group is already child for another group," +
-//                                    "\n Please select valid parent group.",
-//                                    HttpStatus.BAD_REQUEST);
-//                        }
-//                    }
-//                    group.setName(groupName);
-//                    group.setDescription(description);
-//                    group.setDiscountRate(discountRate);
-//                    group.setAccountID(discountId);
-//                    group.setParentGroup(parentGroup);
-//                    group.setAccountID(account.getId());
-//                    group.setLastUpdate(new Date());
-//
-//                }
-//            }
-//
-//            groupRepo.save(new Group());
-//            return ResponseEntity.status(HttpStatus.OK).body(new Group());
-//        }
-//        return new ResponseEntity(HttpStatus.FORBIDDEN);
-//    }
 
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
@@ -279,7 +194,7 @@ public class GroupController {
 
             Account account = accountOptional.get();
 
-            List<Group> groups = appGroupService.getTopGroups();
+            List<Group> groups = appGroupService.getTopGroups(account);
 
             return groups;
         } else {

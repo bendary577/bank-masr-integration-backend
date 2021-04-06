@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
+import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
 import com.sun.supplierpoc.services.application.AppUserService;
@@ -37,6 +38,9 @@ public class    AppUserController {
     @Autowired
     private AppUserService appUserService;
 
+    @Autowired
+    private ImageService imageService;
+
 //    private static final String QR_CODE_IMAGE_PATH = "./src/main/resources/QRCode.png";
 //    private static final String LOGO_IMAGE_PATH = "./src/main/resources/logo.png";
 
@@ -49,7 +53,8 @@ public class    AppUserController {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            ArrayList<ApplicationUser> applicationUsers = userRepo.findAll();
+            Account account = accountOptional.get();
+            ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
             return  ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -66,6 +71,7 @@ public class    AppUserController {
             Account account = accountOptional.get();
 
             if(addFlag){
+                applicationUser.setAccountId(account.getId());
                 applicationUser.setCreationDate(new Date());
                 applicationUser.setLastUpdate(new Date());
                 applicationUser.setDeleted(false);
@@ -75,8 +81,8 @@ public class    AppUserController {
 
             Random random = new Random();
             String code = applicationUser.getName() +random.nextInt();
-            String QRPath = "F:\\oracle-hospitality-frontend\\src\\assets\\"+ code +".png" ;
-            String logoPath = "";
+            String logoPath = "https://storage.googleapis.com/oracle-integrator-bucket/logo.png-1856061613?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1617796802&Signature=oAY183ycuF6%2F3%2FPNJZ64znzCKyx6tjEP5p3GSnkhG4qY%2Bakn%2FSOusi0wQktp6EMXHXyEFY3NeWzxTPe5xB%2F0KYNx1lq6HnsKie%2FQQBxLbFwSWjNMb3PM3bm712z1PFuEnmXnFV3P2fo8iwvhbNcnl%2BHa6lmSJalCosyarVfXmHH9QdqLYLYcZ4k%2BzswYhtwwyKx%2BoZUkB4Ca10JlrkXMJz3Qb8T2rZ2kUjpf05jJQtsQ6XC4TrU5cWsnKQbvH1Gj1Ib%2BUXXVQ5geKZbSMLr9o2R9Fdsg4QhgXJ0qtZCNUhR6J8hHXLs455AEkc8zR24f2yYLiPLsKrL0kujGI2aJ4Q%3D%3D";
+            String QRPath = code +".png" ;
 
             if(account.getImageUrl() != null) {
                 logoPath = account.getImageUrl();
@@ -85,8 +91,8 @@ public class    AppUserController {
             applicationUser.setCode(code);
 
             try {
-                qrCodeGenerator.generateQRCodeImage(code,200, 200, QRPath);
-                emailService.sendMimeMail(QRPath, logoPath, applicationUser);
+                String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
+                emailService.sendMimeMail(QrPath, logoPath, applicationUser);
             } catch (WriterException | IOException e) {
                 return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
             }
@@ -117,13 +123,9 @@ public class    AppUserController {
 
                 ApplicationUser applicationUser = applicationUserOptional.get();
 
-                String filePath = "F:\\oracle-hospitality-frontend\\src\\assets\\" + applicationUser.getName() + ".jpg";
+                String logoUrl = imageService.store(image);
 
-                try {
-                    image.transferTo(new File(filePath));
-                } catch (IOException e) {}
-
-                applicationUser.setLogoUrl("../../../assets/" + applicationUser.getName() + ".jpg");
+                applicationUser.setLogoUrl(logoUrl);
                 userRepo.save(applicationUser);
 
             }
@@ -159,7 +161,7 @@ public class    AppUserController {
 
             Account account = accountOptional.get();
 
-            List<ApplicationUser> applicationUsers = appUserService.getTopUsers();
+            List<ApplicationUser> applicationUsers = appUserService.getTopUsers(account);
 
             return applicationUsers;
         }else{
@@ -185,12 +187,12 @@ public class    AppUserController {
 //        qrCodeGenerator.generateQRCodeImage(codeText, width, height, QR_CODE_IMAGE_PATH);
 //    }
 
-    @GetMapping(value = "/Simphony/generateQRCode")
-    public ResponseEntity<byte[]> generateQRCode(
-            @RequestParam(name = "codeText") String codeText,
-            @RequestParam(name = "width") Integer width,
-            @RequestParam(name = "height") Integer height)
-            throws Exception {
-        return ResponseEntity.status(HttpStatus.OK).body(qrCodeGenerator.getQRCodeImage(codeText, width, height));
-    }
+//    @GetMapping(value = "/Simphony/generateQRCode")
+//    public ResponseEntity<byte[]> generateQRCode(
+//            @RequestParam(name = "codeText") String codeText,
+//            @RequestParam(name = "width") Integer width,
+//            @RequestParam(name = "height") Integer height)
+//            throws Exception {
+//        return ResponseEntity.status(HttpStatus.OK).body(qrCodeGenerator.getQRCodeImage(codeText, width, height));
+//    }
 }

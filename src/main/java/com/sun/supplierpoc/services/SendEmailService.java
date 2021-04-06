@@ -49,7 +49,7 @@ public class SendEmailService {
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);transition: 0.3s; width: 100%;'>" +
                     "<br>" +
                     "<img style=\"width:40%; display: block;margin-left: auto; margin-right: auto;\"" +
-                    "   src='cid:image000'>" +
+                    "   src='"+logoPath+"'>" +
 
                     "<br>\n" +
                     "<img style=\"width:100%\"" +
@@ -62,7 +62,7 @@ public class SendEmailService {
                     "</p>" +
 
                     "<p style=\"text-align: center;font-weight: bold;\"> Show this code to our staff</p>" +
-                    "<img src='cid:image001' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
+                    "<img src='"+qrCodePath+"' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
                             "<p style='text-align:center'>"+ " code : "+ user.getCode() +"</p>" +
                     "<p style='text-align:center'>Look forward to seeing you at out store</p>" +
                     "<br>" +
@@ -75,15 +75,9 @@ public class SendEmailService {
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
 
-            FileSystemResource resource = new FileSystemResource(new File(qrCodePath));
-            messageHelper.addInline("image001", resource);
-
-            resource = new FileSystemResource(new File(logoPath));
-            messageHelper.addInline("image000", resource);
-
             mailSender.send(mailMessage);
 
-            new File(logoPath).delete();
+            new File(qrCodePath).delete();
 
         } catch (MessagingException e) {
             e.printStackTrace();

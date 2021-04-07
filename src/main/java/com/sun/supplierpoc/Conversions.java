@@ -277,7 +277,7 @@ public class Conversions {
     // ==> OPERA Report Functions
 
     public BookingType checkBookingTypeExistence(ArrayList<BookingType> bookingTypes, String typeName){
-        if(typeName.equals("")){
+        if(typeName.equals("") || bookingTypes.size() == 0){
             return new BookingType("0");
         }
         for (BookingType paymentType : bookingTypes) {

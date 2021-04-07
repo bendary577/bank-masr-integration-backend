@@ -183,9 +183,12 @@ public class ExcelHelper {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Resv Status")) {
                         bookingDetails.reservationStatus = currentCell.getStringCellValue();
-                    } else if (cellIdx == columnsName.indexOf("Nationality Code")) {
+                    } else if (cellIdx == columnsName.indexOf("Nationality")) {
                         typeName = currentCell.getStringCellValue();
                         bookingType = conversions.checkBookingTypeExistence(nationalities, typeName);
+
+                        if(typeName.equals(""))
+                            bookingType.setTypeId("826");
 
                         bookingDetails.nationalityCode = bookingType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Arrival Date")) {
@@ -203,7 +206,9 @@ public class ExcelHelper {
                         bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
 
                         bookingDetails.roomType = bookingType.getTypeId();
-                    } else if (cellIdx == columnsName.indexOf("Full Rate Amount")) {
+                    } else if (cellIdx == columnsName.indexOf("Daily Rate")) {
+                        bookingDetails.dailyRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
+                    } else if (cellIdx == columnsName.indexOf("Total Rate")) {
                         bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Total Room")) {
                         bookingDetails.grandTotal = String.valueOf((conversions.roundUpFloat((float) currentCell.getNumericCellValue())));
@@ -263,9 +268,6 @@ public class ExcelHelper {
                 typeName = "Visitor";
                 bookingType = conversions.checkBookingTypeExistence(customerTypes, typeName);
                 bookingDetails.customerType = bookingType.getTypeId();
-
-                // Fetch from database
-                bookingDetails.dailyRoomRate = "1000";
 
                 HashMap<String, Object> data = new HashMap<>();
                 Field[] allFields = bookingDetails.getClass().getDeclaredFields();

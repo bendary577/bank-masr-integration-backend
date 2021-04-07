@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.models.opera.Reservation;
@@ -127,7 +128,7 @@ public class ExcelHelper {
     }
 
     public List<SyncJobData> getNewBookingFromExcel(SyncJob syncJob, String municipalityTax, GeneralSettings generalSettings,
-                                                    InputStream is) {
+                                                    SyncJobType syncJobType, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -241,7 +242,9 @@ public class ExcelHelper {
                 }
 
                 // check if it was new booking or update
-                ArrayList<SyncJobData> list = syncJobDataService.getSyncJobDataByBookingNo(bookingDetails.bookingNo);
+                ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo,
+                        syncJobType.getId());
+
                 if (list.size() > 0) {
                     // Update
                     bookingDetails.cuFlag = "2";
@@ -295,7 +298,7 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
-    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, String municipalityTax,
+    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob,
                                                        ArrayList<BookingType> paymentTypes,
                                                        ArrayList<BookingType> cancelReasons, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();

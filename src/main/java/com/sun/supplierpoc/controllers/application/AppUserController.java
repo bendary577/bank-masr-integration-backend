@@ -7,7 +7,7 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
+import com.sun.supplierpoc.repositories.applications.   ApplicationUserRepo;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
@@ -69,16 +69,21 @@ public class    AppUserController {
                                                 @RequestBody ApplicationUser applicationUser, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
 
             if(addFlag){
+
                 applicationUser.setAccountId(account.getId());
                 applicationUser.setCreationDate(new Date());
                 applicationUser.setLastUpdate(new Date());
                 applicationUser.setDeleted(false);
+
             }else {
+
                 applicationUser.setLastUpdate(new Date());
+
             }
 
             Random random = new Random();

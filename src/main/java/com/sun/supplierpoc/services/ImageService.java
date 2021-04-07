@@ -34,7 +34,7 @@ public class ImageService {
         Random random = new Random();
         int rand = random.nextInt();
         String projectId = "oracle-symphony-integrator";
-        String bucketName = "accour";
+        String bucketName = "oracle-integrator-bucket";
         String objectName = image.getOriginalFilename() + rand;
 
         StorageOptions storageOptions = null;
@@ -67,11 +67,11 @@ public class ImageService {
     }
 
     public String downloadFile(Storage storage, String fileName) {
-        Blob blob = storage.get("accour ", fileName);
+        Blob blob = storage.get("oracle-integrator-bucket", fileName);
         String PATH_TO_JSON_KEY = baseConfigPath;
         URL signedUrl = null;
         try {
-            signedUrl = storage.signUrl(BlobInfo.newBuilder("accour ", fileName).build(),
+            signedUrl = storage.signUrl(BlobInfo.newBuilder("oracle-integrator-bucket", fileName).build(),
                     1, TimeUnit.DAYS, Storage.SignUrlOption.signWith(ServiceAccountCredentials.fromStream(
                             new FileInputStream(PATH_TO_JSON_KEY))));
         } catch (IOException e) {

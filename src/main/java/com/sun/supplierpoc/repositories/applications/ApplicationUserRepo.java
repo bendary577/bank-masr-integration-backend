@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.repositories.applications;
 
+import com.sun.supplierpoc.models.Application;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.models.applications.Group;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -22,4 +24,7 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     List<ApplicationUser> findTop3ByAccountIdOrderByTopDesc(String accountId);
 
     ArrayList<ApplicationUser> findAllByAccountId(String accountId);
+
+    List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);
+
 }

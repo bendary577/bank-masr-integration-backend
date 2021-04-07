@@ -1,12 +1,17 @@
 package com.sun.supplierpoc.controllers.application;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.ApplicationRepo;
+import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.AppGroupService;
 import com.sun.supplierpoc.services.ImageService;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +23,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 public class GroupController {
@@ -34,6 +36,9 @@ public class GroupController {
     private AppGroupService appGroupService;
     @Autowired
     private ImageService imageService;
+
+    @Autowired
+    private ApplicationUserRepo userRepo;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -67,6 +72,8 @@ public class GroupController {
             ArrayList<Group> groups;
 
             if (isParent) {
+                groups = groupRepo.findAllByAccountIdAndParentGroup(account.getId(), null);
+            } else {
                 Optional<Group> groupOptional = groupRepo.findById(parentId);
                 if (groupOptional.isPresent()) {
                     Group group = groupOptional.get();
@@ -74,10 +81,7 @@ public class GroupController {
 
                 } else {
                     return new ResponseEntity(HttpStatus.BAD_REQUEST);
-                }
-            } else {
-                groups = groupRepo.findAllByAccountIdAndParentGroup(account.getId(), null);
-            }
+                }            }
 
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }
@@ -143,25 +147,37 @@ public class GroupController {
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    Principal principal) {
 
+        HashMap response = new HashMap();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
 
             Optional<Group> groupOptional = groupRepo.findById(groupId);
 
-
             if (groupOptional.isPresent()) {
 
                 Group group = groupOptional.get();
 
-                String logoUrl = imageService.store(image);
-
+                String logoUrl = Constants.USER_IMAGE_URL;
+                if(image != null) {
+                    try {
+                        logoUrl = imageService.store(image);
+                    } catch (Exception e) {
+                        LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                    }
+                }
                 group.setLogoUrl(logoUrl);
                 groupRepo.save(group);
 
+                response.put("message", "Group updated successfully.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }else{
+                response.put("message", "Can't save group.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-            return ResponseEntity.status(HttpStatus.OK).body(new Group());
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
@@ -170,13 +186,36 @@ public class GroupController {
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups, Principal principal) {
+    public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups,Principal principal,
+                                                     @RequestParam(name = "addFlag") boolean addFlag) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             for (Group group : groups) {
-                group.setDeleted(true);
-                groupRepo.save(group);
+
+                Account account = accountOptional.get();
+
+                if(addFlag) {
+                    group.setDeleted(true);
+                    groupRepo.save(group);
+
+                    List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+
+                    for (ApplicationUser applicationUser : applicationUsers) {
+                        applicationUser.setDeleted(true);
+                        userRepo.save(applicationUser);
+                    }
+                }else{
+                    group.setDeleted(false);
+                    groupRepo.save(group);
+
+                    List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+
+                    for (ApplicationUser applicationUser : applicationUsers) {
+                        applicationUser.setDeleted(false);
+                        userRepo.save(applicationUser);
+                    }
+                }
             }
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }

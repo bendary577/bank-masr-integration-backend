@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.controllers.application;
 import com.google.zxing.WriterException;
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
@@ -11,6 +12,7 @@ import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
 import com.sun.supplierpoc.services.application.AppUserService;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -81,7 +83,7 @@ public class    AppUserController {
 
             Random random = new Random();
             String code = applicationUser.getName() +random.nextInt();
-            String logoPath = "https://storage.googleapis.com/oracle-integrator-bucket/logo.png-1856061613?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1617796802&Signature=oAY183ycuF6%2F3%2FPNJZ64znzCKyx6tjEP5p3GSnkhG4qY%2Bakn%2FSOusi0wQktp6EMXHXyEFY3NeWzxTPe5xB%2F0KYNx1lq6HnsKie%2FQQBxLbFwSWjNMb3PM3bm712z1PFuEnmXnFV3P2fo8iwvhbNcnl%2BHa6lmSJalCosyarVfXmHH9QdqLYLYcZ4k%2BzswYhtwwyKx%2BoZUkB4Ca10JlrkXMJz3Qb8T2rZ2kUjpf05jJQtsQ6XC4TrU5cWsnKQbvH1Gj1Ib%2BUXXVQ5geKZbSMLr9o2R9Fdsg4QhgXJ0qtZCNUhR6J8hHXLs455AEkc8zR24f2yYLiPLsKrL0kujGI2aJ4Q%3D%3D";
+            String logoPath = Constants.ACCOUNT_IMAGE_URL;
             String QRPath = code +".png" ;
 
             if(account.getImageUrl() != null) {
@@ -111,8 +113,11 @@ public class    AppUserController {
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    Principal principal) {
 
+        HashMap response = new HashMap();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
 
@@ -123,13 +128,26 @@ public class    AppUserController {
 
                 ApplicationUser applicationUser = applicationUserOptional.get();
 
-                String logoUrl = imageService.store(image);
+                String logoUrl = Constants.USER_IMAGE_URL;
+
+                if(image != null) {
+                    try {
+                        logoUrl = imageService.store(image);
+                    } catch (Exception e) {
+                        LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                    }
+                }
 
                 applicationUser.setLogoUrl(logoUrl);
                 userRepo.save(applicationUser);
 
+                response.put("message", "User saved successfully.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }else{
+                response.put("message", "Can't save user.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(applicationUserOptional);
+
             }
-            return ResponseEntity.status(HttpStatus.OK).body(applicationUserOptional);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
@@ -137,12 +155,17 @@ public class    AppUserController {
     @RequestMapping("/deleteApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationUsers(@RequestBody List<ApplicationUser> applicationUsers, Principal principal){
+    public ResponseEntity deleteApplicationUsers(@RequestParam(name = "addFlag") boolean addFlag,
+                                                 @RequestBody List<ApplicationUser> applicationUsers, Principal principal){
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             for (ApplicationUser applicationUser : applicationUsers) {
-                applicationUser.setDeleted(true);
+                if(addFlag) {
+                    applicationUser.setDeleted(true);
+                }else{
+                    applicationUser.setDeleted(false);
+                }
                 userRepo.save(applicationUser);
             }
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);

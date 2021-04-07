@@ -59,7 +59,6 @@ public class ApplicationController {
         HashMap response = new HashMap();
 
         try {
-
             if (result.hasErrors()) {
                 response.put("error", result.getAllErrors());
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);

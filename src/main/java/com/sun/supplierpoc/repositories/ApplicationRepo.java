@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.repositories;
 
 import com.sun.supplierpoc.models.Application;
+import com.sun.supplierpoc.models.applications.Group;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

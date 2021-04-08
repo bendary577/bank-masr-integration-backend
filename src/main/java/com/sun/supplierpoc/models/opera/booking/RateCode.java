@@ -6,6 +6,7 @@ public class RateCode {
     public float vatRate = 0;
     public float serviceChargeRate = 0;
     public float municipalityTaxRate = 0;
+    public float basicPackageValue = 0;
 
     public RateCode() { }
 }

@@ -321,7 +321,7 @@ public class ExcelHelper {
                 municipalityTax = (roomRate * rateCode.municipalityTaxRate)/100;
                 bookingDetails.municipalityTax = String.valueOf(municipalityTax);
 
-                grandTotal = (roomRate + vat + municipalityTax + serviceCharge) * nights;
+                grandTotal = (roomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue) * nights;
                 bookingDetails.grandTotal = String.valueOf(grandTotal);
 
                 if (bookingDetails.discount.equals(""))

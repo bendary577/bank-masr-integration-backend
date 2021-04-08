@@ -3,6 +3,7 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
 
 import java.nio.charset.StandardCharsets;
@@ -299,6 +300,18 @@ public class Conversions {
         }
 
         return new BookingType("1");
+    }
+
+    public RateCode checkRateCodeExistence(ArrayList<RateCode> rateCodes, String code){
+        if(code.equals("") || rateCodes.size() == 0){
+            return new RateCode();
+        }
+        for (RateCode rateCode : rateCodes) {
+            if (rateCode.code.toLowerCase().equals(code.toLowerCase())) {
+                return rateCode;
+            }
+        }
+        return new RateCode();
     }
 
     public String checkRoomRentType(Date arrivalDate, Date departureDate){

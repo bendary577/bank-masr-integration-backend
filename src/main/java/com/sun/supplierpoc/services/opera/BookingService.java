@@ -65,13 +65,11 @@ public class BookingService {
 
         try{
             String filePath = bookingConfiguration.filePath;
-            String municipalityTax = bookingConfiguration.municipalityTax;
             File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
 
-            List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, municipalityTax,
-                    generalSettings, syncJobType, input);
+            List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

@@ -131,6 +131,7 @@ public class ExcelHelper {
                                                     SyncJobType syncJobType, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
 
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
         ArrayList<BookingType> roomTypes = generalSettings.getRoomTypes();
@@ -157,6 +158,9 @@ public class ExcelHelper {
             Date arrivalDate = null;
             Date departureDate = null;
 
+            Date checkinTime = null;
+            Date checkoutTime = null;
+
             ArrayList<String> columnsName = new ArrayList<>();
 
             while (rows.hasNext()) {
@@ -182,8 +186,12 @@ public class ExcelHelper {
 
                     if (cellIdx == columnsName.indexOf("Booking No")) {
                         bookingDetails.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
-                    } else if (cellIdx == columnsName.indexOf("Resv Status")) {
-                        bookingDetails.reservationStatus = currentCell.getStringCellValue();
+                    } else if (cellIdx == columnsName.indexOf("Reserve Status")) {
+                        typeName = currentCell.getStringCellValue();
+
+                        bookingType = conversions.checkBookingTypeExistence(transactionTypes, typeName);
+                        bookingDetails.transactionTypeId = bookingType.getTypeId();
+                        bookingDetails.reservationStatus = typeName;
                     } else if (cellIdx == columnsName.indexOf("Nationality")) {
                         typeName = currentCell.getStringCellValue();
                         bookingType = conversions.checkBookingTypeExistence(nationalities, typeName);
@@ -198,7 +206,36 @@ public class ExcelHelper {
                     } else if (cellIdx == columnsName.indexOf("Departure Date")) {
                         departureDate = currentCell.getDateCellValue();
                         bookingDetails.checkOutDate = dateFormat.format(departureDate);
-                    } else if (cellIdx == columnsName.indexOf("Number of Nights")) {
+                    } else if (cellIdx == columnsName.indexOf("Arrival Time")) {
+                        try {
+                            if(currentCell.getStringCellValue().equals(""))
+                                bookingDetails.checkInTime = "00:00";
+
+                            if(currentCell.getStringCellValue().contains("*"))
+                                bookingDetails.checkInTime = currentCell.getStringCellValue().replace("*", "");
+
+                            Date date = new SimpleDateFormat("HH:mmm").parse(bookingDetails.checkInTime);
+                            bookingDetails.checkInTime = timeFormat.format(date);
+
+                        } catch (Exception e) {
+                            checkinTime = currentCell.getDateCellValue();
+                            bookingDetails.checkInTime = (timeFormat.format(checkinTime));
+                        }
+                    } else if (cellIdx == columnsName.indexOf("Departure Time")) {
+                        try {
+                            if(currentCell.getStringCellValue().equals(""))
+                                bookingDetails.checkOutTime = "00:00";
+
+                            if(currentCell.getStringCellValue().contains("*"))
+                                bookingDetails.checkOutTime = currentCell.getStringCellValue().replace("*", "");
+
+                            Date date = new SimpleDateFormat("HH:mmm").parse(bookingDetails.checkInTime);
+                            bookingDetails.checkOutTime = timeFormat.format(date);
+                        } catch (Exception e) {
+                            checkinTime = currentCell.getDateCellValue();
+                            bookingDetails.checkOutTime = timeFormat.format(checkinTime);
+                        }
+                    } else if (cellIdx == columnsName.indexOf("Nights")) {
                         bookingDetails.totalDurationDays = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Room No.")) {
                         bookingDetails.allotedRoomNo = String.valueOf((int) (currentCell.getNumericCellValue()));
@@ -221,8 +258,12 @@ public class ExcelHelper {
                     } else if (cellIdx == columnsName.indexOf("Adults")) {
                         bookingDetails.noOfGuest = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Date of Birth")) {
-                        bookingDetails.dateOfBirth = String.valueOf(currentCell.getDateCellValue());
-                    } else if (cellIdx == columnsName.indexOf("Payment Method")) {
+                        if(currentCell.getStringCellValue().equals("XX/XX/XX")){
+                            bookingDetails.dateOfBirth = "";
+                        }else{
+                            bookingDetails.dateOfBirth = String.valueOf(currentCell.getDateCellValue());
+                        }
+                    } else if (cellIdx == columnsName.indexOf("Pay Method")) {
                         typeName = (currentCell.getStringCellValue());
                         bookingType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
 
@@ -262,11 +303,6 @@ public class ExcelHelper {
                 if (arrivalDate != null && departureDate != null) {
                     bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);
                 }
-
-                // Static Value
-                typeName = "Room Types";
-                bookingType = conversions.checkBookingTypeExistence(transactionTypes, typeName);
-                bookingDetails.transactionTypeId = bookingType.getTypeId();
 
                 typeName = "Visitor";
                 bookingType = conversions.checkBookingTypeExistence(customerTypes, typeName);

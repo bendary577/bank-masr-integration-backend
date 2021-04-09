@@ -117,7 +117,22 @@ public class    AppUserController {
                     applicationUser.setCreationDate(new Date());
                     applicationUser.setLastUpdate(new Date());
                     applicationUser.setDeleted(false);
+
+                    Random random = new Random();
+                    String code = applicationUser.getName() +random.nextInt();
+                    String logoPath = account.getImageUrl();
+                    String QRPath = "./src/main/resources/"+ code +".png" ;
+                    applicationUser.setCode(code);
+
+                    try {
+                        String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
+                        emailService.sendMimeMail(QrPath, logoPath, applicationUser);
+                    } catch (WriterException | IOException e) {
+                        LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                    }
+
                     userRepo.save(applicationUser);
+
                 } else {
 
                     Optional<ApplicationUser> userOptional = userRepo.findById(userId);
@@ -188,6 +203,23 @@ public class    AppUserController {
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
+
+    @RequestMapping("/deleteAllUsersDeeply")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity deleteAllUsersDeeply(Principal principal) {
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+
+            userRepo.deleteAll();
+
+            return ResponseEntity.status(HttpStatus.OK).body("Deleted");
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
 
     @RequestMapping("/getTopUser")
     public List getTransactionByType(Principal principal) {

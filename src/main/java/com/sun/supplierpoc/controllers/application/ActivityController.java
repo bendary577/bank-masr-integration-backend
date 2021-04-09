@@ -4,8 +4,6 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
-import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.TransactionTypeRepo;
@@ -15,16 +13,11 @@ import com.sun.supplierpoc.services.application.ActivityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.security.Principal;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/activity")
@@ -69,8 +62,8 @@ public class ActivityController {
 
             if (account != null) {
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-//                SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
 
+                //SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
                 //Constants.REDEEM_VOUCHER)
 
                 TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());

@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.controllers;
+package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;

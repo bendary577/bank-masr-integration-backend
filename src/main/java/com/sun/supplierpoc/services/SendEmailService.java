@@ -67,10 +67,11 @@ public class SendEmailService {
                     "<p style='text-align:center'>Look forward to seeing you at out store</p>" +
                     "<br>" +
                     "<br>" +
-                    "<div style=\"display: table;margin-left: auto; margin-right: auto;\">" +
-                    "<div style=\"float: left; width: 10%;\">" +
-                    "   <img src='https://s3-eu-west-1.amazonaws.com/wuzzuf/files/company_logo/Entrepreware-Egypt-7223.png'>\n" +
-                    "</div>";
+                    "<div style=\"display: table;margin-left: auto; margin-right: auto;\">" ;
+//                            +
+//                    "<div style=\"float: left; width: 10%;\">" +
+//                    "   <img src='https://s3-eu-west-1.amazonaws.com/wuzzuf/files/company_logo/Entrepreware-Egypt-7223.png'>\n" +
+//                    "</div>";
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);

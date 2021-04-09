@@ -70,6 +70,7 @@ public class TransactionService {
             double totalSpend = 0;
 
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
+            calendar.set(Calendar.DATE, Calendar.DATE-1);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 59);
             calendar.set(Calendar.SECOND, 59);

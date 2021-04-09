@@ -90,7 +90,7 @@ public class    AppUserController {
 
                     if (groupId != null) {
                         Optional<Group> groupOptional = groupRepo.findById(groupId);
-                        if (groupOptional.get().getParentGroup() == null) {
+                        if (groupOptional.get() == null) {
                             response.put("message", "Group doesn't exist");
                             return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
                         }

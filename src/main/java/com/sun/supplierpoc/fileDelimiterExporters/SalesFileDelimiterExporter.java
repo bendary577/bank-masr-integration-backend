@@ -266,11 +266,12 @@ public class SalesFileDelimiterExporter {
 
         for (SyncJobData syncJobData : listSyncJobData) {
 
-            if(syncJobData.getData().get("overGroup").equals("Food") || syncJobData.getData().get("overGroup").equals("Bar")){
+            if(syncJobData.getData().get("overGroup").equals("Food") || syncJobData.getData().get("overGroup").equals("Bar")
+                    || syncJobData.getData().get("overGroup").toString().contains("major")){
 
                 if(tempSyncJobData.getId() != (null)){
 
-                    tempSyncJobData.getData().put("totalCr", totalCr);
+                    tempSyncJobData.getData().put("totalCr", conversions.roundUpFloat(totalCr));
 
                     syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "C");
                     if (syncJobDataCSV != null)

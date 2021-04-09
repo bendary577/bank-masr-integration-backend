@@ -1,10 +1,15 @@
 package com.sun.supplierpoc.models.configurations;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RevenueCenter {
     private boolean checked = false;
     private String revenueCenter = "";
     private String discountAccount ="";
     private String accountCode ="";
+
+    private List<OrderType> orderTypes = new ArrayList<>();
 
     public RevenueCenter() {
     }
@@ -44,5 +49,13 @@ public class RevenueCenter {
 
     public void setAccountCode(String accountCode) {
         this.accountCode = accountCode;
+    }
+
+    public List<OrderType> getOrderTypes() {
+        return orderTypes;
+    }
+
+    public void setOrderTypes(List<OrderType> orderTypes) {
+        this.orderTypes = orderTypes;
     }
 }

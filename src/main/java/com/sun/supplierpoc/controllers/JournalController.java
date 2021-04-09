@@ -97,8 +97,7 @@ public class JournalController {
 
         ConsumptionConfiguration configuration = journalSyncJobType.getConfiguration().consumptionConfiguration;
         ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
-
-        String consumptionBasedOnType = journalSyncJobType.getConfiguration().consumptionConfiguration.consumptionBasedOnType;
+        String consumptionBasedOnType = configuration.consumptionBasedOnType;
 
         ArrayList<OverGroup> overGroups;
         if (!journalSyncJobType.getConfiguration().uniqueOverGroupMapping){
@@ -310,7 +309,7 @@ public class JournalController {
 
     public HashMap<String, Object> syncApprovedInvoicesInDayRange(String userId, Account account) throws ParseException, IOException {
         HashMap<String, Object> response = new HashMap<>();
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.APPROVED_INVOICES, account.getId(), false);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
         DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
         DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
@@ -318,9 +317,6 @@ public class JournalController {
 
         int tryCount = 2;
 
-        /*
-         * Sync days in range
-         * */
         if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
             String startDate = syncJobType.getConfiguration().fromDate;
             String endDate = syncJobType.getConfiguration().toDate;

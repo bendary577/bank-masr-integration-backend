@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.   ApplicationUserRepo;
+import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
@@ -43,10 +44,8 @@ public class    AppUserController {
     @Autowired
     private ImageService imageService;
 
-//    private static final String QR_CODE_IMAGE_PATH = "./src/main/resources/QRCode.png";
-//    private static final String LOGO_IMAGE_PATH = "./src/main/resources/logo.png";
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    @Autowired
+    private GroupRepo groupRepo;
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
@@ -65,96 +64,108 @@ public class    AppUserController {
     @RequestMapping("/addApplicationUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationUser(@RequestParam(name = "addFlag") boolean addFlag,
-                                                @RequestBody ApplicationUser applicationUser, Principal principal){
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
-        if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-
-            if(addFlag){
-
-                applicationUser.setAccountId(account.getId());
-                applicationUser.setCreationDate(new Date());
-                applicationUser.setLastUpdate(new Date());
-                applicationUser.setDeleted(false);
-
-            }else {
-
-                applicationUser.setLastUpdate(new Date());
-
-            }
-
-            Random random = new Random();
-            String code = applicationUser.getName() +random.nextInt();
-            String logoPath = Constants.ACCOUNT_IMAGE_URL;
-            String QRPath = code +".png" ;
-
-            if(account.getImageUrl() != null) {
-                logoPath = account.getImageUrl();
-            }
-
-            applicationUser.setCode(code);
-
-            try {
-                String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
-                emailService.sendMimeMail(QrPath, logoPath, applicationUser);
-            } catch (WriterException | IOException e) {
-                return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
-            }
-
-            userRepo.save(applicationUser);
-
-            return ResponseEntity.status(HttpStatus.OK).body(applicationUser);
-        }
-        return new ResponseEntity(HttpStatus.FORBIDDEN);
-    }
-
-    @RequestMapping("/addApplicationUserImage")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ResponseEntity addApplicationGroupImage(@RequestPart(name = "userId", required = false) String groupId,
+    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
+                                                   @RequestPart(name = "name", required = false) String name,
+                                                   @RequestPart(name = "email", required = false) String email,
+                                                   @RequestPart(name = "groupId") String groupId,
+                                                   @RequestPart(name = "userId", required = false) String userId,
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    Principal principal) {
 
         HashMap response = new HashMap();
+        try {
 
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
-        if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
 
-            Optional<ApplicationUser> applicationUserOptional = userRepo.findById(groupId);
+                ApplicationUser applicationUser;
+                Group group ;
 
+                if (addFlag) {
 
-            if (applicationUserOptional.isPresent()) {
+                    applicationUser = new ApplicationUser();
 
-                ApplicationUser applicationUser = applicationUserOptional.get();
+                    if (groupId != null) {
+                        Optional<Group> groupOptional = groupRepo.findById(groupId);
+                        if (groupOptional.get().getParentGroup() == null) {
+                            response.put("message", "Group doesn't exist");
+                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        }
+                        group = groupOptional.get();
+                        applicationUser.setGroup(group);
+                    }else {
+                        response.put("message", "Group can't be empty.");
+                        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                    }
 
-                String logoUrl = Constants.USER_IMAGE_URL;
+                    String logoUrl = Constants.USER_IMAGE_URL;
+                    if (image != null) {
+                        try {
+                            logoUrl = imageService.store(image);
+                        } catch (Exception e) {
+                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                        }
+                    }
 
-                if(image != null) {
-                    try {
-                        logoUrl = imageService.store(image);
-                    } catch (Exception e) {
-                        LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                    applicationUser.setName(name);
+                    applicationUser.setEmail(email);
+                    applicationUser.setLogoUrl(logoUrl);
+                    applicationUser.setAccountId(account.getId());
+                    applicationUser.setCreationDate(new Date());
+                    applicationUser.setLastUpdate(new Date());
+                    applicationUser.setDeleted(false);
+                    userRepo.save(applicationUser);
+                } else {
+
+                    Optional<ApplicationUser> userOptional = userRepo.findById(userId);
+
+                    if (userOptional.isPresent()) {
+
+                        applicationUser = userOptional.get();
+
+                        if (groupId != null) {
+                            Optional<Group> groupOptional = groupRepo.findById(groupId);
+                            if (groupOptional.get().getParentGroup() == null) {
+                                response.put("message", "Group doesn't exist");
+                                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            }
+                            group = groupOptional.get();
+                            applicationUser.setGroup(group);
+                        } else {
+                            response.put("message", "Group can't be empty.");
+                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        }
+
+                        String logoUrl = Constants.USER_IMAGE_URL;
+                        if (image != null) {
+                            try {
+                                logoUrl = imageService.store(image);
+                            } catch (Exception e) {
+                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                            }
+                        }
+
+                        applicationUser.setName(name);
+                        applicationUser.setEmail(email);
+                        applicationUser.setLogoUrl(logoUrl);
+                        applicationUser.setAccountId(account.getId());
+                        group.setLastUpdate(new Date());
+                        userRepo.save(applicationUser);
                     }
                 }
-
-                applicationUser.setLogoUrl(logoUrl);
-                userRepo.save(applicationUser);
-
                 response.put("message", "User saved successfully.");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
-            }else{
-                response.put("message", "Can't save user.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(applicationUserOptional);
-
+            } else {
+                response.put("message", "Invalid user.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
+        }catch (Exception e){
+            response.put("message", "Something went wrong.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
-        return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
     @RequestMapping("/deleteApplicationUsers")

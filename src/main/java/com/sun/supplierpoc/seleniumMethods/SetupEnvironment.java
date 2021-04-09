@@ -6,6 +6,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.OrderType;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -247,7 +248,7 @@ public class SetupEnvironment {
     }
 
     public Response selectTimePeriodOHRA(String timePeriod, String syncFromDate, String syncToDate,
-                                         String location, String revenueCenter, WebDriver driver) {
+                                         String location, String revenueCenter, String orderType, WebDriver driver) {
         Response response = new Response();
         try {
             if (timePeriod.equals(Constants.USER_DEFINED)) {
@@ -394,6 +395,27 @@ public class SetupEnvironment {
                     }while (!selectRevenueCenterOption.equals(revenueCenter));
                 }else{
                     selectRevenueCenter.selectByVisibleText("All");
+                }
+            }
+
+            if (driver.findElements(By.id("orderTypesData")).size() != 0) {
+                Select selectOrderType = new Select(driver.findElement(By.id("orderTypesData")));
+                if (!orderType.equals("")) {
+                    String selectRevenueCenterOption;
+                    do {
+                        try {
+                            selectOrderType.selectByVisibleText(orderType);
+                        } catch (Exception e) {
+                            response.setStatus(false);
+                            response.setMessage("INVALID ORDER TYPE");
+                            response.setEntries(new ArrayList<>());
+                            return response;
+                        }
+
+                        selectRevenueCenterOption = selectOrderType.getFirstSelectedOption().getText().strip();
+                    } while (!selectRevenueCenterOption.equals(orderType));
+                } else {
+                    selectOrderType.selectByVisibleText("All");
                 }
             }
 
@@ -584,7 +606,56 @@ public class SetupEnvironment {
 
         do{
             Response dateResponse = selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
-                    revenueCenter.getRevenueCenter(), driver);
+                    revenueCenter.getRevenueCenter(),"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return true;
+            }
+
+            driver.findElement(By.id("Run Report")).click();
+
+            try {
+                Alert locationAlert = driver.switchTo().alert();
+                message = locationAlert.getText();
+                locationAlert.accept();
+            }catch (NoAlertPresentException Ex) {
+                System.out.println("No alert exits");
+            }
+            tryMaxCount --;
+
+        }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
+
+        message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
+
+        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+            response.setStatus(false);
+            response.setMessage(message);
+            return true;
+        }else if(message.equals(Constants.NO_INFO)){
+            response.setStatus(true);
+            response.setMessage(message);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean runReportPerOrderType(String businessDate, String fromDate, String toDate, CostCenter location,
+                                         RevenueCenter revenueCenter, WebDriver driver, Response response, OrderType orderType) {
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+        } catch (Exception Ex) {
+            System.out.println("There is no loader");
+        }
+
+        String message = "";
+        int tryMaxCount = 2;
+
+        do{
+            Response dateResponse = selectTimePeriodOHRA(businessDate, fromDate, toDate, location.locationName,
+                    revenueCenter.getRevenueCenter(), orderType.getOrderType(), driver);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);

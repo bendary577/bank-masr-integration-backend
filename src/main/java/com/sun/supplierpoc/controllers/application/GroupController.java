@@ -81,7 +81,8 @@ public class GroupController {
 
                 } else {
                     return new ResponseEntity(HttpStatus.BAD_REQUEST);
-                }            }
+                }
+            }
 
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }
@@ -91,93 +92,138 @@ public class GroupController {
     @RequestMapping("/addApplicationGroup")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationCompany(@RequestParam(name = "addFlag") boolean addFlag,
-                                                @RequestBody Group group, Principal principal) {
-
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-
-            if (addFlag) {
-
-                if (group.getParentGroup() != null) {
-
-                    if (group.getParentGroup().getParentGroup() != null) {
-                        return new ResponseEntity("Parent group is already child for another group," +
-                                "\n Please select valid parent group.",
-                                HttpStatus.BAD_REQUEST);
-                    }
-                }
-
-                Optional<Group> testNameGroupOptional = groupRepo.findByName(group.getName());
-
-                if(testNameGroupOptional.isPresent()){
-                    return new ResponseEntity("Group is already exist with this name.", HttpStatus.BAD_REQUEST);
-                }
-
-                group.setAccountId(account.getId());
-                group.setCreationDate(new Date());
-                group.setLastUpdate(new Date());
-                group.setDeleted(false);
-            } else {
-
-                if (group.getParentGroup() != null) {
-                    if (group.getParentGroup().getParentGroup() != null) {
-                        return new ResponseEntity("Parent group is already child for another group," +
-                                "\n Please select valid parent group.",
-                                HttpStatus.BAD_REQUEST);
-                    }
-                }
-
-                group.setLastUpdate(new Date());
-
-            }
-
-            groupRepo.save(group);
-            return ResponseEntity.status(HttpStatus.OK).body(group);
-        }
-        return new ResponseEntity(HttpStatus.FORBIDDEN);
-    }
-
-    @RequestMapping("/addApplicationGroupImage")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ResponseEntity addApplicationGroupImage(@RequestPart(name = "groupId", required = false) String groupId,
+    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
+                                                   @RequestPart(name = "name", required = false) String name,
+                                                   @RequestPart(name = "description", required = false) String description,
+                                                   @RequestPart(name = "discountRate", required = false) String discountRate,
+                                                   @RequestPart(name = "discountId", required = false) String discountId,
+                                                   @RequestPart(name = "parentGroupId", required = false) String parentGroupId,
+                                                   @RequestPart(name = "groupId", required = false) String groupId,
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    Principal principal) {
 
         HashMap response = new HashMap();
+        try {
+
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+                Group group;
+                Group parentGroup ;
+
+                if (addFlag) {
+
+                    group = new Group();
+
+                    if (parentGroupId != null) {
+
+                        Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
+                        parentGroup = parentGroupOptional.get();
+
+                        if (parentGroupOptional.get().getParentGroup() != null) {
+                            response.put("message", "Parent group is already child for another group," +
+                                    "\n Please select valid parent group.");
+                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        }
+                        group.setParentGroup(parentGroup);
+                    }
+
+                    Optional<Group> testNameGroupOptional = groupRepo.findByName(name);
+
+                    if (testNameGroupOptional.isPresent()) {
+                        response.put("message", "Group is already exist with this name.");
+                        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                    }
+
+                    String logoUrl = Constants.GROUP_IMAGE_URL;
+                    if (image != null) {
+                        try {
+                            logoUrl = imageService.store(image);
+                        } catch (Exception e) {
+                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                        }
+                    }
+
+                    group.setName(name);
+                    group.setDescription(description);
+                    group.setDiscountRate(Float.parseFloat(discountRate));
+                    group.setDiscountId(Integer.parseInt(discountId));
+                    group.setLogoUrl(logoUrl);
+                    group.setAccountId(account.getId());
+                    group.setCreationDate(new Date());
+                    group.setLastUpdate(new Date());
+                    group.setDeleted(false);
+                    groupRepo.save(group);
+                } else {
+                    Optional<Group> groupOptional = groupRepo.findById(groupId);
+
+                    if (groupOptional.isPresent()) {
+
+                        group = groupOptional.get();
+
+                        Optional<Group> testNameGroupOptional = groupRepo.findByName(name);
+
+                        if (testNameGroupOptional.isPresent() && !group.getName().equals(name)) {
+                            response.put("message", "Group is already exist with this name.");
+                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        }
+
+                        String logoUrl = Constants.GROUP_IMAGE_URL;
+                        if (image != null) {
+                            try {
+                                logoUrl = imageService.store(image);
+                            } catch (Exception e) {
+                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                            }
+                        }
+
+                        if (parentGroupId != null) {
+                            Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
+                            parentGroup = parentGroupOptional.get();
+                            if (parentGroupOptional.get().getParentGroup() != null) {
+                                response.put("message", "Parent group is already child for another group," +
+                                        "\n Please select valid parent group.");
+                                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            }
+                            group.setParentGroup(parentGroup);
+                        }
+
+                        group.setName(name);
+                        group.setDescription(description);
+                        group.setDiscountRate(Float.parseFloat(discountRate));
+                        group.setDiscountId(Integer.parseInt(discountId));
+                        group.setLogoUrl(logoUrl);
+                        group.setAccountId(account.getId());
+                        group.setLastUpdate(new Date());
+                        groupRepo.save(group);
+                    }
+                }
+                response.put("message", "Group saved successfully.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                response.put("message", "Invalid user.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+        }catch (Exception e){
+            response.put("message", "Something went wrong.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
+    @RequestMapping("/deleteAllApplicationGroupsDeeply")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity deleteAllApplicationGroupsDeeply(Principal principal) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
         if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
 
-            Optional<Group> groupOptional = groupRepo.findById(groupId);
+            groupRepo.deleteAll();
 
-            if (groupOptional.isPresent()) {
-
-                Group group = groupOptional.get();
-
-                String logoUrl = Constants.USER_IMAGE_URL;
-                if(image != null) {
-                    try {
-                        logoUrl = imageService.store(image);
-                    } catch (Exception e) {
-                        LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
-                    }
-                }
-                group.setLogoUrl(logoUrl);
-                groupRepo.save(group);
-
-                response.put("message", "Group updated successfully.");
-                return ResponseEntity.status(HttpStatus.OK).body(response);
-            }else{
-                response.put("message", "Can't save group.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
+            return ResponseEntity.status(HttpStatus.OK).body("Deleted");
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
@@ -186,7 +232,7 @@ public class GroupController {
     @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups,Principal principal,
+    public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups, Principal principal,
                                                      @RequestParam(name = "addFlag") boolean addFlag) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -195,7 +241,7 @@ public class GroupController {
 
                 Account account = accountOptional.get();
 
-                if(addFlag) {
+                if (addFlag) {
                     group.setDeleted(true);
                     groupRepo.save(group);
 
@@ -205,7 +251,7 @@ public class GroupController {
                         applicationUser.setDeleted(true);
                         userRepo.save(applicationUser);
                     }
-                }else{
+                } else {
                     group.setDeleted(false);
                     groupRepo.save(group);
 

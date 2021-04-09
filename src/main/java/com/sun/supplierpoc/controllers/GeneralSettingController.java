@@ -74,7 +74,6 @@ public class GeneralSettingController {
         }
         ArrayList<OverGroup> overGroups = new ArrayList<>();
 
-
         try {
             if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();

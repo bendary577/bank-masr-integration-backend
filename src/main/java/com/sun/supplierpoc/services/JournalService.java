@@ -399,7 +399,7 @@ public class JournalService {
             return response;
         }
 
-        ArrayList<Journal> journals  = new ArrayList<>();
+        ArrayList<Journal> journals = new ArrayList<>();
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
@@ -428,7 +428,6 @@ public class JournalService {
 
                 if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
                     driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
-
                     try {
                         WebDriverWait wait = new WebDriverWait(driver, 60);
                         wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
@@ -440,130 +439,270 @@ public class JournalService {
                 for (RevenueCenter revenueCenter : revenueCenters) {
                     Response dateResponse = new Response();
 
-                    if (!revenueCenter.isChecked() || revenueCenter.getRevenueCenter().equals("Dine In") )
+                    if (!revenueCenter.isChecked() || revenueCenter.getRevenueCenter().equals("Dine In")) {
                         continue;
-
-                    if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
-                        if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
-                            driver.quit();
-                            response.setStatus(false);
-                            response.setMessage(dateResponse.getMessage());
-                            return response;
-                        } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
-                            continue;
-                        }
                     }
 
-                    driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
-                    List<WebElement> rows = driver.findElements(By.tagName("tr"));
+                    if (revenueCenter.getRevenueCenter().equals("COMP") || revenueCenter.getRevenueCenter().equals("OFFICER")) {
 
-                    if (rows.size() < 5)
-                        continue;
+                        List<OrderType> orderTypes = revenueCenter.getOrderTypes();
 
-                    ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+                        if (orderTypes.size() == 0) {
+                            OrderType orderType = new OrderType("All");
+                            orderTypes.add(orderType);
+                        }
 
-                    MajorGroup majorGroup;
-                    RevenueCenter MGRevenueCenter;
-                    String majorGroupName = "";
-
-                    for (int i = 1; i < rows.size(); i++) {
-
-                        WebElement row = rows.get(i);
-                        List<WebElement> cols = row.findElements(By.tagName("td"));
-
-                        if (cols.size() != columns.size())
-                            continue;
-
-                        WebElement col;
-
-                        col = cols.get(columns.indexOf("item_group"));
-
-                        if (col.getAttribute("class").equals("header_1") || col.getAttribute("class").equals("header_2")) {
-                            majorGroupName = col.getText().strip().toLowerCase();
-                            majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
-
-                            if (!majorGroup.getChecked()) {
-                                continue;
+                        for(OrderType orderType : orderTypes) {
+                            if (setupEnvironment.runReportPerOrderType(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse, orderType)) {
+                                if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
+                                    driver.quit();
+                                    response.setStatus(false);
+                                    response.setMessage(dateResponse.getMessage());
+                                    return response;
+                                } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                                    continue;
+                                }
                             }
 
-                            if (!revenueCenter.getRevenueCenter().equals("")) {
+                            driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
-                                MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+                            List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-                                int j = i+1;
-                                boolean flag = true;
-                                row = rows.get(j);
-                                cols = row.findElements(By.tagName("td"));
+                            if (rows.size() < 5)
+                                continue;
 
-                                while (cols.get(columns.indexOf("item_group")).getAttribute("class").equals("normal")){
+                            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
 
-                                    if(flag){
-                                        j--;
-                                        row = rows.get(j);
-                                        cols = row.findElements(By.tagName("td"));
-                                    }
+                            MajorGroup majorGroup;
+                            RevenueCenter MGRevenueCenter;
+                            String majorGroupName = "";
 
-                                    HashMap<String, Object> transferDetails = new HashMap<>();
-                                    List<WebElement> newCols = row.findElements(By.tagName("td"));
+                            for (int i = 1; i < rows.size(); i++) {
 
-                                    if (cols.size() != columns.size()) {
+                                WebElement row = rows.get(i);
+                                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                                if (cols.size() != columns.size())
+                                    continue;
+
+                                WebElement col;
+
+                                col = cols.get(columns.indexOf("item_group"));
+
+                                if (col.getAttribute("class").equals("header_1") || col.getAttribute("class").equals("header_2")) {
+                                    majorGroupName = col.getText().strip().toLowerCase();
+                                    majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+
+                                    if (!majorGroup.getChecked()) {
                                         continue;
                                     }
 
-                                    FamilyGroup familyGroup = new FamilyGroup();
-                                    String group = "";
+                                    if (!revenueCenter.getRevenueCenter().equals("")) {
 
-                                    if (!flag) {
+                                        MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+                                        MGRevenueCenter.setAccountCode(orderType.getAccount());
 
-                                        WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
-                                        familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
-                                                , familyGroupName.getText().strip());
+                                        int j = i + 1;
+                                        boolean flag = true;
+                                        row = rows.get(j);
+                                        cols = row.findElements(By.tagName("td"));
 
-                                        if (newCols.get(columns.indexOf("item_group")).getText().equals("Highest Cost Menu Items")) {
-                                            break;
+                                        while (cols.get(columns.indexOf("item_group")).getAttribute("class").equals("normal")) {
+
+                                            if (flag) {
+                                                j--;
+                                                row = rows.get(j);
+                                                cols = row.findElements(By.tagName("td"));
+                                            }
+
+                                            HashMap<String, Object> transferDetails = new HashMap<>();
+                                            List<WebElement> newCols = row.findElements(By.tagName("td"));
+
+                                            if (cols.size() != columns.size()) {
+                                                continue;
+                                            }
+
+                                            FamilyGroup familyGroup = new FamilyGroup();
+                                            String group = "";
+
+                                            if (!flag) {
+
+                                                WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
+                                                familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                                                        , familyGroupName.getText().strip());
+
+                                                if (newCols.get(columns.indexOf("item_group")).getText().equals("Highest Cost Menu Items")) {
+                                                    break;
+                                                }
+
+                                                group = majorGroup.getMajorGroup() + " " + revenueCenter.getRevenueCenter();
+                                            } else {
+                                                group = " major " + majorGroup.getMajorGroup() + " " + revenueCenter.getRevenueCenter();
+                                            }
+
+                                            for (int y = 0; y < cols.size(); y++) {
+                                                transferDetails.put(columns.get(y), cols.get(y).getText().strip());
+                                            }
+
+                                            Journal journal = new Journal();
+
+                                            float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
+
+                                            if (cost == 0 || cost == -00) {
+                                                j++;
+                                                flag = false;
+                                                row = rows.get(j);
+                                                cols = row.findElements(By.tagName("td"));
+                                                continue;
+                                            }
+
+                                            CostCenter costCenter = new CostCenter();
+                                            List<CostCenter> costCenters = majorGroup.getCostCenters();
+                                            for (CostCenter costCenter1 : costCenters) {
+                                                if (location.locationName.equals(costCenter1.locationName)) {
+                                                    costCenter = costCenter1;
+                                                }
+                                            }
+
+                                            journals = journal.checkCollectedExistence(journals, majorGroup, familyGroup, group, cost,
+                                                    costCenter, MGRevenueCenter, "");
+
+                                            j++;
+                                            flag = false;
+                                            row = rows.get(j);
+                                            cols = row.findElements(By.tagName("td"));
                                         }
-                                        group = familyGroup.familyGroup;
-                                    }else{
-                                        group = majorGroup.getMajorGroup();
                                     }
+                                }
+                            }
+                            driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+                        }
+                    } else {
 
-                                    for (int y = 0; y < cols.size(); y++) {
-                                        transferDetails.put(columns.get(y), cols.get(y).getText().strip());
-                                    }
+                        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
+                            if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
+                                driver.quit();
+                                response.setStatus(false);
+                                response.setMessage(dateResponse.getMessage());
+                                return response;
+                            } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                                continue;
+                            }
+                        }
 
-                                    Journal journal = new Journal();
+                        driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
-                                    float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
+                        List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-                                    if(cost == 0 || cost == -00) {
+                        if (rows.size() < 5)
+                            continue;
+
+                        ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+
+                        MajorGroup majorGroup;
+                        RevenueCenter MGRevenueCenter;
+                        String majorGroupName = "";
+
+                        for (int i = 1; i < rows.size(); i++) {
+
+                            WebElement row = rows.get(i);
+                            List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                            if (cols.size() != columns.size())
+                                continue;
+
+                            WebElement col;
+
+                            col = cols.get(columns.indexOf("item_group"));
+
+                            if (col.getAttribute("class").equals("header_1") || col.getAttribute("class").equals("header_2")) {
+                                majorGroupName = col.getText().strip().toLowerCase();
+                                majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+
+                                if (!majorGroup.getChecked()) {
+                                    continue;
+                                }
+
+                                if (!revenueCenter.getRevenueCenter().equals("")) {
+
+                                    MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+
+                                    int j = i + 1;
+                                    boolean flag = true;
+                                    row = rows.get(j);
+                                    cols = row.findElements(By.tagName("td"));
+
+                                    while (cols.get(columns.indexOf("item_group")).getAttribute("class").equals("normal")) {
+
+                                        if (flag) {
+                                            j--;
+                                            row = rows.get(j);
+                                            cols = row.findElements(By.tagName("td"));
+                                        }
+
+                                        HashMap<String, Object> transferDetails = new HashMap<>();
+                                        List<WebElement> newCols = row.findElements(By.tagName("td"));
+
+                                        if (cols.size() != columns.size()) {
+                                            continue;
+                                        }
+
+                                        FamilyGroup familyGroup = new FamilyGroup();
+                                        String group = "";
+
+                                        if (!flag) {
+
+                                            WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
+                                            familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                                                    , familyGroupName.getText().strip());
+
+                                            if (newCols.get(columns.indexOf("item_group")).getText().equals("Highest Cost Menu Items")) {
+                                                break;
+                                            }
+
+                                            group = familyGroup.familyGroup;
+                                        } else {
+                                            group = majorGroup.getMajorGroup();
+                                        }
+
+                                        for (int y = 0; y < cols.size(); y++) {
+                                            transferDetails.put(columns.get(y), cols.get(y).getText().strip());
+                                        }
+
+                                        Journal journal = new Journal();
+
+                                        float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
+
+                                        if (cost == 0 || cost == -00) {
+                                            j++;
+                                            flag = false;
+                                            row = rows.get(j);
+                                            cols = row.findElements(By.tagName("td"));
+                                            continue;
+                                        }
+
+                                        CostCenter costCenter = new CostCenter();
+                                        List<CostCenter> costCenters = majorGroup.getCostCenters();
+                                        for (CostCenter costCenter1 : costCenters) {
+                                            if (location.locationName.equals(costCenter1.locationName)) {
+                                                costCenter = costCenter1;
+                                            }
+                                        }
+
+                                        journals = journal.checkExistence(journals, majorGroup, familyGroup, group, cost,
+                                                costCenter, MGRevenueCenter, "");
+
                                         j++;
                                         flag = false;
                                         row = rows.get(j);
                                         cols = row.findElements(By.tagName("td"));
-                                        continue;
                                     }
-
-                                    CostCenter costCenter = new CostCenter();
-                                    List<CostCenter> costCenters = majorGroup.getCostCenters();
-                                    for(CostCenter costCenter1 : costCenters) {
-                                        if (location.locationName.equals(costCenter1.locationName)) {
-                                            costCenter = costCenter1;
-                                        }
-                                    }
-
-                                    journals = journal.checkExistence(journals, majorGroup, familyGroup, group, cost,
-                                            costCenter, MGRevenueCenter, "");
-
-                                    j++;
-                                    flag = false;
-                                    row = rows.get(j);
-                                    cols = row.findElements(By.tagName("td"));
                                 }
                             }
                         }
+                        driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
                     }
-                    driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
                 }
 
                 journalBatch.setLocation(location);
@@ -631,8 +770,7 @@ public class JournalService {
                     costData.put("inventoryAccount", costCenter.accountCode);
                     costData.put("expensesAccount", costCenter.costCenter);
 
-                    if(!familyGroup.familyGroup.equals(""))
-                    {
+                    if (!familyGroup.familyGroup.equals("")) {
                         costData.put("inventoryAccount", revenueCenter.getAccountCode());
                         costData.put("expensesAccount", revenueCenter.getAccountCode());
                     }
@@ -640,15 +778,15 @@ public class JournalService {
                     if (costCenter.location != null && !costCenter.location.locationName.equals("")) {
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), journal.getCostCenter(), null, null);
                     } else {
-                        syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), batch.getLocation(), familyGroup, null);
+                        syncJobDataService.prepareConsumptionAnalysis(revenueCenter, costData, syncJobType.getConfiguration(), batch.getLocation(), familyGroup, null);
                     }
 
                     String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
                     costData.put("accountingPeriod", transactionDate.substring(2, 6));
                     costData.put("transactionDate", transactionDate);
 
-                    costData.put("totalCr", String.valueOf(journal.getTotalCost()));
-                    costData.put("totalDr", String.valueOf(journal.getTotalCost()* -1));
+                    costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
+                    costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost() * -1)));
 
                     costData.put("fromCostCenter", batch.getCostCenter().costCenter);
                     costData.put("fromAccountCode", batch.getCostCenter().accountCode);
@@ -656,7 +794,7 @@ public class JournalService {
                     costData.put("toCostCenter", costCenter.costCenter);
                     costData.put("toAccountCode", costCenter.accountCode);
 
-                    if(!familyGroup.familyGroup.equals("")) {
+                    if (!familyGroup.familyGroup.equals("")) {
                         costData.put("toAccountCode", revenueCenter.getAccountCode());
                         costData.put("toAccountCode", revenueCenter.getAccountCode());
                     }
@@ -667,25 +805,29 @@ public class JournalService {
                     String loc = "";
                     String cost = "";
 
-                    if(batch.getLocation().locationName.equals("Nisantasi CFC")) {
+                    if (batch.getLocation().locationName.equals("Nisantasi CFC")) {
                         loc = "CFC";
-                    }else{
+                    } else {
                         loc = "City";
                     }
 
-                    if(journal.getOverGroup().equals("Food")) {
-                        cost =" Kitchen";
-                    }else{
+                    if (journal.getOverGroup().toString().contains("Food")) {
+                        cost = " Kitchen";
+                    } else {
                         cost = " Bar";
                     }
 
                     String description = "";
 
 
-                    if(!familyGroup.familyGroup.equals("")) {
-                        description = journal.getMajorGroup().getMajorGroup() +" Cost-Home " + revenueCenter.getRevenueCenter();
-                    }else{
-                         description = loc + cost;
+                    if (!familyGroup.familyGroup.equals("")) {
+                        description = journal.getMajorGroup().getMajorGroup() + " Cost-Home " + revenueCenter.getRevenueCenter();
+                    } else {
+//                        if(revenueCenter.getRevenueCenter().equals("OFFICER") || revenueCenter.getRevenueCenter().equals("COMP")){
+//                            description = loc + journal.getOverGroup();
+//                        }else {
+                            description = loc + cost;
+//                        }
                     }
 
                     if (description.length() > 50) {
@@ -696,7 +838,7 @@ public class JournalService {
 
                     if (costCenter.costCenterReference.equals(""))
                         costData.put("transactionReference", "Consumption");
-                    else{
+                    else {
                         costData.put("transactionReference", loc);
                     }
 

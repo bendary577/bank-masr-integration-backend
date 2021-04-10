@@ -138,13 +138,13 @@ public class GroupController {
                     }
 
                     String logoUrl = Constants.GROUP_IMAGE_URL;
-                    if (image != null) {
-                        try {
-                            logoUrl = imageService.store(image);
-                        } catch (Exception e) {
-                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
-                        }
-                    }
+//                    if (image != null) {
+//                        try {
+//                            logoUrl = imageService.store(image);
+//                        } catch (Exception e) {
+//                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+//                        }
+//                    }
 
                     group.setName(name);
                     group.setDescription(description);
@@ -171,13 +171,13 @@ public class GroupController {
                         }
 
                         String logoUrl = Constants.GROUP_IMAGE_URL;
-                        if (image != null) {
-                            try {
-                                logoUrl = imageService.store(image);
-                            } catch (Exception e) {
-                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
-                            }
-                        }
+//                        if (image != null) {
+//                            try {
+//                                logoUrl = imageService.store(image);
+//                            } catch (Exception e) {
+//                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+//                            }
+//                        }
 
                         if (parentGroupId != null) {
                             Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);

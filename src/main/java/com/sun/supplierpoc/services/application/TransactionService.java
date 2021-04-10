@@ -70,7 +70,6 @@ public class TransactionService {
             double totalSpend = 0;
 
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
-            calendar.set(Calendar.DATE, Calendar.DATE-1);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 59);
             calendar.set(Calendar.SECOND, 59);
@@ -88,13 +87,16 @@ public class TransactionService {
 
             double totalSpend = 0;
 
-            Date date = new Date();
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
-            int i = c.get(Calendar.DAY_OF_WEEK) - c.getFirstDayOfWeek();
-            c.add(Calendar.DATE, -i - 7);
+            c.add(Calendar.DATE, -7);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
             Date start = c.getTime();
-            c.add(Calendar.DATE, 6);
+            c.add(Calendar.DATE, 7);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
 
             transactions = transactionRepo.findByTransactionDateBetween(start, end);
@@ -108,13 +110,16 @@ public class TransactionService {
 
             double totalSpend = 0;
 
-            Date date = new Date();
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
-            int i = c.get(Calendar.DAY_OF_WEEK) - c.getFirstDayOfWeek();
-            c.add(Calendar.DATE, -i - 30);
+            c.add(Calendar.DATE, - 30);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
             Date start = c.getTime();
-            c.add(Calendar.DATE, 29);
+            c.add(Calendar.DATE, 30);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
 
             transactions = transactionRepo.findByTransactionDateBetween(start, end);

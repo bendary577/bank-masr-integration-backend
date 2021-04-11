@@ -102,13 +102,13 @@ public class    AppUserController {
                     }
 
                     String logoUrl = Constants.USER_IMAGE_URL;
-//                    if (image != null) {
-//                        try {
-//                            logoUrl = imageService.store(image);
-//                        } catch (Exception e) {
-//                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
-//                        }
-//                    }
+                    if (image != null) {
+                        try {
+                            logoUrl = imageService.store(image);
+                        } catch (Exception e) {
+                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                        }
+                    }
 
                     applicationUser.setName(name);
                     applicationUser.setEmail(email);
@@ -121,7 +121,9 @@ public class    AppUserController {
                     Random random = new Random();
                     String code = applicationUser.getName() +random.nextInt();
                     String logoPath = account.getImageUrl();
-                    String QRPath = "./src/main/resources/"+ code +".png" ;
+//                    String QRPath = "QRCodes/"+ code +".png" ;
+                    String QRPath = "./src/main/resources/QRCode.png";
+
                     applicationUser.setCode(code);
 
 //                    try {
@@ -155,13 +157,13 @@ public class    AppUserController {
                         }
 
                         String logoUrl = Constants.USER_IMAGE_URL;
-//                        if (image != null) {
-//                            try {
-//                                logoUrl = imageService.store(image);
-//                            } catch (Exception e) {
-//                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
-//                            }
-//                        }
+                        if (image != null) {
+                            try {
+                                logoUrl = imageService.store(image);
+                            } catch (Exception e) {
+                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                            }
+                        }
 
                         applicationUser.setName(name);
                         applicationUser.setEmail(email);

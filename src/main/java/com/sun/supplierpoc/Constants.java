@@ -50,9 +50,11 @@ public class Constants {
     public static String REDEEM_VOUCHER = "Redeem Voucher";
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
+    public static String PROJECT_NAME = "oracle-symphony-integrator";
+    public static String BUCKET_NAME = "oracle-integrator-bucket";
 
-    public static String USER_IMAGE_URL = "../../../assets/defaultImage.jpg";
-    public static String GROUP_IMAGE_URL = "../../../assets/unnamed (1).png";
+    public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
+    public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";
     public static final String ACCOUNT_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/indeex.jpg-1192782010?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1617883508&Signature=IfLBwoO4X65GOO3yE6deP1W8Ab9rdesZbr9QHy2XJP%2BOdRW0yiGnfFPhiMYX4ukFvqUS5MMroWlgjjzIvGGfOZIaMHLTWttlSOHDL6N8Zwpj3meW3iSkgCBai94PTo1r%2BOaNeP7kFdXJiey5qC8vF2nbXu8KcDJQ%2BTcr64F%2FVzyd3YGYGWpWJPZc0fhZZNs14jgIzIXkaLAnS%2BuQ3LUKUbCE77R%2FaKGNvgggFwbBSJfsqEg4YiQJXph0RJjEfN6Zx7LxgIJqeMwH87y4US%2F2vE08FOGKglN7Jjn7iVfWp4augpUusOuAot3TiocaazGerPefxQ16EKMzC%2FAMMczzww%3D%3D";
 
     ////////////////////////////////////////// Accounts /////////// /////////////////////////////////////////////////////

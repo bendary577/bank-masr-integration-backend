@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.storage.*;
+import com.sun.supplierpoc.Constants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +36,8 @@ public class ImageService {
         int rand = random.nextInt();
         String projectId = "oracle-symphony-integrator";
         String bucketName = "oracle-integrator-bucket";
-        String objectName = image.getOriginalFilename() + rand;
+
+        String objectName = "AccourImage/" + rand + image.getOriginalFilename();
 
         StorageOptions storageOptions = null;
         try {
@@ -60,7 +62,7 @@ public class ImageService {
         return downloadFile(storage, objectName);
     }
 
-    public   File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException {
+    public File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException {
         File convFile = new File(System.getProperty("java.io.tmpdir")+"/"+multipart.getOriginalFilename());
         multipart.transferTo(convFile);
         return convFile;

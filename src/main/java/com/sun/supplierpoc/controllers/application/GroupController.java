@@ -63,7 +63,8 @@ public class GroupController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity getApplicationCompanies(Principal principal, @RequestParam("parentId") String parentId,
-                                                  @RequestParam("isParent") boolean isParent) {
+                                                  @RequestParam("isParent") boolean isParent,
+                                                  @RequestParam("status") int status) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -71,17 +72,16 @@ public class GroupController {
             Account account = accountOptional.get();
             ArrayList<Group> groups;
 
-            if (isParent) {
-                groups = groupRepo.findAllByAccountIdAndParentGroup(account.getId(), null);
-            } else {
-                Optional<Group> groupOptional = groupRepo.findById(parentId);
-                if (groupOptional.isPresent()) {
-                    Group group = groupOptional.get();
-                    groups = groupRepo.findAllByAccountIdAndParentGroup(account.getId(), group);
-
-                } else {
-                    return new ResponseEntity(HttpStatus.BAD_REQUEST);
-                }
+            if(isParent){
+                if(status == 1)
+                    groups = groupRepo.findAllByAccountIdAndParentGroupIdAndDeleted(account.getId(), null, false);
+                else
+                    groups = groupRepo.findAllByAccountIdAndParentGroupId(account.getId(), null);
+            }else {
+                if(status == 1)
+                    groups = groupRepo.findAllByAccountIdAndParentGroupIdAndDeleted(account.getId(), parentId, false);
+                else
+                    groups = groupRepo.findAllByAccountIdAndParentGroupId(account.getId(), parentId);
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(groups);
@@ -122,12 +122,12 @@ public class GroupController {
                         Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
                         parentGroup = parentGroupOptional.get();
 
-                        if (parentGroupOptional.get().getParentGroup() != null) {
+                        if (parentGroupOptional.get().getParentGroupId() != null) {
                             response.put("message", "Parent group is already child for another group," +
                                     "\n Please select valid parent group.");
                             return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
                         }
-                        group.setParentGroup(parentGroup);
+                        group.setParentGroupId(parentGroup.getId());
                     }
 
                     Optional<Group> testNameGroupOptional = groupRepo.findByName(name);
@@ -182,12 +182,12 @@ public class GroupController {
                         if (parentGroupId != null) {
                             Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
                             parentGroup = parentGroupOptional.get();
-                            if (parentGroupOptional.get().getParentGroup() != null) {
+                            if (parentGroupOptional.get().getParentGroupId() != null) {
                                 response.put("message", "Parent group is already child for another group," +
                                         "\n Please select valid parent group.");
                                 return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
                             }
-                            group.setParentGroup(parentGroup);
+                            group.setParentGroupId(parentGroup.getId());
                         }
 
                         group.setName(name);

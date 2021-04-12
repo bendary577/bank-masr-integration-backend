@@ -54,13 +54,13 @@ public class ActivityService {
 
             transactionRepo.save(transaction);
 
-            response.put("isSuccess", Constants.SUCCESS);
+            response.put("isSuccess", true);
             response.put("message", "Discount applied successfully.");
             response.put("discountId", group.getDiscountId());
             return response;
 
         }catch(Exception e){
-            response.put("isSuccess", Constants.FAILED);
+            response.put("isSuccess", false);
             response.put("message", "Can't apply discount.");
             return response;
 

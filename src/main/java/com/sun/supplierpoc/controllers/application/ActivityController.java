@@ -77,10 +77,10 @@ public class ActivityController {
                 if (true) {
                     response = activityService.createTransaction(transactionType, transaction);
 
-                    if (response.get("isSuccess").equals(Constants.SUCCESS)) {
+                    if ((boolean) response.get("isSuccess")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
 
                 } else {

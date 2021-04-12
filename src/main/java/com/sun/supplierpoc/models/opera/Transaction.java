@@ -43,6 +43,9 @@ public class Transaction {
     @JsonProperty("items")
     private List<Item> items = null;
 
+    public Transaction() {
+    }
+
     public Transaction(String purchaseCode, String customerCard, String attendantCard, String hotelID,
                        String transactionMode, String transactionDate, String paiementmode, String transactionType,
                        String transactionSource, List<Item> items){

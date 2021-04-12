@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.services.opera;
 
-import com.google.gson.JsonObject;
 import com.sun.supplierpoc.models.opera.Transaction;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;

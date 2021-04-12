@@ -1,27 +1,20 @@
 package com.sun.supplierpoc.controllers.opera;
 
-import com.sun.supplierpoc.components.ExcelHelper;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.opera.Item;
 import com.sun.supplierpoc.models.opera.Transaction;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.services.ReservationService;
 import com.sun.supplierpoc.services.opera.TransWebServ;
-import org.apache.commons.compress.utils.IOUtils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.ArrayList;
@@ -38,8 +31,8 @@ public class wlsIntegrationController {
     @Autowired
     private AccountRepo accountRepo;
 
-    @Autowired
-    private TransWebServ transWebServ;
+//    @Autowired
+//    private TransWebServ transWebServ;
 
     @RequestMapping("/syncExcel")
     @CrossOrigin(origins = "*")
@@ -53,15 +46,15 @@ public class wlsIntegrationController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-             try {
-                    response = reservationService.syncReservation(user.getId(), account);
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                } catch (Exception e) {
-                    response.setStatus(false);
-                    response.setMessage("Could not upload the file");
-                    return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(response);
-                }
+            try {
+                response = reservationService.syncReservation(user.getId(), account);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } catch (Exception e) {
+                response.setStatus(false);
+                response.setMessage("Could not upload the file");
+                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body(response);
             }
+        }
         response.setMessage("Please upload an excel file!");
         response.setStatus(false);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -70,14 +63,14 @@ public class wlsIntegrationController {
     @RequestMapping("/getTransaction")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public Transaction getTransaction(Principal principal){
+    public Transaction getTransaction(Principal principal) {
         Item item = new Item("9", "34A", "10", "1120.22");
         List<Item> items = new ArrayList<Item>();
         items.add(item);
         Transaction transaction = new Transaction("1001", "2041 2578 3654 9876", "Gaad2", "110",
                 "online", "10/3/2021", "MC", "Resa/checkout", "OTA/Direct", items);
-        Transaction transaction1 = transWebServ.transactionService(transaction);
-
-    return transaction1;
+//        Transaction transaction1 = transWebServ.transactionService(transaction);
+        Transaction transaction1 = new Transaction();
+        return transaction1;
     }
 }

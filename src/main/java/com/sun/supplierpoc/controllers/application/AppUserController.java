@@ -120,16 +120,13 @@ public class    AppUserController {
 
                     Random random = new Random();
                     String code = applicationUser.getName() +random.nextInt();
-                    String logoPath = account.getImageUrl();
-//                    String QRPath = "QRCodes/"+ code +".png" ;
-                    String QRPath = "./src/main/resources/QRCode.png";
-
+                    String logoPath = group.getLogoUrl();
+                    String QRPath = "QRCodes/"+ code +".png" ;
                     applicationUser.setCode(code);
 
                     try {
                         String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
-                        emailService.sendSimpleMail();
-//                        emailService.sendMimeMail(QrPath, logoPath, applicationUser);
+                        emailService.sendMimeMail(QrPath, logoPath, applicationUser);
                     } catch (WriterException | IOException e) {
                         LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
                     }

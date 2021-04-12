@@ -1008,7 +1008,7 @@ public class SalesService {
                     syncJobDataService.prepareAnalysis(discountData, configuration, discount.getCostCenter(), discount.getFamilyGroup(), null);
 
                     String description = "";
-                    String reference = "Discount Expense";
+                    String reference = "Discount";
                     if (discount.getCostCenter().costCenterReference.equals("")){
                         description = "Discount Expense";
                     }else{

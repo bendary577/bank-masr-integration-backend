@@ -64,9 +64,7 @@ public class InvoiceController {
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     public InvoiceController() {}
-
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     @RequestMapping("/getApprovedInvoices")
     @CrossOrigin(origins = "*")
     @ResponseBody

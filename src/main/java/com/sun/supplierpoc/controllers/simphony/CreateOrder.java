@@ -78,7 +78,7 @@ public class CreateOrder {
 
                 InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
                 if (invokerUser != null) {
-                    Optional<Account> accountOptional = accountService.getAccount(invokerUser.getAccountId());
+                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
 
                     if (accountOptional.isPresent()) {
                         Account account = accountOptional.get();

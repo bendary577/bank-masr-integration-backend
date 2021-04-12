@@ -6,7 +6,6 @@ import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.OperationType;
-import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.opera.TransactionObject;
 import com.sun.supplierpoc.models.opera.TransactionObjectResponse;

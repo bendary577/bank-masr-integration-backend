@@ -98,6 +98,33 @@ public class SyncJobDataService {
             index = configuration.familyGroupAnalysisCode;
             data.put("analysisCodeT" + index, familyGroup.departmentCode);
         }
+
+    }
+
+    public void prepareConsumptionAnalysis(RevenueCenter revenueCenter, HashMap<String, Object> data, Configuration configuration,
+                                CostCenter location, FamilyGroup familyGroup, Tender tender){
+        ArrayList<Analysis> analysis = configuration.analysis;
+        for (int i = 1; i <= analysis.size(); i++) {
+            data.put("analysisCodeT" + i, analysis.get(i - 1).getCodeElement());
+        }
+
+        String index;
+        if(location != null && !location.accountCode.equals("")){
+            index = configuration.locationAnalysisCode;
+            data.put("analysisCodeT" + index, location.accountCode);
+        }
+
+        if(tender != null && !tender.getAnalysisCodeT5().equals("")){
+            index = configuration.tenderAnalysisCode;
+            data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());
+        }
+
+        if(!revenueCenter.getRevenueCenter().equals("OFFICER") && !revenueCenter.getRevenueCenter().equals("COMP")) {
+            if (familyGroup != null && !familyGroup.departmentCode.equals("")) {
+                index = configuration.familyGroupAnalysisCode;
+                data.put("analysisCodeT" + index, familyGroup.departmentCode);
+            }
+        }
     }
 
     public void prepareAnalysisForInvoices(HashMap<String, Object> data, Configuration configuration,

@@ -394,6 +394,7 @@ public class WastageController {
     private ArrayList<File> createWastesFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
                                                        String AccountName) {
         ArrayList<File> locationFiles = new ArrayList<>();
+
         try {
             File file;
             List<SyncJobData> wasteList;

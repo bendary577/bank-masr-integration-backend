@@ -9,6 +9,7 @@ public class WasteGroup implements Serializable {
     private String id;
     private boolean checked;
     private String wasteGroup="";
+    private String reference = "";
 
     public WasteGroup() {
         this.checked = false;
@@ -36,5 +37,17 @@ public class WasteGroup implements Serializable {
 
     public void setWasteGroup(String wasteGroup) {
         this.wasteGroup = wasteGroup;
+    }
+
+    public boolean isChecked() {
+        return checked;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 }

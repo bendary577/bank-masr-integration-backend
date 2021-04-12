@@ -65,6 +65,7 @@ public class Conversions {
                 mj.setChildren(majorGroup.getChildren());
                 mj.setAccount(majorGroup.getAccount());
                 mj.setDiscountAccount(majorGroup.getDiscountAccount());
+                mj.setCostCenters(majorGroup.getCostCenters());
                 return mj;
             }
         }
@@ -443,5 +444,30 @@ public class Conversions {
         }else{
             return values;
         }
+    }
+
+    public String toCamelCase(String s){
+        String[] parts = s.split(" ");
+        String camelCaseString = "";
+        for (int i = 0; i < parts.length; i++){
+            String part = "";
+            if(i==0) {
+                part = parts[i];
+                camelCaseString = camelCaseString + toProperCase(part);
+            }else{
+                part = parts[i];
+                camelCaseString = camelCaseString + toUpperCase(part);
+            }
+        }
+        return camelCaseString;
+    }
+    static String toProperCase(String s) {
+        return s.substring(0, 1).toLowerCase() +
+                s.substring(1).toLowerCase();
+    }
+
+    static String toUpperCase(String s) {
+        return s.substring(0, 1).toUpperCase() +
+                s.substring(1).toLowerCase();
     }
 }

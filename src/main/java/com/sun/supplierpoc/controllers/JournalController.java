@@ -3,13 +3,12 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.ConsumptionExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.ItemGroup;
-import com.sun.supplierpoc.models.configurations.OverGroup;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -24,10 +23,12 @@ import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
+// @RequestMapping(path = "server")
 
 public class JournalController {
     @Autowired
@@ -56,7 +57,7 @@ public class JournalController {
     @RequestMapping("/getConsumption")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) throws IOException, ParseException {
         HashMap<String, Object> response = new HashMap<>();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -88,12 +89,15 @@ public class JournalController {
         ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
         ArrayList<CostCenter> costCentersLocation = generalSettings.getLocations();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
+        ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
         String timePeriod = journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
-        String toDate = journalSyncJobType.getConfiguration().toDate;
+        String toDate =fromDate;
 
-        String consumptionBasedOnType = journalSyncJobType.getConfiguration().consumptionConfiguration.consumptionBasedOnType;
+        ConsumptionConfiguration configuration = journalSyncJobType.getConfiguration().consumptionConfiguration;
+        ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
+        String consumptionBasedOnType = configuration.consumptionBasedOnType;
 
         ArrayList<OverGroup> overGroups;
         if (!journalSyncJobType.getConfiguration().uniqueOverGroupMapping){
@@ -152,13 +156,17 @@ public class JournalController {
 
         try {
             Response data;
+
             if (consumptionBasedOnType.equals("Cost Center")){
                 data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+            }else if(consumptionBasedOnType.equals("Location")){
+                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, costCenters, account);
             }else {
-                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, account);
+                data = journalService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation,
+                        itemGroups, majorGroups, revenueCenters, account);
             }
 
-            if (data.isStatus()) {
+                if (data.isStatus()) {
                 ArrayList<JournalBatch> journalBatches =  data.getJournalBatches();
                 ArrayList<JournalBatch> addedJournalBatches;
 
@@ -172,6 +180,7 @@ public class JournalController {
                             for (JournalBatch batch : journalBatches) {
                                 invoiceController.handleSendJournal(journalSyncJobType, syncJob, batch.getConsumptionData(), account, voucher);
                             }
+
                             syncJob.setReason("");
                             syncJob.setEndDate(new Date());
                             syncJob.setRowsFetched(journalBatches.size());
@@ -187,7 +196,7 @@ public class JournalController {
                             syncJob.setRowsFetched(journalBatches.size());
                             syncJobRepo.save(syncJob);
 
-                            response.put("message", "Failed to connect to Sun System.");
+                            response.put("message", "Failed  to connect to Sun System.");
                             response.put("success", false);
                         }
                     }
@@ -199,8 +208,8 @@ public class JournalController {
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-//                         && consumptionBasedOnType.equals("Location")
-                        if(journalSyncJobType.getConfiguration().exportFilePerLocation) {
+                        if(journalSyncJobType.getConfiguration().exportFilePerLocation &&
+                                ( consumptionBasedOnType.equals("Location") || consumptionBasedOnType.equals("Location And RevenuCenter"))) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
                         }else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
@@ -298,6 +307,60 @@ public class JournalController {
         }
     }
 
+    public HashMap<String, Object> syncApprovedInvoicesInDayRange(String userId, Account account) throws ParseException, IOException {
+        HashMap<String, Object> response = new HashMap<>();
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
+
+        int tryCount = 2;
+
+        if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+            String startDate = syncJobType.getConfiguration().fromDate;
+            String endDate = syncJobType.getConfiguration().toDate;
+
+            Date date= dateFormat.parse(startDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            while (!startDate.equals(endDate)){
+                response = getJournals(userId, account);
+                if (response.get("success").toString().equals("true") || tryCount == 0){
+                    tryCount = 2;
+                    calendar.add(Calendar.DATE, +1);
+                    startDate = dateFormat.format(calendar.getTime());
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobType.getConfiguration().toDate = startDate;
+                    syncJobTypeRepo.save(syncJobType);
+                }else{
+                    tryCount = tryCount;
+                }
+                tryCount--;
+            }
+
+            String message = "Sync sales successfully.";
+            response.put("success", "true");
+            response.put("message", message);
+        }
+        else{
+            if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.DATE, -1);
+
+                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
+                syncJobTypeRepo.save(syncJobType);
+            }
+
+            response = getJournals(userId, account);
+        }
+        return response;
+    }
+
+
     @GetMapping("/consumption/export/excel")
     public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,
                               HttpServletResponse response) throws IOException {
@@ -316,7 +379,7 @@ public class JournalController {
         excelExporter.export(response);
     }
 
-    private ArrayList<File> createConsumptionFilePerLocation(List<JournalBatch> journalBatches, SyncJobType syncJobType,
+    private ArrayList<File> createConsumptionFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
                                                              String AccountName) {
         ArrayList<File> locationFiles = new ArrayList<>();
         try {
@@ -324,11 +387,12 @@ public class JournalController {
             List<SyncJobData> consumptionList;
             SalesFileDelimiterExporter excelExporter;
 
-            for (JournalBatch locationBatch : journalBatches) {
+            for (JournalBatch locationBatch : wasteBatches) {
                 consumptionList = new ArrayList<>(locationBatch.getConsumptionData());
 
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
-                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
+
+                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getLocation().costCenterReference);
                 locationFiles.add(file);
             }
             return locationFiles;
@@ -338,4 +402,30 @@ public class JournalController {
         }
     }
 
+    @RequestMapping("/addConsumptionMajorGroup")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addMajorGroup(@RequestBody ArrayList<MajorGroup> majorGroups,
+                                                  @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                  Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().consumptionConfiguration.majorGroups = majorGroups;
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update consumption major groups successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update consumption major groups.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
 }

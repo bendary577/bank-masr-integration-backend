@@ -126,12 +126,13 @@ public class    AppUserController {
 
                     applicationUser.setCode(code);
 
-//                    try {
-//                        String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
+                    try {
+                        String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
+                        emailService.sendSimpleMail();
 //                        emailService.sendMimeMail(QrPath, logoPath, applicationUser);
-//                    } catch (WriterException | IOException e) {
-//                        LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
-//                    }
+                    } catch (WriterException | IOException e) {
+                        LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                    }
 
                     userRepo.save(applicationUser);
 
@@ -242,14 +243,14 @@ public class    AppUserController {
         }
     }
 
-//    @GetMapping(path = "/Simphony/sendQRCodeEmail")
-//    public void sendQRCodeEmail(ApplicationUser user){
-//        try {
-//            emailService.sendMimeMail(QR_CODE_IMAGE_PATH, LOGO_IMAGE_PATH,user);
-//        } catch (MailException e) {
-//            e.printStackTrace();
-//        }
-//    }
+    @GetMapping(path = "/Simphony/sendQRCodeEmail")
+    public void sendQRCodeEmail(ApplicationUser user){
+        try {
+            emailService.sendSimpleMail();
+        } catch (MailException e) {
+            e.printStackTrace();
+        }
+    }
 //
 //    @GetMapping(path = "/generateAndDownloadQRCode")
 //    public void generateAndDownloadQRCode(

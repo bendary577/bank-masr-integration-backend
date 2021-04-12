@@ -33,7 +33,9 @@ public class SendEmailService {
         mailMessage.setText(messageBody);
 
         mailSender.send(mailMessage);
+        System.out.println("Finish");
     }
+
 
     public void sendMimeMail(String qrCodePath, String logoPath, ApplicationUser user) throws MailException {
         MimeMessage mailMessage = mailSender.createMimeMessage();

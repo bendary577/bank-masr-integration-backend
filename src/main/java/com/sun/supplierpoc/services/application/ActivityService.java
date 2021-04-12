@@ -62,6 +62,7 @@ public class ActivityService {
         }catch(Exception e){
             response.put("isSuccess", false);
             response.put("message", "Can't apply discount.");
+            response.put("discountId", "");
             return response;
 
         }

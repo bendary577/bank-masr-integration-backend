@@ -130,7 +130,7 @@ public class    AppUserController {
 
                     try {
                         String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
-                        if(emailService.sendMimeMail(QrPath, logoPath, applicationUser)){
+                        if(emailService.sendMimeMail(QrPath, logoPath, account.getName(), applicationUser)){
                             userRepo.save(applicationUser);
                             response.put("message", "User added successfully.");
                             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -176,7 +176,7 @@ public class    AppUserController {
 
                             try {
                                 String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(),200, 200, QRPath);
-                                boolean emailStatus = emailService.sendMimeMail(QrPath, logoPath, applicationUser);
+                                boolean emailStatus = emailService.sendMimeMail(QrPath, logoPath, account.getName(), applicationUser);
                                 if(!emailStatus){
                                     response.put("message", "Invalid user email.");
                                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

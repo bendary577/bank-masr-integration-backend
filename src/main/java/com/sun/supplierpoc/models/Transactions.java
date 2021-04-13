@@ -21,6 +21,9 @@ public class Transactions {
     private Date transactionDate;
     @NotNull(message="Revenue Centre Id can't be empty.")
     private int revenueCentreId;
+    private String revenueCentreName;
+    private String employeeId;
+    private String checkNumber;
     private Group group;
     private ApplicationUser user;
     @NotNull(message="Total Payment can't be empty.")
@@ -106,6 +109,30 @@ public class Transactions {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getRevenueCentreName() {
+        return revenueCentreName;
+    }
+
+    public void setRevenueCentreName(String revenueCentreName) {
+        this.revenueCentreName = revenueCentreName;
+    }
+
+    public String getEmployeeId() {
+        return employeeId;
+    }
+
+    public void setEmployeeId(String employeeId) {
+        this.employeeId = employeeId;
+    }
+
+    public String getCheckNumber() {
+        return checkNumber;
+    }
+
+    public void setCheckNumber(String checkNumber) {
+        this.checkNumber = checkNumber;
     }
 }
 

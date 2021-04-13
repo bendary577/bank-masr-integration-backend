@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -39,9 +40,11 @@ public class ActivityService {
                 response.put("message", "No user for this code.");
             }else if(user.isDeleted()){
                 response.put("message", "This user is deleted.");
+            }else if(transactionRepo.existsByCheckNumberAndUser(transaction.getCheckNumber(), user)){
+                response.put("message", "Can't use code for the same check twice.");
             }else {
-                Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
 
+                Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
                 if(!groupOptional.isPresent()){
                     response.put("message", "No group for this user.");
                 }else if(groupOptional.get().isDeleted()) {

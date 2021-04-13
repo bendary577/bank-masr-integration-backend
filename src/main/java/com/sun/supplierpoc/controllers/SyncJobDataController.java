@@ -61,6 +61,10 @@ public class SyncJobDataController {
             else
                 bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
 
+            if(bookingSyncType == null){
+                return new ArrayList<>();
+            }
+
             List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(bookingSyncType.getId(), false);
             for (SyncJob syncJob : syncJobs) {
                 if(bookingNo == null || bookingNo.equals("")){

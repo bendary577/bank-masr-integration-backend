@@ -30,17 +30,13 @@ public class TransactionService {
     @Autowired
     private TransactionTypeRepo transactionTypeRepo;
 
-    @Autowired
-    private AccountRepo accountRepo;
-
     public List<Transactions> getTransactionByType(String transactionTypeId, Account account) {
-
-            TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
-
-            List<Transactions> transactions = transactionRepo.findAllByTransactionTypeId(transactionType.getId());
-
-            return transactions;
-
+        TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
+        if(transactionType == null)
+            return new ArrayList<>();
+        else{
+            return transactionRepo.findAllByTransactionTypeId(transactionType.getId());
+        }
     }
 
     public void createTransactionType(Account account, TransactionType transactionType) {

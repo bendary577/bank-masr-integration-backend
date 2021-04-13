@@ -39,8 +39,8 @@ public class CreateOrder {
     AccountService accountService;
     @Autowired
     InvokerUserService invokerUserService;
-    @Autowired
-    private CreateOrderService createOrderService;
+//    @Autowired
+//    private CreateOrderService createOrderService;
     @Autowired
     private OperationRepo operationRepo;
     @Autowired

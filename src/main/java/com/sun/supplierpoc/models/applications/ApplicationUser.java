@@ -1,29 +1,26 @@
 package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.io.Serializable;
 import java.util.Date;
 
+@Document
 public class ApplicationUser implements Serializable {
+
     @Id
     private String id;
+    private String accountId;
     private String name;
-
+    private int top;
+    private String email;
+    private String logoUrl;
     private Group group;
-    private Company company;
-
     private Date creationDate;
+    private String code;
     private Date lastUpdate;
     private boolean deleted;
-
-    public ApplicationUser(String name, Group group, Company company, Date creationDate, Date lastUpdate, boolean deleted) {
-        this.name = name;
-        this.group = group;
-        this.company = company;
-        this.creationDate = creationDate;
-        this.lastUpdate = lastUpdate;
-        this.deleted = deleted;
-    }
 
     public String getId() {
         return id;
@@ -39,14 +36,6 @@ public class ApplicationUser implements Serializable {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
     }
 
     public Group getGroup() {
@@ -79,5 +68,45 @@ public class ApplicationUser implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public int getTop() {
+        return top;
+    }
+
+    public void setTop(int top) {
+        this.top = top;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
     }
 }

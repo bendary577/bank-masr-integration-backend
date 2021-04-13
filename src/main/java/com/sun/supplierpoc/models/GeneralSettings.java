@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
@@ -34,6 +35,8 @@ public class GeneralSettings {
     private ArrayList<BookingType> transactionTypes = new ArrayList<>();
     private ArrayList<BookingType> expenseTypes = new ArrayList<>();
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
+
+    private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
 
     private Date creationDate;
     private boolean deleted;
@@ -157,6 +160,14 @@ public class GeneralSettings {
 
     public void setSuppliers(ArrayList<Supplier> suppliers) {
         this.suppliers = suppliers;
+    }
+
+    public ArrayList<SimphonyDiscount> getDiscountRates() {
+        return discountRates;
+    }
+
+    public void setDiscountRates(ArrayList<SimphonyDiscount> discountRates) {
+        this.discountRates = discountRates;
     }
 
     public ArrayList<BookingType> getPaymentTypes() {

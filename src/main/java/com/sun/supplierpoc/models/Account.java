@@ -11,6 +11,7 @@ public class Account implements Serializable {
     @Id
     private String id;
     private String name;
+    private String imageUrl;
     private String domain;
     private String ERD;
     private ArrayList<AccountCredential> accountCredentials;
@@ -104,5 +105,13 @@ public class Account implements Serializable {
             }
         }
         return new AccountCredential();
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

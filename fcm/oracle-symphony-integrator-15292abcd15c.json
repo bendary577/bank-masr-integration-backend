@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "oracle-symphony-integrator",
+  "private_key_id": "15292abcd15cb689bbea4269bcca91252fa35b56",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC5Eqld6hhuaG2+\nsnB7H2nzUE0I1LIyS4ja30vcYDw1dGDHME+pb0dzL18X0dTQa1nfGplTyeexGOyl\n+3EwLmegMsO8EYNi3iJtmyP9wmIZznWSPBLBV2wsFi4yP1BXsUqQUWGypXKnSWjM\nUogGhLUScS26kE/Bz0nkAqFFdYTGwG7EbLITphxzWfOw+yOMdwOAjQIUnXwdTtqu\nbTQ6xwlQXUFqdLdWJyYyqqbfog/DyfPZ/EXYssX/hrdEqc5OeZglNuAN3ZivxVz6\nodhUEAu3eQXQLOGLInD6MKwBKEIGvBgp0KBtXWJPMcUw2yue3FeK9HjH4U0dhCf6\nRDRUxtnBAgMBAAECggEAOhgdihldqeql6GJi5IMr4vCl/cumVBtZzjqhuX+L5sut\nRVlo6CrCJuoL05JOV04bW+khkCekzvaf8kpHcXRfmu3Ue0iUEYjhDb7RQWqvGKKy\nTUEGMiKbFguwXJ17PsusODkTjdxZbSGh/+E4SbOGk09rp1B9eLz02Nnqfb8x+qEM\na6AONJxsOFeuvYPmjXIl7It27ZnTOh6dyC1lw7WtoFmN3CT1UPvSXt4qHCqhP7fg\nQy/WANY4FTcPaHVUsXDDELrHw84z/n/QpVnEmeuvOw2WODbhFqCauZfoK2VQmaeS\nyzD1wiEC+l+C4UYVzZQhLKZyfxRGGbEbUG1KvT0icQKBgQDgplLmnMKc/cl7A5RH\n8vi0ANBxUL1kbjkb+DQt1jCBFBD+PQeg/Hb9DzyAMe2ZwDsnyrj13HiYOe4Kdfw3\ntvmG8bBpNWlItQb7n1NKkfw2MPJAIOfoTbH/93Icg6HU2EXwIseijRsbjo1gjxge\newBnHxhhqYo4eaSgRV7H/KeSVwKBgQDS5nHgT/sIIrzVZVes18FEg8BOJqwQ3YDd\ncFjO1CTThaD0T3zl5MyKkS453Pu5Ig6GCTBh8jgtIb4/mppPegO4LrlHoBU986DG\nI600Q5eT75gg2kM3F+MCh5CYTzbvAtryrrwgCLFQUTYsLPl36iTtRpT4b/Bgkw8B\nF5hhNmzVpwKBgQCWHI2oq3cfkDXhjTK4IRMutJyUG29yfHSMy/2R413l4pK4T++Z\nExovXs7+ml46LslYfY26O+gZUBxPwScX05xJH5bRtm7ztoND/+KYIZR2YZ5+W36b\nK8+VSrNlek/Y+etB2vurEr7aWxb9PqDPPUG3pn+UQsWplx76OWBsIdeXYQKBgBh7\nmAyqPEIdhj5fnWX7RfxmLxTjeGYc0LDkMesQxZWolZ7G+4DUpsoPQIaHGNHNGlKF\nDpDQRaU3nZZUpEVFrNjc07V06AJhHfDig2Dl19rcnZRywgrLQxcwFaEY0Q++DRzP\nHBe76pmgU+Gc9vjsvYyt/O06UXVknQFLc+0VHF1RAoGAONZMDAvRQgG5WrMeRPa4\nlEEFesAs9XZ8nMAkPX0A7xewZZ/gDX19i372w7qj0AGDtNJTpln3HPWuXNpjM5xs\nJyc5QJQIWqNgOcMxmqBkBlPQz05w+nlprUP26D6FNkOOmmvLG4OfR7Sbt6s1hJPF\nL4Pxx2FkoXrkFtcboveVwbg=\n-----END PRIVATE KEY-----\n",
+  "client_email": "accour-520@oracle-symphony-integrator.iam.gserviceaccount.com",
+  "client_id": "109891959275501670199",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/accour-520%40oracle-symphony-integrator.iam.gserviceaccount.com"
+}

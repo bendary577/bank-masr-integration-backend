@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
+import com.sun.supplierpoc.models.simphony.Message;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
 import com.sun.supplierpoc.models.simphony.check.ZealPayment;
@@ -65,11 +66,11 @@ public class ZealController {
         try {
             final String[] values = conversions.convertBasicAuth(authorization);
             if (values.length != 0) {
+
                 username = values[0];
                 password = values[1];
                 InvokerUser user = invokerUserService.getInvokerUser(username, password);
 
-                //User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
                 Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
                 if (accountOptional.isPresent()) {
@@ -136,7 +137,6 @@ public class ZealController {
 
                     OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Voucher", account.getId(), false);
 
-
                     if (!user.getTypeId().contains(operationType.getId())){
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to redeem reward!.");
                     }
@@ -148,7 +148,9 @@ public class ZealController {
                         }
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
-                    // error message wrong revenue center, please configure this RC
+                    Message message = new Message();
+                    message.setEn("error message wrong revenue center, please configure this RC");
+                    response.setMessage(message);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
                 String message = "Invalid Credentials";

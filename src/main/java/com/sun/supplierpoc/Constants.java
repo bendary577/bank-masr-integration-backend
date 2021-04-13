@@ -8,9 +8,12 @@ public class Constants {
     public static String RETRY_TO_SEND = "Retry to Send";
 
     public static String INVALID_LOCATION = "Invalid location";
+    public static String INVALID_USER = "Invalid user.";
+
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
     public static String EMPTY_REVENUE_CENTER = "Revenue Centers parameter is empty. Please make a selection.";
+    public static  String WRONG_REVENUE_CENTER = "wrong revenue center, please configure this RC";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
     public static String EMPTY_BUSINESS_DATE = "Business Dates parameter is empty. Please make a selection.";
     public static String WRONG_BUSINESS_DATE = "Wrong Business Dates Chosen.";
@@ -46,7 +49,18 @@ public class Constants {
     public static String MONTHLY = "Monthly";
     public static String DAILY_PER_MONTH = "DailyPerMonth";
 
-    ////////////////////////////////////////// Accounts ////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
+    public static String REDEEM_VOUCHER = "Redeem Voucher";
+
+    ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
+    public static String PROJECT_NAME = "oracle-symphony-integrator";
+    public static String BUCKET_NAME = "oracle-integrator-bucket";
+
+    public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
+    public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";
+    public static final String ACCOUNT_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/indeex.jpg-1192782010?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1617883508&Signature=IfLBwoO4X65GOO3yE6deP1W8Ab9rdesZbr9QHy2XJP%2BOdRW0yiGnfFPhiMYX4ukFvqUS5MMroWlgjjzIvGGfOZIaMHLTWttlSOHDL6N8Zwpj3meW3iSkgCBai94PTo1r%2BOaNeP7kFdXJiey5qC8vF2nbXu8KcDJQ%2BTcr64F%2FVzyd3YGYGWpWJPZc0fhZZNs14jgIzIXkaLAnS%2BuQ3LUKUbCE77R%2FaKGNvgggFwbBSJfsqEg4YiQJXph0RJjEfN6Zx7LxgIJqeMwH87y4US%2F2vE08FOGKglN7Jjn7iVfWp4augpUusOuAot3TiocaazGerPefxQ16EKMzC%2FAMMczzww%3D%3D";
+
+    ////////////////////////////////////////// Accounts /////////// /////////////////////////////////////////////////////
     public static String SUN = "Sun";
     public static String FUSION = "Fusion";
     public static String ORACLE_OHIM = "HospitalityOHIM";
@@ -110,6 +124,7 @@ public class Constants {
 
     // Daily Detail >> Sales Mix
     public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=15";
+
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
     // Daily Detail >> Discount
@@ -123,6 +138,10 @@ public class Constants {
     // myInventory Reports >> COS by Cost Center
     public static String CONSUMPTION_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=499";
     public static String CONSUMPTION_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=499&method=run&reportID=myInvenCOSByCC";
+
+    // Dealy details >> Cost Of Goods (-VAT)
+    public static String CONSUMPTION_COSTOFGOODS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=12";
+    public static String CONSUMPTION_COSTOFGOODS_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=12&method=run&reportID=EAME_COGSDailyDetail_VAT";
 
     // More Reports >> Summary >> System Sales Summary
     public static String SALES_SUMMARY_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Optional;
 
 @Service
 public class ActivityService {
@@ -33,38 +34,58 @@ public class ActivityService {
         try {
 
             ApplicationUser user = userRepo.findByCode(transaction.getCode());
-            Group group = user.getGroup();
 
-            user.setTop( user.getTop() + 1 );
-            group.setTop( group.getTop() + 1 );
+            if(user == null){
+                response.put("message", "No user for this code.");
+            }else if(user.isDeleted()){
+                response.put("message", "This user is deleted.");
+            }else {
+                Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
 
-            double discount = group.getDiscountRate();
-            double amount = transaction.getTotalPayment();
-            double amountAfterDiscount = amount - (amount * (discount/100));
+                if(!groupOptional.isPresent()){
+                    response.put("message", "No group for this user.");
+                }else if(groupOptional.get().isDeleted()) {
+                    response.put("message", "This group is deleted.");
+                }else {
 
-            transaction.setUser(user);
-            transaction.setGroup(group);
-            transaction.setDiscountRate(group.getDiscountRate());
-            transaction.setAfterDiscount(amountAfterDiscount);
-            transaction.setTransactionDate(new Date());
-            transaction.setTransactionTypeId(transactionType.getId());
+                    Group group = groupOptional.get();
 
-            userRepo.save(user);
-            groupRepo.save(group);
+                    user.setTop(user.getTop() + 1);
+                    group.setTop(group.getTop() + 1);
 
-            transactionRepo.save(transaction);
+                    double discount = group.getDiscountRate();
+                    double amount = transaction.getTotalPayment();
+                    double amountAfterDiscount = amount - (amount * (discount / 100));
 
-            response.put("isSuccess", true);
-            response.put("message", "Discount applied successfully.");
-            response.put("discountId", group.getDiscountId());
+                    transaction.setUser(user);
+                    transaction.setGroup(group);
+                    transaction.setDiscountRate(group.getDiscountRate());
+                    transaction.setAfterDiscount(amountAfterDiscount);
+                    transaction.setTransactionDate(new Date());
+                    transaction.setTransactionTypeId(transactionType.getId());
+
+                    userRepo.save(user);
+                    groupRepo.save(group);
+
+                    transactionRepo.save(transaction);
+
+                    response.put("isSuccess", true);
+                    response.put("message", "Discount applied successfully.");
+                    response.put("discountId", group.getDiscountId());
+                    return response;
+                }
+
+                response.put("isSuccess", false);
+                return response;
+            }
+
+            response.put("isSuccess", false);
             return response;
 
         }catch(Exception e){
             response.put("isSuccess", false);
             response.put("message", "Can't apply discount.");
-            response.put("discountId", "");
             return response;
-
         }
     }
 }

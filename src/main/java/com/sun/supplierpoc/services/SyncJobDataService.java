@@ -38,6 +38,23 @@ public class SyncJobDataService {
         return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNo(bookingNo);
     }
 
+    public ArrayList<SyncJobData> getDataByBookingNoAndSyncType(String bookingNo, String syncJobTypeId){
+        List<SyncJobData> data;
+        ArrayList<SyncJobData> syncJobData = new ArrayList<>();
+
+        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
+        for (SyncJob syncJob : syncJobs) {
+            if(bookingNo == null || bookingNo.equals("")){
+                data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
+            }else {
+                data = syncJobDataRepo.findByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
+            }
+            syncJobData.addAll(data);
+        }
+
+        return syncJobData;
+    }
+
     public ArrayList<SyncJobData> getSyncJobDataByTypeId(String syncJobTypeId)  {
         List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(syncJobTypeId, false);
         ArrayList<SyncJobData> syncJobsData = new ArrayList<>();

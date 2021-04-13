@@ -24,6 +24,7 @@ public class Constants {
     public static String NEW_BOOKING_REPORT = "New Booking Report";
     public static String CANCEL_BOOKING_REPORT = "Cancel Booking Report";
     public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update Report";
+    public static String EXPENSES_DETAILS_REPORT = "Expenses Details Report";
 
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";

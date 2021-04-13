@@ -3,6 +3,7 @@ package com.sun.supplierpoc;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
 
 import java.nio.charset.StandardCharsets;
@@ -277,6 +278,9 @@ public class Conversions {
     // ==> OPERA Report Functions
 
     public BookingType checkBookingTypeExistence(ArrayList<BookingType> bookingTypes, String typeName){
+        if(typeName.equals("") || bookingTypes.size() == 0){
+            return new BookingType("0");
+        }
         for (BookingType paymentType : bookingTypes) {
             if (paymentType.getType().toLowerCase().equals(typeName.toLowerCase())) {
                 return paymentType;
@@ -285,14 +289,37 @@ public class Conversions {
         return new BookingType("0");
     }
 
+    public BookingType checkExpenseTypeExistence(ArrayList<BookingType> expenseTypes, String typeName){
+        if(typeName.equals("")){
+            return new BookingType("1");
+        }
+        for (BookingType paymentType : expenseTypes) {
+            if(typeName.toLowerCase().contains(paymentType.getType().toLowerCase())){
+                return paymentType;
+            }
+        }
+
+        return new BookingType("1");
+    }
+
+    public RateCode checkRateCodeExistence(ArrayList<RateCode> rateCodes, String code){
+        if(code.equals("") || rateCodes.size() == 0){
+            return new RateCode();
+        }
+        for (RateCode rateCode : rateCodes) {
+            if (rateCode.code.toLowerCase().equals(code.toLowerCase())) {
+                return rateCode;
+            }
+        }
+        return new RateCode();
+    }
+
     public String checkRoomRentType(Date arrivalDate, Date departureDate){
         long diff = departureDate.getTime() - arrivalDate.getTime();
         long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
-        System.out.println ("Days: " + numberOfDays);
-
         if(numberOfDays % 7 == 0){
             return "3"; //Weekly
-        }else if(numberOfDays % 30 == 0){
+        }else if(numberOfDays % 30 == 0 || numberOfDays % 30 == 1){
             return "4"; // Monthly
         }
 

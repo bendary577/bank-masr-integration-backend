@@ -2,6 +2,7 @@ package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
@@ -31,6 +32,8 @@ public class GeneralSettings {
     private ArrayList<BookingType> genders = new ArrayList<>();
     private ArrayList<BookingType> customerTypes = new ArrayList<>();
     private ArrayList<BookingType> transactionTypes = new ArrayList<>();
+    private ArrayList<BookingType> expenseTypes = new ArrayList<>();
+    private ArrayList<RateCode> rateCodes = new ArrayList<>();
 
     private Date creationDate;
     private boolean deleted;
@@ -218,5 +221,21 @@ public class GeneralSettings {
 
     public void setTransactionTypes(ArrayList<BookingType> transactionTypes) {
         this.transactionTypes = transactionTypes;
+    }
+
+    public ArrayList<BookingType> getExpenseTypes() {
+        return expenseTypes;
+    }
+
+    public void setExpenseTypes(ArrayList<BookingType> expenseTypes) {
+        this.expenseTypes = expenseTypes;
+    }
+
+    public ArrayList<RateCode> getRateCodes() {
+        return rateCodes;
+    }
+
+    public void setRateCodes(ArrayList<RateCode> rateCodes) {
+        this.rateCodes = rateCodes;
     }
 }

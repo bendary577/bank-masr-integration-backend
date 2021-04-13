@@ -74,21 +74,14 @@ public class    AppUserController {
 
         HashMap response = new HashMap();
         try {
+            Group group;
+            ApplicationUser applicationUser;
 
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
-                ApplicationUser applicationUser;
-
-                applicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
-                if(applicationUser != null){
-                    response.put("message", "There is user exist with this email.");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
-
-                Group group = new Group();
 
                 if (addFlag) {
                     applicationUser = new ApplicationUser();
@@ -96,14 +89,20 @@ public class    AppUserController {
                     if (groupId != null) {
                         Optional<Group> groupOptional = groupRepo.findById(groupId);
                         if(groupOptional.isEmpty()){
-                            response.put("message", "Group doesn't exist");
-                            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            response.put("message", "User group doesn't exist");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
                         group = groupOptional.get();
                         applicationUser.setGroup(group);
                     }else {
-                        response.put("message", "Group can't be empty.");
-                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        response.put("message", "User group can't be empty.");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
+
+                    applicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
+                    if(applicationUser != null){
+                        response.put("message", "There is user exist with this email.");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
 
                     String logoUrl = Constants.USER_IMAGE_URL;
@@ -131,19 +130,38 @@ public class    AppUserController {
 
                     try {
                         String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
-                        emailService.sendMimeMail(QrPath, logoPath, applicationUser);
+                        if(emailService.sendMimeMail(QrPath, logoPath, applicationUser)){
+                            userRepo.save(applicationUser);
+                            response.put("message", "User added successfully.");
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
+                        }else{
+                            response.put("message", "Invalid user email.");
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                        }
                     } catch (WriterException | IOException e) {
                         LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                        response.put("message", "Invalid user email.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                     }
-
-                    userRepo.save(applicationUser);
-
                 } else {
-
                     Optional<ApplicationUser> userOptional = userRepo.findById(userId);
 
                     if (userOptional.isPresent()) {
                         applicationUser = userOptional.get();
+
+                        if (groupId != null) {
+                            Optional<Group> groupOptional = groupRepo.findById(groupId);
+                            if (groupOptional.isPresent()) {
+                                group = groupOptional.get();
+                                applicationUser.setGroup(group);
+                            }else {
+                                response.put("message", "Group doesn't exist");
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            }
+                        } else {
+                            response.put("message", "Group can't be empty.");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
 
                         if(!applicationUser.getEmail().equals(email)){
                             ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
@@ -152,40 +170,48 @@ public class    AppUserController {
                                 response.put("message", "There is user exist with this email.");
                                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                             }
-                        }
 
-                        if (groupId != null) {
-                            Optional<Group> groupOptional = groupRepo.findById(groupId);
-                            if (groupOptional.get().getParentGroupId() == null) {
-                                response.put("message", "Group doesn't exist");
-                                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            String logoPath = group.getLogoUrl();
+                            String QRPath = "QRCodes/"+ applicationUser.getCode() +".png" ;
+
+                            try {
+                                String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(),200, 200, QRPath);
+                                boolean emailStatus = emailService.sendMimeMail(QrPath, logoPath, applicationUser);
+                                if(!emailStatus){
+                                    response.put("message", "Invalid user email.");
+                                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                                }
+                            } catch (WriterException | IOException e) {
+                                LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                                response.put("message", "Invalid user email.");
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                             }
-                            group = groupOptional.get();
-                            applicationUser.setGroup(group);
-                        } else {
-                            response.put("message", "Group can't be empty.");
-                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            applicationUser.setEmail(email);
                         }
 
-                        String logoUrl = Constants.USER_IMAGE_URL;
                         if (image != null) {
+                            String logoUrl = Constants.USER_IMAGE_URL;
                             try {
                                 logoUrl = imageService.store(image);
                             } catch (Exception e) {
                                 LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
                             }
+                            applicationUser.setLogoUrl(logoUrl);
                         }
 
                         applicationUser.setName(name);
-                        applicationUser.setEmail(email);
-                        applicationUser.setLogoUrl(logoUrl);
                         applicationUser.setAccountId(account.getId());
                         group.setLastUpdate(new Date());
                         userRepo.save(applicationUser);
+
+                        response.put("message", "User Updated successfully.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+                    else{
+                        response.put("message", "Can't find user with this id.");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
                 }
-                response.put("message", "User saved successfully.");
-                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
             else {
                 response.put("message", "Invalid user.");

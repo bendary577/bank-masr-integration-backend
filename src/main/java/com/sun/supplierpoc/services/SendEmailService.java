@@ -37,7 +37,7 @@ public class SendEmailService {
         System.out.println("Finish");
     }
 
-    public void sendMimeMail(String qrCodePath, String logoPath, ApplicationUser user) throws MailException {
+    public boolean sendMimeMail(String qrCodePath, String logoPath, ApplicationUser user) throws MailException {
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
         try {
@@ -80,8 +80,10 @@ public class SendEmailService {
             mailSender.send(mailMessage);
 
             new File(qrCodePath).delete();
+            return true;
         } catch (MessagingException e) {
             e.printStackTrace();
+            return false;
         }
     }
 }

@@ -53,8 +53,9 @@ public class ActivityController {
         try {
 
             if (result.hasErrors()) {
-                response.put("error", result.getAllErrors());
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                response.put("isSuccess", false);
+                response.put("message", result.getAllErrors().get(0).getDefaultMessage());
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
 
             InvokerUser user = invokerUserService.getAuthenticatedUser(authorization);
@@ -69,9 +70,9 @@ public class ActivityController {
                 TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
                 if (!user.getTypeId().contains(transactionType.getId())) {
-                    response.put("isSuccess", Constants.FAILED);
+                    response.put("isSuccess", false);
                     response.put("message", "You don't have role to redeem reward!.");
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 //                location.isChecked()
                 if (true) {
@@ -84,17 +85,21 @@ public class ActivityController {
                     }
 
                 } else {
-                    response.put("error", Constants.WRONG_REVENUE_CENTER);
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    response.put("isSuccess", false);
+                    response.put("message", Constants.WRONG_REVENUE_CENTER);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 
             } else {
-                response.put("error", Constants.INVALID_USER);
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                response.put("isSuccess", false);
+                response.put("message", Constants.INVALID_USER);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
             }
         } catch (Exception e) {
-            response.put("error", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+
+            response.put("isSuccess", false);
+            response.put("message", "Some thing went wrong.");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
 

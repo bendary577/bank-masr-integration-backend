@@ -10,7 +10,7 @@ import java.util.List;
 public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
     List<Transactions> findAllByTransactionTypeId(String transactionType);
-    List<Transactions> findByTransactionDateBetween(Date from, Date to);
+    List<Transactions> findAllByTransactionTypeIdAndTransactionDateBetween(String accountI,Date from, Date to);
 
     List<Transactions> findAllByUser(ApplicationUser user);
 

@@ -71,7 +71,7 @@ public class TransactionService {
             calendar.set(Calendar.SECOND, 59);
             Date date = calendar.getTime();
 
-            transactions = transactionRepo.findByTransactionDateBetween(date, new Date());
+            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), date, new Date());
 
             for(Transactions transaction : transactions){
                 totalSpend = totalSpend + transaction.getAfterDiscount();
@@ -95,7 +95,7 @@ public class TransactionService {
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
 
-            transactions = transactionRepo.findByTransactionDateBetween(start, end);
+            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), start, end);
 
             for(Transactions transaction : transactions){
                 totalSpend = totalSpend + transaction.getAfterDiscount();
@@ -118,7 +118,7 @@ public class TransactionService {
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
 
-            transactions = transactionRepo.findByTransactionDateBetween(start, end);
+            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), start, end);
 
             for(Transactions transaction : transactions){
                 totalSpend = totalSpend + transaction.getAfterDiscount();

@@ -1,17 +1,17 @@
 package com.sun.supplierpoc.ftp;
 
-        import com.sun.supplierpoc.Constants;
-        import com.sun.supplierpoc.models.Account;
-        import com.sun.supplierpoc.models.configurations.AccountCredential;
-        import org.apache.commons.net.PrintCommandListener;
-        import org.apache.commons.net.ftp.FTPClient;
-        import org.apache.commons.net.ftp.FTPReply;
+import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.configurations.AccountCredential;
+import org.apache.commons.net.PrintCommandListener;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPReply;
 
-        import java.io.File;
-        import java.io.FileInputStream;
-        import java.io.IOException;
-        import java.io.PrintWriter;
-        import java.util.ArrayList;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 
 public class FtpClient {
     private String server;

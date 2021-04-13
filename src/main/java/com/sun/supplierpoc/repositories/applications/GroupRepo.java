@@ -17,7 +17,5 @@ public interface GroupRepo extends MongoRepository<Group, String> {
     ArrayList<Group> findAllByAccountIdAndParentGroupId(String id, String group);
     ArrayList<Group> findAllByAccountIdAndParentGroupIdAndDeleted(String id, String group, boolean deleted);
 
-    boolean existsByName(String name);
-
-    Optional<Group> findByName(String name);
+    Optional<Group> findByNameAndAccountId(String name, String accountId);
 }

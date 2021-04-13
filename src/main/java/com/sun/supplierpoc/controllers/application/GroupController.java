@@ -2,6 +2,7 @@ package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
@@ -45,14 +46,18 @@ public class GroupController {
     @RequestMapping("/getAllApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getAllApplicationCompanies(Principal principal) {
+    public ResponseEntity getAllApplicationCompanies(Principal principal, @RequestParam("status") int status) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
-            ArrayList<Group> groups = groupRepo.findAllByAccountId(account.getId());
+            ArrayList<Group> groups;
+            if(status == 1) // get active groups only
+                groups = groupRepo.findAllByAccountIdAndDeleted(account.getId(), false);
+            else
+                groups = groupRepo.findAllByAccountId(account.getId());
 
             return ResponseEntity.status(HttpStatus.OK).body(groups);
         }
@@ -102,7 +107,7 @@ public class GroupController {
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    Principal principal) {
 
-        HashMap response = new HashMap();
+        Response response = new Response();
         try {
 
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -114,27 +119,30 @@ public class GroupController {
                 Group parentGroup ;
 
                 if (addFlag) {
-
                     group = new Group();
-
                     if (parentGroupId != null) {
-
                         Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
                         parentGroup = parentGroupOptional.get();
 
-                        if (parentGroupOptional.get().getParentGroupId() != null) {
-                            response.put("message", "Parent group is already child for another group," +
-                                    "\n Please select valid parent group.");
-                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        if (parentGroup.getParentGroupId() != null) {
+                            response.setStatus(false);
+                            response.setMessage("Parent group is already child for another group, Please select valid parent group.");
+
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }else if(parentGroup.isDeleted()){
+                            response.setStatus(false);
+                            response.setMessage("Parent group is inactive, Please select valid parent group.");
+
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
                         group.setParentGroupId(parentGroup.getId());
                     }
 
-                    Optional<Group> testNameGroupOptional = groupRepo.findByName(name);
+                    Optional<Group> testNameGroupOptional = groupRepo.findByNameAndAccountId(name, account.getId());
 
                     if (testNameGroupOptional.isPresent()) {
-                        response.put("message", "Group is already exist with this name.");
-                        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        response.setMessage("Group is already exist with this name.");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
 
                     String logoUrl = Constants.GROUP_IMAGE_URL;
@@ -151,23 +159,26 @@ public class GroupController {
                     group.setDiscountRate(Float.parseFloat(discountRate));
                     group.setDiscountId(Integer.parseInt(discountId));
                     group.setLogoUrl(logoUrl);
+
                     group.setAccountId(account.getId());
                     group.setCreationDate(new Date());
                     group.setLastUpdate(new Date());
                     group.setDeleted(false);
                     groupRepo.save(group);
-                } else {
+                }
+                else {
                     Optional<Group> groupOptional = groupRepo.findById(groupId);
 
                     if (groupOptional.isPresent()) {
 
                         group = groupOptional.get();
 
-                        Optional<Group> testNameGroupOptional = groupRepo.findByName(name);
+                        Optional<Group> testNameGroupOptional = groupRepo.findByNameAndAccountId(name, account.getId());
 
                         if (testNameGroupOptional.isPresent() && !group.getName().equals(name)) {
-                            response.put("message", "Group is already exist with this name.");
-                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            response.setStatus(false);
+                            response.setMessage("Group is already exist with this name.");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
 
                         String logoUrl = Constants.GROUP_IMAGE_URL;
@@ -182,10 +193,16 @@ public class GroupController {
                         if (parentGroupId != null) {
                             Optional<Group> parentGroupOptional = groupRepo.findById(parentGroupId);
                             parentGroup = parentGroupOptional.get();
-                            if (parentGroupOptional.get().getParentGroupId() != null) {
-                                response.put("message", "Parent group is already child for another group," +
-                                        "\n Please select valid parent group.");
-                                return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            if (parentGroup.getParentGroupId() != null) {
+                                response.setStatus(false);
+                                response.setMessage("Parent group is already child for another group, Please select valid parent group.");
+
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            }else if(parentGroup.isDeleted()){
+                                response.setStatus(false);
+                                response.setMessage("Parent group is inactive, Please select valid parent group.");
+
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                             }
                             group.setParentGroupId(parentGroup.getId());
                         }
@@ -200,14 +217,15 @@ public class GroupController {
                         groupRepo.save(group);
                     }
                 }
-                response.put("message", "Group saved successfully.");
+
+                response.setMessage("Group saved successfully.");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             } else {
-                response.put("message", "Invalid user.");
+                response.setMessage("Invalid user.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
         }catch (Exception e){
-            response.put("message", "Something went wrong.");
+            response.setMessage("Something went wrong.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }

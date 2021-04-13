@@ -80,25 +80,30 @@ public class    AppUserController {
 
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
-
                 ApplicationUser applicationUser;
-                Group group ;
+
+                applicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
+                if(applicationUser != null){
+                    response.put("message", "There is user exist with this email.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
+                Group group = new Group();
 
                 if (addFlag) {
-
                     applicationUser = new ApplicationUser();
 
                     if (groupId != null) {
                         Optional<Group> groupOptional = groupRepo.findById(groupId);
-                        if (groupOptional.get() == null) {
+                        if(groupOptional.isEmpty()){
                             response.put("message", "Group doesn't exist");
-                            return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                            ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
                         group = groupOptional.get();
                         applicationUser.setGroup(group);
                     }else {
                         response.put("message", "Group can't be empty.");
-                        return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
 
                     String logoUrl = Constants.USER_IMAGE_URL;
@@ -138,8 +143,16 @@ public class    AppUserController {
                     Optional<ApplicationUser> userOptional = userRepo.findById(userId);
 
                     if (userOptional.isPresent()) {
-
                         applicationUser = userOptional.get();
+
+                        if(!applicationUser.getEmail().equals(email)){
+                            ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
+
+                            if(oldApplicationUser != null){
+                                response.put("message", "There is user exist with this email.");
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            }
+                        }
 
                         if (groupId != null) {
                             Optional<Group> groupOptional = groupRepo.findById(groupId);
@@ -173,7 +186,8 @@ public class    AppUserController {
                 }
                 response.put("message", "User saved successfully.");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
-            } else {
+            }
+            else {
                 response.put("message", "Invalid user.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }

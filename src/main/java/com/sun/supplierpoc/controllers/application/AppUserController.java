@@ -99,8 +99,8 @@ public class    AppUserController {
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
 
-                    applicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
-                    if(applicationUser != null){
+                    ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
+                    if(oldApplicationUser != null){
                         response.put("message", "There is user exist with this email.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
@@ -218,6 +218,7 @@ public class    AppUserController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
         }catch (Exception e){
+            e.printStackTrace();
             response.put("message", "Something went wrong.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }

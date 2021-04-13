@@ -37,7 +37,7 @@ public class SendEmailService {
         System.out.println("Finish");
     }
 
-    public void sendMimeMail(String qrCodePath, String logoPath, ApplicationUser user) throws MailException {
+    public boolean sendMimeMail(String qrCodePath, String logoPath, String accountName, ApplicationUser user) throws MailException {
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
         try {
@@ -58,7 +58,7 @@ public class SendEmailService {
                             "   src='https://vistapointe.net/images/gift-1.jpg'>" +
                             "<h3 style='text-align:center'>Hello " + user.getName() + ",</h3>" +
                             "<p style='text-align:center'>" +
-                            "   Welcome to ACT loyalty program." +
+                            "   Welcome to "+ accountName + " loyalty program." +
                             "   <br>" +
                             "   Please feel free to use the below QR code in each visit to enjoy your special discount." +
                             "</p>" +
@@ -80,8 +80,10 @@ public class SendEmailService {
             mailSender.send(mailMessage);
 
             new File(qrCodePath).delete();
+            return true;
         } catch (MessagingException e) {
             e.printStackTrace();
+            return false;
         }
     }
 }

@@ -250,7 +250,7 @@ public class GroupController {
     @ResponseBody
     public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups, Principal principal,
                                                      @RequestParam(name = "addFlag") boolean addFlag,
-                                                     @RequestParam(name = "deleteUsers") boolean deleteUsers,
+                                                     @RequestParam(name = "withUsers") boolean withUsers,
                                                      @RequestParam(name = "parentGroupId") String parentGroupId) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -264,7 +264,7 @@ public class GroupController {
                     group.setDeleted(true);
                     groupRepo.save(group);
 
-                    if(deleteUsers) {
+                    if(withUsers) {
                         List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
 
                         for (ApplicationUser applicationUser : applicationUsers) {
@@ -288,11 +288,12 @@ public class GroupController {
                     group.setDeleted(false);
                     groupRepo.save(group);
 
-                    List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
-
-                    for (ApplicationUser applicationUser : applicationUsers) {
-                        applicationUser.setDeleted(false);
-                        userRepo.save(applicationUser);
+                    if(withUsers) {
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+                        for (ApplicationUser applicationUser : applicationUsers) {
+                            applicationUser.setDeleted(false);
+                            userRepo.save(applicationUser);
+                        }
                     }
                 }
             }

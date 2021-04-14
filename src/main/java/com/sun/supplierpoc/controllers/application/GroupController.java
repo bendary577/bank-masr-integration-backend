@@ -245,11 +245,14 @@ public class GroupController {
     }
 
 
-    @RequestMapping("/deleteApplicationGroups")
+        @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups, Principal principal,
-                                                     @RequestParam(name = "addFlag") boolean addFlag) {
+                                                     @RequestParam(name = "addFlag") boolean addFlag,
+                                                     @RequestParam(name = "deleteUsers") boolean deleteUsers,
+                                                     @RequestParam(name = "parentGroupId") String parentGroupId) {
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
@@ -261,11 +264,25 @@ public class GroupController {
                     group.setDeleted(true);
                     groupRepo.save(group);
 
-                    List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+                    if(deleteUsers) {
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
 
-                    for (ApplicationUser applicationUser : applicationUsers) {
-                        applicationUser.setDeleted(true);
-                        userRepo.save(applicationUser);
+                        for (ApplicationUser applicationUser : applicationUsers) {
+                            applicationUser.setDeleted(true);
+                            userRepo.save(applicationUser);
+                        }
+                    }else{
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+
+                        Optional<Group> newGroupOptional = groupRepo.findById(parentGroupId);
+
+                        if(newGroupOptional.isPresent()) {
+                            Group newGroup = newGroupOptional.get();
+                            for (ApplicationUser applicationUser : applicationUsers) {
+                                applicationUser.setGroup(newGroup);
+                            }
+                        }else{ }
+                        userRepo.saveAll(applicationUsers);
                     }
                 } else {
                     group.setDeleted(false);

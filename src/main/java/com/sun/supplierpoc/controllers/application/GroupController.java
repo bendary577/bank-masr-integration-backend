@@ -156,7 +156,6 @@ public class GroupController {
 
                     group.setName(name);
                     group.setDescription(description);
-                    group.setDiscountRate(Float.parseFloat(discountRate));
                     group.setDiscountId(Integer.parseInt(discountId));
                     group.setLogoUrl(logoUrl);
 
@@ -209,7 +208,6 @@ public class GroupController {
 
                         group.setName(name);
                         group.setDescription(description);
-                        group.setDiscountRate(Float.parseFloat(discountRate));
                         group.setDiscountId(Integer.parseInt(discountId));
                         group.setLogoUrl(logoUrl);
                         group.setAccountId(account.getId());

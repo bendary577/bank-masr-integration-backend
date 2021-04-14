@@ -1,6 +1,7 @@
 package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
@@ -328,6 +329,17 @@ public class Conversions {
     }
 
     // ==> END of OPERA Report Functions
+
+    // ==> OPERA Report Functions
+
+    public SimphonyDiscount checkSimphonyDiscountExistence(ArrayList<SimphonyDiscount> discounts, int discountId){
+        for (SimphonyDiscount discount : discounts) {
+            if (discount.getDiscountId() == discountId) {
+                return discount;
+            }
+        }
+        return new SimphonyDiscount();
+    }
 
     public String filterString(String value){
         value = value.toLowerCase().replaceAll(",", "");

@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers.application;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -30,18 +31,12 @@ public class ActivityController {
     private InvokerUserService invokerUserService;
 
     @Autowired
-    private GeneralSettingsRepo generalSettingsRepo;
-
-    @Autowired
     private TransactionTypeRepo transactionTypeRepo;
 
     @Autowired
     AccountService accountService;
 
-    @Autowired
-    private AccountRepo accountRepo;
-
-    private final Conversions conversions = new Conversions();
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/createTransactionActivity")
     @CrossOrigin("*")
@@ -58,25 +53,23 @@ public class ActivityController {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
 
-            InvokerUser user = invokerUserService.getAuthenticatedUser(authorization);
-            Account account = accountService.getAccount(user.getAccountId());
+            InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+            Account account = accountService.getAccount(invokerUser.getAccountId());
 
             if (account != null) {
-                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                 //SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
                 //Constants.REDEEM_VOUCHER)
 
                 TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
-                if (!user.getTypeId().contains(transactionType.getId())) {
+                if (!invokerUser.getTypeId().contains(transactionType.getId())) {
                     response.put("isSuccess", false);
                     response.put("message", "You don't have role to redeem reward!.");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
-//                location.isChecked()
                 if (true) {
-                    response = activityService.createTransaction(transactionType, transaction);
+                    response = activityService.createTransaction(transactionType, transaction, account);
 
                     if ((boolean) response.get("isSuccess")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

@@ -11,7 +11,6 @@ public class Group implements Serializable {
     private String parentGroupId;
     private String name;
     private String description;
-    private float discountRate;
     private int discountId;
     private int top;
     private String logoUrl;
@@ -23,10 +22,9 @@ public class Group implements Serializable {
     public Group() {
     }
 
-    public Group(String name, String description, float discountRate, String logoUrl, String accountId, Date creationDate, Date lastUpdate, boolean deleted) {
+    public Group(String name, String description, String logoUrl, String accountId, Date creationDate, Date lastUpdate, boolean deleted) {
         this.name = name;
         this.description = description;
-        this.discountRate = discountRate;
         this.logoUrl = logoUrl;
         this.accountId = accountId;
         this.creationDate = creationDate;
@@ -72,14 +70,6 @@ public class Group implements Serializable {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public float getDiscountRate() {
-        return discountRate;
-    }
-
-    public void setDiscountRate(float discountRate) {
-        this.discountRate = discountRate;
     }
 
     public Date getCreationDate() {

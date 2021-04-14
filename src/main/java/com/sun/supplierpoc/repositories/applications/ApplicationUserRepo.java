@@ -11,14 +11,15 @@ import java.util.List;
 @Repository
 public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, String> {
     ArrayList<ApplicationUser> findAll();
+    ApplicationUser findByIdAndDeleted(String id, boolean deleted);
     ApplicationUser findByCode(String code);
-    ApplicationUser findFirstByEmailAndAccountId(String email, String accountId);
 
-//    @Query(value = "SELECT * u from ApplicationUser ORDER BY u.top DESC LIMIT ?")
+    ApplicationUser findFirstByEmailAndAccountId(String email, String accountId);
+    ApplicationUser findFirstByEmailAndAccountIdAndDeleted(String email, String accountId, boolean deleted);
+
     List<ApplicationUser> findTop3ByAccountIdOrderByTopDesc(String accountId);
 
     ArrayList<ApplicationUser> findAllByAccountId(String accountId);
-
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);
 
 }

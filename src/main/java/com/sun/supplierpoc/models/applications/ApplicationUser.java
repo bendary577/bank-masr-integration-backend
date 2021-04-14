@@ -2,6 +2,7 @@ package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -109,4 +110,5 @@ public class ApplicationUser implements Serializable {
     public void setAccountId(String accountId) {
         this.accountId = accountId;
     }
+
 }

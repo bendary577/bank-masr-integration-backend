@@ -46,16 +46,17 @@ public class ActivityService {
 
             ApplicationUser user = userRepo.findByCode(transaction.getCode());
 
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
-
             if(user == null){
                 response.put("message", "No user for this code.");
             }else if(user.isDeleted()){
                 response.put("message", "This user is deleted.");
-            }else if(transactionRepo.existsByCheckNumberAndUser(transaction.getCheckNumber(), user)){
+            } else if(!user.getAccountId().equals(account.getId())){
+                response.put("message", "This user does not belong to this account loyalty program.");
+            } else if(transactionRepo.existsByCheckNumberAndUser(transaction.getCheckNumber(), user)){
                 response.put("message", "Can't use code for the same check twice.");
             }else {
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
 
                 Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
                 if(!groupOptional.isPresent()){

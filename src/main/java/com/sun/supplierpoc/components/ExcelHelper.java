@@ -628,6 +628,7 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
+            int roomNo = 0;
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
@@ -666,6 +667,8 @@ public class ExcelHelper {
                             continue;
                         }
 
+                    } else if (cellIdx == columnsName.indexOf("Room No.")) {
+                        roomNo = (int)currentCell.getNumericCellValue();
                     } else if (cellIdx == columnsName.indexOf("Transaction Date")) {
                         Date updateDate = currentCell.getDateCellValue();
                         if (updateDate != null)
@@ -720,6 +723,7 @@ public class ExcelHelper {
                     expenseItem.discount = "0";
 
                     unitPrice = transactionAmount;
+                    expenseObject.roomNo = roomNo;
                     expenseItem.unitPrice = String.valueOf(transactionAmount);
                     expenseItem.grandTotal = String.valueOf(transactionAmount);
                     expenseItem.paymentType = paymentType.getTypeId();

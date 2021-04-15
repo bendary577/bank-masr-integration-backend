@@ -607,9 +607,10 @@ public class ExcelHelper {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
-        int municipalityTaxRate = configuration.municipalityTaxRate;
-        int vatRate = configuration.vatRate;
-        int serviceChargeRate = configuration.serviceChargeRate;
+        float municipalityTax= 0;
+        float vat = 0;
+        float serviceCharge = 0;
+        float unitPrice = 0;
 
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
         ArrayList<BookingType> expenseTypes = generalSettings.getExpenseTypes();
@@ -627,7 +628,6 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
-            float serviceCharge = 0;
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
@@ -685,8 +685,11 @@ public class ExcelHelper {
 
                 if (transactionDescription.toLowerCase().contains("vat")) {
                     expenseObject.items.get(0).vat = String.valueOf(transactionAmount);
+                    vat = transactionAmount;
                 } else if (transactionDescription.toLowerCase().contains("muncipality")) {
+                    municipalityTax = transactionAmount;
                     expenseObject.items.get(0).municipalityTax = String.valueOf(transactionAmount);
+                    expenseItem.grandTotal = String.valueOf(unitPrice + vat + municipalityTax + serviceCharge);
 
                     syncJobDataList.remove(syncJobDataList.size() - 1);
 
@@ -708,7 +711,7 @@ public class ExcelHelper {
                     expenseObject = new ExpenseObject();
                     expenseItem = new ExpenseItem();
                 } else if (transactionDescription.toLowerCase().contains("service charge")) {
-                    continue;
+                    serviceCharge = transactionAmount;
                 } else {
                     expenseObject = new ExpenseObject();
                     expenseItem = new ExpenseItem();
@@ -716,6 +719,7 @@ public class ExcelHelper {
                     expenseItem.cuFlag = "1";
                     expenseItem.discount = "0";
 
+                    unitPrice = transactionAmount;
                     expenseItem.unitPrice = String.valueOf(transactionAmount);
                     expenseItem.grandTotal = String.valueOf(transactionAmount);
                     expenseItem.paymentType = paymentType.getTypeId();
@@ -723,7 +727,6 @@ public class ExcelHelper {
 
                     expenseItem.vat = "0";
                     expenseItem.municipalityTax = "0";
-                    expenseItem.grandTotal = expenseItem.unitPrice;
 
                     if (!expenseItem.expenseTypeId.equals("") && !expenseItem.unitPrice.equals("0.0")) {
                         expenseObject.items.add(expenseItem);

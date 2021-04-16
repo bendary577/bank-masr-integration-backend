@@ -44,6 +44,9 @@ public class SendEmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
 
             messageHelper.setSentDate(new Date());
+
+
+
             messageHelper.setTo(user.getEmail());
 
             String mailSubject = "We crafted some offers JUST FOR YOU!";

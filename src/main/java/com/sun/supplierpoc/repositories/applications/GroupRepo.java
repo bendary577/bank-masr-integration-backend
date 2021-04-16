@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface GroupRepo extends MongoRepository<Group, String> {
     ArrayList<Group> findAllByAccountId(String accountId);
     ArrayList<Group> findAllByAccountIdAndDeleted(String accountId, boolean deleted);
-    List<Group> findTop3ByAccountIdOrderByTopDesc(String accountId);
+    List<Group> findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(String accountId, boolean deleted, int top);
 
     ArrayList<Group> findAllByAccountIdAndParentGroupId(String id, String group);
     ArrayList<Group> findAllByAccountIdAndParentGroupIdAndDeleted(String id, String group, boolean deleted);

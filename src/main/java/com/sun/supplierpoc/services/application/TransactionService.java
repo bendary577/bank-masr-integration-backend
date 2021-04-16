@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.Month;
 import java.util.*;
 
 @Service
@@ -65,7 +67,7 @@ public class TransactionService {
 
             double totalSpend = 0;
 
-            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
+                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 59);
             calendar.set(Calendar.SECOND, 59);
@@ -102,17 +104,27 @@ public class TransactionService {
             }
 
             return totalSpend;
-        }else{
+        }else {
 
             double totalSpend = 0;
 
             Calendar c = Calendar.getInstance();
-            c.add(Calendar.DATE, - 30);
+            c.set(Calendar.DAY_OF_MONTH, 0);
+            c.add(Calendar.DATE, -30);
+
+            c.add(Calendar.DATE, 0);
             c.set(Calendar.HOUR_OF_DAY, 0);
             c.set(Calendar.MINUTE, 0);
             c.set(Calendar.SECOND, 0);
             Date start = c.getTime();
+
             c.add(Calendar.DATE, 30);
+
+            Month month = Month.of(c.getTime().getMonth() + 1);
+            if(month.maxLength() == 31){
+                c.add(Calendar.DATE, 1);
+            }
+
             c.set(Calendar.HOUR_OF_DAY, 0);
             c.set(Calendar.MINUTE, 0);
             c.set(Calendar.SECOND, 0);

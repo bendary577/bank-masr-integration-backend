@@ -17,7 +17,7 @@ public class AppUserService {
 
     public List<ApplicationUser> getTopUsers(Account account) {
 
-            List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdOrderByTopDesc(account.getId());
+            List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(),false,  0);
 
             return applicationUsers;
     }

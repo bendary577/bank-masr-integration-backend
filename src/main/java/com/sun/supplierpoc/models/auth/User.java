@@ -24,16 +24,13 @@ public class User implements UserDetails  {
     private String accountId;
     private ArrayList<UserAccess> userAccesses;
     private Date creationDate;
+    private Date updateDate;
+
     private boolean deleted;
-
-
     private Collection<? extends GrantedAuthority> authorities;
     private Boolean enabled;
-
     private Boolean accountNonExpired;
-
     private Boolean accountNonLocked;
-
     private boolean credentialsNonExpired;
 
 
@@ -189,5 +186,25 @@ public class User implements UserDetails  {
 
     public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
         this.userAccesses = userAccesses;
+    }
+
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public Date getUpdateDate() {
+        return updateDate;
+    }
+
+    public void setUpdateDate(Date updateDate) {
+        this.updateDate = updateDate;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
+    }
+
+    public Boolean getAccountNonLocked() {
+        return accountNonLocked;
     }
 }

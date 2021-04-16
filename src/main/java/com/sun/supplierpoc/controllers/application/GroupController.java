@@ -54,7 +54,7 @@ public class GroupController {
 
             Account account = accountOptional.get();
             ArrayList<Group> groups;
-            if(status == 1) // get active groups only
+            if(status == 1)
                 groups = groupRepo.findAllByAccountIdAndDeleted(account.getId(), false);
             else
                 groups = groupRepo.findAllByAccountId(account.getId());
@@ -253,7 +253,7 @@ public class GroupController {
                                                      @RequestParam(name = "withUsers") boolean withUsers,
                                                      @RequestParam(name = "parentGroupId") String parentGroupId) {
 
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        User user = (User) ((OAuth2Authentication) principal    ).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             for (Group group : groups) {

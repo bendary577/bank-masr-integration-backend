@@ -1,4 +1,5 @@
 package com.sun.supplierpoc.controllers.application;
+
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
@@ -7,7 +8,7 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.applications.   ApplicationUserRepo;
+import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
@@ -29,7 +30,7 @@ import java.util.*;
 
 @RestController
 
-public class    AppUserController {
+public class AppUserController {
     @Autowired
     ApplicationUserRepo userRepo;
     @Autowired
@@ -50,13 +51,13 @@ public class    AppUserController {
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getApplicationUsers(Principal principal){
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+    public ResponseEntity getApplicationUsers(Principal principal) {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
-            return  ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
+            return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
@@ -88,19 +89,19 @@ public class    AppUserController {
 
                     if (groupId != null) {
                         Optional<Group> groupOptional = groupRepo.findById(groupId);
-                        if(groupOptional.isEmpty()){
+                        if (groupOptional.isEmpty()) {
                             response.put("message", "User group doesn't exist");
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
                         group = groupOptional.get();
                         applicationUser.setGroup(group);
-                    }else {
+                    } else {
                         response.put("message", "User group can't be empty.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
 
                     ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
-                    if(oldApplicationUser != null){
+                    if (oldApplicationUser != null) {
                         response.put("message", "There is user exist with this email.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
@@ -123,18 +124,18 @@ public class    AppUserController {
                     applicationUser.setDeleted(false);
 
                     Random random = new Random();
-                    String code = applicationUser.getName() +random.nextInt();
-                    String logoPath = group.getLogoUrl();
-                    String QRPath = "QRCodes/"+ code +".png" ;
+                    String code = applicationUser.getName() + random.nextInt();
+                    String logoPath = account.getImageUrl();
+                    String QRPath = "QRCodes/" + code + ".png";
                     applicationUser.setCode(code);
 
                     try {
-                        String QrPath = qrCodeGenerator.getQRCodeImage(code,200, 200, QRPath);
-                        if(emailService.sendMimeMail(QrPath, logoPath, account.getName(), applicationUser)){
+                        String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
+                        if (emailService.sendMimeMail(QrPath, logoPath, account.getName(), applicationUser)) {
                             userRepo.save(applicationUser);
                             response.put("message", "User added successfully.");
                             return ResponseEntity.status(HttpStatus.OK).body(response);
-                        }else{
+                        } else {
                             response.put("message", "Invalid user email.");
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                         }
@@ -154,7 +155,7 @@ public class    AppUserController {
                             if (groupOptional.isPresent()) {
                                 group = groupOptional.get();
                                 applicationUser.setGroup(group);
-                            }else {
+                            } else {
                                 response.put("message", "Group doesn't exist");
                                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                             }
@@ -163,21 +164,21 @@ public class    AppUserController {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
 
-                        if(!applicationUser.getEmail().equals(email)){
+                        if (!applicationUser.getEmail().equals(email)) {
                             ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
 
-                            if(oldApplicationUser != null){
+                            if (oldApplicationUser != null) {
                                 response.put("message", "There is user exist with this email.");
                                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                             }
 
                             String logoPath = group.getLogoUrl();
-                            String QRPath = "QRCodes/"+ applicationUser.getCode() +".png" ;
+                            String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
 
                             try {
-                                String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(),200, 200, QRPath);
+                                String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
                                 boolean emailStatus = emailService.sendMimeMail(QrPath, logoPath, account.getName(), applicationUser);
-                                if(!emailStatus){
+                                if (!emailStatus) {
                                     response.put("message", "Invalid user email.");
                                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                                 }
@@ -206,21 +207,80 @@ public class    AppUserController {
 
                         response.put("message", "User Updated successfully.");
                         return ResponseEntity.status(HttpStatus.OK).body(response);
-                    }
-                    else{
+                    } else {
                         response.put("message", "Can't find user with this id.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
                 }
-            }
-            else {
+            } else {
                 response.put("message", "Invalid user.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             response.put("message", "Something went wrong.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
+
+    @PostMapping(path = "/resendQRCode")
+    public ResponseEntity resendQRCode(@RequestPart(name = "userId", required = false) String userId,
+                                       Principal principal) {
+        HashMap response = new HashMap();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            Optional<ApplicationUser> applicationUser = userRepo.findById(userId);
+
+            if(applicationUser.isPresent()) {
+
+                ApplicationUser appUser = applicationUser.get();
+
+                Optional<Group> groupOptional = groupRepo.findById(appUser.getGroup().getId());
+                if(groupOptional.isPresent()) {
+
+                    Group group = groupOptional.get();
+
+                    try {
+
+                        Random random = new Random();
+                        String code = appUser.getName() + random.nextInt();
+                        String QRPath = "QRCodes/" + code + ".png";
+                        String logoPath = group.getLogoUrl();
+
+                        String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
+                        if (emailService.sendMimeMail(QrPath, logoPath, account.getName(), appUser)) {
+
+                            appUser.setCode(code);
+                            userRepo.save(appUser);
+
+                            response.put("message", "QRCode send successfully.");
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
+                        } else {
+                            response.put("message", "Invalid user email.");
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                        }
+                    } catch (WriterException | IOException e) {
+                        LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                        response.put("message", "Invalid user email.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
+                }else{
+                    response.put("message", "User group not found.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+            }else{
+                response.put("message", "User not found.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        } else {
+            response.put("message", "Invalid user.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
     }
 
@@ -228,22 +288,38 @@ public class    AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity deleteApplicationUsers(@RequestParam(name = "addFlag") boolean addFlag,
-                                                 @RequestBody List<ApplicationUser> applicationUsers, Principal principal){
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+                                                 @RequestBody List<ApplicationUser> applicationUsers, Principal principal) {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             for (ApplicationUser applicationUser : applicationUsers) {
-                if(addFlag) {
-                    applicationUser.setDeleted(true);
-                }else{
-                    applicationUser.setDeleted(false);
-                }
+                applicationUser.setDeleted(addFlag);
                 userRepo.save(applicationUser);
             }
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
+
+    @RequestMapping("/getTopUser")
+    public List getTransactionByType(Principal principal) {
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            List<ApplicationUser> applicationUsers = appUserService.getTopUsers(account);
+
+            return applicationUsers;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
 
     @RequestMapping("/deleteAllUsersDeeply")
     @CrossOrigin(origins = "*")
@@ -261,34 +337,6 @@ public class    AppUserController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
-
-    @RequestMapping("/getTopUser")
-    public List getTransactionByType(Principal principal) {
-
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
-        if (accountOptional.isPresent()) {
-
-            Account account = accountOptional.get();
-
-            List<ApplicationUser> applicationUsers = appUserService.getTopUsers(account);
-
-            return applicationUsers;
-        }else{
-            return new ArrayList<>();
-        }
-    }
-
-    @GetMapping(path = "/Simphony/sendQRCodeEmail")
-    public void sendQRCodeEmail(ApplicationUser user){
-        try {
-            emailService.sendSimpleMail();
-        } catch (MailException e) {
-            e.printStackTrace();
-        }
-    }
 //
 //    @GetMapping(path = "/generateAndDownloadQRCode")
 //    public void generateAndDownloadQRCode(
@@ -306,5 +354,14 @@ public class    AppUserController {
 //            @RequestParam(name = "height") Integer height)
 //            throws Exception {
 //        return ResponseEntity.status(HttpStatus.OK).body(qrCodeGenerator.getQRCodeImage(codeText, width, height));
+//    }
+
+//    @GetMapping(path = "/Simphony/sendQRCodeEmail")
+//    public void sendQRCodeEmail(ApplicationUser user){
+//        try {
+//            emailService.sendSimpleMail();
+//        } catch (MailException e) {
+//            e.printStackTrace();
+//        }
 //    }
 }

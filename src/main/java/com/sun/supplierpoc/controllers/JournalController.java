@@ -28,7 +28,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
-// @RequestMapping(path = "server")
 
 public class JournalController {
     @Autowired
@@ -53,11 +52,12 @@ public class JournalController {
     private InvoiceController invoiceController;
 
     public Conversions conversions = new Conversions();
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     @RequestMapping("/getConsumption")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) throws IOException, ParseException {
+    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) {
         HashMap<String, Object> response = new HashMap<>();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -66,9 +66,9 @@ public class JournalController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             response = getJournals(user.getId(), account);
-            if(response.get("success").equals(false)){
+            if (response.get("success").equals(false)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }else {
+            } else {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
         }
@@ -86,39 +86,37 @@ public class JournalController {
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         SyncJobType journalSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
 
-        ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
+        ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<CostCenter> costCentersLocation = generalSettings.getLocations();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
-        ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
         String timePeriod = journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
-        String toDate =fromDate;
+        String toDate = journalSyncJobType.getConfiguration().toDate;
 
         ConsumptionConfiguration configuration = journalSyncJobType.getConfiguration().consumptionConfiguration;
-        ArrayList<MajorGroup> majorGroups = configuration.majorGroups;
         String consumptionBasedOnType = configuration.consumptionBasedOnType;
 
         ArrayList<OverGroup> overGroups;
-        if (!journalSyncJobType.getConfiguration().uniqueOverGroupMapping){
-            overGroups =  generalSettings.getOverGroups();
-        }else{
-            overGroups =  journalSyncJobType.getConfiguration().overGroups;
+        if (!journalSyncJobType.getConfiguration().uniqueOverGroupMapping) {
+            overGroups = generalSettings.getOverGroups();
+        } else {
+            overGroups = journalSyncJobType.getConfiguration().overGroups;
         }
 
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(journalSyncJobType, account.getERD());
-        if (sunConfigResponse != null){
+        if (sunConfigResponse != null) {
             return sunConfigResponse;
         }
 
-        if (timePeriod.equals("")){
+        if (timePeriod.equals("")) {
             String message = "Map time period before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
-        }else if (timePeriod.equals("UserDefined")){
+        } else if (timePeriod.equals("UserDefined")) {
             if (fromDate.equals("")
-                    || toDate.equals("")){
+                    || toDate.equals("")) {
                 String message = "Map time period before sync consumption.";
                 response.put("message", message);
                 response.put("success", false);
@@ -126,21 +124,21 @@ public class JournalController {
             }
         }
 
-        if (generalSettings.getCostCenterAccountMapping().size() == 0){
+        if (generalSettings.getCostCenterAccountMapping().size() == 0) {
             String message = "Map cost centers before sync consumption.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (costCentersLocation.size() == 0){
+        if (costCentersLocation.size() == 0) {
             String message = "Map cost centers to location before sync sales.";
             response.put("message", message);
             response.put("success", false);
             return response;
         }
 
-        if (generalSettings.getItemGroups().size() == 0){
+        if (generalSettings.getItemGroups().size() == 0) {
             String message = "Map items before sync consumption.";
             response.put("message", message);
             response.put("success", false);
@@ -152,31 +150,28 @@ public class JournalController {
 
         syncJobRepo.save(syncJob);
 
-        String businessDate =  journalSyncJobType.getConfiguration().timePeriod;
+        String businessDate = journalSyncJobType.getConfiguration().timePeriod;
 
         try {
             Response data;
 
-            if (consumptionBasedOnType.equals("Cost Center")){
+            if (consumptionBasedOnType.equals("Cost Center")) {
                 data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
-            }else if(consumptionBasedOnType.equals("Location")){
-                data = journalService.getJournalData(journalSyncJobType, costCentersLocation,itemGroups, costCenters, account);
-            }else {
-                data = journalService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation,
-                        itemGroups, majorGroups, revenueCenters, account);
+            } else {
+                data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
             }
 
-                if (data.isStatus()) {
-                ArrayList<JournalBatch> journalBatches =  data.getJournalBatches();
+            if (data.isStatus()) {
+                ArrayList<JournalBatch> journalBatches = data.getJournalBatches();
                 ArrayList<JournalBatch> addedJournalBatches;
 
                 if (journalBatches.size() > 0) {
-                    addedJournalBatches = journalService.saveJournalData(journalBatches,journalSyncJobType, syncJob,
-                            businessDate, fromDate, overGroups, itemGroups);
+                    addedJournalBatches = journalService.saveJournalData(journalBatches, journalSyncJobType, syncJob,
+                            businessDate, fromDate);
 
-                    if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)){
+                    if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
-                        if (voucher != null){
+                        if (voucher != null) {
                             for (JournalBatch batch : journalBatches) {
                                 invoiceController.handleSendJournal(journalSyncJobType, syncJob, batch.getConsumptionData(), account, voucher);
                             }
@@ -188,8 +183,7 @@ public class JournalController {
 
                             response.put("message", "Sync journals Successfully.");
                             response.put("success", true);
-                        }
-                        else {
+                        } else {
                             syncJob.setStatus(Constants.FAILED);
                             syncJob.setReason("Failed to connect to Sun System.");
                             syncJob.setEndDate(new Date());
@@ -199,8 +193,7 @@ public class JournalController {
                             response.put("message", "Failed  to connect to Sun System.");
                             response.put("success", false);
                         }
-                    }
-                    else if (addedJournalBatches.size() > 0 &&  account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                    } else if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                         List<SyncJobData> consumptionList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                         File file;
@@ -208,15 +201,15 @@ public class JournalController {
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-                        if(journalSyncJobType.getConfiguration().exportFilePerLocation &&
-                                ( consumptionBasedOnType.equals("Location") || consumptionBasedOnType.equals("Location And RevenuCenter"))) {
+                        if (journalSyncJobType.getConfiguration().exportFilePerLocation &&
+                                (consumptionBasedOnType.equals("Location") || consumptionBasedOnType.equals("Location And RevenuCenter"))) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
-                        }else {
+                        } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
                         }
 
-                        if(ftpClient != null){
-                            if(ftpClient.open()){
+                        if (ftpClient != null) {
+                            if (ftpClient.open()) {
 //                                boolean sendFileFlag = false;
 //                                try {
 //                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
@@ -226,31 +219,29 @@ public class JournalController {
 //                                }
 //
 //                                if (sendFileFlag){
-                                if (true){
-                                        syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
-                                        syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                                "Sync consumption successfully.", Constants.SUCCESS);
+                                if (true) {
+                                    syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
+                                    syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                            "Sync consumption successfully.", Constants.SUCCESS);
 
-                                        response.put("success", true);
-                                        response.put("message", "Sync consumption successfully.");
-                                    }
-                                else {
-                                        syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.FAILED);
-                                        syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                                "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
+                                    response.put("success", true);
+                                    response.put("message", "Sync consumption successfully.");
+                                } else {
+                                    syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.FAILED);
+                                    syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                            "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
 
-                                        response.put("success", false);
-                                        response.put("message", "Failed to sync consumption to sun system via FTP.");
-                                    }
-                            }
-                            else {
+                                    response.put("success", false);
+                                    response.put("message", "Failed to sync consumption to sun system via FTP.");
+                                }
+                            } else {
                                 syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
                                         "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                                 response.put("success", false);
                                 response.put("message", "Failed to connect to sun system via FTP.");
                             }
-                        }else {
+                        } else {
                             syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
                                     "Sync approved Invoices successfully.", Constants.SUCCESS);
@@ -258,8 +249,7 @@ public class JournalController {
                             response.put("success", true);
                             response.put("message", "Sync sales successfully.");
                         }
-                    }
-                    else {
+                    } else {
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("No consumption to add in middleware.");
                         syncJob.setEndDate(new Date());
@@ -270,8 +260,7 @@ public class JournalController {
                         response.put("message", "No new consumption to add in middleware.");
                     }
                     return response;
-                }
-                else {
+                } else {
                     syncJob.setStatus(Constants.SUCCESS);
                     syncJob.setReason("There is no journals to get from Oracle Hospitality.");
                     syncJob.setEndDate(new Date());
@@ -282,8 +271,7 @@ public class JournalController {
                     response.put("success", true);
 
                 }
-            }
-            else {
+            } else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(data.getMessage());
                 syncJob.setEndDate(new Date());
@@ -317,25 +305,25 @@ public class JournalController {
 
         int tryCount = 2;
 
-        if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+        if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
             String startDate = syncJobType.getConfiguration().fromDate;
             String endDate = syncJobType.getConfiguration().toDate;
 
-            Date date= dateFormat.parse(startDate);
+            Date date = dateFormat.parse(startDate);
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(date);
 
-            while (!startDate.equals(endDate)){
+            while (!startDate.equals(endDate)) {
                 response = getJournals(userId, account);
-                if (response.get("success").toString().equals("true") || tryCount == 0){
+                if (response.get("success").toString().equals("true") || tryCount == 0) {
                     tryCount = 2;
                     calendar.add(Calendar.DATE, +1);
                     startDate = dateFormat.format(calendar.getTime());
                     syncJobType.getConfiguration().fromDate = startDate;
                     syncJobType.getConfiguration().toDate = startDate;
                     syncJobTypeRepo.save(syncJobType);
-                }else{
+                } else {
                     tryCount = tryCount;
                 }
                 tryCount--;
@@ -344,8 +332,7 @@ public class JournalController {
             String message = "Sync sales successfully.";
             response.put("success", "true");
             response.put("message", message);
-        }
-        else{
+        } else {
             if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
@@ -372,7 +359,7 @@ public class JournalController {
         String headerValue = "attachment; filename=Consumption_" + currentDateTime + ".xlsx";
         response.setHeader(headerKey, headerValue);
 
-        List<SyncJobData> wastageList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId,false);
+        List<SyncJobData> wastageList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJobId, false);
 
         ConsumptionExcelExporter excelExporter = new ConsumptionExcelExporter(wastageList);
 
@@ -396,7 +383,7 @@ public class JournalController {
                 locationFiles.add(file);
             }
             return locationFiles;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return locationFiles;
         }

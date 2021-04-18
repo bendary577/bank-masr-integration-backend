@@ -34,6 +34,7 @@ public class Constants {
     public static String CREDIT_NOTES = "Credit Notes";
     public static String TRANSFERS = "Booked Transfers";
     public static String CONSUMPTION = "Consumption";
+    public static String COST_OF_GOODS = "Cost of Goods";
     public static String SALES = "POS Sales";
     public static String WASTAGE = "Wastage";
     public static String BOOKED_PRODUCTION = "Booked Production";

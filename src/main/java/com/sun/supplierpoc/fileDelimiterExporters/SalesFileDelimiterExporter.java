@@ -265,7 +265,7 @@ public class SalesFileDelimiterExporter {
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
 
-                totalCr = totalCr + Math.abs(conversions.convertStringToFloat((String) syncJobData.getData().get("totalCr").toString()));
+                totalCr = totalCr + Math.abs(conversions.convertStringToFloat(syncJobData.getData().get("totalCr").toString()));
             }
 
             if (counter == (listSyncJobData.size() - 1)) {

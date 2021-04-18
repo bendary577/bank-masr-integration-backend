@@ -386,9 +386,9 @@ public class JournalService {
     }
 
 
-    public Response getJournalDataByRevenueCenter(SyncJobType journalSyncJobType,
-                                                  ArrayList<CostCenter> costCentersLocation,
-                                                  ArrayList<ItemGroup> itemGroups, ArrayList<MajorGroup> majorGroups, List<RevenueCenter> revenueCenters, Account account) throws CloneNotSupportedException {
+    public Response getJournalDataByRevenueCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCentersLocation,
+                                                  ArrayList<MajorGroup> majorGroups, List<RevenueCenter> revenueCenters,
+                                                  Account account) {
         Response response = new Response();
         WebDriver driver;
         try {
@@ -399,7 +399,7 @@ public class JournalService {
             return response;
         }
 
-        ArrayList<Journal> journals = new ArrayList<>();
+        ArrayList<Journal> journals;
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
@@ -438,11 +438,9 @@ public class JournalService {
 
                 for (RevenueCenter revenueCenter : revenueCenters) {
                     Response dateResponse = new Response();
-
-                    if (!revenueCenter.isChecked() || revenueCenter.getRevenueCenter().equals("Dine In")) {
+                    if (revenueCenter.getRevenueCenter().equals("")) {
                         continue;
                     }
-
 
                     if (revenueCenter.getRevenueCenter().equals("COMP") || revenueCenter.getRevenueCenter().equals("OFFICER")) {
 
@@ -453,7 +451,7 @@ public class JournalService {
                             orderTypes.add(orderType);
                         }
 
-                        for(OrderType orderType : orderTypes) {
+                        for (OrderType orderType : orderTypes) {
                             if (setupEnvironment.runReportPerOrderType(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse, orderType)) {
                                 if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                                     driver.quit();
@@ -536,9 +534,9 @@ public class JournalService {
                                                     break;
                                                 }
 
-                                                group = majorGroup.getMajorGroup() + " " + revenueCenter.getRevenueCenter();
+                                                group = majorGroup.getMajorGroup();
                                             } else {
-                                                group = " major " + majorGroup.getMajorGroup() + " " + revenueCenter.getRevenueCenter();
+                                                group = majorGroup.getMajorGroup();
                                             }
 
                                             for (int y = 0; y < cols.size(); y++) {
@@ -548,14 +546,6 @@ public class JournalService {
                                             Journal journal = new Journal();
 
                                             float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
-
-                                            if (cost == 0 || cost == -00) {
-                                                j++;
-                                                flag = false;
-                                                row = rows.get(j);
-                                                cols = row.findElements(By.tagName("td"));
-                                                continue;
-                                            }
 
                                             CostCenter costCenter = new CostCenter();
                                             List<CostCenter> costCenters = majorGroup.getCostCenters();
@@ -579,7 +569,6 @@ public class JournalService {
                             driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
                         }
                     } else {
-
                         if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
                             if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                                 driver.quit();
@@ -593,7 +582,8 @@ public class JournalService {
 
                         driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
-                        List<WebElement> rows = driver.findElements(By.tagName("tr"));
+                        WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+                        List<WebElement> rows = table.findElements(By.tagName("tr"));
 
                         if (rows.size() < 5)
                             continue;
@@ -624,80 +614,69 @@ public class JournalService {
                                     continue;
                                 }
 
-                                if (!revenueCenter.getRevenueCenter().equals("")) {
+                                MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
 
-                                    MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+                                int j = i + 1;
+                                boolean flag = true;
+                                row = rows.get(j);
+                                cols = row.findElements(By.tagName("td"));
 
-                                    int j = i + 1;
-                                    boolean flag = true;
-                                    row = rows.get(j);
-                                    cols = row.findElements(By.tagName("td"));
+                                while (cols.get(columns.indexOf("item_group")).getAttribute("class").equals("normal")) {
 
-                                    while (cols.get(columns.indexOf("item_group")).getAttribute("class").equals("normal")) {
-
-                                        if (flag) {
-                                            j--;
-                                            row = rows.get(j);
-                                            cols = row.findElements(By.tagName("td"));
-                                        }
-
-                                        HashMap<String, Object> transferDetails = new HashMap<>();
-                                        List<WebElement> newCols = row.findElements(By.tagName("td"));
-
-                                        if (cols.size() != columns.size()) {
-                                            continue;
-                                        }
-
-                                        FamilyGroup familyGroup = new FamilyGroup();
-                                        String group = "";
-
-                                        if (!flag) {
-
-                                            WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
-                                            familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
-                                                    , familyGroupName.getText().strip());
-
-                                            if (newCols.get(columns.indexOf("item_group")).getText().equals("Highest Cost Menu Items")) {
-                                                break;
-                                            }
-
-                                            group = familyGroup.familyGroup;
-                                        } else {
-                                            group = majorGroup.getMajorGroup();
-                                        }
-
-                                        for (int y = 0; y < cols.size(); y++) {
-                                            transferDetails.put(columns.get(y), cols.get(y).getText().strip());
-                                        }
-
-                                        Journal journal = new Journal();
-
-                                        float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
-
-                                        if (cost == 0 || cost == -00) {
-                                            j++;
-                                            flag = false;
-                                            row = rows.get(j);
-                                            cols = row.findElements(By.tagName("td"));
-                                            continue;
-                                        }
-
-                                        CostCenter costCenter = new CostCenter();
-                                        List<CostCenter> costCenters = majorGroup.getCostCenters();
-                                        for (CostCenter costCenter1 : costCenters) {
-                                            if (location.locationName.equals(costCenter1.locationName)) {
-                                                costCenter = costCenter1;
-                                            }
-                                        }
-
-                                        journals = journal.checkExistence(journals, majorGroup, familyGroup, group, cost,
-                                                costCenter, MGRevenueCenter, "");
-
-                                        j++;
-                                        flag = false;
+                                    if (flag) {
+                                        j--;
                                         row = rows.get(j);
                                         cols = row.findElements(By.tagName("td"));
                                     }
+
+                                    HashMap<String, Object> transferDetails = new HashMap<>();
+                                    List<WebElement> newCols = row.findElements(By.tagName("td"));
+
+                                    if (cols.size() != columns.size()) {
+                                        continue;
+                                    }
+
+                                    FamilyGroup familyGroup = new FamilyGroup();
+                                    String group = "";
+
+                                    if (!flag) {
+
+                                        WebElement familyGroupName = newCols.get(columns.indexOf("item_group"));
+                                        familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                                                , familyGroupName.getText().strip());
+
+                                        if (newCols.get(columns.indexOf("item_group")).getText().equals("Highest Cost Menu Items")) {
+                                            break;
+                                        }
+
+                                        group = familyGroup.familyGroup;
+                                    } else {
+                                        group = majorGroup.getMajorGroup();
+                                    }
+
+                                    for (int y = 0; y < cols.size(); y++) {
+                                        transferDetails.put(columns.get(y), cols.get(y).getText().strip());
+                                    }
+
+                                    Journal journal = new Journal();
+
+                                    float cost = conversions.convertStringToFloat((String) transferDetails.get("cogs"));
+
+                                    CostCenter costCenter = new CostCenter();
+                                    List<CostCenter> costCenters = majorGroup.getCostCenters();
+                                    for (CostCenter costCenter1 : costCenters) {
+                                        if (location.locationName.equals(costCenter1.locationName)) {
+                                            costCenter = costCenter1;
+                                        }
+                                    }
+
+                                    journals = journal.checkExistence(journals, majorGroup, familyGroup, group, cost,
+                                            costCenter, MGRevenueCenter, "");
+
+                                    j++;
+                                    flag = false;
+                                    row = rows.get(j);
+                                    cols = row.findElements(By.tagName("td"));
                                 }
                             }
                         }
@@ -720,14 +699,13 @@ public class JournalService {
             e.printStackTrace();
             driver.quit();
             response.setStatus(false);
-            response.setMessage("Failed to get consumption entries from Oracle Hospitality.");
+            response.setMessage("Failed to get cost of goods entries from Oracle Hospitality.");
             return response;
         }
     }
 
     public ArrayList<JournalBatch> saveJournalData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
-                                                   String businessDate, String fromDate, ArrayList<OverGroup> overGroups,
-                                                   ArrayList<ItemGroup> itemGroups) {
+                                                   String businessDate, String fromDate) {
         ArrayList<SyncJobData> addedJournals;
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
         ArrayList<Journal> journals;
@@ -795,23 +773,16 @@ public class JournalService {
                     costData.put("toAccountCode", costCenter.accountCode);
 
                     if (!familyGroup.familyGroup.equals("")) {
-                        costData.put("toAccountCode", revenueCenter.getAccountCode());
+                        costData.put("fromAccountCode", revenueCenter.getAccountCode());
                         costData.put("toAccountCode", revenueCenter.getAccountCode());
                     }
 
                     costData.put("fromLocation", costCenter.accountCode);
                     costData.put("toLocation", costCenter.accountCode);
 
-                    String loc = "";
                     String cost = "";
 
-                    if (batch.getLocation().locationName.equals("Nisantasi CFC")) {
-                        loc = "CFC";
-                    } else {
-                        loc = "City";
-                    }
-
-                    if (journal.getOverGroup().toString().contains("Food")) {
+                    if (journal.getOverGroup().contains("Food")) {
                         cost = " Kitchen";
                     } else {
                         cost = " Bar";
@@ -823,11 +794,7 @@ public class JournalService {
                     if (!familyGroup.familyGroup.equals("")) {
                         description = journal.getMajorGroup().getMajorGroup() + " Cost-Home " + revenueCenter.getRevenueCenter();
                     } else {
-//                        if(revenueCenter.getRevenueCenter().equals("OFFICER") || revenueCenter.getRevenueCenter().equals("COMP")){
-//                            description = loc + journal.getOverGroup();
-//                        }else {
-                            description = loc + cost;
-//                        }
+                        description = batch.getLocation().costCenterReference + cost;
                     }
 
                     if (description.length() > 50) {
@@ -837,10 +804,109 @@ public class JournalService {
                     costData.put("description", description);
 
                     if (costCenter.costCenterReference.equals(""))
-                        costData.put("transactionReference", "Consumption");
+                        costData.put("transactionReference", "COG");
                     else {
-                        costData.put("transactionReference", loc);
+                        costData.put("transactionReference", batch.getLocation().costCenterReference);
                     }
+
+                    costData.put("overGroup", journal.getOverGroup());
+
+                    SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
+                            syncJob.getId());
+                    syncJobDataRepo.save(syncJobData);
+
+                    addedJournals.add(syncJobData);
+                }
+            }
+
+            if (addedJournals.size() > 0) {
+                batch.setConsumptionData(addedJournals);
+                addedJournalBatches.add(batch);
+            }
+        }
+        return addedJournalBatches;
+    }
+
+    public ArrayList<JournalBatch> saveCostOfGoodsData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
+                                                       String businessDate, String fromDate) {
+        ArrayList<SyncJobData> addedJournals;
+        ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
+        ArrayList<Journal> journals;
+        CostCenter costCenter;
+
+        for (JournalBatch batch : journalBatches) {
+            addedJournals = new ArrayList<>();
+            journals = batch.getConsumption();
+
+            for (Journal journal : journals) {
+                costCenter = journal.getCostCenter();
+                FamilyGroup familyGroup = journal.getFamilyGroup();
+                RevenueCenter revenueCenter = journal.getRevenueCenter();
+
+                if (costCenter.costCenterReference.equals("")) {
+                    costCenter.costCenterReference = journal.getCostCenter().costCenter;
+                }
+
+                // check zero entries (not needed)
+                if (journal.getTotalCost() != 0) {
+                    HashMap<String, Object> costData = new HashMap<>();
+
+                    String transactionDate = conversions.getTransactionDate(businessDate, fromDate);
+                    costData.put("accountingPeriod", transactionDate.substring(2, 6));
+                    costData.put("transactionDate", transactionDate);
+
+                    if (syncJobType.getConfiguration().exportFilePerLocation) {
+                        syncJobDataService.prepareConsumptionAnalysis(revenueCenter, costData,
+                                syncJobType.getConfiguration(), batch.getLocation(), familyGroup, null);
+                    } else {
+                        syncJobDataService.prepareConsumptionAnalysis(revenueCenter, costData,
+                                syncJobType.getConfiguration(), costCenter, familyGroup, null);
+                    }
+
+                    syncJobDataService.prepareConsumptionAnalysis(revenueCenter, costData,
+                            syncJobType.getConfiguration(), batch.getLocation(), familyGroup, null);
+
+                    costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
+                    costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost() * -1)));
+
+                    if (syncJobType.getConfiguration().accountCodePer.equals("Cost Centers")) {
+                        costData.put("inventoryAccount", costCenter.accountCode);
+                        costData.put("expensesAccount", costCenter.costCenter);
+
+                        costData.put("fromCostCenter", costCenter.costCenter);
+                        costData.put("toCostCenter", costCenter.costCenter);
+
+                        costData.put("fromAccountCode", costCenter.accountCode);
+                        costData.put("toAccountCode", costCenter.accountCode);
+                    } else {
+                        costData.put("inventoryAccount", revenueCenter.getAccountCode());
+                        costData.put("expensesAccount", revenueCenter.getAccountCode());
+
+                        costData.put("fromAccountCode", revenueCenter.getAccountCode());
+                        costData.put("toAccountCode", revenueCenter.getAccountCode());
+                    }
+
+                    costData.put("fromLocation", costCenter.accountCode);
+                    costData.put("toLocation", costCenter.accountCode);
+
+                    if (costCenter.costCenterReference.equals(""))
+                        costData.put("transactionReference", "COG");
+                    else {
+                        costData.put("transactionReference", batch.getLocation().costCenterReference);
+                    }
+
+                    String description = "";
+
+                    if (!familyGroup.familyGroup.equals("")) {
+                        description = journal.getMajorGroup().getMajorGroup() + " Cost-Home " + revenueCenter.getRevenueCenter();
+                    } else {
+                        description = batch.getLocation().costCenterReference + journal.getOverGroup();
+                    }
+
+                    if (description.length() > 50) {
+                        description = description.substring(0, 50);
+                    }
+                    costData.put("description", description);
 
                     costData.put("overGroup", journal.getOverGroup());
 

@@ -438,7 +438,7 @@ public class JournalService {
 
                 for (RevenueCenter revenueCenter : revenueCenters) {
                     Response dateResponse = new Response();
-                    if (revenueCenter.getRevenueCenter().equals("")) {
+                    if (!revenueCenter.isChecked()) {
                         continue;
                     }
 
@@ -588,7 +588,7 @@ public class JournalService {
                         if (rows.size() < 5)
                             continue;
 
-                        ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+                        ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
                         MajorGroup majorGroup;
                         RevenueCenter MGRevenueCenter;

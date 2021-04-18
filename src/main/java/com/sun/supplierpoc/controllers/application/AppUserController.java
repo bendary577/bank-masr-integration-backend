@@ -251,7 +251,7 @@ public class AppUserController {
                         Random random = new Random();
                         String code = appUser.getName() + random.nextInt();
                         String QRPath = "QRCodes/" + code + ".png";
-                        String logoPath = group.getLogoUrl();
+                        String logoPath = account.getImageUrl();
 
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
                         if (emailService.sendMimeMail(QrPath, logoPath, account.getName(), appUser)) {
@@ -289,14 +289,37 @@ public class AppUserController {
     @ResponseBody
     public ResponseEntity deleteApplicationUsers(@RequestParam(name = "addFlag") boolean addFlag,
                                                  @RequestBody List<ApplicationUser> applicationUsers, Principal principal) {
+
+        HashMap response = new HashMap();
+
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             for (ApplicationUser applicationUser : applicationUsers) {
-                applicationUser.setDeleted(addFlag);
-                userRepo.save(applicationUser);
+
+                Optional<Group> groupOptional  = groupRepo.findById(applicationUser.getGroup().getId());
+
+                if(groupOptional.isPresent()) {
+                    Group group = groupOptional.get();
+
+                    if(!group.isDeleted()) {
+                        applicationUser.setDeleted(addFlag);
+                        userRepo.save(applicationUser);
+                    }else{
+                        response.put("message", "The group of the user "+applicationUser.getName() +" is already deleted,\n try to update his group.");
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
+                }else{
+                    response.put("message", "The group of the user "+applicationUser.getName() +" is already deleted, \n try to update his group.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
             }
-            return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
+            if(addFlag) {
+                response.put("message", "Deleted Successfully.");
+            }else{
+                response.put("message", "Restored Successfully.");
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }

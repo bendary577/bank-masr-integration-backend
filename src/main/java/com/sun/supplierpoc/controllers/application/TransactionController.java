@@ -37,7 +37,7 @@ public class TransactionController {
     private AccountRepo accountRepo;
 
     @RequestMapping("/getTransactions")
-    public List<Transactions> getTransactionByType(Principal principal,
+    public List<Transactions> getTransactionByType(Principal principal,@RequestParam("time") String time,
                                                    @RequestParam("transactionType") String transactionType) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
@@ -47,7 +47,7 @@ public class TransactionController {
 
             Account account = accountOptional.get();
 
-            List<Transactions> transactions = transactionService.getTransactionByType(transactionType, account);
+            List<Transactions> transactions = transactionService.getTransactionByType(transactionType, time, account);
 
             return transactions;
         }else{

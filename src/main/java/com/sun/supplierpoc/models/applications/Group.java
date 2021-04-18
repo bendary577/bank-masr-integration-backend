@@ -11,6 +11,7 @@ public class Group implements Serializable {
     private String parentGroupId;
     private String name;
     private String description;
+    private SimphonyDiscount simphonyDiscount;
     private int discountId;
     private int top;
     private String logoUrl;
@@ -118,6 +119,14 @@ public class Group implements Serializable {
 
     public void setTop(int top) {
         this.top = top;
+    }
+
+    public SimphonyDiscount getSimphonyDiscount() {
+        return simphonyDiscount;
+    }
+
+    public void setSimphonyDiscount(SimphonyDiscount simphonyDiscount) {
+        this.simphonyDiscount = simphonyDiscount;
     }
 }
 

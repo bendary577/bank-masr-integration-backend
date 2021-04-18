@@ -27,17 +27,18 @@ public class TransactionService {
     @Autowired
     private TransactionRepo transactionRepo;
 
-    private Conversions conversion = new Conversions();
+    private final Conversions conversion = new Conversions();
 
     @Autowired
     private TransactionTypeRepo transactionTypeRepo;
 
-    public List<Transactions> getTransactionByType(String transactionTypeId, Account account) {
+    public List<Transactions> getTransactionByType(String transactionTypeId, String time, Account account) {
+
         TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
-        if(transactionType == null)
+        if (transactionType == null)
             return new ArrayList<>();
-        else{
-            return transactionRepo.findAllByTransactionTypeId(transactionType.getId());
+        else {
+            return getTransactionsByTime(transactionType, time);
         }
     }
 
@@ -52,7 +53,7 @@ public class TransactionService {
             transactionType.setAccountId(account.getId());
             transactionTypeRepo.save(transactionType);
 
-        }catch(Exception e){
+        } catch (Exception e) {
             LoggerFactory.getLogger(TransactionService.class).info(e.getMessage());
         }
     }
@@ -61,13 +62,31 @@ public class TransactionService {
 
         TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
-        List<Transactions> transactions = new ArrayList<>();
+        List<Transactions> transactions;
 
-        if(dateFlag.equals("Today")){
+        double totalSpend = 0;
+
+        transactions = getTransactionsByTime(transactionType, dateFlag);
+
+        for (Transactions transaction : transactions) {
+            totalSpend = totalSpend + transaction.getAfterDiscount();
+        }
+
+        return totalSpend;
+
+    }
+
+
+    public List<Transactions> getTransactionsByTime(TransactionType transactionType, String time) {
+
+
+        List<Transactions> transactions;
+
+        if (time.equals("Today")) {
 
             double totalSpend = 0;
 
-                Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 59);
             calendar.set(Calendar.SECOND, 59);
@@ -75,13 +94,7 @@ public class TransactionService {
 
             transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), date, new Date());
 
-            for(Transactions transaction : transactions){
-                totalSpend = totalSpend + transaction.getAfterDiscount();
-            }
-
-            return totalSpend;
-
-        }else if(dateFlag.equals("Last Week")){
+        } else if (time.equals("Last Week")) {
 
             double totalSpend = 0;
 
@@ -99,12 +112,7 @@ public class TransactionService {
 
             transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), start, end);
 
-            for(Transactions transaction : transactions){
-                totalSpend = totalSpend + transaction.getAfterDiscount();
-            }
-
-            return totalSpend;
-        }else {
+        } else if(time.equals("Last Month")) {
 
             double totalSpend = 0;
 
@@ -121,7 +129,7 @@ public class TransactionService {
             c.add(Calendar.DATE, 30);
 
             Month month = Month.of(c.getTime().getMonth() + 1);
-            if(month.maxLength() == 31){
+            if (month.maxLength() == 31) {
                 c.add(Calendar.DATE, 1);
             }
 
@@ -132,12 +140,9 @@ public class TransactionService {
 
             transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), start, end);
 
-            for(Transactions transaction : transactions){
-                totalSpend = totalSpend + transaction.getAfterDiscount();
-            }
-
-            return totalSpend;
+        }else{
+            transactions =  transactionRepo.findAllByTransactionTypeId(transactionType.getId());
         }
-
+        return transactions;
     }
 }

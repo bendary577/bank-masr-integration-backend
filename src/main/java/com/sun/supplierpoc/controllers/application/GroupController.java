@@ -1,13 +1,17 @@
 package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
+import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.ApplicationRepo;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.AppGroupService;
@@ -40,6 +44,11 @@ public class GroupController {
 
     @Autowired
     private ApplicationUserRepo userRepo;
+
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
+    private Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +109,6 @@ public class GroupController {
     public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
                                                    @RequestPart(name = "name", required = false) String name,
                                                    @RequestPart(name = "description", required = false) String description,
-                                                   @RequestPart(name = "discountRate", required = false) String discountRate,
                                                    @RequestPart(name = "discountId", required = false) String discountId,
                                                    @RequestPart(name = "parentGroupId", required = false) String parentGroupId,
                                                    @RequestPart(name = "groupId", required = false) String groupId,
@@ -114,9 +122,13 @@ public class GroupController {
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
             if (accountOptional.isPresent()) {
+
                 Account account = accountOptional.get();
                 Group group;
                 Group parentGroup ;
+
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
 
                 if (addFlag) {
                     group = new Group();
@@ -154,18 +166,18 @@ public class GroupController {
                         }
                     }
 
+                    SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, Integer.parseInt(discountId));
+
                     group.setName(name);
                     group.setDescription(description);
-                    group.setDiscountId(Integer.parseInt(discountId));
                     group.setLogoUrl(logoUrl);
-
+                    group.setSimphonyDiscount(simphonyDiscount);
                     group.setAccountId(account.getId());
                     group.setCreationDate(new Date());
                     group.setLastUpdate(new Date());
                     group.setDeleted(false);
                     groupRepo.save(group);
-                }
-                else {
+                }else {
                     Optional<Group> groupOptional = groupRepo.findById(groupId);
 
                     if (groupOptional.isPresent()) {
@@ -206,13 +218,21 @@ public class GroupController {
                             group.setParentGroupId(parentGroup.getId());
                         }
 
+                        SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, Integer.parseInt(discountId));
+
                         group.setName(name);
                         group.setDescription(description);
-                        group.setDiscountId(Integer.parseInt(discountId));
+                        group.setSimphonyDiscount(simphonyDiscount);
                         group.setLogoUrl(logoUrl);
                         group.setAccountId(account.getId());
                         group.setLastUpdate(new Date());
                         groupRepo.save(group);
+
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), group.getId());
+                        for (ApplicationUser applicationUser : applicationUsers) {
+                            applicationUser.setGroup(group);
+                            userRepo.save(applicationUser);
+                        }
                     }
                 }
 
@@ -265,14 +285,15 @@ public class GroupController {
                     groupRepo.save(group);
 
                     if(withUsers) {
-                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), group.getId());
 
                         for (ApplicationUser applicationUser : applicationUsers) {
                             applicationUser.setDeleted(true);
+                            applicationUser.setGroup(group);
                             userRepo.save(applicationUser);
                         }
                     }else{
-                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), group.getId());
 
                         Optional<Group> newGroupOptional = groupRepo.findById(parentGroupId);
 
@@ -289,9 +310,10 @@ public class GroupController {
                     groupRepo.save(group);
 
                     if(withUsers) {
-                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupAndDeleted(account.getId(), group, false);
+                        List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), group.getId());
                         for (ApplicationUser applicationUser : applicationUsers) {
                             applicationUser.setDeleted(false);
+                            applicationUser.setGroup(group);
                             userRepo.save(applicationUser);
                         }
                     }

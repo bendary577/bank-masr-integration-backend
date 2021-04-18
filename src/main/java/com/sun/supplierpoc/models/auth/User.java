@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Created by jeebb on 11/8/14.
@@ -207,4 +208,5 @@ public class User implements UserDetails  {
     public Boolean getAccountNonLocked() {
         return accountNonLocked;
     }
+
 }

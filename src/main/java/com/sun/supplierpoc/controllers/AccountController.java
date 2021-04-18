@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers;
 import com.google.common.collect.Sets;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.OauthClientDetails;
@@ -97,9 +98,11 @@ public class AccountController {
 
     @RequestMapping(value = "/addAdminUser")
     @ResponseBody
-    public ResponseEntity<RefreshTokenResult> addAdminUser(Principal principal,
+    public ResponseEntity addAdminUser(Principal principal,
                                                            @RequestParam("addFlag") boolean addFlag,
                                                            @RequestBody User userRequest) {
+
+        HashMap response = new HashMap();
 
         User authedUser = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
@@ -110,6 +113,12 @@ public class AccountController {
             User user = new User();
 
             if(addFlag) {
+
+                if (userRepo.existsByNameAndAccountId(userRequest.getName(), account.getId())) {
+                    response.put("message", "User is already exist with this name.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
                 Set<GrantedAuthority> roles = new LinkedHashSet<>();
                 roles.add(new SimpleGrantedAuthority("ROLE_USER"));
                 user.setName(userRequest.getName());
@@ -130,18 +139,27 @@ public class AccountController {
 
                     user = updatedUserOptional.get();
 
+                    if(!user.getName().equals(userRequest.getName())){
+                        if (userRepo.existsByNameAndAccountId(userRequest.getName(), account.getId())) {
+                            response.put("message", "User is already exist with this name.");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
+                    }
+
                     user.setName(userRequest.getName());
                     user.setUsername(userRequest.getUsername());
                     user.setPassword(userRequest.getPassword());
                     user.setUpdateDate(new Date());
 
                 }else{
-                    return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+                    response.put("message", "Can't find the user.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
             }
             mongoTemplate.save(user);
             return new ResponseEntity<>(HttpStatus.OK);
         }else{
+            response.put("message", Constants.INVALID_USER);
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }

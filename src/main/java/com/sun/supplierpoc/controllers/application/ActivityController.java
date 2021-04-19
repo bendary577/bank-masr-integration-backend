@@ -57,6 +57,11 @@ public class ActivityController {
             Account account = accountService.getAccount(invokerUser.getAccountId());
 
             if (account != null) {
+                if(transaction.getCheckNumber().equals("")){
+                    response.put("isSuccess", false);
+                    response.put("message", "Check number is a required field.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
 
                 //SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
                 //Constants.REDEEM_VOUCHER)

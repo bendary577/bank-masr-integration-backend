@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -50,13 +51,17 @@ public class SendEmailService {
             messageHelper.setTo(user.getEmail());
 
             String mailSubject = "We crafted some offers JUST FOR YOU!";
+
             String mailContent =
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);transition: 0.3s; width: 100%;'>" +
-                            "<br>" +
-                            "<img style=\"width:40%; display: block;margin-left: auto; margin-right: auto;\"" +
-                            "   src='" + logoPath + "'>" +
+                            "<br>";
 
-                            "<br>\n" +
+            if(!logoPath.equals(Constants.GROUP_IMAGE_URL)){
+                mailContent +=
+                        "<img style=\"width:40%; display: block;margin-left: auto; margin-right: auto;\"" +
+                                "   src='" + logoPath + "'>" + "<br>\n";
+            }
+            mailContent +=
                             "<img style=\"width:100%\"" +
                             "   src='https://vistapointe.net/images/gift-1.jpg'>" +
                             "<h3 style='text-align:center'>Hello " + user.getName() + ",</h3>" +

@@ -1,8 +1,6 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.*;
-import com.sun.supplierpoc.services.InvoiceService;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
@@ -23,19 +21,9 @@ public class Journal {
     private CostCenter costCenter;
     private RevenueCenter revenueCenter;
     private String departmentCode;
+    private String DCMarker = "";
 
-    public Journal() {
-    }
-
-    private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
-                    float tax) {
-        this.overGroup = overGroup;
-        this.totalWaste = totalWaste;
-        this.totalCost = totalCost;
-        this.totalVariance = totalVariance;
-        this.totalTransfer = totalTransfer;
-        this.tax = tax;
-    }
+    public Journal() { }
 
     private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer) {
         this.overGroup = overGroup;
@@ -54,17 +42,15 @@ public class Journal {
         this.departmentCode = departmentCode;
     }
 
-    private Journal(String overGroup,MajorGroup majorGroup, FamilyGroup familyGroup, float totalCost, CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
+    private Journal(MajorGroup majorGroup, float totalCost,
+                    CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode, String DCMarker) {
         this.majorGroup = majorGroup;
-        this.overGroup = overGroup;
-        this.familyGroup = familyGroup;
         this.totalCost = totalCost;
         this.costCenter = costCenter;
         this.revenueCenter = revenueCenter;
         this.departmentCode = departmentCode;
+        this.DCMarker = DCMarker;
     }
-
-
 
     private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
                     CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
@@ -102,36 +88,18 @@ public class Journal {
 
     }
 
-    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
-                                             String group , float cost,  CostCenter costCenter, RevenueCenter revenueCenter,
-                                             String departmentCode) {
-
-//        for (Journal journal : journals) {
-//            if (journal.majorGroup.getMajorGroup().equals(group)) {
-//                // Add new value
-//                journal.totalCost += cost;
-//                return journals;
-//            }
-//        }
-
-        journals.add(new Journal(group, majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
-        return journals;
-
-    }
-
-    public ArrayList<Journal> checkCollectedExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
-                                             String group , float cost,  CostCenter costCenter, RevenueCenter revenueCenter,
-                                             String departmentCode) {
+    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup, float cost,
+                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode,
+                                             String DCMarker) {
 
         for (Journal journal : journals) {
-            if (journal.overGroup.equals(group)) {
-                // Add new value
+            if (journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())) {
                 journal.totalCost += cost;
                 return journals;
             }
         }
 
-        journals.add(new Journal(group, majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
+        journals.add(new Journal(majorGroup, cost, costCenter, revenueCenter, departmentCode, DCMarker));
         return journals;
 
     }
@@ -141,12 +109,15 @@ public class Journal {
                                                String departmentCode) {
 
         for (Journal journal : journals) {
-            if (journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)) {
-                journal.totalCost += cost;
-                return journals;
+            if(journal.familyGroup != null){
+                if (journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)) {
+                    if(journal.revenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter())){
+                        journal.totalCost += cost;
+                        return journals;
+                    }
+                }
             }
         }
-
 
         journals.add(new Journal(majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
         return journals;
@@ -272,5 +243,13 @@ public class Journal {
 
     public void setNet(float net) {
         this.net = net;
+    }
+
+    public String getDCMarker() {
+        return DCMarker;
+    }
+
+    public void setDCMarker(String DCMarker) {
+        this.DCMarker = DCMarker;
     }
 }

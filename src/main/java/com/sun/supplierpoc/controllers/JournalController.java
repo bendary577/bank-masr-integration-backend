@@ -57,7 +57,7 @@ public class JournalController {
     @RequestMapping("/getConsumption")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getJournalsRequest(Principal principal) throws ParseException {
         HashMap<String, Object> response = new HashMap<>();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -65,7 +65,7 @@ public class JournalController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getJournals(user.getId(), account);
+            response = syncJournalInDayRange(user.getId(), account);
             if (response.get("success").equals(false)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             } else {
@@ -77,8 +77,59 @@ public class JournalController {
         response.put("success", false);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-
     }
+
+    private HashMap<String, Object> syncJournalInDayRange(String userId, Account account) throws ParseException {
+        HashMap<String, Object> response = new HashMap<>();
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+
+        int tryCount = 2;
+
+        if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+            String startDate = syncJobType.getConfiguration().fromDate;
+            String endDate = syncJobType.getConfiguration().toDate;
+
+            Date date = dateFormat.parse(startDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            while (!startDate.equals(endDate)) {
+                response = getJournals(userId, account);
+                if (response.get("success").equals(true) || tryCount == 0) {
+                    tryCount = 2;
+                    calendar.add(Calendar.DATE, +1);
+                    startDate = dateFormat.format(calendar.getTime());
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobType.getConfiguration().toDate = startDate;
+                    syncJobTypeRepo.save(syncJobType);
+                } else {
+                    tryCount--;
+                }
+            }
+
+            String message = "Sync consumption successfully.";
+            response.put("message", message);
+            response.put("success", true);
+        } else {
+            if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.DATE, -1);
+
+                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().toDate = dateFormat.format(calendar.getTime());
+
+                syncJobTypeRepo.save(syncJobType);
+            }
+
+            response = getJournals(userId, account);
+        }
+        return response;
+    }
+
 
     public HashMap<String, Object> getJournals(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
@@ -294,59 +345,6 @@ public class JournalController {
             return response;
         }
     }
-
-    public HashMap<String, Object> syncApprovedInvoicesInDayRange(String userId, Account account) throws ParseException, IOException {
-        HashMap<String, Object> response = new HashMap<>();
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CONSUMPTION, account.getId(), false);
-
-        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
-        DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
-        DateFormat monthFormat = new SimpleDateFormat("MM");
-
-        int tryCount = 2;
-
-        if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
-            String startDate = syncJobType.getConfiguration().fromDate;
-            String endDate = syncJobType.getConfiguration().toDate;
-
-            Date date = dateFormat.parse(startDate);
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-
-            while (!startDate.equals(endDate)) {
-                response = getJournals(userId, account);
-                if (response.get("success").toString().equals("true") || tryCount == 0) {
-                    tryCount = 2;
-                    calendar.add(Calendar.DATE, +1);
-                    startDate = dateFormat.format(calendar.getTime());
-                    syncJobType.getConfiguration().fromDate = startDate;
-                    syncJobType.getConfiguration().toDate = startDate;
-                    syncJobTypeRepo.save(syncJobType);
-                } else {
-                    tryCount = tryCount;
-                }
-                tryCount--;
-            }
-
-            String message = "Sync sales successfully.";
-            response.put("success", "true");
-            response.put("message", message);
-        } else {
-            if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(new Date());
-                calendar.add(Calendar.DATE, -1);
-
-                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
-                syncJobTypeRepo.save(syncJobType);
-            }
-
-            response = getJournals(userId, account);
-        }
-        return response;
-    }
-
 
     @GetMapping("/consumption/export/excel")
     public void exportToExcel(@RequestParam(name = "syncJobId") String syncJobId,

@@ -144,7 +144,6 @@ public class CostOfGoodsController {
         return response;
     }
 
-
     private Response getCostOfGoods(String userId, Account account) {
         Response response = new Response();
 

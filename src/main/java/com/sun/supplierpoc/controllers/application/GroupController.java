@@ -115,7 +115,7 @@ public class GroupController {
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    Principal principal) {
 
-        Response response = new Response();
+            Response response = new Response();
         try {
 
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -162,7 +162,8 @@ public class GroupController {
                         try {
                             logoUrl = imageService.store(image);
                         } catch (Exception e) {
-                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                            response.setMessage("Group is already exist with this name.");
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                         }
                     }
 
@@ -192,13 +193,17 @@ public class GroupController {
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
 
-                        String logoUrl = Constants.GROUP_IMAGE_URL;
-                        if (image != null) {
-                            try {
-                                logoUrl = imageService.store(image);
-                            } catch (Exception e) {
-                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                        if(image != null) {
+                            String logoUrl = Constants.GROUP_IMAGE_URL;
+                            if (image != null) {
+                                try {
+                                    logoUrl = imageService.store(image);
+                                } catch (Exception e) {
+                                    response.setMessage("Group is already exist with this name.");
+                                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                                }
                             }
+                            group.setLogoUrl(logoUrl);
                         }
 
                         if (parentGroupId != null) {
@@ -214,6 +219,10 @@ public class GroupController {
                                 response.setMessage("Parent group is inactive, Please select valid parent group.");
 
                                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            }else if(group.getId().equals(parentGroupId)){
+                                response.setStatus(false);
+                                response.setMessage("Invalid parent group.");
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                             }
                             group.setParentGroupId(parentGroup.getId());
                         }
@@ -223,7 +232,6 @@ public class GroupController {
                         group.setName(name);
                         group.setDescription(description);
                         group.setSimphonyDiscount(simphonyDiscount);
-                        group.setLogoUrl(logoUrl);
                         group.setAccountId(account.getId());
                         group.setLastUpdate(new Date());
                         groupRepo.save(group);

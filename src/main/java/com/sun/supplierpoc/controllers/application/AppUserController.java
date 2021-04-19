@@ -111,7 +111,8 @@ public class AppUserController {
                         try {
                             logoUrl = imageService.store(image);
                         } catch (Exception e) {
-                            LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                            response.put("message", "Can't save image.");
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                         }
                     }
 
@@ -195,7 +196,8 @@ public class AppUserController {
                             try {
                                 logoUrl = imageService.store(image);
                             } catch (Exception e) {
-                                LoggerFactory.getLogger(GroupController.class).info(e.getMessage());
+                                response.put("message", "Can't save image.");
+                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                             }
                             applicationUser.setLogoUrl(logoUrl);
                         }
@@ -254,9 +256,8 @@ public class AppUserController {
                         String logoPath = account.getImageUrl();
 
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
+                        appUser.setCode(code);
                         if (emailService.sendMimeMail(QrPath, logoPath, account.getName(), appUser)) {
-
-                            appUser.setCode(code);
                             userRepo.save(appUser);
 
                             response.put("message", "QRCode send successfully.");

@@ -71,12 +71,13 @@ public class ActivityService {
 
                     // get discount rate using discount id
 
-                    SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getDiscountId());
+                    SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
                     if(simphonyDiscount.getDiscountId() == 0){
                         response.put("message", "No discount found for this user.");
                         response.put("isSuccess", false);
                         return response;
                     }
+
                     double discount = simphonyDiscount.getDiscountRate();
 
                     double amount = transaction.getTotalPayment();
@@ -96,7 +97,7 @@ public class ActivityService {
 
                     response.put("isSuccess", true);
                     response.put("message", "Discount applied successfully.");
-                    response.put("discountId", group.getDiscountId());
+                    response.put("discountId", group.getSimphonyDiscount().getDiscountId());
                     return response;
                 }
 

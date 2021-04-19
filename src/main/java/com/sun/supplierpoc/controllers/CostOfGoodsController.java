@@ -8,10 +8,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
-import com.sun.supplierpoc.services.JournalService;
-import com.sun.supplierpoc.services.SunService;
-import com.sun.supplierpoc.services.SyncJobDataService;
-import com.sun.supplierpoc.services.SyncJobService;
+import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,7 +39,7 @@ public class CostOfGoodsController {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
     @Autowired
-    private JournalService journalService;
+    private CostOfGoodsService costOfGoodsService;
     @Autowired
     private SyncJobService syncJobService;
     @Autowired
@@ -217,14 +214,14 @@ public class CostOfGoodsController {
         try {
             Response data;
 
-            data = journalService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation,majorGroups, revenueCenters, account);
+            data = costOfGoodsService.getJournalDataByRevenueCenter(journalSyncJobType, costCentersLocation,majorGroups, revenueCenters, account);
 
             if (data.isStatus()) {
                 ArrayList<JournalBatch> journalBatches = data.getJournalBatches();
                 ArrayList<JournalBatch> addedJournalBatches;
 
                 if (journalBatches.size() > 0) {
-                    addedJournalBatches = journalService.saveCostOfGoodsData(journalBatches, journalSyncJobType, syncJob,
+                    addedJournalBatches = costOfGoodsService.saveCostOfGoodsData(journalBatches, journalSyncJobType, syncJob,
                             businessDate, fromDate);
 
                     if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {

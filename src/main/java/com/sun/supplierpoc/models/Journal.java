@@ -94,8 +94,10 @@ public class Journal {
 
         for (Journal journal : journals) {
             if (journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())) {
-                journal.totalCost += cost;
-                return journals;
+                if(journal.getRevenueCenter() != null && journal.getRevenueCenter().getRevenueCenter().equals(revenueCenter.getRevenueCenter())){
+                    journal.totalCost += cost;
+                    return journals;
+                }
             }
         }
 

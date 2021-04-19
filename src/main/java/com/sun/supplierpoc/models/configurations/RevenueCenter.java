@@ -8,6 +8,7 @@ public class RevenueCenter {
     private String revenueCenter = "";
     private String discountAccount ="";
     private String accountCode ="";
+    private boolean requireAnalysis = false;
 
     private List<OrderType> orderTypes = new ArrayList<>();
 
@@ -57,5 +58,13 @@ public class RevenueCenter {
 
     public void setOrderTypes(List<OrderType> orderTypes) {
         this.orderTypes = orderTypes;
+    }
+
+    public boolean isRequireAnalysis() {
+        return requireAnalysis;
+    }
+
+    public void setRequireAnalysis(boolean requireAnalysis) {
+        this.requireAnalysis = requireAnalysis;
     }
 }

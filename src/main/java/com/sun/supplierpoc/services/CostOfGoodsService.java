@@ -4,10 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
-import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.FamilyGroup;
-import com.sun.supplierpoc.models.configurations.MajorGroup;
-import com.sun.supplierpoc.models.configurations.RevenueCenter;
+import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
@@ -78,7 +75,6 @@ public class CostOfGoodsService {
                     continue;
 
                 for (RevenueCenter revenueCenter : revenueCenters) {
-                    Journal journal = new Journal();
                     Response dateResponse = new Response();
 
                     if (!revenueCenter.isChecked()) {
@@ -95,98 +91,36 @@ public class CostOfGoodsService {
                         }
                     }
 
-                    if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
-                        if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
-                            driver.quit();
-                            response.setStatus(false);
-                            response.setMessage(dateResponse.getMessage());
-                            return response;
-                        } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
-                            continue;
+                    // Check if this revenue center has order types
+                    List<OrderType> orderTypes = revenueCenter.getOrderTypes();
+
+                    if (orderTypes.size() != 0) {
+                        for (OrderType orderType : orderTypes) {
+                            if (setupEnvironment.runReportPerOrderType(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse, orderType)) {
+                                if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
+                                    driver.quit();
+                                    response.setStatus(false);
+                                    response.setMessage(dateResponse.getMessage());
+                                    return response;
+                                } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                                    continue;
+                                }
+                            }
+
+                            fetchCostOfGoodsRows(majorGroups, location, revenueCenter, orderType, journals, driver);
                         }
-                    }
-
-                    driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
-
-                    WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
-                    List<WebElement> rows = table.findElements(By.tagName("tr"));
-
-                    if (rows.size() < 5)
-                        continue;
-
-                    ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
-
-                    MajorGroup majorGroup;
-                    RevenueCenter MGRevenueCenter;
-                    String majorGroupName = "";
-
-                    for (int i = 2; i < rows.size(); i++) {
-
-                        WebElement row = rows.get(i);
-                        List<WebElement> cols = row.findElements(By.tagName("td"));
-
-                        if (cols.size() != columns.size())
-                            continue;
-
-                        WebElement col;
-
-                        col = cols.get(columns.indexOf("item_group"));
-                        float majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("cogs")).getText());
-
-                        if (col.getAttribute("class").equals("header_1")) {
-                            majorGroupName = col.getText().strip().toLowerCase();
-                            majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
-
-                            if (!majorGroup.getChecked()) {
+                    }else {
+                        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
+                            if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
+                                driver.quit();
+                                response.setStatus(false);
+                                response.setMessage(dateResponse.getMessage());
+                                return response;
+                            } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
                                 continue;
                             }
-
-                            MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
-
-                            CostCenter costCenter = new CostCenter();
-                            List<CostCenter> costCenters = majorGroup.getCostCenters();
-                            for (CostCenter costCenter1 : costCenters) {
-                                if (location.locationName.equals(costCenter1.locationName)) {
-                                    costCenter = costCenter1;
-                                }
-                            }
-
-                            // Credit line
-                            journals = journal.checkExistence(journals, majorGroup,majorGroupAmount,
-                                    costCenter, MGRevenueCenter, "", "C");
-
-                            // Debit lines
-                            for (int j = i + 1; j < rows.size(); j++) {
-                                WebElement FGRow = rows.get(j);
-                                List<WebElement> FGCols = FGRow.findElements(By.tagName("td"));
-                                WebElement FGCol;
-
-                                FGCol = FGCols.get(columns.indexOf("item_group"));
-                                if (FGCol.getAttribute("class").equals("header_1")) {
-                                    i = j - 1;
-                                    break;
-                                }
-
-                                if (FGCols.size() != columns.size()) {
-                                    continue;
-                                }
-
-                                FamilyGroup familyGroup;
-
-                                // Check if family group exists
-                                String familyGroupName = FGCol.getText().strip().toLowerCase();
-                                familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
-                                        , familyGroupName);
-
-                                if (familyGroup.familyGroup.equals(""))
-                                    continue;
-
-                                majorGroupAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText());
-
-                                journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
-                                        , location, MGRevenueCenter, familyGroup.departmentCode);
-                            }
                         }
+                        fetchCostOfGoodsRows(majorGroups, location, revenueCenter, null, journals, driver);
                     }
                 }
 
@@ -207,6 +141,98 @@ public class CostOfGoodsService {
             response.setStatus(false);
             response.setMessage("Failed to get cost of goods entries from Oracle Hospitality.");
             return response;
+        }
+    }
+
+    private void fetchCostOfGoodsRows(ArrayList<MajorGroup> majorGroups, CostCenter location,
+                                  RevenueCenter revenueCenter, OrderType orderType,
+                                  ArrayList<Journal> journals, WebDriver driver) throws CloneNotSupportedException {
+        Journal journal = new Journal();
+
+        driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
+
+        WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+        List<WebElement> rows = table.findElements(By.tagName("tr"));
+
+        if (rows.size() < 5)
+            return;
+
+        ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+        MajorGroup majorGroup;
+        RevenueCenter MGRevenueCenter;
+        String majorGroupName = "";
+
+        for (int i = 2; i < rows.size(); i++) {
+
+            WebElement row = rows.get(i);
+            List<WebElement> cols = row.findElements(By.tagName("td"));
+
+            if (cols.size() != columns.size())
+                continue;
+
+            WebElement col;
+
+            col = cols.get(columns.indexOf("item_group"));
+            float majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("cogs")).getText());
+
+            if (col.getAttribute("class").equals("header_1")) {
+                majorGroupName = col.getText().strip().toLowerCase();
+                majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+
+                if (!majorGroup.getChecked()) {
+                    continue;
+                }
+
+                MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+
+                if(orderType != null)
+                    MGRevenueCenter.setAccountCode(orderType.getAccount());
+
+                CostCenter costCenter = new CostCenter();
+                List<CostCenter> costCenters = majorGroup.getCostCenters();
+                for (CostCenter costCenter1 : costCenters) {
+                    if (location.locationName.equals(costCenter1.locationName)) {
+                        costCenter = costCenter1;
+                    }
+                }
+
+                // Credit line
+                journals = journal.checkExistence(journals, majorGroup,majorGroupAmount,
+                        costCenter, MGRevenueCenter, "", "C");
+
+                // Debit lines
+                for (int j = i + 1; j < rows.size(); j++) {
+                    WebElement FGRow = rows.get(j);
+                    List<WebElement> FGCols = FGRow.findElements(By.tagName("td"));
+                    WebElement FGCol;
+
+                    FGCol = FGCols.get(columns.indexOf("item_group"));
+                    if (FGCol.getAttribute("class").equals("header_1")) {
+                        i = j - 1;
+                        break;
+                    }
+
+                    if (FGCols.size() != columns.size()) {
+                        continue;
+                    }
+
+                    FamilyGroup familyGroup;
+
+                    // Check if family group exists
+                    String familyGroupName = FGCol.getText().strip().toLowerCase();
+                    familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                            , familyGroupName);
+
+                    if (familyGroup.familyGroup.equals(""))
+                        continue;
+
+                    majorGroupAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText());
+
+                    journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
+                            , location, MGRevenueCenter, familyGroup.departmentCode);
+                }
+            }
         }
     }
 

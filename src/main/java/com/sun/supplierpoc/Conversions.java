@@ -83,6 +83,17 @@ public class Conversions {
         return new RevenueCenter();
     }
 
+    public boolean validateRevenueCenter(ArrayList<RevenueCenter> revenueCenters, int revenueCenterId){
+        for (RevenueCenter revenueCenter : revenueCenters) {
+            if (revenueCenter.getRevenueCenterId() == revenueCenterId) {
+                if(revenueCenter.isChecked()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public FamilyGroup checkFamilyGroupExistence(ArrayList<FamilyGroup> familyGroups, String familyGroupName){
         for (FamilyGroup fg : familyGroups) {
             if (fg.familyGroup.toLowerCase().equals(familyGroupName.toLowerCase())) {

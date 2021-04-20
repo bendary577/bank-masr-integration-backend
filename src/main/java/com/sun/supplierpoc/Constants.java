@@ -13,7 +13,7 @@ public class Constants {
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
     public static String EMPTY_REVENUE_CENTER = "Revenue Centers parameter is empty. Please make a selection.";
-    public static  String WRONG_REVENUE_CENTER = "wrong revenue center, please configure this RC";
+    public static  String WRONG_REVENUE_CENTER = "Wrong revenue center, please configure this RVC";
     public static String INVALID_BUSINESS_DATE = "Invalid business Date";
     public static String EMPTY_BUSINESS_DATE = "Business Dates parameter is empty. Please make a selection.";
     public static String WRONG_BUSINESS_DATE = "Wrong Business Dates Chosen.";

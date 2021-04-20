@@ -126,13 +126,14 @@ public class AppUserController {
 
                     Random random = new Random();
                     String code = applicationUser.getName() + random.nextInt();
-                    String logoPath = account.getImageUrl();
+                    String accountLogo = account.getImageUrl();
+                    String groupLogo = group.getLogoUrl();
                     String QRPath = "QRCodes/" + code + ".png";
                     applicationUser.setCode(code);
 
                     try {
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
-                        if (emailService.sendMimeMail(QrPath, logoPath, account.getName(), applicationUser)) {
+                        if (emailService.sendMimeMail(QrPath, groupLogo, account.getName(), applicationUser)) {
                             userRepo.save(applicationUser);
                             response.put("message", "User added successfully.");
                             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -253,11 +254,12 @@ public class AppUserController {
                         Random random = new Random();
                         String code = appUser.getName() + random.nextInt();
                         String QRPath = "QRCodes/" + code + ".png";
-                        String logoPath = account.getImageUrl();
+                        String accountLogo = account.getImageUrl();
+                        String groupLogo = group.getLogoUrl();
 
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
                         appUser.setCode(code);
-                        if (emailService.sendMimeMail(QrPath, logoPath, account.getName(), appUser)) {
+                        if (emailService.sendMimeMail(QrPath, groupLogo, account.getName(), appUser)) {
                             userRepo.save(appUser);
 
                             response.put("message", "QRCode send successfully.");

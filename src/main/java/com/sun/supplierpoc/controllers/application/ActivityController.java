@@ -5,6 +5,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.InvokerUser;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.TransactionTypeRepo;
@@ -18,7 +19,9 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @RestController
 @RequestMapping("/activity")
@@ -35,6 +38,11 @@ public class ActivityController {
 
     @Autowired
     AccountService accountService;
+
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
+    private Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -57,14 +65,12 @@ public class ActivityController {
             Account account = accountService.getAccount(invokerUser.getAccountId());
 
             if (account != null) {
+
                 if(transaction.getCheckNumber().equals("")){
                     response.put("isSuccess", false);
                     response.put("message", "Check number is a required field.");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
-
-                //SimphonyLocation location = generalSettings.getSimphonyLocationsByID(transaction.getRevenueCentreId());
-                //Constants.REDEEM_VOUCHER)
 
                 TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
 
@@ -73,7 +79,11 @@ public class ActivityController {
                     response.put("message", "You don't have role to redeem reward!.");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
-                if (true) {
+
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
+
+                if (conversions.validateRevenueCenter(revenueCenters, transaction.getRevenueCentreId())) {
                     response = activityService.createTransaction(transactionType, transaction, account);
 
                     if ((boolean) response.get("isSuccess")) {

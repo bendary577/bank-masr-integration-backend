@@ -5,6 +5,7 @@ import java.util.List;
 
 public class RevenueCenter {
     private boolean checked = false;
+    private int revenueCenterId;
     private String revenueCenter = "";
     private String discountAccount ="";
     private String accountCode ="";
@@ -66,5 +67,13 @@ public class RevenueCenter {
 
     public void setRequireAnalysis(boolean requireAnalysis) {
         this.requireAnalysis = requireAnalysis;
+    }
+
+    public int getRevenueCenterId() {
+        return revenueCenterId;
+    }
+
+    public void setRevenueCenterId(int revenueCenterId) {
+        this.revenueCenterId = revenueCenterId;
     }
 }

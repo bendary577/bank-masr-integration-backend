@@ -286,10 +286,12 @@ public class ExcelHelper {
                         bookingDetails.nationalityCode = bookingType.getTypeId();
                     }
                     else if (cellIdx == columnsName.indexOf("Date of Birth")) {
-                        if (currentCell.getStringCellValue().equals("XX/XX/XX")) {
-                            bookingDetails.dateOfBirth = "";
-                        } else {
-                            bookingDetails.dateOfBirth = String.valueOf(currentCell.getDateCellValue());
+                        try {
+                            if (currentCell.getStringCellValue().equals("XX/XX/XX"))
+                                bookingDetails.dateOfBirth = "";
+                        } catch (Exception e) {
+                            arrivalDate = currentCell.getDateCellValue();
+                            bookingDetails.dateOfBirth = (dateFormat.format(arrivalDate));
                         }
                     }
 

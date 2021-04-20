@@ -44,6 +44,8 @@ public class ScheduledTasks {
     @Autowired
     private JournalController journalController;
     @Autowired
+    private CostOfGoodsController costOfGoodsController;
+    @Autowired
     private WastageController wastageController;
     @Autowired
     private SalesController salesController;
@@ -150,6 +152,9 @@ public class ScheduledTasks {
                 }
                 else if (syncJobType.getName().equals(Constants.CONSUMPTION)){
                     journalController.getJournals("Automated User", account);
+                }
+                else if (syncJobType.getName().equals(Constants.COST_OF_GOODS)){
+                    costOfGoodsController.syncCostOfGoodsInDayRange("Automated User", account);
                 }
                 else if (syncJobType.getName().equals(Constants.SALES)){
                     salesController.syncPOSSalesInDayRange("Automated User", account);

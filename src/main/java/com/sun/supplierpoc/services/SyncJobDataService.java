@@ -119,7 +119,7 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());
         }
 
-        if(!revenueCenter.getRevenueCenter().equals("OFFICER") && !revenueCenter.getRevenueCenter().equals("COMP")) {
+        if(revenueCenter.isRequireAnalysis()){
             if (familyGroup != null && !familyGroup.departmentCode.equals("")) {
                 index = configuration.familyGroupAnalysisCode;
                 data.put("analysisCodeT" + index, familyGroup.departmentCode);

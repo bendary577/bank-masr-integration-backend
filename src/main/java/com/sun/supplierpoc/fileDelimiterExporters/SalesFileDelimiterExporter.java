@@ -77,9 +77,7 @@ public class SalesFileDelimiterExporter {
                 this.extractSalesSyncJobData();
             else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES))
                 this.extractInvoicesSyncJobData();
-            else if (syncJobType.getName().equals(Constants.CONSUMPTION))
-                this.extractConsumptionSyncJobData();
-            else
+            else if (syncJobType.getName().equals(Constants.CONSUMPTION) || syncJobType.getName().equals(Constants.WASTAGE))
                 this.extractWastageSyncJobData();
 
             file = createNDFFile();
@@ -234,61 +232,11 @@ public class SalesFileDelimiterExporter {
         }
     }
 
-    private void extractConsumptionSyncJobData() {
-        SyncJobDataCSV syncJobDataCSV;
-        SyncJobData tempSyncJobData = new SyncJobData();
-        float totalCr = 0;
-        int counter = 0;
-
-        for (SyncJobData syncJobData : listSyncJobData) {
-
-            if (syncJobData.getData().get("overGroup").equals("Food") || syncJobData.getData().get("overGroup").equals("Bar")
-                    || syncJobData.getData().get("overGroup").toString().contains("major")) {
-
-                if (tempSyncJobData.getId() != (null)) {
-
-                    tempSyncJobData.getData().put("totalCr", conversions.roundUpFloat(totalCr));
-
-                    syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "C");
-                    if (syncJobDataCSV != null)
-                        this.syncJobDataCSVList.add(syncJobDataCSV);
-
-                    tempSyncJobData = syncJobData;
-                    totalCr = 0;
-
-                } else {
-                    tempSyncJobData = syncJobData;
-                }
-            } else {
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
-                if (syncJobDataCSV != null)
-                    this.syncJobDataCSVList.add(syncJobDataCSV);
-
-                totalCr = totalCr + Math.abs(conversions.convertStringToFloat(syncJobData.getData().get("totalCr").toString()));
-            }
-
-            if (counter == (listSyncJobData.size() - 1)) {
-
-                tempSyncJobData.getData().put("totalCr", totalCr);
-
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "C");
-                if (syncJobDataCSV != null)
-                    this.syncJobDataCSVList.add(syncJobDataCSV);
-                totalCr = 0;
-
-            } else {
-                counter++;
-            }
-        }
-    }
-
     private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker) {
 
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
         syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation").toString();
         syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation").toString();
-//        syncJobDataCSV.toCostCenter = syncJobData.getData().get("toCostCenter").toString();
-//        syncJobDataCSV.toAccountCode = syncJobData.getData().get("toAccountCode").toString();
         syncJobDataCSV.description = syncJobData.getData().get("description").toString();
 
         if (syncJobDataCSV.description.length() > 25) {

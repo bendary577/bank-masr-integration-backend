@@ -38,9 +38,6 @@ public class Configuration implements Serializable {
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     public ArrayList<OverGroup> overGroups = new ArrayList<>();
 
-    // Account per (overGroup/CostCenters)
-    public String accountCodePer = "";
-
     // Sync per (overGroup/itemGroup)
     public String syncPerGroup = "";
 

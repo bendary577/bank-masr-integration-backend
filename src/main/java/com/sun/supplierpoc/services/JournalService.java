@@ -409,30 +409,8 @@ public class JournalService {
                 if (journal.getTotalCost() != 0) {
                     HashMap<String, Object> costData = new HashMap<>();
 
-//                    if (!syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")) {
-//                        ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
-//
-//                        costData.put("inventoryAccount", itemGroup.getInventoryAccount());
-//                        costData.put("expensesAccount", itemGroup.getExpensesAccount());
-//                    } else {
-//                        OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-//
-//                        if (oldOverGroupData.getChecked() && !oldOverGroupData.getInventoryAccount().equals("")
-//                                && !oldOverGroupData.getExpensesAccount().equals("")) {
-//                            costData.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-//                            costData.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-//                        } else
-//                            continue;
-//                    }
-
-
                     costData.put("inventoryAccount", costCenter.accountCode);
                     costData.put("expensesAccount", costCenter.costCenter);
-
-                    if (!familyGroup.familyGroup.equals("")) {
-                        costData.put("inventoryAccount", revenueCenter.getAccountCode());
-                        costData.put("expensesAccount", revenueCenter.getAccountCode());
-                    }
 
                     if (costCenter.location != null && !costCenter.location.locationName.equals("")) {
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), journal.getCostCenter(), null, null);
@@ -461,22 +439,11 @@ public class JournalService {
                     costData.put("fromLocation", costCenter.accountCode);
                     costData.put("toLocation", costCenter.accountCode);
 
-                    String cost = "";
-
-                    if (journal.getOverGroup().contains("Food")) {
-                        cost = " Kitchen";
-                    } else {
-                        cost = " Bar";
-                    }
-
                     String description = "";
 
 
-                    if (!familyGroup.familyGroup.equals("")) {
-                        description = journal.getMajorGroup().getMajorGroup() + " Cost-Home " + revenueCenter.getRevenueCenter();
-                    } else {
-                        description = batch.getLocation().costCenterReference + cost;
-                    }
+                    description = batch.getLocation().costCenterReference ;
+
 
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
@@ -485,12 +452,10 @@ public class JournalService {
                     costData.put("description", description);
 
                     if (costCenter.costCenterReference.equals(""))
-                        costData.put("transactionReference", "COG");
+                        costData.put("transactionReference", "CON");
                     else {
                         costData.put("transactionReference", batch.getLocation().costCenterReference);
                     }
-
-                    costData.put("overGroup", journal.getOverGroup());
 
                     SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());

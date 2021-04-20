@@ -92,7 +92,7 @@ public class CostOfGoodsController {
 
     }
 
-    private Response syncCostOfGoodsInDayRange(String userId, Account account) throws ParseException {
+    public Response syncCostOfGoodsInDayRange(String userId, Account account) throws ParseException {
         Response response = new Response();
         SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.COST_OF_GOODS, account.getId(), false);
 

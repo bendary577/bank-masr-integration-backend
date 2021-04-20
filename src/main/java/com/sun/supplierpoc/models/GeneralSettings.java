@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
+import com.sun.supplierpoc.models.applications.SimphonyQuota;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
@@ -37,6 +38,8 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
 
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
+
+    private SimphonyQuota simphonyQuota;
 
     private Date creationDate;
     private boolean deleted;
@@ -249,4 +252,13 @@ public class GeneralSettings {
     public void setRateCodes(ArrayList<RateCode> rateCodes) {
         this.rateCodes = rateCodes;
     }
+
+    public SimphonyQuota getSimphonyQuota() {
+        return simphonyQuota;
+    }
+
+    public void setSimphonyQuota(SimphonyQuota simphonyQuota) {
+        this.simphonyQuota = simphonyQuota;
+    }
 }
+

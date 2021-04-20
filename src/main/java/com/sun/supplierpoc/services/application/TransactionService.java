@@ -92,7 +92,7 @@ public class TransactionService {
             calendar.set(Calendar.SECOND, 59);
             Date date = calendar.getTime();
 
-            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), date, new Date());
+            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), date, new Date());
 
         } else if (time.equals("Last Week")) {
 
@@ -110,7 +110,7 @@ public class TransactionService {
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
 
-            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), start, end);
+            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), start, end);
 
         } else if(time.equals("Last Month")) {
 
@@ -138,10 +138,10 @@ public class TransactionService {
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
 
-            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetween(transactionType.getId(), start, end);
+            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), start, end);
 
         }else{
-            transactions =  transactionRepo.findAllByTransactionTypeId(transactionType.getId());
+            transactions =  transactionRepo.findAllByTransactionTypeIdOrderByTransactionDateDesc(transactionType.getId());
         }
         return transactions;
     }

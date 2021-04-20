@@ -9,10 +9,10 @@ import java.util.List;
 
 public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
-    List<Transactions> findAllByTransactionTypeId(String transactionType);
-    List<Transactions> findAllByTransactionTypeIdAndTransactionDateBetween(String accountI,Date from, Date to);
+    List<Transactions> findAllByTransactionTypeIdOrderByTransactionDateDesc(String transactionType);
+    List<Transactions> findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(String accountI,Date from, Date to);
 
-    List<Transactions> findAllByUser(ApplicationUser user);
+    List<Transactions> findAllByUserOrderByTransactionDateDesc(ApplicationUser user);
 
     boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 }

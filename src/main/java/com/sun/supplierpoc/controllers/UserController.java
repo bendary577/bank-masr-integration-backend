@@ -37,7 +37,7 @@ public class UserController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();
 
-        return userRepo.findByAccountIdAndDeleted(account.getId(), false);
+        return userRepo.findByAccountId(account.getId());
     }
 
     @RequestMapping("/addInvokerUser")

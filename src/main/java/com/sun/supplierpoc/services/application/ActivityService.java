@@ -38,7 +38,7 @@ public class ActivityService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap createTransaction(TransactionType transactionType, Transactions transaction,
-                                     Account account) {
+                                     Account account, GeneralSettings generalSettings) {
 
         HashMap response = new HashMap();
 
@@ -55,7 +55,7 @@ public class ActivityService {
             } else if(transactionRepo.existsByCheckNumber(transaction.getCheckNumber())){
                 response.put("message", "Can't use code for the same check twice.");
             }else {
-                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
                 ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
 
                 Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
@@ -95,6 +95,9 @@ public class ActivityService {
                     groupRepo.save(group);
 
                     transactionRepo.save(transaction);
+
+                    generalSettings.getSimphonyQuota().setUsedTransactionQuota(generalSettings.getSimphonyQuota().getUsedTransactionQuota() + 1);
+                    generalSettingsRepo.save(generalSettings);
 
                     response.put("isSuccess", true);
                     response.put("message", "Discount applied successfully.");

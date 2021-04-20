@@ -18,4 +18,8 @@ public interface UserRepo extends MongoRepository<User, String>{
     Optional<User> findByNameAndAccountId(String name, String id);
 
     boolean existsByNameAndAccountId(String name, String id);
+
+    boolean existsByUsernameAndAccountId(String username, String id);
+
+    List<User> findByAccountId(String id);
 }

@@ -34,7 +34,6 @@ public class User implements UserDetails  {
     private Boolean accountNonLocked;
     private boolean credentialsNonExpired;
 
-
     public User() {
     }
 

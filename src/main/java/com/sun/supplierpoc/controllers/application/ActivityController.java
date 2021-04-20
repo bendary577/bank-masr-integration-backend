@@ -81,10 +81,17 @@ public class ActivityController {
                 }
 
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                if(generalSettings.getSimphonyQuota().getTransactionQuota() == generalSettings.getSimphonyQuota().getUsedTransactionQuota()){
+                    response.put("isSuccess", false);
+                    response.put("message", "You have exhausted your package of transactions, Pleas contact your service provider.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
                 ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
                 if (conversions.validateRevenueCenter(revenueCenters, transaction.getRevenueCentreId())) {
-                    response = activityService.createTransaction(transactionType, transaction, account);
+                    response = activityService.createTransaction(transactionType, transaction, account, generalSettings);
 
                     if ((boolean) response.get("isSuccess")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

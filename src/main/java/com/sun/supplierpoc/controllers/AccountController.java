@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers;
 import com.google.common.collect.Sets;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -114,15 +115,15 @@ public class AccountController {
 
             if(addFlag) {
 
-                if (userRepo.existsByNameAndAccountId(userRequest.getName(), account.getId())) {
-                    response.put("message", "User is already exist with this name.");
+                if (userRepo.existsByUsernameAndAccountId(userRequest.getUsername(), account.getId())) {
+                    response.put("message", "User is already exist with this username.");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
                 Set<GrantedAuthority> roles = new LinkedHashSet<>();
                 roles.add(new SimpleGrantedAuthority("ROLE_USER"));
-                user.setName(userRequest.getName());
-                user.setUsername(userRequest.getUsername());
+                user.setName(userRequest.getName().replaceAll("\\s", ""));
+                user.setUsername(userRequest.getUsername().replaceAll("\\s", ""));
                 user.setPassword(userRequest.getPassword());
                 user.setAccountId(account.getId());
                 user.setAuthorities(roles);
@@ -139,15 +140,15 @@ public class AccountController {
 
                     user = updatedUserOptional.get();
 
-                    if(!user.getName().equals(userRequest.getName())){
-                        if (userRepo.existsByNameAndAccountId(userRequest.getName(), account.getId())) {
-                            response.put("message", "User is already exist with this name.");
+                    if(!user.getUsername().equals(userRequest.getUsername())){
+                        if (userRepo.existsByUsernameAndAccountId(userRequest.getUsername(), account.getId())) {
+                            response.put("message", "This username is already used.");
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                         }
                     }
 
-                    user.setName(userRequest.getName());
-                    user.setUsername(userRequest.getUsername());
+                    user.setName(userRequest.getName().replaceAll("\\s", ""));
+                    user.setUsername(userRequest.getUsername().replaceAll("\\s", ""));
                     user.setPassword(userRequest.getPassword());
                     user.setUpdateDate(new Date());
 
@@ -163,6 +164,43 @@ public class AccountController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
     }
+
+    @RequestMapping("/deleteUsers")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity deleteUsers(@RequestParam(name = "addFlag") boolean addFlag,
+                                      @RequestParam("userId") String userId, Principal principal) {
+
+        HashMap response = new HashMap();
+
+        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Optional<User> updatedUserOptional = userRepo.findById(userId);
+            if(updatedUserOptional.isPresent()){
+
+                User user = updatedUserOptional.get();
+
+                user.setDeleted(addFlag);
+                user.setAccountNonExpired(!addFlag);
+                user.setAccountNonLocked(!addFlag);
+                user.setCredentialsNonExpired(!addFlag);
+                user.setEnabled(!addFlag);
+                mongoTemplate.save(user);
+
+            }
+            if(addFlag) {
+                response.put("message", "User deleted Successfully.");
+            }else{
+                response.put("message", "User restored Successfully.");
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
 
     @RequestMapping(value = "/user")
     @ResponseBody

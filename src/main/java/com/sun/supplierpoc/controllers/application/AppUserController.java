@@ -125,7 +125,7 @@ public class AppUserController {
                     applicationUser.setDeleted(false);
 
                     Random random = new Random();
-                    String code = applicationUser.getName() + random.nextInt();
+                    String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
                     String accountLogo = account.getImageUrl();
                     String groupLogo = group.getLogoUrl();
                     String QRPath = "QRCodes/" + code + ".png";
@@ -253,7 +253,7 @@ public class AppUserController {
                     try {
 
                         Random random = new Random();
-                        String code = appUser.getName() + random.nextInt();
+                        String code = appUser.getEmail().substring(0, appUser.getEmail().indexOf('@')) + random.nextInt(100);
                         String QRPath = "QRCodes/" + code + ".png";
                         String accountLogo = account.getImageUrl();
                         String groupLogo = group.getLogoUrl();

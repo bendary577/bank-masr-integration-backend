@@ -323,6 +323,8 @@ public class ExcelHelper {
                 municipalityTax = (roomRate * rateCode.municipalityTaxRate)/100;
                 bookingDetails.municipalityTax = String.valueOf(municipalityTax);
 
+                // Grand Total = (Total Room Rate + VAT + Municipality Tax) - Discount
+
                 grandTotal = (roomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue) * nights;
                 bookingDetails.grandTotal = String.valueOf(grandTotal);
 
@@ -373,10 +375,22 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
-    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob,
-                                                       ArrayList<BookingType> paymentTypes,
-                                                       ArrayList<BookingType> cancelReasons, InputStream is) {
+    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, GeneralSettings generalSettings, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
+        ArrayList<RateCode> rateCodes = generalSettings.getRateCodes();
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> cancelReasons = generalSettings.getCancelReasons();
+
+        String typeName;
+
+        float roomRate = 0;
+        float vat = 0;
+        float municipalityTax = 0;
+        float serviceCharge = 0;
+        float grandTotal = 0;
+        int nights = 0;
+
+        RateCode rateCode = new RateCode();
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -429,14 +443,17 @@ public class ExcelHelper {
                         cancelReason = conversions.checkBookingTypeExistence(cancelReasons, cancelReasonName);
 
                         bookingDetails.cancelReason = cancelReason.getTypeId();
-                    } else if (cellIdx == columnsName.indexOf("Chargable Days")) {
+                    } else if (cellIdx == columnsName.indexOf("Chargeable Days")) {
+                        nights = (int) (currentCell.getNumericCellValue());
                         bookingDetails.chargeableDays = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Daily Rate")) {
-                        bookingDetails.dailyRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
-                    } else if (cellIdx == columnsName.indexOf("Total Rate")) {
-                        bookingDetails.totalRoomRate = String.valueOf(conversions.roundUpFloat((float) currentCell.getNumericCellValue()));
+                        roomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
+                        bookingDetails.dailyRoomRate = String.valueOf(roomRate);
                     } else if (cellIdx == columnsName.indexOf("Discount Amount")) {
                         bookingDetails.discount = String.valueOf((int) (currentCell.getNumericCellValue()));
+                        if (bookingDetails.discount.equals(""))
+                            bookingDetails.discount = "0";
+
                     } else if (cellIdx == columnsName.indexOf("Pay Method")) {
                         paymentTypeName = (currentCell.getStringCellValue());
                         paymentType = conversions.checkBookingTypeExistence(paymentTypes, paymentTypeName);
@@ -459,9 +476,27 @@ public class ExcelHelper {
                         departureDate = currentCell.getDateCellValue();
                     } else if (cellIdx == columnsName.indexOf("Room Tax")) {
                         bookingDetails.vat = String.valueOf((float) (currentCell.getNumericCellValue()));
+                    } else if (cellIdx == columnsName.indexOf("Rate Code")) {
+                        typeName = (currentCell.getStringCellValue());
+                        rateCode = conversions.checkRateCodeExistence(rateCodes, typeName);
                     }
 
                     cellIdx++;
+                }
+
+                if (Float.parseFloat(bookingDetails.chargeableDays) != 0) {
+                    bookingDetails.totalRoomRate = String.valueOf(roomRate * nights);
+
+                    serviceCharge = (roomRate * rateCode.serviceChargeRate)/ 100;
+                    vat = ((serviceCharge + roomRate) * rateCode.vatRate)/100;
+                    bookingDetails.vat = String.valueOf(vat * nights);
+
+                    municipalityTax = (roomRate * rateCode.municipalityTaxRate)/100;
+                    bookingDetails.municipalityTax = String.valueOf(municipalityTax * nights);
+
+                    grandTotal = (roomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue) * nights;
+                    bookingDetails.grandTotal = String.valueOf(grandTotal);
+
                 }
 
                 // check if it was new booking or update
@@ -476,20 +511,8 @@ public class ExcelHelper {
                     bookingDetails.transactionId = "";
                 }
 
-                bookingDetails.municipalityTax = String.valueOf(paymentAmount * 0.07);
-                bookingDetails.grandTotal = String.valueOf(paymentAmount);
-                if (bookingDetails.discount.equals(""))
-                    bookingDetails.discount = "0";
-
                 if (arrivalDate != null && departureDate != null) {
                     bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);
-                }
-
-                if (Float.parseFloat(bookingDetails.chargeableDays) != 0) {
-                    float dailyRate = Float.parseFloat(bookingDetails.totalRoomRate) / Float.parseFloat(bookingDetails.chargeableDays);
-                    bookingDetails.dailyRoomRate = String.valueOf(conversions.roundUpFloat(dailyRate));
-                } else {
-                    bookingDetails.dailyRoomRate = bookingDetails.totalRoomRate;
                 }
 
                 HashMap<String, Object> data = new HashMap<>();

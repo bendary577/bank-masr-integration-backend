@@ -121,12 +121,12 @@ public class BookingService {
 
         try{
             String filePath = bookingConfiguration.filePath;
+
             File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
 
-            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob,
-                    generalSettings.getPaymentTypes(), generalSettings.getCancelReasons(), input);
+            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob,generalSettings, input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

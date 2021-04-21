@@ -273,7 +273,7 @@ public class GroupController {
     }
 
 
-        @RequestMapping("/deleteApplicationGroups")
+    @RequestMapping("/deleteApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity deleteApplicationCompanies(@RequestBody List<Group> groups, Principal principal,
@@ -293,6 +293,7 @@ public class GroupController {
                     groupRepo.save(group);
 
                     if(withUsers) {
+
                         List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), group.getId());
 
                         for (ApplicationUser applicationUser : applicationUsers) {
@@ -300,6 +301,23 @@ public class GroupController {
                             applicationUser.setGroup(group);
                             userRepo.save(applicationUser);
                         }
+
+                        List<Group> childGroups = groupRepo.findAllByAccountIdAndParentGroupId(account.getId(), group.getId());
+
+                        for(Group childGroup: childGroups){
+                            childGroup.setDeleted(true);
+
+                            List<ApplicationUser> childGroupApplicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), childGroup.getId());
+
+                            for (ApplicationUser applicationUser : childGroupApplicationUsers) {
+                                applicationUser.setDeleted(true);
+                                applicationUser.setGroup(childGroup);
+                                userRepo.save(applicationUser);
+                            }
+                        }
+
+                        groupRepo.saveAll(childGroups);
+
                     }else{
                         List<ApplicationUser> applicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), group.getId());
 
@@ -310,6 +328,22 @@ public class GroupController {
                             for (ApplicationUser applicationUser : applicationUsers) {
                                 applicationUser.setGroup(newGroup);
                             }
+
+                            List<Group> childGroups = groupRepo.findAllByAccountIdAndParentGroupId(account.getId(), group.getId());
+
+                            for(Group childGroup: childGroups){
+                                childGroup.setParentGroupId(newGroup.getId());
+
+                                List<ApplicationUser> childGroupApplicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), childGroup.getId());
+
+                                for (ApplicationUser applicationUser : childGroupApplicationUsers) {
+                                    applicationUser.setGroup(childGroup);
+                                    userRepo.save(applicationUser);
+                                }
+                            }
+
+                            groupRepo.saveAll(childGroups);
+
                         }else{ }
                         userRepo.saveAll(applicationUsers);
                     }
@@ -324,6 +358,22 @@ public class GroupController {
                             applicationUser.setGroup(group);
                             userRepo.save(applicationUser);
                         }
+
+                        List<Group> childGroups = groupRepo.findAllByAccountIdAndParentGroupId(account.getId(), group.getId());
+
+                        for(Group childGroup: childGroups){
+                            childGroup.setDeleted(false);
+
+                            List<ApplicationUser> childGroupApplicationUsers = userRepo.findAllByAccountIdAndGroupId(account.getId(), childGroup.getId());
+
+                            for (ApplicationUser applicationUser : childGroupApplicationUsers) {
+                                applicationUser.setDeleted(false);
+                                applicationUser.setGroup(childGroup);
+                                userRepo.save(applicationUser);
+                            }
+                        }
+                        groupRepo.saveAll(childGroups);
+
                     }
                 }
             }

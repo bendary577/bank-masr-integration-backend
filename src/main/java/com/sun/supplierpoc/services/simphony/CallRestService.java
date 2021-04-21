@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services.simphony;
 
+import com.sun.supplierpoc.models.amazonPayment.AmazonPaymentServiceBody;
 import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
@@ -21,6 +22,7 @@ public class CallRestService {
     public CallRestService(RestTemplateBuilder restTemplateBuilder) {
         this.restTemplate = restTemplateBuilder.build();
     }
+
 
     public ZealLoyaltyResponse zealPayment(ZealLoyaltyRequest zealPayment) {
         String url = "https://private-anon-09bdbe61bf-symphonypos.apiary-mock.com/api/visit/scan";

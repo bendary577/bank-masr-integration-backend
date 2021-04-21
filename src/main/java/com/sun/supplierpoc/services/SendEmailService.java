@@ -38,7 +38,7 @@ public class SendEmailService {
         System.out.println("Finish");
     }
 
-    public boolean sendMimeMail(String qrCodePath, String logoPath, String accountName, ApplicationUser user) throws MailException {
+    public boolean sendMimeMail(String qrCodePath, String logoPath, String accountLogo, String accountName, ApplicationUser user) throws MailException {
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
         try {
@@ -58,8 +58,11 @@ public class SendEmailService {
 
             if(!logoPath.equals(Constants.GROUP_IMAGE_URL)){
                 mailContent +=
-                        "<img style=\"width:40%; display: block;margin-left: auto; margin-right: auto;\"" +
-                                "   src='" + logoPath + "'>" + "<br>\n";
+                        "<img style=\"width:20%; height: 20%; margin-left: 30%; margin-right: 2%;\"" +
+                                "   src='" + logoPath + "'>"  +
+
+                                "<img style=\"width:20%; height: 20%; margin-left: auto; margin-right: auto;\"" +
+                        "   src='" + accountLogo + "'>" + "<br>\n";
             }
             mailContent +=
                             "<img style=\"width:100%\"" +

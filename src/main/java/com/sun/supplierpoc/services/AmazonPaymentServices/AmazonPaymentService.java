@@ -85,13 +85,15 @@ public class AmazonPaymentService {
     public void getSignature(){
 
         Map<String, Object> requestMap = new HashedMap();
-        requestMap.put("service_command", "CAPTURE");
-        requestMap.put("merchant_reference", "OR1");
-        requestMap.put("amount", "10000");
-        requestMap.put("access_code", "zx0IPmPy5jp1vAz8Kpg7");
+        requestMap.put("command ", "AUTHORIZATION");
+        requestMap.put("access_code", "zx0IPmPy5jp1vAz");
         requestMap.put("merchant_identifier", "f0db228a");
+        requestMap.put("merchant_reference", "or1");
+        requestMap.put("amount", "10000");
         requestMap.put("currency", "EGP");
         requestMap.put("language", "ar");
+        requestMap.put("customer_email", "bassel759@yahoo.com");
+        requestMap.put("order_description", "iPhone 6-S");
         requestMap.put("order_description", "iPhone 6-S");
 
 //        {\"command\" : \"CAPTURE\" ," +
@@ -111,6 +113,7 @@ public class AmazonPaymentService {
                             (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
             String requestString = "PASS";
+
             for (Map.Entry<String, Object> entry : requestMap.entrySet())
                 requestString += entry.getKey() + "=" + entry.getValue();
             requestString += "PASS";

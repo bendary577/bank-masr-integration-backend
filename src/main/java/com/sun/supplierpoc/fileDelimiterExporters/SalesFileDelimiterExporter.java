@@ -272,29 +272,32 @@ public class SalesFileDelimiterExporter {
 
 
             if (totalDr.substring(0, 1).equals("-")) {
-                if (syncJobData.getData().containsKey("totalDr"))
-                    totalDr = syncJobData.getData().get("totalDr").toString();
-                else
-                    totalDr = syncJobData.getData().get("net").toString();
-
-                splitTotalAmount(syncJobDataCSV, totalDr);
-
-                String accountCode = "";
-
-                if (syncJobData.getData().containsKey("expensesAccount")) {
-                    accountCode = syncJobData.getData().get("expensesAccount").toString();
-                } else {
-                    accountCode = syncJobData.getData().get("toLocation").toString();
-                }
-
-                if (accountCode.length() < 10) {
-                    accountCode = String.format("%-10s", accountCode);
-                }
-                syncJobDataCSV.accountCode = accountCode;
+                totalDr = totalDr.substring(1);
             }
+
+            splitTotalAmount(syncJobDataCSV, totalDr);
+
+            String accountCode = "";
+
+            if (syncJobData.getData().containsKey("expensesAccount")) {
+                accountCode = syncJobData.getData().get("expensesAccount").toString();
+            } else {
+                accountCode = syncJobData.getData().get("toLocation").toString();
+            }
+
+            if (accountCode.length() < 10) {
+                accountCode = String.format("%-10s", accountCode);
+            }
+            syncJobDataCSV.accountCode = accountCode;
+
         } else if (CDMaker.equals("DV")) {
             syncJobDataCSV.DCMarker = "D";
             totalDr = syncJobData.getData().get("vat").toString();
+
+            if (totalDr.substring(0, 1).equals("-")) {
+                totalDr = totalDr.substring(1);
+            }
+
             splitTotalAmount(syncJobDataCSV, totalDr);
 
             String accountCode = "9230002";
@@ -376,10 +379,6 @@ public class SalesFileDelimiterExporter {
     }
 
     private void splitTotalAmount(SyncJobDataCSV syncJobDataCSV, String totalDr) {
-        if (totalDr.substring(0, 1).equals("-")) {
-            totalDr = totalDr.substring(1);
-        }
-
         String[] amountArray = totalDr.split("\\.");
 
         String amountPart = amountArray[0];

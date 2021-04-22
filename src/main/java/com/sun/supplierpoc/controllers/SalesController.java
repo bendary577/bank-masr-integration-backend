@@ -217,12 +217,13 @@ public class SalesController {
                             FtpClient ftpClient = new FtpClient();
                             ftpClient = ftpClient.createFTPClient(account);
 
+                            File file;
                             SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
                             if(syncJobType.getConfiguration().exportFilePerLocation){
                                 ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                         syncJobType, account.getName());
                             }else {
-                                File file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
+                                file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
                             }
 
                             if (ftpClient != null){

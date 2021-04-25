@@ -1,6 +1,4 @@
 package com.sun.supplierpoc.services.simphony;
-
-import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.SyncJobDataService;
@@ -11,11 +9,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CreateOrderService {
-
-    @Autowired
-    private CallRestService callRestService;
-    @Autowired
-    private SyncJobRepo syncJobRepo;
     @Autowired
     MenuItemService menuItemService;
     @Autowired
@@ -26,16 +19,6 @@ public class CreateOrderService {
     AccountService accountService;
     @Autowired
     InvokerUserService invokerUserService;
-    @Autowired
-    private OperationTypeRepo operationTypeRepo;
-    @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
-    @Autowired
-    private OperationRepo operationRepo;
-    @Autowired
-    private OperationDataRepo operationDataRepo;
-    @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
 
 
 //    public ArrayList<OperationData> saveOrderCreation(PostTransactionEx2 checkDetails, Operation operation) {

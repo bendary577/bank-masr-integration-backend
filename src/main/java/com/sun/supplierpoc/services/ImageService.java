@@ -87,7 +87,7 @@ public class ImageService {
         String projectId = "oracle-symphony-integrator";
         String bucketName = "oracle-integrator-bucket";
 
-        String objectName = file.getName();
+        String objectName = file.getPath();
 
         StorageOptions storageOptions = null;
         try {

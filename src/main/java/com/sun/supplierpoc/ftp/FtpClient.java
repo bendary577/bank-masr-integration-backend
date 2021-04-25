@@ -65,7 +65,7 @@ public class FtpClient {
 
     public boolean putFileToPath(File file, String path) throws IOException {
         ftp.setControlKeepAliveTimeout(120);
-        return ftp.storeFile(path, new FileInputStream(new File("https://storage.googleapis.com/oracle-integrator-bucket/24042021Sat.ndf")));
+        return ftp.storeFile(path, new FileInputStream(file));
     }
 
     public boolean putFile(String file, String path) throws IOException {

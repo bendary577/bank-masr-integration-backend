@@ -227,13 +227,13 @@ public class SalesController {
                                         syncJobType, account.getName());
                             }else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
-//                                fileStoragePath = imageService.storeFile(file);
+                                fileStoragePath = imageService.storeFile(file);
                             }
 
                             if (ftpClient != null){
                                 if(ftpClient.open()){
-//                                    if (file != null && !fileStoragePath.equals("") && ftpClient.putFile(fileStoragePath, file.getName())){
-                                    if (true){
+                                    if (file != null && !fileStoragePath.equals("") && ftpClient.putFile(fileStoragePath, file.getName())){
+//                                    if (true){
                                         syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                         syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                                 "Sync sales successfully.", Constants.SUCCESS);

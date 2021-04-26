@@ -31,6 +31,8 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/opera/**").authenticated()
                 .antMatchers("/**").authenticated()
                 .antMatchers("/activity/**").authenticated()
+                .antMatchers("/amazon/**").authenticated()
+
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }
 

@@ -3,7 +3,6 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.ConsumptionExcelExporter;
-import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
@@ -436,7 +435,7 @@ public class JournalController {
                 if(updateLocation)
                     syncJobType.getConfiguration().consumptionConfiguration.consumptionLocations = locations;
                 else
-                    syncJobType.getConfiguration().consumptionConfiguration.consumptionCostCenter = locations;
+                    syncJobType.getConfiguration().consumptionConfiguration.consumptionCostCenters = locations;
 
                 syncJobTypeRepo.save(syncJobType);
 

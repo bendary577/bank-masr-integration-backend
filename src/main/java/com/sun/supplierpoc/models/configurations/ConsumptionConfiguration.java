@@ -11,6 +11,6 @@ public class ConsumptionConfiguration implements Serializable {
     public String consumptionBasedOnType = "";
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
     public ArrayList<ConsumptionLocation> consumptionLocations = new ArrayList<>();
-    public ArrayList<ConsumptionLocation> consumptionCostCenter = new ArrayList<>();
+    public ArrayList<ConsumptionLocation> consumptionCostCenters = new ArrayList<>();
 
 }

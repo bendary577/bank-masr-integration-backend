@@ -24,17 +24,16 @@ public class AmazonSendForm {
         HttpPost httppost = new HttpPost("https://sbcheckout.PayFort.com/FortAPI/paymentPage");
 
         // Request parameters and other properties.
-        List<NameValuePair> params = new ArrayList<NameValuePair>(5);
+        List<NameValuePair> params = new ArrayList<NameValuePair>(9);
         params.add(new BasicNameValuePair("service_command", "TOKENIZATION"));
-        params.add(new BasicNameValuePair("access_code", "Y6lL5f0wvakSxdM8jsjr"));
+        params.add(new BasicNameValuePair("access_code", "Y6lL5f0wvaKSxdM8jsjr"));
         params.add(new BasicNameValuePair("merchant_identifier", "f0db228a"));
         params.add(new BasicNameValuePair("merchant_reference", "or100"));
-        params.add(new BasicNameValuePair("language", "ar"));
+        params.add(new BasicNameValuePair("language", "en"));
         params.add(new BasicNameValuePair("expiry_date", "05/21"));
         params.add(new BasicNameValuePair("card_number", "4005550000000001"));
         params.add(new BasicNameValuePair("card_security_code", "123"));
         params.add(new BasicNameValuePair("signature", signature));
-        params.add(new BasicNameValuePair("return_url", "https://www.merchant.com"));
 
 
         httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));

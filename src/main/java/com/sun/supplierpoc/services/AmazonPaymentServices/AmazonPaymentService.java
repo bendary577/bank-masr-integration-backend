@@ -82,14 +82,29 @@ public class AmazonPaymentService {
     }
 
 
-    public String getSignature(){
+    public String getSignature(Object obj){
 
         Map<String, Object> requestMap = new HashedMap();
-        requestMap.put("service_command", "TOKENIZATION");
-        requestMap.put("access_code", "Y6lL5f0wvakSxdM8jsjr");
+
+
+
+        requestMap.put("command", "PURCHASE");
+        requestMap.put("customer_email", "basel@yahoo.com");
+        requestMap.put("customer_ip", "2001:0db8:3042:0002:5a55:caff:fef6:bdbf");
+        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
         requestMap.put("merchant_identifier", "f0db228a");
-        requestMap.put("merchant_reference", "or100");
-        requestMap.put("language", "ar");
+        requestMap.put("merchant_reference", "or10222");
+        requestMap.put("currency", "USD");
+        requestMap.put("language", "en");
+        requestMap.put("amount", "10000");
+        requestMap.put("token_name", "88a517b737c64c3abda741add4ec86ef");
+
+
+//        requestMap.put("service_command", "TOKENIZATION");
+//        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
+//        requestMap.put("merchant_identifier", "f0db228a");
+//        requestMap.put("merchant_reference", "or10222");
+//        requestMap.put("language", "en");
 
 //        requestMap.put("amount", "10000");
 //        requestMap.put("currency", "EGP");

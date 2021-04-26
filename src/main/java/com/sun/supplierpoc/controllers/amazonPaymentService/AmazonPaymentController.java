@@ -21,15 +21,15 @@ public class AmazonPaymentController {
     private AmazonSendForm amazonSendForm;
 
     @RequestMapping("/auth")
-    public ResponseEntity authRequest(@RequestBody AmazonPaymentServiceBody amazonPaymentServiceBody){
+    public ResponseEntity authRequest(@RequestBody Object obj){
 
         try{
 
-            String signature = amazonPaymentService.getSignature();
+            String signature = amazonPaymentService.getSignature(obj);
 
             amazonSendForm.amazonPaymentSendTokenization(signature);
 
-            amazonPaymentService.amazonPaymentService(amazonPaymentServiceBody);
+//            amazonPaymentService.amazonPaymentService(amazonPaymentServiceBody);
 
         }catch(Exception e){
 

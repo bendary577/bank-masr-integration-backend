@@ -12,6 +12,7 @@ import com.sun.supplierpoc.repositories.TransactionTypeRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.application.ActivityService;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,12 @@ public class ActivityController {
     private Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @GetMapping("/test")
+    public ResponseEntity test(){
+        LoggerFactory.getLogger(ActivityController.class);
+        return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
 
     @RequestMapping("/createTransactionActivity")
     @CrossOrigin("*")

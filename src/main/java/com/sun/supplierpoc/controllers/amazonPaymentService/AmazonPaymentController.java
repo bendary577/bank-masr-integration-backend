@@ -21,8 +21,9 @@ public class AmazonPaymentController {
     public ResponseEntity authRequest(@RequestBody AmazonPaymentServiceBody amazonPaymentServiceBody){
 
         try{
-            amazonPaymentService.getSignature();
-            amazonPaymentService.amazonPaymentService(amazonPaymentServiceBody);
+            amazonPaymentService.sendReq("",  "", "");
+            String signature = amazonPaymentService.getSignature();
+            amazonPaymentService.amazonPaymentService(signature);
 
         }catch(Exception e){
 

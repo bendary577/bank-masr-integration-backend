@@ -12,7 +12,6 @@ public class Journal {
 
     private float totalWaste;
     private float totalCost;
-    private float totalVariance;
     private float totalTransfer;
     private float tax;
     private float vat;
@@ -25,11 +24,18 @@ public class Journal {
 
     public Journal() { }
 
-    private Journal(String overGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer) {
+    // Consumption Controller
+    public Journal(String overGroup, float totalCost, CostCenter costCenter, String DCMarker) {
+        this.overGroup = overGroup;
+        this.totalCost = totalCost;
+        this.costCenter = costCenter;
+        this.DCMarker = DCMarker;
+    }
+
+    private Journal(String overGroup, float totalWaste, float totalCost, float totalTransfer) {
         this.overGroup = overGroup;
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
-        this.totalVariance = totalVariance;
         this.totalTransfer = totalTransfer;
     }
 
@@ -52,12 +58,11 @@ public class Journal {
         this.DCMarker = DCMarker;
     }
 
-    private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalVariance, float totalTransfer,
+    private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalTransfer,
                     CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
         this.majorGroup = majorGroup;
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
-        this.totalVariance = totalVariance;
         this.totalTransfer = totalTransfer;
         this.costCenter = costCenter;
         this.revenueCenter = revenueCenter;
@@ -69,7 +74,7 @@ public class Journal {
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
-                                             float waste, float cost, float variance, float transfer,
+                                             float waste, float cost, float transfer,
                                              CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
 
         for (Journal journal : journals) {
@@ -77,13 +82,12 @@ public class Journal {
                 // Add new value
                 journal.totalWaste += waste;
                 journal.totalCost += cost;
-                journal.totalVariance += variance;
                 journal.totalTransfer += transfer;
                 return journals;
             }
         }
 
-        journals.add(new Journal(majorGroup, waste, cost, variance, transfer, costCenter, revenueCenter, departmentCode));
+        journals.add(new Journal(majorGroup, waste, cost, transfer, costCenter, revenueCenter, departmentCode));
         return journals;
 
     }
@@ -103,7 +107,6 @@ public class Journal {
 
         journals.add(new Journal(majorGroup, cost, costCenter, revenueCenter, departmentCode, DCMarker));
         return journals;
-
     }
 
     public ArrayList<Journal> checkFGExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
@@ -127,19 +130,18 @@ public class Journal {
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, String overGroup, float waste, float cost,
-                                             float variance, float transfer) {
+                                             float transfer) {
 
         for (Journal journal : journals) {
             if (journal.overGroup.equals(overGroup)) {
                 journal.totalCost += cost;
                 journal.totalTransfer += transfer;
-                journal.totalVariance += variance;
                 journal.totalWaste += waste;
 
                 return journals;
             }
         }
-        journals.add(new Journal(overGroup, waste, cost, variance, transfer));
+        journals.add(new Journal(overGroup, waste, cost, transfer));
         return journals;
     }
 
@@ -173,14 +175,6 @@ public class Journal {
 
     public void setTotalCost(float totalCost) {
         this.totalCost = totalCost;
-    }
-
-    public float getTotalVariance() {
-        return totalVariance;
-    }
-
-    public void setTotalVariance(float totalVariance) {
-        this.totalVariance = totalVariance;
     }
 
     public float getTotalTransfer() {

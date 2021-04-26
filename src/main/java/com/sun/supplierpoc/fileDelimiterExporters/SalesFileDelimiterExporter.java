@@ -36,10 +36,13 @@ public class SalesFileDelimiterExporter {
         /*
          * Check sync job type here
          * */
-        if (syncJobType.getName().equals(Constants.SALES))
+        if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
+                || syncJobType.getName().equals(Constants.CONSUMPTION))
             this.extractSalesSyncJobData();
-        else
+        else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES))
             this.extractInvoicesSyncJobData();
+        else if (syncJobType.getName().equals(Constants.WASTAGE))
+            this.extractWastageSyncJobData();
         this.createFileContent();
         writer.print(this.fileContent);
     }
@@ -73,11 +76,12 @@ public class SalesFileDelimiterExporter {
             /*
              * Check sync job type here
              * */
-            if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS))
+            if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
+            || syncJobType.getName().equals(Constants.CONSUMPTION))
                 this.extractSalesSyncJobData();
             else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES))
                 this.extractInvoicesSyncJobData();
-            else if (syncJobType.getName().equals(Constants.CONSUMPTION) || syncJobType.getName().equals(Constants.WASTAGE))
+            else if (syncJobType.getName().equals(Constants.WASTAGE))
                 this.extractWastageSyncJobData();
 
             file = createNDFFile();
@@ -235,8 +239,6 @@ public class SalesFileDelimiterExporter {
     private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker) {
 
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
-        syncJobDataCSV.fromLocation = syncJobData.getData().get("fromLocation").toString();
-        syncJobDataCSV.toLocation = syncJobData.getData().get("toLocation").toString();
         syncJobDataCSV.description = syncJobData.getData().get("description").toString();
 
         if (syncJobDataCSV.description.length() > 25) {
@@ -399,7 +401,6 @@ public class SalesFileDelimiterExporter {
 
         syncJobDataCSV.amount = amountPart + decimalPart;
     }
-
 
     private String fillTCode(int index, SyncJobData syncJobData, String CDMaker) {
         String analysisTCode = "";

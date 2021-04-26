@@ -230,7 +230,7 @@ public class BookedProductionService {
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) productionDetails.get("value")),
-                        0,0, 0);
+                        0, 0);
 
             }
 

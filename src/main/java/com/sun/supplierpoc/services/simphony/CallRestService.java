@@ -1,6 +1,4 @@
 package com.sun.supplierpoc.services.simphony;
-
-import com.sun.supplierpoc.models.amazonPayment.AmazonPaymentServiceBody;
 import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
@@ -15,12 +13,12 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class CallRestService {
 
-    Logger logger = LoggerFactory.getLogger(CallRestService.class);
+//    Logger logger = LoggerFactory.getLogger(CallRestService.class);
     @Autowired
     private RestTemplate restTemplate;
 
     public CallRestService(RestTemplateBuilder restTemplateBuilder) {
-        this.restTemplate = restTemplateBuilder.build();
+//        this.restTemplate = restTemplateBuilder.build();
     }
 
 
@@ -40,7 +38,7 @@ public class CallRestService {
         ZealRedeemResponse zealRedeemResponse =
                 this.restTemplate.postForObject(url, zealRedeemRequest, ZealRedeemResponse.class);
 
-        logger.info(zealRedeemResponse.toString());
+//        logger.info(zealRedeemResponse.toString());
 
         return zealRedeemResponse;
 

@@ -506,7 +506,7 @@ public class SalesService {
                         majorGroupAmount = getMajorGroupAmount(taxIncluded, grossDiscountSales, columns, cols);
 
                         majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
-                                , 0, majorGroupAmount, 0, 0, location, MGRevenueCenter, "");
+                                , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
 
                         if(taxIncluded)
                             discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts_vat")).getText().strip());

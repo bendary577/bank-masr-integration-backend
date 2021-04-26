@@ -81,5 +81,35 @@ public class ImageService {
         }
         return signedUrl.toString();
     }
+
+
+    public String storeFile(File file){
+        String projectId = "oracle-symphony-integrator";
+        String bucketName = "oracle-integrator-bucket";
+
+        String objectName = file.getPath();
+
+        StorageOptions storageOptions = null;
+        try {
+            storageOptions = StorageOptions.newBuilder()
+                    .setProjectId(projectId)
+                    .setCredentials(GoogleCredentials.fromStream(new
+                            FileInputStream(baseConfigPath))).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Storage storage = storageOptions.getService();
+
+        BlobId blobId = BlobId.of(bucketName, objectName);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+        try {
+            storage.create(blobInfo, Files.readAllBytes(Paths.get(file.toPath().toString())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return downloadFile(storage, objectName);
+    }
 }
 

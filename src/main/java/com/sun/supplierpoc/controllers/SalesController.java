@@ -46,6 +46,8 @@ public class SalesController {
     private SyncJobDataService syncJobDataService;
     @Autowired
     private SunService sunService;
+    @Autowired
+    private ImageService imageService;
 
     public Conversions conversions = new Conversions();
 
@@ -217,18 +219,20 @@ public class SalesController {
                             FtpClient ftpClient = new FtpClient();
                             ftpClient = ftpClient.createFTPClient(account);
 
-                            File file;
+                            File file = null;
+                            String fileStoragePath = "";
                             SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
                             if(syncJobType.getConfiguration().exportFilePerLocation){
                                 ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                         syncJobType, account.getName());
                             }else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
+                                fileStoragePath = imageService.storeFile(file);
                             }
 
                             if (ftpClient != null){
                                 if(ftpClient.open()){
-//                                if (ftpClient.putFileToPath(file, fileName)){
+//                                    if (file != null && !fileStoragePath.equals("") && ftpClient.putFile(fileStoragePath, file.getName())){
                                     if (true){
                                         syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                         syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
@@ -599,4 +603,26 @@ public class SalesController {
             return locationFiles;
         }
     }
+//
+//    @RequestMapping("/Simphony/sendFTPFile")
+//    @CrossOrigin(origins = "*")
+//    @ResponseBody
+//    public boolean sendFTPFile(){
+//        Optional<Account> accountOptional = accountRepo.findById("5f968c83d939da0c6ed84ae4");
+//        if (accountOptional.isPresent()) {
+//            Account account = accountOptional.get();
+//            FtpClient ftpClient = new FtpClient();
+//            ftpClient = ftpClient.createFTPClient(account);
+//            try {
+//                if(ftpClient.open()){
+//                    ftpClient.putFile(imageService.storeFile(), "24042021Sat.ndf");
+//                    ftpClient.close();
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//            return true;
+//        }
+//        return false;
+//    }
 }

@@ -1,19 +1,31 @@
 package com.sun.supplierpoc.ftp;
 
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.auth.oauth2.ServiceAccountCredentials;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
+import com.google.cloud.storage.StorageOptions;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import org.apache.commons.net.PrintCommandListener;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 public class FtpClient {
+    @Value("${spring.cloud.gcp.credentials.location}")
+    private String baseConfigPath;
+
     private String server;
     private int port;
     private String user;
@@ -54,6 +66,11 @@ public class FtpClient {
     public boolean putFileToPath(File file, String path) throws IOException {
         ftp.setControlKeepAliveTimeout(120);
         return ftp.storeFile(path, new FileInputStream(file));
+    }
+
+    public boolean putFile(String file, String path) throws IOException {
+        ftp.setControlKeepAliveTimeout(120);
+        return ftp.storeFile(path, new URL(file).openStream());
     }
 
     public FtpClient createFTPClient(Account account) {

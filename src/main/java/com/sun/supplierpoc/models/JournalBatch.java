@@ -19,6 +19,7 @@ public class JournalBatch {
 
     private ArrayList<HashMap<String, Object>> waste = new ArrayList<>();
     private ArrayList<Journal> consumption = new ArrayList<>();
+    private ArrayList<ConsumptionJournal> consumptionJournals = new ArrayList<>();
 
     private SyncJobData salesDifferentData = new SyncJobData();
     private ArrayList<SyncJobData> salesTaxData = new ArrayList<>();
@@ -195,5 +196,13 @@ public class JournalBatch {
 
     public void setLocation(CostCenter location) {
         this.location = location;
+    }
+
+    public ArrayList<ConsumptionJournal> getConsumptionJournals() {
+        return consumptionJournals;
+    }
+
+    public void setConsumptionJournals(ArrayList<ConsumptionJournal> consumptionJournals) {
+        this.consumptionJournals = consumptionJournals;
     }
 }

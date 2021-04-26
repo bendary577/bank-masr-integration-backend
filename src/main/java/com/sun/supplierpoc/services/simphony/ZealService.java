@@ -28,9 +28,6 @@ import java.util.List;
 
 @Service
 public class ZealService {
-
-    Logger logger = LoggerFactory.getLogger(ZealService.class);
-
     @Autowired
     private CallRestService callRestService;
     @Autowired

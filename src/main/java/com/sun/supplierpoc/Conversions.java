@@ -177,6 +177,15 @@ public class Conversions {
         return new CostCenter();
     }
 
+    public ConsumptionLocation checkConCostCenterExistence(ArrayList<ConsumptionLocation> costCenters, String costCenterName){
+        for (ConsumptionLocation costCenter : costCenters) {
+            if (costCenter.costCenter.costCenter.equals(costCenterName.toLowerCase())) {
+                return costCenter;
+            }
+        }
+        return new ConsumptionLocation();
+    }
+
     public Supplier checkSupplierExistence(ArrayList<Supplier> suppliers, String vendorName){
         for (Supplier supplier : suppliers) {
             if (supplier.getSupplierName().toLowerCase().equals(vendorName.toLowerCase())) {

@@ -8,7 +8,6 @@ import com.sun.supplierpoc.models.simphony.Message;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
 import com.sun.supplierpoc.models.simphony.check.ZealPayment;
-import com.sun.supplierpoc.models.simphony.check.ZealPoints;
 import com.sun.supplierpoc.models.simphony.check.ZealVoucher;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
@@ -20,18 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 @RestController
 @RequestMapping("/zeal")
 public class ZealController {
-
-    Logger logger = LoggerFactory.getLogger(ZealController.class);
-
     @Autowired
     private ZealService zealService;
     @Autowired

@@ -206,18 +206,24 @@ public class JournalController {
         try {
             Response data;
 
-            if (consumptionBasedOnType.equals("Cost Center")) {
-                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
-            } else {
-                data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
-            }
+//            if (consumptionBasedOnType.equals("Cost Center")) {
+//                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+//            } else {
+//                data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
+//            }
+
+
+            ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
+            data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations, account);
 
             if (data.isStatus()) {
                 ArrayList<JournalBatch> journalBatches = data.getJournalBatches();
                 ArrayList<JournalBatch> addedJournalBatches;
 
                 if (journalBatches.size() > 0) {
-                    addedJournalBatches = journalService.saveJournalData(journalBatches, journalSyncJobType, syncJob,
+//                    addedJournalBatches = journalService.saveJournalData(journalBatches, journalSyncJobType, syncJob,
+//                            businessDate, fromDate);
+                    addedJournalBatches = journalService.saveJournalDataByItemGroup(journalBatches, journalSyncJobType, syncJob,
                             businessDate, fromDate);
 
                     if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
@@ -377,7 +383,7 @@ public class JournalController {
 
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
 
-                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getLocation().costCenterReference);
+                file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
                 locationFiles.add(file);
             }
             return locationFiles;
@@ -412,5 +418,43 @@ public class JournalController {
             }
         }
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @RequestMapping("/updateConsumptionLocations")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> updateConsumptionLocations(@RequestBody ArrayList<ConsumptionLocation> locations,
+                                                  @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                  @RequestParam(name = "updateLocation") boolean updateLocation,
+                                                  Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                if(updateLocation)
+                    syncJobType.getConfiguration().consumptionConfiguration.consumptionLocations = locations;
+                else
+                    syncJobType.getConfiguration().consumptionConfiguration.consumptionCostCenter = locations;
+
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update consumption locations successfully.");
+
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update consumption locations.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }else{
+            response.setStatus(false);
+            response.setMessage("Wrong Credentials");
+
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
     }
 }

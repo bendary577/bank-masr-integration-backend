@@ -252,7 +252,7 @@ public class WastageService {
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) transferDetails.get("value")),
-                        0,0, 0);
+                        0, 0);
 
             }
 
@@ -527,7 +527,7 @@ public class WastageService {
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, group, conversions.convertStringToFloat((String) wasteDetails.get("value")),
-                        0,0, 0);
+                        0, 0);
 
             }
 

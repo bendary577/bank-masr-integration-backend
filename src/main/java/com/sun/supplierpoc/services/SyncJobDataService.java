@@ -101,6 +101,20 @@ public class SyncJobDataService {
 
     }
 
+    public void prepareConsumptionJournalAnalysis(HashMap<String, Object> data, Configuration configuration,
+                                CostCenter location, String DCMarker){
+        ArrayList<Analysis> analysis = configuration.analysis;
+        for (int i = 1; i <= analysis.size(); i++) {
+            data.put("analysisCodeT" + i, analysis.get(i - 1).getCodeElement());
+        }
+
+        String index;
+        if(location != null && !location.accountCode.equals("") && DCMarker.equals("D")){
+            index = configuration.locationAnalysisCode;
+            data.put("analysisCodeT" + index, location.accountCode);
+        }
+    }
+
     public void prepareConsumptionAnalysis(RevenueCenter revenueCenter, HashMap<String, Object> data, Configuration configuration,
                                 CostCenter location, FamilyGroup familyGroup, Tender tender){
         ArrayList<Analysis> analysis = configuration.analysis;

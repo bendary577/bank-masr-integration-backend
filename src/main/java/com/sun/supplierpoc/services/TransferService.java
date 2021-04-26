@@ -257,7 +257,7 @@ public class TransferService {
                 transferDetails.put("total", td.getText().strip());
 
                 Journal journal = new Journal();
-                journals = journal.checkExistence(journals, overGroup, 0,0, 0,
+                journals = journal.checkExistence(journals, overGroup, 0,0,
                         conversions.convertStringToFloat((String) transferDetails.get("total")));
 
             }

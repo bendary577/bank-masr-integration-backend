@@ -320,7 +320,7 @@ public class InvoiceService {
 
             Journal journal = new Journal();
             journals = journal.checkExistence(journals, overGroup, 0,
-                    conversions.convertStringToFloat((String) invoiceDetails.get("gross")),0, 0);
+                    conversions.convertStringToFloat((String) invoiceDetails.get("gross")), 0);
 
         }
 

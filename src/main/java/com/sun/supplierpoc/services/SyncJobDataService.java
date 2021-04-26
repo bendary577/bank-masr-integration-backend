@@ -109,7 +109,7 @@ public class SyncJobDataService {
         }
 
         String index;
-        if(location != null && !location.accountCode.equals("") && DCMarker.equals("D")){
+        if(location != null && !location.accountCode.equals("") && !location.locationName.equals("") && DCMarker.equals("D")){
             index = configuration.locationAnalysisCode;
             data.put("analysisCodeT" + index, location.accountCode);
         }

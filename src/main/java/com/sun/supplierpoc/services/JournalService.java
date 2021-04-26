@@ -390,7 +390,8 @@ public class JournalService {
      * */
 
     public Response getJournalDataByItemGroup(SyncJobType journalSyncJobType,
-                                              ArrayList<ConsumptionLocation> costCentersLocation, Account account) {
+                                              ArrayList<ConsumptionLocation> costCentersLocation,
+                                              ArrayList<ConsumptionLocation> consumptionCostCenters, Account account) {
         Response response = new Response();
 
         WebDriver driver;
@@ -403,6 +404,7 @@ public class JournalService {
         }
 
         ArrayList<ConsumptionJournal> journals;
+        ArrayList<ConsumptionJournal> costCenterJournals;
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
@@ -426,6 +428,7 @@ public class JournalService {
             for (ConsumptionLocation consumptionLocation : costCentersLocation) {
                 journalBatch = new JournalBatch();
                 journals = new ArrayList<>();
+                costCenterJournals = new ArrayList<>();
 
                 if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_REPORT_LINK)) {
                     driver.get(Constants.CONSUMPTION_REPORT_LINK);
@@ -470,7 +473,6 @@ public class JournalService {
                         continue;
                     }
 
-                    float cost = conversions.convertStringToFloat(cols.get(columns.indexOf("actual_cost")).getText());
                     String extension = cols.get(0).findElement(By.tagName("div")).getAttribute("onclick").substring(7);
                     String costCenterName = cols.get(0).findElement(By.tagName("div")).getText();
                     int index = extension.indexOf('\'');
@@ -485,9 +487,19 @@ public class JournalService {
                 float totalCost = 0;
                 ConsumptionJournal journal = new ConsumptionJournal();
 
+                // Check exception cost centers
                 for (HashMap<String, String> extension : costExtensions) {
                     try {
                         driver.get(Constants.OHRA_LINK + extension.get("extension"));
+
+                        float costCenterTotalCost = 0;
+                        String costCenterName = extension.get("costCenterName");
+
+                        boolean costCenterExist = false;
+                        ConsumptionLocation consumptionCostCenter = conversions.checkConCostCenterExistence(consumptionCostCenters, costCenterName);
+                        if(!consumptionCostCenter.accountCode.equals("")){
+                            costCenterExist = true;
+                        }
 
                         rows = driver.findElements(By.tagName("tr"));
 
@@ -505,22 +517,37 @@ public class JournalService {
 
                             WebElement td = cols.get(columns.indexOf("item_group"));
 
-                            ItemGroup itemGroup = conversions.checkItemGroupExistence(consumptionLocation.itemGroups, td.getText().strip());
+                            ItemGroup itemGroup;
+                            if(costCenterExist)
+                                itemGroup = conversions.checkItemGroupExistence(consumptionCostCenter.itemGroups, td.getText().strip());
+                            else
+                                itemGroup = conversions.checkItemGroupExistence(consumptionLocation.itemGroups, td.getText().strip());
 
                             if(itemGroup.getItemGroup().equals(""))
                                 continue;
 
                             group = itemGroup.getItemGroup();
 
-                            journal.costCenter = consumptionLocation.costCenter;
+                            journal.costCenter = consumptionCostCenter.costCenter;
                             float cost = conversions.convertStringToFloat(cols.get(columns.indexOf("actual_usage")).getText());
                             if(cost == 0)
                                 continue;
                             totalCost += cost;
+                            costCenterTotalCost += cost;
 
                             // Debit line
-                            journals = journal.checkJournalExistence(journals, group, cost, itemGroup.getExpensesAccount(),
-                                    consumptionLocation.costCenter, "D");
+                            if(costCenterExist){
+                                costCenterJournals = journal.checkJournalExistence(costCenterJournals, group, cost, itemGroup.getExpensesAccount(),
+                                        consumptionCostCenter.costCenter, "D");
+                            }else{
+                                journals = journal.checkJournalExistence(journals, group, cost, itemGroup.getExpensesAccount(),
+                                        consumptionLocation.costCenter, "D");
+                            }
+                        }
+
+                        if(costCenterExist && costCenterTotalCost != 0){
+                            costCenterJournals = journal.checkJournalExistence(costCenterJournals, "", costCenterTotalCost, consumptionCostCenter.accountCode,
+                                    consumptionCostCenter.costCenter, "C");
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -532,6 +559,7 @@ public class JournalService {
                             consumptionLocation.costCenter, "C");
 
                 journalBatch.setCostCenter(consumptionLocation.costCenter);
+                journals.addAll(costCenterJournals);
                 journalBatch.setConsumptionJournals(journals);
                 journalBatches.add(journalBatch);
             }
@@ -604,7 +632,10 @@ public class JournalService {
                     if (costCenter.costCenterReference.equals(""))
                         costData.put("transactionReference", "CON");
                     else {
-                        costData.put("transactionReference", costCenter.costCenterReference);
+                        if(costCenter.location.locationName.equals(""))
+                            costData.put("transactionReference", costCenter.costCenterReference);
+                        else
+                            costData.put("transactionReference", costCenter.location.locationName);
                     }
 
                     SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),

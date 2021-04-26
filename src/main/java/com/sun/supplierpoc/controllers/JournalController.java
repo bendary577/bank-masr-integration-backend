@@ -96,6 +96,11 @@ public class JournalController {
             calendar.setTime(date);
 
             while (!startDate.equals(endDate)) {
+                startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobType.getConfiguration().toDate = startDate;
+                syncJobTypeRepo.save(syncJobType);
+
                 response = getJournals(userId, account);
                 if (response.get("success").equals(true) || tryCount == 0) {
                     tryCount = 2;
@@ -213,7 +218,9 @@ public class JournalController {
 
 
             ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
-            data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations, account);
+            ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+            data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
+                    consumptionCostCenters, account);
 
             if (data.isStatus()) {
                 ArrayList<JournalBatch> journalBatches = data.getJournalBatches();

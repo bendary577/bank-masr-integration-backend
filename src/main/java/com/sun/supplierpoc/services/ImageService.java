@@ -88,11 +88,11 @@ public class ImageService {
         String bucketName = "oracle-integrator-bucket";
 
         String objectName = file.getPath();
+        objectName = objectName.replaceAll("\\\\","/");
 
         StorageOptions storageOptions = null;
         try {
             storageOptions = StorageOptions.newBuilder()
-                    .setProjectId(projectId)
                     .setCredentials(GoogleCredentials.fromStream(new
                             FileInputStream(baseConfigPath))).build();
         } catch (IOException e) {

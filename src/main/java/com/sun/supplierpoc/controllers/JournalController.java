@@ -48,6 +48,8 @@ public class JournalController {
     @Autowired
     private SunService sunService;
     @Autowired
+    private ImageService imageService;
+    @Autowired
     private InvoiceController invoiceController;
 
     public Conversions conversions = new Conversions();
@@ -271,6 +273,7 @@ public class JournalController {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
+                            imageService.storeFile(file);
                         }
 
                         if (ftpClient != null) {

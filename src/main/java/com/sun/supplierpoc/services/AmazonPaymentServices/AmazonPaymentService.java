@@ -30,10 +30,10 @@ public class AmazonPaymentService {
         String url = "https://sbpaymentservices.payfort.com/FortAPI/paymentApi";
 
         String jsonRequestString =
-                "{\"command\" : \"CAPTURE\" , \"access_code\" : \"zx0IPmPy5jp1vAz8Kpg7\"," +
-                        " \"merchant_identifier\" : \"CycHZxVj\", " +
-                        "\"merchant_reference\" : \"XYZ9239-yu898\"," +
-                        " \"amount\" : \"10000\", \"currency\" : \"AED\"," +
+                "{\"service_command\" : \"TOKENIZATION\" , \"access_code\" : \"Y6lL5f0wvakSxdM8jsjr\"," +
+                        " \"merchant_identifier\" : \"f0db228a\", " +
+                        "\"merchant_reference\" : \"or100\"," +
+                        " \"amount\" : \"10000\", \"currency\" : \"EGY\"," +
                         "\"language\" : \"en\", \"fort_id\" : \"149295435400084008\", " +
                         "\"signature\" : \"7cad05f0212ed933c9a5d5dffa31661acf2c827a\", \"order_description\" : \"iPhone 6-S\"}";
 
@@ -82,19 +82,35 @@ public class AmazonPaymentService {
     }
 
 
-    public void getSignature(){
+    public String getSignature(Object obj){
 
         Map<String, Object> requestMap = new HashedMap();
-        requestMap.put("command ", "AUTHORIZATION");
-        requestMap.put("access_code", "zx0IPmPy5jp1vAz");
+
+
+
+        requestMap.put("command", "PURCHASE");
+        requestMap.put("customer_email", "basel@yahoo.com");
+        requestMap.put("customer_ip", "2001:0db8:3042:0002:5a55:caff:fef6:bdbf");
+        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
         requestMap.put("merchant_identifier", "f0db228a");
-        requestMap.put("merchant_reference", "or1");
+        requestMap.put("merchant_reference", "or10222");
+        requestMap.put("currency", "USD");
+        requestMap.put("language", "en");
         requestMap.put("amount", "10000");
-        requestMap.put("currency", "EGP");
-        requestMap.put("language", "ar");
-        requestMap.put("customer_email", "bassel759@yahoo.com");
-        requestMap.put("order_description", "iPhone 6-S");
-        requestMap.put("order_description", "iPhone 6-S");
+        requestMap.put("token_name", "88a517b737c64c3abda741add4ec86ef");
+
+
+//        requestMap.put("service_command", "TOKENIZATION");
+//        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
+//        requestMap.put("merchant_identifier", "f0db228a");
+//        requestMap.put("merchant_reference", "or10222");
+//        requestMap.put("language", "en");
+
+//        requestMap.put("amount", "10000");
+//        requestMap.put("currency", "EGP");
+//        requestMap.put("customer_email", "bassel759@yahoo.com");
+//        requestMap.put("order_description", "iPhone 6-S");
+
 
 //        {\"command\" : \"CAPTURE\" ," +
 //        \"access_code\" : \"zx0IPmPy5jp1vAz8Kpg7\"," +
@@ -112,18 +128,19 @@ public class AmazonPaymentService {
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                             (oldValue, newValue) -> oldValue, LinkedHashMap::new));
 
-            String requestString = "PASS";
+            String requestString = "68D2fyokjF9UCt2x45V7SD(@";
 
             for (Map.Entry<String, Object> entry : requestMap.entrySet())
                 requestString += entry.getKey() + "=" + entry.getValue();
-            requestString += "PASS";
+            requestString += "68D2fyokjF9UCt2x45V7SD(@";
 
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashed = digest.digest(requestString.getBytes(StandardCharsets.UTF_8));
             String signature = javax.xml.bind.DatatypeConverter.printHexBinary(hashed);
             LoggerFactory.getLogger(AmazonPaymentService.class).info(signature);
+            return signature;
         }catch(Exception e){
-
+            return "";
         }
     }
 }

@@ -210,27 +210,29 @@ public class JournalController {
         try {
             Response data;
 
-//            if (consumptionBasedOnType.equals("Cost Center")) {
-//                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
-//            } else {
-//                data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
-//            }
-
-
-            ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
-            ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
-            data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
-                    consumptionCostCenters, account);
+            if (consumptionBasedOnType.equals("Cost Center")) {
+                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+            } else if (consumptionBasedOnType.equals("Location")){
+                data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
+            } else{
+                ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
+                ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+                data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
+                        consumptionCostCenters, account);
+            }
 
             if (data.isStatus()) {
                 ArrayList<JournalBatch> journalBatches = data.getJournalBatches();
                 ArrayList<JournalBatch> addedJournalBatches;
 
                 if (journalBatches.size() > 0) {
-//                    addedJournalBatches = journalService.saveJournalData(journalBatches, journalSyncJobType, syncJob,
-//                            businessDate, fromDate);
-                    addedJournalBatches = journalService.saveJournalDataByItemGroup(journalBatches, journalSyncJobType, syncJob,
-                            businessDate, fromDate);
+                    if (consumptionBasedOnType.equals("Cost Center") || consumptionBasedOnType.equals("Location")){
+                        addedJournalBatches = journalService.saveJournalData(journalBatches, journalSyncJobType, syncJob,
+                                businessDate, fromDate);
+                    }else{
+                        addedJournalBatches = journalService.saveJournalDataByItemGroup(journalBatches, journalSyncJobType, syncJob,
+                                businessDate, fromDate);
+                    }
 
                     if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);

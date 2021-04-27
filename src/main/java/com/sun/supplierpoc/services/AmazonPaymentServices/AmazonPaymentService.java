@@ -82,45 +82,28 @@ public class AmazonPaymentService {
     }
 
 
-    public String getSignature(Object obj){
+    public String getSignature(HashedMap c){
 
-        Map<String, Object> requestMap = new HashedMap();
+        Map<String, Object> requestMap = c;
 
-
-
-        requestMap.put("command", "PURCHASE");
-        requestMap.put("customer_email", "basel@yahoo.com");
-        requestMap.put("customer_ip", "2001:0db8:3042:0002:5a55:caff:fef6:bdbf");
-        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
-        requestMap.put("merchant_identifier", "f0db228a");
-        requestMap.put("merchant_reference", "or10222");
-        requestMap.put("currency", "USD");
-        requestMap.put("language", "en");
-        requestMap.put("amount", "10000");
-        requestMap.put("token_name", "88a517b737c64c3abda741add4ec86ef");
-
+//        requestMap.put("command", "AUTHORIZATION");
+//        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
+//        requestMap.put("merchant_identifier", "f0db228a");
+//        requestMap.put("merchant_reference", "or102251");
+//        requestMap.put("amount", "100000");
+//        requestMap.put("currency", "SAR");
+//        requestMap.put("language", "en");
+//        requestMap.put("customer_email", "basel@yahoo.com");
+//        requestMap.put("customer_ip", "2001:0db8:3042:0002:5a55:caff:fef6:bdbf");
+//        requestMap.put("token_name", "749ee1fbe97049a69cfe6926b39372c3");
 
 //        requestMap.put("service_command", "TOKENIZATION");
 //        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
 //        requestMap.put("merchant_identifier", "f0db228a");
-//        requestMap.put("merchant_reference", "or10222");
+//        requestMap.put("merchant_reference", "or102251");
 //        requestMap.put("language", "en");
+//        requestMap.put("return_url", "http://localhost:8081/amazon/acceptRequest");
 
-//        requestMap.put("amount", "10000");
-//        requestMap.put("currency", "EGP");
-//        requestMap.put("customer_email", "bassel759@yahoo.com");
-//        requestMap.put("order_description", "iPhone 6-S");
-
-
-//        {\"command\" : \"CAPTURE\" ," +
-//        \"access_code\" : \"zx0IPmPy5jp1vAz8Kpg7\"," +
-//                " \"merchant_identifier\" : \"CycHZxVj\", " +
-//                "\"merchant_reference\" : \"XYZ9239-yu898\"," +
-//                " \"amount\" : \"10000\"," +
-//                " \"currency\" : \"AED\"," +
-//                "\"language\" : \"en\"," +
-//                " \"fort_id\" : \"149295435400084008\", " +
-//                " \"order_description\" : \"iPhone 6-S\"}
         try {
 
             //order by key

@@ -28,13 +28,13 @@ public class AmazonSendForm {
         params.add(new BasicNameValuePair("service_command", "TOKENIZATION"));
         params.add(new BasicNameValuePair("access_code", "Y6lL5f0wvaKSxdM8jsjr"));
         params.add(new BasicNameValuePair("merchant_identifier", "f0db228a"));
-        params.add(new BasicNameValuePair("merchant_reference", "or100"));
+        params.add(new BasicNameValuePair("merchant_reference", "or102250"));
         params.add(new BasicNameValuePair("language", "en"));
-        params.add(new BasicNameValuePair("expiry_date", "05/21"));
+        params.add(new BasicNameValuePair("expiry_date", "2105"));
         params.add(new BasicNameValuePair("card_number", "4005550000000001"));
         params.add(new BasicNameValuePair("card_security_code", "123"));
         params.add(new BasicNameValuePair("signature", signature));
-
+        params.add(new BasicNameValuePair("return_url", "http://localhost:8081/amazon/acceptRequest"));
 
         httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 

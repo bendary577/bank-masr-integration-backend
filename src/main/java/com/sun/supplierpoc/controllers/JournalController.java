@@ -268,9 +268,11 @@ public class JournalController {
                         ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-                        if (journalSyncJobType.getConfiguration().exportFilePerLocation &&
-                                (consumptionBasedOnType.equals("Location") || consumptionBasedOnType.equals("Location And RevenuCenter"))) {
+                        if (journalSyncJobType.getConfiguration().exportFilePerLocation) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
+                            for (File f : files) {
+                                imageService.storeFile(f);
+                            }
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
                             imageService.storeFile(file);

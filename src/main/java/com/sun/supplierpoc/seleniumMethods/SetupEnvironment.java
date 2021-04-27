@@ -759,6 +759,7 @@ public class SetupEnvironment {
                 try {
                     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                     DateFormat BusinessDateFormat = new SimpleDateFormat("M/d/yyyy");
+                    DateFormat BusinessDateFormatV2 = new SimpleDateFormat("d/M/yyyy");
 
                     Date fromDate = dateFormat.parse(syncFromDate);
                     Date toDate = dateFormat.parse(syncToDate);
@@ -767,7 +768,9 @@ public class SetupEnvironment {
                     String firstForm = BusinessDateFormat.format(fromDate);
                     String secondForm = BusinessDateFormat.format(fromDate) + " - " + BusinessDateFormat.format(toDate);
                     String thirdForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormat.format(toDate);
-                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(thirdForm);
+                    String fourthForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormatV2.format(toDate);
+                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(thirdForm)
+                            || businessDate.equals(fourthForm);
                 } catch (ParseException e) {
                     e.printStackTrace();
                     return false;

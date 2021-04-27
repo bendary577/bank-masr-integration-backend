@@ -346,11 +346,11 @@
             <version>3.1</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.payfort</groupId>
-            <artifactId>java-sdk</artifactId>
-            <version>1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.payfort</groupId>-->
+<!--            <artifactId>java-sdk</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
 
 
     </dependencies>

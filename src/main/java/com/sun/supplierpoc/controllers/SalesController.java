@@ -225,6 +225,9 @@ public class SalesController {
                             if(syncJobType.getConfiguration().exportFilePerLocation){
                                 ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                         syncJobType, account.getName());
+                                for (File f : files) {
+                                    imageService.storeFile(f);
+                                }
                             }else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
                                 fileStoragePath = imageService.storeFile(file);

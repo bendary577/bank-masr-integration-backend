@@ -157,14 +157,14 @@ public class CostOfGoodsService {
     private void fetchCostOfGoodsRows(ArrayList<MajorGroup> majorGroups, CostCenter location,
                                   RevenueCenter revenueCenter, OrderType orderType,
                                   ArrayList<Journal> journals, WebDriver driver) throws CloneNotSupportedException {
-        Journal journal = new Journal();
+        try { Journal journal = new Journal();
 
         driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
         WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
         List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-        if (rows.size() < 5)
+        if (rows.size() < 4)
             return;
 
         ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
@@ -244,7 +244,7 @@ public class CostOfGoodsService {
                             , location, MGRevenueCenter, familyGroup.departmentCode);
                 }
             }
-        }
+        }}catch(Exception e){e.getMessage();}
     }
 
     public ArrayList<JournalBatch> saveCostOfGoodsData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,

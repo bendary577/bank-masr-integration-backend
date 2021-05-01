@@ -174,6 +174,7 @@ public class CostOfGoodsService {
             WebElement col;
 
             col = cols.get(columns.indexOf("item_group"));
+
             float majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("cogs")).getText());
 
             if (col.getAttribute("class").equals("header_1")) {

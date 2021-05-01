@@ -96,6 +96,16 @@ public class CostOfGoodsService {
 
                     if (orderTypes.size() != 0) {
                         for (OrderType orderType : orderTypes) {
+                            if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
+                                driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+                                try {
+                                    WebDriverWait wait = new WebDriverWait(driver, 60);
+                                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                                } catch (Exception ex) {
+                                    System.out.println(ex.getMessage());
+                                }
+                            }
+
                             if (setupEnvironment.runReportPerOrderType(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse, orderType)) {
                                 if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                                     driver.quit();

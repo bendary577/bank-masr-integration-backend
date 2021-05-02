@@ -8,6 +8,7 @@ public class Journal {
 
     private MajorGroup majorGroup;
     private FamilyGroup familyGroup;
+    private OrderType orderType;
     private String overGroup;
 
     private float totalWaste;
@@ -93,14 +94,17 @@ public class Journal {
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup, float cost,
-                                             CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode,
+                                             CostCenter costCenter, RevenueCenter revenueCenter,
+                                             OrderType orderType ,String departmentCode,
                                              String DCMarker) {
 
         for (Journal journal : journals) {
-            if (journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())) {
+            if (journal.getMajorGroup().getMajorGroup().equals(majorGroup.getMajorGroup()) && journal.departmentCode.equals(departmentCode)) {
                 if(journal.getRevenueCenter() != null && journal.getRevenueCenter().getRevenueCenter().equals(revenueCenter.getRevenueCenter())){
-                    journal.totalCost += cost;
-                    return journals;
+                    if(orderType == null || (journal.orderType.getOrderType().equals(orderType.getOrderType()))){
+                        journal.totalCost += cost;
+                        return journals;
+                    }
                 }
             }
         }
@@ -111,14 +115,17 @@ public class Journal {
 
     public ArrayList<Journal> checkFGExistence(ArrayList<Journal> journals, MajorGroup majorGroup, FamilyGroup familyGroup,
                                                float cost, CostCenter costCenter, RevenueCenter revenueCenter,
+                                               OrderType orderType,
                                                String departmentCode) {
 
         for (Journal journal : journals) {
             if(journal.familyGroup != null){
                 if (journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)) {
                     if(journal.revenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter())){
-                        journal.totalCost += cost;
-                        return journals;
+                        if(orderType == null || (journal.orderType.getOrderType().equals(orderType.getOrderType()))){
+                            journal.totalCost += cost;
+                            return journals;
+                        }
                     }
                 }
             }
@@ -247,5 +254,13 @@ public class Journal {
 
     public void setDCMarker(String DCMarker) {
         this.DCMarker = DCMarker;
+    }
+
+    public OrderType getOrderType() {
+        return orderType;
+    }
+
+    public void setOrderType(OrderType orderType) {
+        this.orderType = orderType;
     }
 }

@@ -172,6 +172,7 @@ public class CostOfGoodsService {
         MajorGroup majorGroup;
         RevenueCenter MGRevenueCenter;
         String majorGroupName = "";
+        float majorGroupAmountTotal = 0;
 
         for (int i = 2; i < rows.size(); i++) {
 
@@ -185,9 +186,11 @@ public class CostOfGoodsService {
 
             col = cols.get(columns.indexOf("item_group"));
 
-            float majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("cogs")).getText());
+            float majorGroupAmount = 0;
 
             if (col.getAttribute("class").equals("header_1")) {
+                majorGroupAmountTotal = 0;
+
                 majorGroupName = col.getText().strip().toLowerCase();
                 majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
 
@@ -207,10 +210,6 @@ public class CostOfGoodsService {
                         costCenter = costCenter1;
                     }
                 }
-
-                // Credit line
-                journals = journal.checkExistence(journals, majorGroup,majorGroupAmount,
-                        costCenter, MGRevenueCenter, "", "C");
 
                 // Debit lines
                 for (int j = i + 1; j < rows.size(); j++) {
@@ -239,10 +238,15 @@ public class CostOfGoodsService {
                         continue;
 
                     majorGroupAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText());
+                    majorGroupAmountTotal += majorGroupAmount;
 
                     journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
-                            , location, MGRevenueCenter, familyGroup.departmentCode);
+                            , location, MGRevenueCenter, orderType, familyGroup.departmentCode);
                 }
+
+                // Credit line
+                journals = journal.checkExistence(journals, majorGroup,majorGroupAmountTotal,
+                        costCenter, MGRevenueCenter,orderType, "", "C");
             }
         }}catch(Exception e){e.getMessage();}
     }
@@ -304,6 +308,8 @@ public class CostOfGoodsService {
 
                     if (familyGroup != null && !familyGroup.familyGroup.equals("")) {
                         description = journal.getMajorGroup().getMajorGroup() + " Cost-" + revenueCenter.getRevenueCenter();
+                        if(!journal.getOrderType().getOrderType().equals(""))
+                            description += " " + journal.getOrderType().getOrderType();
                     } else {
                         description = batch.getLocation().costCenterReference + " " + journal.getMajorGroup().getMajorGroup();
                     }

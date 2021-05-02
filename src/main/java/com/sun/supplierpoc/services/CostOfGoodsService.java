@@ -308,7 +308,7 @@ public class CostOfGoodsService {
 
                     if (familyGroup != null && !familyGroup.familyGroup.equals("")) {
                         description = journal.getMajorGroup().getMajorGroup() + " Cost-" + revenueCenter.getRevenueCenter();
-                        if(!journal.getOrderType().getOrderType().equals(""))
+                        if(journal.getOrderType() != null && !journal.getOrderType().getOrderType().equals(""))
                             description += " " + journal.getOrderType().getOrderType();
                     } else {
                         description = batch.getLocation().costCenterReference + " " + journal.getMajorGroup().getMajorGroup();

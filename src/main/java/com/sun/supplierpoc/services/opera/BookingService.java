@@ -237,7 +237,7 @@ public class BookingService {
             File file = new File(filePath);
 
             FileInputStream input = new FileInputStream(file);
-            List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcel(syncJob, input,
+            List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcelV2(syncJob, input,
                     generalSettings, bookingConfiguration);
 
             syncJob.setStatus(Constants.SUCCESS);

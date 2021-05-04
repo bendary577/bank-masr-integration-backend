@@ -1,8 +1,8 @@
 package com.sun.supplierpoc.fileDelimiterExporters;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.util.ArrayList;
+        import java.io.*;
+        import java.nio.file.Files;
+        import java.util.ArrayList;
 
 public class GeneralExporterMethods {
     private String fileName;
@@ -118,8 +118,8 @@ public class GeneralExporterMethods {
                             this.fileContent.append('\n');
                     }
                     if( !(line.length()<50) || !version.equals("1")){
-                    this.fileContent.append(line);
-                    this.fileContent.append(ls);}
+                        this.fileContent.append(line);
+                        this.fileContent.append(ls);}
 
                     version = "1";
                 }

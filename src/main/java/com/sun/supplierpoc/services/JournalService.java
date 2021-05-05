@@ -532,8 +532,12 @@ public class JournalService {
                             float cost = conversions.convertStringToFloat(cols.get(columns.indexOf("actual_usage")).getText());
                             if(cost == 0)
                                 continue;
-                            totalCost += cost;
-                            costCenterTotalCost += cost;
+
+                            if(costCenterExist){
+                                costCenterTotalCost += cost;
+                            }else{
+                                totalCost += cost;
+                            }
 
                             // Debit line
                             if(costCenterExist){

@@ -1,22 +1,28 @@
 package com.sun.supplierpoc.services.AmazonPaymentServices;
 
 import com.sun.supplierpoc.models.amazonPayment.AmazonPaymentServiceBody;
+import com.sun.supplierpoc.models.opera.TransactionRequest;
+import com.sun.supplierpoc.models.opera.TransactionResponse;
 import org.apache.commons.collections4.map.HashedMap;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -24,7 +30,60 @@ import java.util.stream.Collectors;
 @Service
 public class AmazonPaymentService {
 
-    public void amazonPaymentService(AmazonPaymentServiceBody amazonPaymentServiceBody) throws IOException {
+    public String amazonPaymentSendTokenization(String signature, String cardNumber, String cardSecurityCode,
+                                              String orderId) throws IOException {
+
+        HttpClient httpclient = HttpClients.createDefault();
+        HttpPost url = new HttpPost("https://sbcheckout.PayFort.com/FortAPI/paymentPage");
+        String tokenName = "";
+
+        ArrayList<NameValuePair> params = new ArrayList();
+        params.add(new BasicNameValuePair("service_command", "TOKENIZATION"));
+        params.add(new BasicNameValuePair("access_code", "Y6lL5f0wvaKSxdM8jsjr"));
+        params.add(new BasicNameValuePair("merchant_identifier", "f0db228a"));
+        params.add(new BasicNameValuePair("merchant_reference", orderId));
+        params.add(new BasicNameValuePair("language", "en"));
+        params.add(new BasicNameValuePair("expiry_date", "2105"));
+        params.add(new BasicNameValuePair("card_number", cardNumber));
+        params.add(new BasicNameValuePair("card_security_code", cardSecurityCode));
+        params.add(new BasicNameValuePair("signature", signature));
+
+        url.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+
+        //Execute and get the response.
+        HttpResponse response = httpclient.execute(url);
+        HttpEntity entity = response.getEntity();
+
+        if (entity != null) {
+            try (InputStream instream = entity.getContent()) {
+                // do something useful
+            }
+        }
+        return tokenName;
+    }
+
+    public TransactionResponse amazonPaymentService(TransactionRequest transactionRequest){
+        TransactionResponse transactionResponse = new TransactionResponse();
+        transactionResponse.setSequenceNo(transactionRequest.getSequenceNo());
+        transactionResponse.setTransType(transactionRequest.getTransType());
+        transactionResponse.setTransAmount(transactionRequest.getTransAmount());
+
+        transactionResponse.setRespCode("00");
+        transactionResponse.setRespText("APPROVAL");
+        transactionResponse.setpAN("XXXXXXXXXXXXXX2811");
+        transactionResponse.setExpiryDate("2212");
+        transactionResponse.setTransToken("131111111111112811");
+        transactionResponse.setEntryMode("01");
+        transactionResponse.setIssuerId("01");
+        transactionResponse.setrRN("000000000311");
+        transactionResponse.setOfflineFlag("N");
+        transactionResponse.setMerchantId("1");
+        transactionResponse.setdCCIndicator("0");
+        transactionResponse.setTerminalId("1");
+        return transactionResponse;
+    }
+
+    public void amazonPaymentTokenization(AmazonPaymentServiceBody amazonPaymentServiceBody) throws IOException {
 
 //        String url = "https://sbcheckout.PayFort.com/FortAPI/paymentPage";
         String url = "https://sbpaymentservices.payfort.com/FortAPI/paymentApi";

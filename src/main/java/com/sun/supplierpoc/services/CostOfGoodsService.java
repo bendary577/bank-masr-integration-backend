@@ -112,7 +112,7 @@ public class CostOfGoodsService {
                                     response.setStatus(false);
                                     response.setMessage(dateResponse.getMessage());
                                     return response;
-                                } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                                } else{
                                     continue;
                                 }
                             }
@@ -126,10 +126,11 @@ public class CostOfGoodsService {
                                 response.setStatus(false);
                                 response.setMessage(dateResponse.getMessage());
                                 return response;
-                            } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                            } else {
                                 continue;
                             }
                         }
+
                         fetchCostOfGoodsRows(majorGroups, location, revenueCenter, null, journals, driver);
                     }
                 }
@@ -200,8 +201,8 @@ public class CostOfGoodsService {
 
                 MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
 
-                if(orderType != null)
-                    MGRevenueCenter.setAccountCode(orderType.getAccount());
+//                if(orderType != null)
+//                    MGRevenueCenter.setAccountCode(orderType.getAccount());
 
                 CostCenter costCenter = new CostCenter();
                 List<CostCenter> costCenters = majorGroup.getCostCenters();
@@ -237,7 +238,7 @@ public class CostOfGoodsService {
                     if (familyGroup.familyGroup.equals(""))
                         continue;
 
-                    majorGroupAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText());
+                    majorGroupAmount = Math.abs(conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText()));
                     majorGroupAmountTotal += majorGroupAmount;
 
                     journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
@@ -292,7 +293,11 @@ public class CostOfGoodsService {
                         costData.put("inventoryAccount", costCenter.accountCode);
                     }else{ // Per over group or FG per revenue center
                         costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost() * -1)));
-                        costData.put("expensesAccount", revenueCenter.getAccountCode());
+                        if(journal.getOrderType() != null && !journal.getOrderType().getOrderType().equals("")){
+                            costData.put("expensesAccount", journal.getOrderType().getAccount());
+                        }else{
+                            costData.put("expensesAccount", revenueCenter.getAccountCode());
+                        }
                     }
 
                     costData.put("fromLocation", batch.getLocation().accountCode);

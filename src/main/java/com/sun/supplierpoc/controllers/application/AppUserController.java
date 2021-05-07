@@ -124,8 +124,14 @@ public class AppUserController {
                     applicationUser.setLastUpdate(new Date());
                     applicationUser.setDeleted(false);
 
+//                    String codeBuild = applicationUser.getName() + " " + group.getName() + " " + new Date().toString();
+//                    Base64.Encoder encoder = Base64.getEncoder().withoutPadding();
+//                    byte[] encodedBytes = Base64.getEncoder().encode(codeBuild.getBytes());
+//                    String code = new String(encodedBytes);
+
                     Random random = new Random();
                     String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
+
                     String accountLogo = account.getImageUrl();
                     String groupLogo = group.getLogoUrl();
                     String QRPath = "QRCodes/" + code + ".png";
@@ -364,15 +370,15 @@ public class AppUserController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
-//
-//    @GetMapping(path = "/generateAndDownloadQRCode")
-//    public void generateAndDownloadQRCode(
-//            @RequestParam(name = "codeText") String codeText,
-//            @RequestParam(name = "width") Integer width,
-//            @RequestParam(name = "height") Integer height)
-//            throws Exception {
-//        qrCodeGenerator.generateQRCodeImage(codeText, width, height, QR_CODE_IMAGE_PATH);
-//    }
+
+    @GetMapping(path = "/generateAndDownloadQRCode")
+    public void generateAndDownloadQRCode(
+            @RequestParam(name = "codeText") String codeText,
+            @RequestParam(name = "width") Integer width,
+            @RequestParam(name = "height") Integer height)
+            throws Exception {
+        qrCodeGenerator.getQRCodeImage(codeText, width, height, "C:\\Users\\basse\\.Bassel Work Space\\infor-sun-poc\\src\\main\\resources\\Qr.png");
+    }
 
 //    @GetMapping(value = "/Simphony/generateQRCode")
 //    public ResponseEntity<byte[]> generateQRCode(

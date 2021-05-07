@@ -896,7 +896,7 @@ public class SalesService {
                 saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
                 float majorGroupGrossTotal = majorGroupJournal.getTotalCost();
-                totalMajorGroupNet += majorGroupGrossTotal;
+                totalMajorGroupNet += Math.abs(majorGroupGrossTotal);
             }
 
             // Save taxes {Credit}

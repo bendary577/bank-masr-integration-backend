@@ -40,23 +40,26 @@ public class Journal {
         this.totalTransfer = totalTransfer;
     }
 
-    private Journal(MajorGroup majorGroup, FamilyGroup familyGroup, float totalCost, CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode) {
+    private Journal(MajorGroup majorGroup, FamilyGroup familyGroup,
+                    float totalCost, CostCenter costCenter, RevenueCenter revenueCenter, OrderType orderType, String departmentCode) {
         this.majorGroup = majorGroup;
         this.familyGroup = familyGroup;
         this.totalCost = totalCost;
         this.costCenter = costCenter;
         this.revenueCenter = revenueCenter;
         this.departmentCode = departmentCode;
+        this.orderType = orderType;
     }
 
     private Journal(MajorGroup majorGroup, float totalCost,
-                    CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode, String DCMarker) {
+                    CostCenter costCenter, RevenueCenter revenueCenter, String departmentCode, OrderType orderType, String DCMarker) {
         this.majorGroup = majorGroup;
         this.totalCost = totalCost;
         this.costCenter = costCenter;
         this.revenueCenter = revenueCenter;
         this.departmentCode = departmentCode;
         this.DCMarker = DCMarker;
+        this.orderType = orderType;
     }
 
     private Journal(MajorGroup majorGroup, float totalWaste, float totalCost, float totalTransfer,
@@ -109,7 +112,7 @@ public class Journal {
             }
         }
 
-        journals.add(new Journal(majorGroup, cost, costCenter, revenueCenter, departmentCode, DCMarker));
+        journals.add(new Journal(majorGroup, cost, costCenter, revenueCenter, departmentCode, orderType, DCMarker));
         return journals;
     }
 
@@ -131,7 +134,7 @@ public class Journal {
             }
         }
 
-        journals.add(new Journal(majorGroup, familyGroup, cost, costCenter, revenueCenter, departmentCode));
+        journals.add(new Journal(majorGroup, familyGroup, cost, costCenter, revenueCenter, orderType, departmentCode));
         return journals;
 
     }

@@ -328,10 +328,10 @@ public class ExcelHelper {
 
                         bookingDetails.paymentType = bookingType.getTypeId();
                     }
-                    else if (cellIdx == columnsName.indexOf("Rate Code")) {
-                        typeName = (currentCell.getStringCellValue());
+//                    else if (cellIdx == columnsName.indexOf("Rate Code")) {
+//                        typeName = (currentCell.getStringCellValue());
 //                        rateCode = conversions.checkRateCodeExistence(rateCodes, typeName);
-                    }
+//                    }
 
                     cellIdx++;
                 }

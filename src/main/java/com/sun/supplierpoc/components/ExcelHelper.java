@@ -142,7 +142,7 @@ public class ExcelHelper {
         ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
         ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
 
-        ArrayList<RateCode> rateCodes = generalSettings.getRateCodes();
+//        ArrayList<RateCode> rateCodes = generalSettings.getRateCodes();
 
         String typeName;
         BookingType bookingType;
@@ -157,6 +157,10 @@ public class ExcelHelper {
         int noOfRooms = 0;
 
         RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
 
         BookingDetails bookingDetails;
 
@@ -201,12 +205,26 @@ public class ExcelHelper {
                         bookingDetails.reservationStatus = typeName;
                     }
                     else if (cellIdx == columnsName.indexOf("Arrival Date")) {
-                        arrivalDate = currentCell.getDateCellValue();
-                        bookingDetails.checkInDate = (dateFormat.format(arrivalDate));
+                        try{
+                            if (!currentCell.getStringCellValue().equals("")){
+                                arrivalDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                                bookingDetails.checkInDate = (dateFormat.format(arrivalDate));
+                            }
+                        } catch (Exception e) {
+                            arrivalDate = currentCell.getDateCellValue();
+                            bookingDetails.checkInDate = (dateFormat.format(arrivalDate));
+                        }
                     }
                     else if (cellIdx == columnsName.indexOf("Departure Date")) {
-                        departureDate = currentCell.getDateCellValue();
-                        bookingDetails.checkOutDate = dateFormat.format(departureDate);
+                        try{
+                            if (!currentCell.getStringCellValue().equals("")){
+                                departureDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                                bookingDetails.checkOutDate = (dateFormat.format(departureDate));
+                            }
+                        } catch (Exception e) {
+                            departureDate = currentCell.getDateCellValue();
+                            bookingDetails.checkOutDate = dateFormat.format(departureDate);
+                        }
                     }
                     else if (cellIdx == columnsName.indexOf("Arrival Time")) {
                         try {
@@ -312,7 +330,7 @@ public class ExcelHelper {
                     }
                     else if (cellIdx == columnsName.indexOf("Rate Code")) {
                         typeName = (currentCell.getStringCellValue());
-                        rateCode = conversions.checkRateCodeExistence(rateCodes, typeName);
+//                        rateCode = conversions.checkRateCodeExistence(rateCodes, typeName);
                     }
 
                     cellIdx++;

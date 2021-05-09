@@ -397,9 +397,10 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
-    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, GeneralSettings generalSettings, InputStream is) {
+    public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, GeneralSettings generalSettings,
+                                                       SyncJobType syncJobType, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
-        ArrayList<RateCode> rateCodes = generalSettings.getRateCodes();
+//        ArrayList<RateCode> rateCodes = generalSettings.getRateCodes();
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
         ArrayList<BookingType> cancelReasons = generalSettings.getCancelReasons();
 
@@ -415,6 +416,10 @@ public class ExcelHelper {
         int noOfRooms = 0;
 
         RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
 
         try {
             XSSFWorkbook workbook = new XSSFWorkbook(is);
@@ -428,6 +433,7 @@ public class ExcelHelper {
             CancelBookingDetails bookingDetails;
 
             float paymentAmount = 0;
+            float transactionAmount = 0;
             String paymentTypeName;
             BookingType paymentType;
 
@@ -436,6 +442,7 @@ public class ExcelHelper {
 
             Date arrivalDate = null;
             Date departureDate = null;
+            Date cancelDate = null;
 
             ArrayList<String> columnsName = new ArrayList<>();
 
@@ -469,7 +476,6 @@ public class ExcelHelper {
                         bookingDetails.cancelReason = cancelReason.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Chargeable Days")) {
                         nights = (int) (currentCell.getNumericCellValue());
-                        bookingDetails.chargeableDays = String.valueOf((int) (currentCell.getNumericCellValue()));
                     } else if (cellIdx == columnsName.indexOf("Daily Rate")) {
                         roomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
                     } else if (cellIdx == columnsName.indexOf("Discount Amount")) {
@@ -484,26 +490,49 @@ public class ExcelHelper {
                         bookingDetails.paymentType = paymentType.getTypeId();
                     } else if (cellIdx == columnsName.indexOf("Pay Amount")) {
                         paymentAmount = (float) (currentCell.getNumericCellValue());
-
-                        bookingDetails.cancelWithCharges = "1";
-//                        if (paymentAmount > 0)
-//                            bookingDetails.cancelWithCharges = "1";
-//                        else {
-//                            bookingDetails.cancelWithCharges = "0";
-//                        }
-
+                    } else if (cellIdx == columnsName.indexOf("Transaction Amount")) {
+                        transactionAmount = (float) (currentCell.getNumericCellValue());
                     } else if (cellIdx == columnsName.indexOf("Arrival Date")) {
-                        arrivalDate = currentCell.getDateCellValue();
+                        try{
+                            if (!currentCell.getStringCellValue().equals("")){
+                                arrivalDate  = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                            }
+                        } catch (Exception e) {
+                            arrivalDate = currentCell.getDateCellValue();
+                        }
                     } else if (cellIdx == columnsName.indexOf("Departure Date")) {
-                        departureDate = currentCell.getDateCellValue();
-                    } else if (cellIdx == columnsName.indexOf("Rate Code")) {
-                        typeName = (currentCell.getStringCellValue());
-                        rateCode = conversions.checkRateCodeExistence(rateCodes, typeName);
-                    } else if (cellIdx == columnsName.indexOf("No. of Rooms")) {
+                        try{
+                            if (!currentCell.getStringCellValue().equals("")){
+                                departureDate  = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                            }
+                        } catch (Exception e) {
+                            departureDate = currentCell.getDateCellValue();
+                        }
+                    } else if (cellIdx == columnsName.indexOf("Cancel Date")) {
+                        try{
+                            if (!currentCell.getStringCellValue().equals("")){
+                                cancelDate  = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                            }
+                        } catch (Exception e) {
+                            cancelDate = currentCell.getDateCellValue();
+                        }
+                    }
+//                    else if (cellIdx == columnsName.indexOf("Rate Code")) {
+//                        typeName = (currentCell.getStringCellValue());
+//                        rateCode = conversions.checkRateCodeExistence(rateCodes, typeName);
+//                    }
+                    else if (cellIdx == columnsName.indexOf("No. of Rooms")) {
                         noOfRooms = (int)currentCell.getNumericCellValue();
                     }
 
                     cellIdx++;
+                }
+
+                // 1=Yes, 2=No
+                if (paymentAmount > 0 || transactionAmount > 0)
+                    bookingDetails.cancelWithCharges = "1";
+                else {
+                    bookingDetails.cancelWithCharges = "2";
                 }
 
                 if (bookingDetails.cancelWithCharges.equals("1")) {
@@ -520,6 +549,7 @@ public class ExcelHelper {
                     bookingDetails.dailyRoomRate = String.valueOf(roomRate + rateCode.basicPackageValue);
                     bookingDetails.totalRoomRate = String.valueOf(totalRoomRate);
                     bookingDetails.grandTotal = String.valueOf(grandTotal);
+                    bookingDetails.chargeableDays = String.valueOf((int) (nights));
 
                     if (arrivalDate != null && departureDate != null) {
                         bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);
@@ -562,8 +592,8 @@ public class ExcelHelper {
             e.printStackTrace();
         }
         return syncJobDataList;
-    }
 
+    }
     public List<SyncJobData> getOccupancyFromExcel(SyncJob syncJob, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");

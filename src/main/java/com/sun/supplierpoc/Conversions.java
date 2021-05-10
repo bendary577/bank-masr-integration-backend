@@ -395,6 +395,13 @@ public class Conversions {
         return Float.parseFloat(temp);
     }
 
+    public float roundUpFloat2Digest(float value){
+        DecimalFormat df = new DecimalFormat("###.##");
+        String temp = df.format(value);
+        temp = temp.toLowerCase().replaceAll(",", "");
+        return Float.parseFloat(temp);
+    }
+
     public String getTransactionDate(String businessDate, String fromDate){
         SimpleDateFormat inMonthFormatter = new SimpleDateFormat("M");
         SimpleDateFormat outMonthFormatter = new SimpleDateFormat("MM");
@@ -493,6 +500,7 @@ public class Conversions {
         }
         return camelCaseString;
     }
+
     static String toProperCase(String s) {
         return s.substring(0, 1).toLowerCase() +
                 s.substring(1).toLowerCase();

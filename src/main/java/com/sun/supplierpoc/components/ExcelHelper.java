@@ -756,7 +756,7 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
-            int roomNo = 0;
+            String roomNo = "";
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
@@ -796,7 +796,11 @@ public class ExcelHelper {
                         }
 
                     } else if (cellIdx == columnsName.indexOf("Room No.")) {
-                        roomNo = (int)currentCell.getNumericCellValue();
+                        try{
+                            roomNo = String.valueOf(currentCell.getNumericCellValue());
+                        } catch (Exception e) {
+                            roomNo = currentCell.getStringCellValue();
+                        }
                     } else if (cellIdx == columnsName.indexOf("Transaction Date")) {
                         Date updateDate = currentCell.getDateCellValue();
                         if (updateDate != null)
@@ -900,7 +904,13 @@ public class ExcelHelper {
         float municipalityTax= 0;
         float vat = 0;
         float serviceCharge = 0;
+        float municipalityTaxPercent= 0;
+        float vatPercent = 0;
+        float serviceChargePercent = 0;
+
         float unitPrice = 0;
+        String generates = "";
+        String[] generatesArray;
 
         ArrayList<String> neglectedGroupCodes = configuration.neglectedGroupCodes;
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
@@ -919,7 +929,7 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
-            int roomNo = 0;
+            String roomNo = "";
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
@@ -932,6 +942,7 @@ public class ExcelHelper {
             expenseItem = new ExpenseItem();
 
             while (rows.hasNext()) {
+                serviceChargePercent = 0; vatPercent = 0; municipalityTaxPercent = 0;
                 currentRow = rows.next();
                 if (rowNumber == 0) {
                     cellsInRow = currentRow.iterator();
@@ -960,22 +971,53 @@ public class ExcelHelper {
                         }
 
                     } else if (cellIdx == columnsName.indexOf("Room No.")) {
-                        roomNo = (int)currentCell.getNumericCellValue();
+                        try{
+                            roomNo = String.valueOf((int)currentCell.getNumericCellValue());
+                        } catch (Exception e) {
+                            roomNo = currentCell.getStringCellValue();
+                        }
                     } else if (cellIdx == columnsName.indexOf("Transaction Date")) {
-                        Date updateDate = currentCell.getDateCellValue();
-                        if (updateDate != null)
-                            expenseItem.expenseDate = dateFormat.format(updateDate);
+                        try{
+                            if (!currentCell.getStringCellValue().equals("")){
+                                Date updateDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                                if (updateDate != null)
+                                    expenseItem.expenseDate = dateFormat.format(updateDate);
+                            }
+                        } catch (Exception e) {
+                            Date updateDate = currentCell.getDateCellValue();
+                            if (updateDate != null)
+                                expenseItem.expenseDate = dateFormat.format(updateDate);
+                        }
                     } else if (cellIdx == columnsName.indexOf("Transaction Amount")) {
                         transactionAmount = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
                     } else if (cellIdx == columnsName.indexOf("Payment Method")) {
                         typeName = (currentCell.getStringCellValue());
                         paymentType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
-                    } else if (cellIdx == columnsName.indexOf("Transaction Code Description")) {
-                        typeName = (currentCell.getStringCellValue());
+                    } else if (cellIdx == columnsName.indexOf("Transaction Code")) {
+                        typeName = String.valueOf((int)currentCell.getNumericCellValue());
                         paymentType = conversions.checkExpenseTypeExistence(expenseTypes, typeName);
-                        transactionDescription = typeName;
-                    }else if (cellIdx == columnsName.indexOf("Code Group")) {
+                        transactionDescription = paymentType.getTypeId();
+                    } else if (cellIdx == columnsName.indexOf("Code Group")) {
                         groupCodeDescription = (currentCell.getStringCellValue());
+                    } else if (cellIdx == columnsName.indexOf("Generates")) {
+                        try {
+                            generates = currentCell.getStringCellValue();
+                            generates = generates.replaceAll(",", "").replaceAll("\\s", "");
+                            generatesArray = generates.split("%");
+                            if(generatesArray.length >= 1 && !generatesArray[generatesArray.length -1].equals("")){
+                                try {
+                                    vatPercent = Integer.parseInt(generatesArray[generatesArray.length -1])/100;
+                                } catch (Exception e) {
+                                    vatPercent = 0;
+                                }
+                            }
+                            if(generatesArray.length >= 2 && !generatesArray[generatesArray.length -2].equals(""))
+                                municipalityTaxPercent = Integer.parseInt(generatesArray[generatesArray.length -2])/100;
+                            if(generatesArray.length >= 3 && !generatesArray[generatesArray.length -3].equals(""))
+                                serviceChargePercent = Integer.parseInt(generatesArray[generatesArray.length -3])/100;
+                        } catch (Exception e) {
+                            vatPercent = (float) currentCell.getNumericCellValue();
+                        }
                     }
                     cellIdx++;
                 }
@@ -985,16 +1027,18 @@ public class ExcelHelper {
                     continue;
 
                 unitPrice = transactionAmount;
-                serviceCharge = (transactionAmount * 10) / 100;
-                vat = ((transactionAmount + serviceCharge) * 5) / 100;
-                municipalityTax = (transactionAmount * 7) / 100;
+
+                // Round up to nearest 2 digests
+                serviceCharge = conversions.roundUpFloat2Digest(transactionAmount * serviceChargePercent);
+                municipalityTax = conversions.roundUpFloat2Digest(transactionAmount * municipalityTaxPercent);
+                vat = conversions.roundUpFloat2Digest((transactionAmount + municipalityTax) * vatPercent);
 
                 expenseItem.cuFlag = "1";
                 expenseItem.discount = "0";
 
                 expenseObject.roomNo = roomNo;
                 expenseItem.paymentType = paymentType.getTypeId();
-                expenseItem.expenseTypeId = paymentType.getTypeId();
+                expenseItem.expenseTypeId = transactionDescription;
 
                 expenseItem.vat = String.valueOf(vat);
                 expenseItem.municipalityTax = String.valueOf(municipalityTax);

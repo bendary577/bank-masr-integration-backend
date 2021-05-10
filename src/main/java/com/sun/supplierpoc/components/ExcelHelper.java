@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.components;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
@@ -398,13 +399,16 @@ public class ExcelHelper {
     }
 
     public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, GeneralSettings generalSettings,
-                                                       SyncJobType syncJobType, InputStream is) {
+                                                       SyncJobType syncJobType, SyncJobType newBookingSyncType,
+                                                       InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
 //        ArrayList<RateCode> rateCodes = generalSettings.getRateCodes();
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
         ArrayList<BookingType> cancelReasons = generalSettings.getCancelReasons();
 
         String typeName;
+        String status = "";
+        String reason = "";
 
         float roomRate = 0;
         float totalRoomRate = 0;
@@ -447,6 +451,9 @@ public class ExcelHelper {
             ArrayList<String> columnsName = new ArrayList<>();
 
             while (rows.hasNext()) {
+                status = "";
+                reason = "";
+
                 currentRow = rows.next();
 
                 // skip header
@@ -549,23 +556,25 @@ public class ExcelHelper {
                     bookingDetails.dailyRoomRate = String.valueOf(roomRate + rateCode.basicPackageValue);
                     bookingDetails.totalRoomRate = String.valueOf(totalRoomRate);
                     bookingDetails.grandTotal = String.valueOf(grandTotal);
-                    bookingDetails.chargeableDays = String.valueOf((int) (nights));
+                    bookingDetails.chargeableDays = String.valueOf(nights);
 
                     if (arrivalDate != null && departureDate != null) {
                         bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);
                     }
                 }
 
-                // check if it was new booking or update
-                ArrayList<SyncJobData> list = syncJobDataService.getSyncJobDataByBookingNo(bookingDetails.bookingNo);
+                // check if it exists in create/update booking.
+                ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo,
+                        newBookingSyncType.getId());
                 if (list.size() > 0) {
-                    // Update
-                    bookingDetails.cuFlag = "2";
                     bookingDetails.transactionId = (String) list.get(0).getData().get("transactionId");
-                } else {
-                    // New
-                    bookingDetails.cuFlag = "1";
-                    bookingDetails.transactionId = "";
+
+                    // check if it exists in cancel booking
+                    list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo, syncJobType.getId());
+                    if(list.size() > 0) // Update
+                        bookingDetails.cuFlag = "2";
+                    else // New
+                        bookingDetails.cuFlag = "1";
                 }
 
                 HashMap<String, Object> data = new HashMap<>();
@@ -580,7 +589,8 @@ public class ExcelHelper {
                     }
                 }
 
-                SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+                SyncJobData syncJobData = new SyncJobData(data, status, reason, new Date(), syncJob.getId());
+                checkCancelBookingStatus(syncJobData);
                 syncJobDataList.add(syncJobData);
             }
             workbook.close();
@@ -594,6 +604,43 @@ public class ExcelHelper {
         return syncJobDataList;
 
     }
+
+    private void checkCancelBookingStatus(SyncJobData cancelBookingDetails){
+        String status = "";
+        String reason = "";
+        HashMap<String, Object> data = cancelBookingDetails.getData();
+
+        if(data.get("transactionId").equals("")){
+            status = Constants.FAILED;
+            reason = "Can not cancel the booking, before creating it.";
+        }else{
+            if(data.get("cancelWithCharges").equals("1")){
+                if(data.get("vat").equals("0")){
+                    status = Constants.FAILED;
+                    reason = "Invalid VAT. If Cancelled with Charges then this field should not contain 0. It must be numeric (Amount) only.";
+                } else if(data.get("roomRentType").equals("0")){
+                    status = Constants.FAILED;
+                    reason = "Invalid Room Rent Type. this field should not contain 0 & It must be numeric and available in lookup list.";
+                } else if(data.get("dailyRoomRate").equals("0")){
+                    status = Constants.FAILED;
+                    reason = "Invalid Daily Room Rate. this field should not contain 0 & It must be numeric (Amount) only.";
+                } else if(data.get("totalRoomRate").equals("0")){
+                    status = Constants.FAILED;
+                    reason = "Invalid Total Room Rate. this field should not contain 0 & It must be numeric (Amount) only.";
+                } else if(data.get("grandTotal").equals("0")){
+                    status = Constants.FAILED;
+                    reason = "Invalid Grand Total. this field should not contain 0 & It must be numeric (Amount) only.";
+                } else {
+                    status = Constants.SUCCESS;
+                }
+            }else{
+                status = Constants.SUCCESS;
+            }
+        }
+        cancelBookingDetails.setReason(reason);
+        cancelBookingDetails.setStatus(status);
+    }
+
     public List<SyncJobData> getOccupancyFromExcel(SyncJob syncJob, InputStream is) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");

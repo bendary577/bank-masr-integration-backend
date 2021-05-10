@@ -414,6 +414,9 @@ public class ExcelHelper {
         float totalRoomRate = 0;
         float vat = 0;
         float municipalityTax = 0;
+        float discount = 0;
+        int discountPercent = 0;
+
         float serviceCharge = 0;
         float grandTotal = 0;
         int nights = 0;
@@ -446,7 +449,6 @@ public class ExcelHelper {
 
             Date arrivalDate = null;
             Date departureDate = null;
-            Date cancelDate = null;
 
             ArrayList<String> columnsName = new ArrayList<>();
 
@@ -486,10 +488,9 @@ public class ExcelHelper {
                     } else if (cellIdx == columnsName.indexOf("Daily Rate")) {
                         roomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
                     } else if (cellIdx == columnsName.indexOf("Discount Amount")) {
-                        bookingDetails.discount = String.valueOf((int) (currentCell.getNumericCellValue()));
-                        if (bookingDetails.discount.equals(""))
-                            bookingDetails.discount = "0";
-
+                        discount = (float) (currentCell.getNumericCellValue());
+                    } else if (cellIdx == columnsName.indexOf("Discount Percent")) {
+                        discountPercent = (int) (currentCell.getNumericCellValue());
                     } else if (cellIdx == columnsName.indexOf("Pay Method")) {
                         paymentTypeName = (currentCell.getStringCellValue());
                         paymentType = conversions.checkBookingTypeExistence(paymentTypes, paymentTypeName);
@@ -514,14 +515,6 @@ public class ExcelHelper {
                             }
                         } catch (Exception e) {
                             departureDate = currentCell.getDateCellValue();
-                        }
-                    } else if (cellIdx == columnsName.indexOf("Cancel Date")) {
-                        try{
-                            if (!currentCell.getStringCellValue().equals("")){
-                                cancelDate  = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
-                            }
-                        } catch (Exception e) {
-                            cancelDate = currentCell.getDateCellValue();
                         }
                     }
 //                    else if (cellIdx == columnsName.indexOf("Rate Code")) {
@@ -549,7 +542,17 @@ public class ExcelHelper {
 
                     totalRoomRate = (roomRate + rateCode.basicPackageValue) * nights;
                     grandTotal = roomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
-                    grandTotal = grandTotal * nights * noOfRooms;
+                    grandTotal = (grandTotal * nights * noOfRooms);
+
+                    // check if there is discount percent
+                    if(discount > 0)
+                        bookingDetails.discount = String.valueOf(discount);
+                    else if (discountPercent > 0){
+                        discount = (grandTotal * discountPercent) / 100;
+                        bookingDetails.discount = String.valueOf(discount);
+                    }
+
+                    grandTotal = grandTotal - discount;
 
                     bookingDetails.vat = String.valueOf(vat);
                     bookingDetails.municipalityTax = String.valueOf(municipalityTax);

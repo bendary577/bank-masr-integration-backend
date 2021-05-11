@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.services.AmazonPaymentServices;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.amazonPayment.AmazonPaymentServiceBody;
+import okhttp3.*;
 import org.apache.commons.collections4.map.HashedMap;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -10,19 +12,81 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
 import java.io.IOException;
+
+import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
 public class AmazonPaymentService {
+
+    public String getSignature(HashedMap requestSignature) {
+
+        Map<String, Object> requestMap = requestSignature;
+
+        try {
+
+            //order by key
+            requestMap = requestMap.entrySet().stream().sorted(Map.Entry.comparingByKey())
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
+
+            String requestString = Constants.SIGNATURE_PHRASE;
+
+            for (Map.Entry<String, Object> entry : requestMap.entrySet())
+                requestString += entry.getKey() + "=" + entry.getValue();
+            requestString += Constants.SIGNATURE_PHRASE;
+
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hashed = digest.digest(requestString.getBytes(StandardCharsets.UTF_8));
+            String signature = javax.xml.bind.DatatypeConverter.printHexBinary(hashed);
+            LoggerFactory.getLogger(AmazonPaymentService.class).info(signature);
+            return signature;
+
+        } catch (Exception e) {
+
+            LoggerFactory.getLogger(AmazonPaymentService.class).info(e.getMessage());
+            throw new RuntimeException("Can't build signature!.");
+
+        }
+    }
+
+    public void amazonPaymentSendTokenization(String signature) throws IOException {
+
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
+
+        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+        RequestBody body = RequestBody.create(mediaType,
+                "service_command=TOKENIZATION&" +
+                        "access_code=Y6lL5f0wvaKSxdM8jsjr&" +
+                        "merchant_identifier=f0db228a&" +
+                        "merchant_reference=OR113&" +
+                        "language=en&expiry_date=2105&" +
+                        "card_number=4005550000000001&" +
+                        "card_security_code=123&" +
+                        "signature=2C6FE3370926DC8145E6E8966A13AA17EDF23DF1FC61F3556CFFC30231737352&" +
+                        "return_url=http://localhost:8081/amazon/acceptRequest");
+
+        Request request = new Request.Builder()
+                .url("https://sbcheckout.PayFort.com/FortAPI/paymentPage")
+                .method("POST", body)
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .addHeader("Cookie", "JSESSIONID=-uiWCUJFPPy4nUXpuay2kbhoPnct4bPWOI6aaeNs.ip-10-50-212-94; __cfduid=d5d92041f141dc35b692d20d41ef9215c1617632522")
+                .build();
+
+        Response response = client.newCall(request).execute();
+
+        System.out.println(response.body().string());
+
+    }
+
 
     public void amazonPaymentService(AmazonPaymentServiceBody amazonPaymentServiceBody) throws IOException {
 
@@ -81,49 +145,4 @@ public class AmazonPaymentService {
 
     }
 
-
-    public String getSignature(HashedMap c){
-
-        Map<String, Object> requestMap = c;
-
-//        requestMap.put("command", "AUTHORIZATION");
-//        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
-//        requestMap.put("merchant_identifier", "f0db228a");
-//        requestMap.put("merchant_reference", "or102251");
-//        requestMap.put("amount", "100000");
-//        requestMap.put("currency", "SAR");
-//        requestMap.put("language", "en");
-//        requestMap.put("customer_email", "basel@yahoo.com");
-//        requestMap.put("customer_ip", "2001:0db8:3042:0002:5a55:caff:fef6:bdbf");
-//        requestMap.put("token_name", "749ee1fbe97049a69cfe6926b39372c3");
-
-//        requestMap.put("service_command", "TOKENIZATION");
-//        requestMap.put("access_code", "Y6lL5f0wvaKSxdM8jsjr");
-//        requestMap.put("merchant_identifier", "f0db228a");
-//        requestMap.put("merchant_reference", "or102251");
-//        requestMap.put("language", "en");
-//        requestMap.put("return_url", "http://localhost:8081/amazon/acceptRequest");
-
-        try {
-
-            //order by key
-            requestMap = requestMap.entrySet().stream().sorted(Map.Entry.comparingByKey())
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                            (oldValue, newValue) -> oldValue, LinkedHashMap::new));
-
-            String requestString = "68D2fyokjF9UCt2x45V7SD(@";
-
-            for (Map.Entry<String, Object> entry : requestMap.entrySet())
-                requestString += entry.getKey() + "=" + entry.getValue();
-            requestString += "68D2fyokjF9UCt2x45V7SD(@";
-
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashed = digest.digest(requestString.getBytes(StandardCharsets.UTF_8));
-            String signature = javax.xml.bind.DatatypeConverter.printHexBinary(hashed);
-            LoggerFactory.getLogger(AmazonPaymentService.class).info(signature);
-            return signature;
-        }catch(Exception e){
-            return "";
-        }
-    }
 }

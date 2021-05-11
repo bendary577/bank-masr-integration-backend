@@ -185,6 +185,11 @@ public class Constants {
     public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
     public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
 
+    //////////////////////////////////////////////// AMAZON PAYMENT /////////////////////////////////////////////////////
+
+    public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
+
+
 
     public Constants() {}
 }

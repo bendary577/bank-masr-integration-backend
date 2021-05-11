@@ -58,7 +58,8 @@ public class PaymentController {
         return new MappingJackson2XmlHttpMessageConverter(mapper);
     }
 
-    @PostMapping(value = "/opera/operaPayment",produces = MediaType.APPLICATION_XML_VALUE)
+    //paymentTest/opera/operaPayment
+    @PostMapping(value = "/paymentTest", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public TransactionResponse operaPayment(@RequestBody TransactionRequest transactionRequest) {
 

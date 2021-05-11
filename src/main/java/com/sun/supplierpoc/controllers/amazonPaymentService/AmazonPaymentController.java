@@ -24,7 +24,9 @@ public class AmazonPaymentController {
     @RequestMapping("/auth")
     public ResponseEntity authRequest(@RequestBody HashedMap obj){
 
+
         try{
+
 
             String signature = amazonPaymentService.getSignature(obj);
 

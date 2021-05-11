@@ -1,52 +1,40 @@
 package com.sun.supplierpoc.services.AmazonPaymentServices;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.message.BasicNameValuePair;
+import okhttp3.*;
 import org.springframework.stereotype.Service;
-
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class AmazonSendForm {
 
     public void amazonPaymentSendTokenization(String signature) throws IOException {
 
-        HttpClient httpclient = HttpClients.createDefault();
-        HttpPost httppost = new HttpPost("https://sbcheckout.PayFort.com/FortAPI/paymentPage");
+        OkHttpClient client = new OkHttpClient().newBuilder()
+                .build();
 
-        // Request parameters and other properties.
-        List<NameValuePair> params = new ArrayList<NameValuePair>(9);
-        params.add(new BasicNameValuePair("service_command", "TOKENIZATION"));
-        params.add(new BasicNameValuePair("access_code", "Y6lL5f0wvaKSxdM8jsjr"));
-        params.add(new BasicNameValuePair("merchant_identifier", "f0db228a"));
-        params.add(new BasicNameValuePair("merchant_reference", "or102250"));
-        params.add(new BasicNameValuePair("language", "en"));
-        params.add(new BasicNameValuePair("expiry_date", "2105"));
-        params.add(new BasicNameValuePair("card_number", "4005550000000001"));
-        params.add(new BasicNameValuePair("card_security_code", "123"));
-        params.add(new BasicNameValuePair("signature", signature));
-        params.add(new BasicNameValuePair("return_url", "http://localhost:8081/amazon/acceptRequest"));
+        MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+        RequestBody body = RequestBody.create(mediaType,
+                "service_command=TOKENIZATION&" +
+                        "access_code=Y6lL5f0wvaKSxdM8jsjr&" +
+                        "merchant_identifier=f0db228a&" +
+                        "merchant_reference=OR113&" +
+                        "language=en&expiry_date=2105&" +
+                        "card_number=4005550000000001&" +
+                        "card_security_code=123&" +
+                        "signature=2C6FE3370926DC8145E6E8966A13AA17EDF23DF1FC61F3556CFFC30231737352&" +
+                        "return_url=http://localhost:8081/amazon/acceptRequest");
 
-        httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
+        Request request = new Request.Builder()
+                .url("https://sbcheckout.PayFort.com/FortAPI/paymentPage")
+                .method("POST", body)
+                .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                .addHeader("Cookie", "JSESSIONID=-uiWCUJFPPy4nUXpuay2kbhoPnct4bPWOI6aaeNs.ip-10-50-212-94; __cfduid=d5d92041f141dc35b692d20d41ef9215c1617632522")
+                .build();
 
-        //Execute and get the response.
-        HttpResponse response = httpclient.execute(httppost);
-        HttpEntity entity = response.getEntity();
+        Response response = client.newCall(request).execute();
 
-        if (entity != null) {
-            try (InputStream instream = entity.getContent()) {
-                // do something useful
-            }
-        }
+        System.out.println(response.body().string());
 
     }
+
 }

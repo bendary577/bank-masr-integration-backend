@@ -48,6 +48,8 @@ public class CostOfGoodsController {
     private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
+    @Autowired
+    private ImageService imageService;
 
     public Conversions conversions = new Conversions();
 
@@ -257,8 +259,12 @@ public class CostOfGoodsController {
 
                         if (journalSyncJobType.getConfiguration().exportFilePerLocation) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
+                            for (File f : files) {
+                                imageService.storeFile(f);
+                            }
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
+                            imageService.storeFile(file);
                         }
 
                         if (ftpClient != null) {

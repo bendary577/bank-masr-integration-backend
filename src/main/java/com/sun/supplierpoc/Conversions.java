@@ -339,9 +339,9 @@ public class Conversions {
     public String checkRoomRentType(Date arrivalDate, Date departureDate){
         long diff = departureDate.getTime() - arrivalDate.getTime();
         long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
-        if(numberOfDays % 7 == 0){
+        if(numberOfDays < 30 && numberOfDays % 7 == 0){
             return "3"; //Weekly
-        }else if(numberOfDays % 30 == 0 || numberOfDays % 30 == 1){
+        }else if(numberOfDays >= 29 && (numberOfDays % 30 == 0 || numberOfDays % 30 == 1)){
             return "4"; // Monthly
         }
 
@@ -390,6 +390,13 @@ public class Conversions {
 
     public float roundUpFloat(float value){
         DecimalFormat df = new DecimalFormat("###.###");
+        String temp = df.format(value);
+        temp = temp.toLowerCase().replaceAll(",", "");
+        return Float.parseFloat(temp);
+    }
+
+    public float roundUpFloat2Digest(float value){
+        DecimalFormat df = new DecimalFormat("###.##");
         String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);
@@ -493,6 +500,7 @@ public class Conversions {
         }
         return camelCaseString;
     }
+
     static String toProperCase(String s) {
         return s.substring(0, 1).toLowerCase() +
                 s.substring(1).toLowerCase();

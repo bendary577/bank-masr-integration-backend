@@ -96,6 +96,16 @@ public class CostOfGoodsService {
 
                     if (orderTypes.size() != 0) {
                         for (OrderType orderType : orderTypes) {
+                            if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
+                                driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+                                try {
+                                    WebDriverWait wait = new WebDriverWait(driver, 60);
+                                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                                } catch (Exception ex) {
+                                    System.out.println(ex.getMessage());
+                                }
+                            }
+
                             if (setupEnvironment.runReportPerOrderType(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse, orderType)) {
                                 if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                                     driver.quit();
@@ -147,14 +157,14 @@ public class CostOfGoodsService {
     private void fetchCostOfGoodsRows(ArrayList<MajorGroup> majorGroups, CostCenter location,
                                   RevenueCenter revenueCenter, OrderType orderType,
                                   ArrayList<Journal> journals, WebDriver driver) throws CloneNotSupportedException {
-        Journal journal = new Journal();
+        try { Journal journal = new Journal();
 
         driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
         WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
         List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-        if (rows.size() < 5)
+        if (rows.size() < 4)
             return;
 
         ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
@@ -162,6 +172,7 @@ public class CostOfGoodsService {
         MajorGroup majorGroup;
         RevenueCenter MGRevenueCenter;
         String majorGroupName = "";
+        float majorGroupAmountTotal = 0;
 
         for (int i = 2; i < rows.size(); i++) {
 
@@ -174,9 +185,12 @@ public class CostOfGoodsService {
             WebElement col;
 
             col = cols.get(columns.indexOf("item_group"));
-            float majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("cogs")).getText());
+
+            float majorGroupAmount = 0;
 
             if (col.getAttribute("class").equals("header_1")) {
+                majorGroupAmountTotal = 0;
+
                 majorGroupName = col.getText().strip().toLowerCase();
                 majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
 
@@ -196,10 +210,6 @@ public class CostOfGoodsService {
                         costCenter = costCenter1;
                     }
                 }
-
-                // Credit line
-                journals = journal.checkExistence(journals, majorGroup,majorGroupAmount,
-                        costCenter, MGRevenueCenter, "", "C");
 
                 // Debit lines
                 for (int j = i + 1; j < rows.size(); j++) {
@@ -228,12 +238,17 @@ public class CostOfGoodsService {
                         continue;
 
                     majorGroupAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText());
+                    majorGroupAmountTotal += majorGroupAmount;
 
                     journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
-                            , location, MGRevenueCenter, familyGroup.departmentCode);
+                            , location, MGRevenueCenter, orderType, familyGroup.departmentCode);
                 }
+
+                // Credit line
+                journals = journal.checkExistence(journals, majorGroup,majorGroupAmountTotal,
+                        costCenter, MGRevenueCenter,orderType, "", "C");
             }
-        }
+        }}catch(Exception e){e.getMessage();}
     }
 
     public ArrayList<JournalBatch> saveCostOfGoodsData(ArrayList<JournalBatch> journalBatches, SyncJobType syncJobType, SyncJob syncJob,
@@ -293,6 +308,8 @@ public class CostOfGoodsService {
 
                     if (familyGroup != null && !familyGroup.familyGroup.equals("")) {
                         description = journal.getMajorGroup().getMajorGroup() + " Cost-" + revenueCenter.getRevenueCenter();
+                        if(journal.getOrderType() != null && !journal.getOrderType().getOrderType().equals(""))
+                            description += " " + journal.getOrderType().getOrderType();
                     } else {
                         description = batch.getLocation().costCenterReference + " " + journal.getMajorGroup().getMajorGroup();
                     }

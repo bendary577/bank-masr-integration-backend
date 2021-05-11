@@ -40,7 +40,7 @@ link: https://ubiq.co/tech-blog/increase-request-timeout-nginx/#:~:text=By%20def
        proxy_request_timeout 7200;
     }
 
-* when test simphony locally we need to provide simphony local server IP and
+* when test simphony locally need to provide simphony local server IP and
   when test in production we add public server IP.
 
 

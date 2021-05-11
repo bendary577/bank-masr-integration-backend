@@ -271,11 +271,16 @@ public class JournalController {
                         if (journalSyncJobType.getConfiguration().exportFilePerLocation) {
                             ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
                             for (File f : files) {
-                                imageService.storeFile(f);
+                                try{
+                                    imageService.storeFile(f);
+                                } catch (Exception e) {}
+
                             }
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
-                            imageService.storeFile(file);
+                            try{
+                                imageService.storeFile(file);
+                            } catch (Exception e) {}
                         }
 
                         if (ftpClient != null) {

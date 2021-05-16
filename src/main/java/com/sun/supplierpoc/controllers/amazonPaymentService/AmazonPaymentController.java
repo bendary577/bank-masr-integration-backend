@@ -57,9 +57,9 @@ public class AmazonPaymentController {
             amazonSendForm.amazonPaymentSendTokenization(signature);
 
             // Get user token
-            tokenName = amazonPaymentService.amazonPaymentSendTokenization(signature, cardNumber, cardSecurityCode, orderId);
-
-            transactionResponse =  amazonPaymentService.amazonPaymentService(transactionRequest);
+//            tokenName = amazonPaymentService.amazonPaymentSendTokenization(signature, cardNumber, cardSecurityCode, orderId);
+//
+//            transactionResponse =  amazonPaymentService.amazonPaymentService(transactionRequest);
 
             return transactionResponse;
         }catch(Exception e){

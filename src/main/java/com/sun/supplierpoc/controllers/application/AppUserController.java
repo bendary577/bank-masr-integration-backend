@@ -88,7 +88,7 @@ public class AppUserController {
                     applicationUser = new ApplicationUser();
 
                     if (groupId != null) {
-                        Optional<Group> groupOptional = groupRepo.findById(groupId);
+                         Optional<Group> groupOptional = groupRepo.findById(groupId);
                         if (groupOptional.isEmpty()) {
                             response.put("message", "User group doesn't exist");
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -226,7 +226,6 @@ public class AppUserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
-
 
     @PostMapping(path = "/resendQRCode")
     public ResponseEntity resendQRCode(@RequestPart(name = "userId", required = false) String userId,

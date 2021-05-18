@@ -69,7 +69,10 @@ public class FtpClient {
     }
 
     public boolean putFile(String file, String path) throws IOException {
-        ftp.setControlKeepAliveTimeout(120);
+        ftp.setControlKeepAliveTimeout(200);
+//        ftp.setConnectTimeout(50000);
+//         File files = new URL(file).openStream();
+
         return ftp.storeFile(path, new URL(file).openStream());
     }
 

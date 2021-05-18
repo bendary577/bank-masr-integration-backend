@@ -211,7 +211,6 @@ public class WastageController {
 //                                } catch (IOException e) {
 //                                    ftpClient.close();
 //                                }
-
 //                                if (sendFileFlag){
                             if (true){
                                     syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);

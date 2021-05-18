@@ -103,6 +103,7 @@ public class ImageService {
 
         BlobId blobId = BlobId.of(bucketName, objectName);
         BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+
         try {
             storage.create(blobInfo, Files.readAllBytes(Paths.get(file.toPath().toString())));
         } catch (IOException e) {

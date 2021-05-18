@@ -48,6 +48,8 @@ public class SalesController {
     private SunService sunService;
     @Autowired
     private ImageService imageService;
+    @Autowired
+    FtpService ftpService;
 
     public Conversions conversions = new Conversions();
 
@@ -63,9 +65,9 @@ public class SalesController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             response = syncPOSSalesInDayRange(user.getId(), account);
-            if(!response.isStatus()){
+            if (!response.isStatus()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }else {
+            } else {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
         }
@@ -213,64 +215,64 @@ public class SalesController {
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        }
-                        else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+                        } else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-                            FtpClient ftpClient = new FtpClient();
-                            ftpClient = ftpClient.createFTPClient(account);
+//                            FtpClient ftpClient = new FtpClient();
+//                            ftpClient = ftpClient.createFTPClient(account);
 
                             File file = null;
                             String fileStoragePath = "";
                             SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
-                            if(syncJobType.getConfiguration().exportFilePerLocation){
+                            if (syncJobType.getConfiguration().exportFilePerLocation) {
                                 ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
                                         syncJobType, account.getName());
                                 for (File f : files) {
                                     imageService.storeFile(f);
                                 }
-                            }else {
+                            } else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
                                 fileStoragePath = imageService.storeFile(file);
                             }
 
-                            if (ftpClient != null){
-                                if(ftpClient.open()){
-//                                    if (file != null && !fileStoragePath.equals("") && ftpClient.putFile(fileStoragePath, file.getName())){
-                                    if (true){
-                                        syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
-                                        syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                                "Sync sales successfully.", Constants.SUCCESS);
+//                            if (ftpClient != null){
+//                                if(ftpClient.open()){
+////                                    if (file != null && !fileStoragePath.equals("") && ftpClient.putFile(fileStoragePath, file.getName())){
+                            if (file != null && !fileStoragePath.equals("") &&
+                                    ftpService.sendFile(ftpService.getAccountCredential(account), fileStoragePath, file.getName())) {
 
-                                        response.setStatus(true);
-                                        response.setMessage("Sync sales successfully.");
-                                    }else {
-                                        syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
-                                        syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                                "Failed to sync sales to sun system via FTP.", Constants.FAILED);
-
-                                        response.setStatus(true);
-                                        response.setMessage("Failed to sync sales to sun system via FTP.");
-                                    }
-                                    ftpClient.close();
-                                }
-                                else {
-                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                            "Failed to connect to sun system via FTP.", Constants.FAILED);
-
-                                    response.setStatus(false);
-                                    response.setMessage("Failed to connect to sun system via FTP.");
-                                }
-                            }
-                            else{
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Sync sales successfully.", Constants.SUCCESS);
 
                                 response.setStatus(true);
                                 response.setMessage("Sync sales successfully.");
+                            } else {
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                        "Failed to sync sales to sun system via FTP.", Constants.FAILED);
+
+                                response.setStatus(true);
+                                response.setMessage("Failed to sync sales to sun system via FTP.");
                             }
-                        }
-                        else {
+//                                    ftpClient.close();
+//                                }
+//                                else {
+//                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+//                                            "Failed to connect to sun system via FTP.", Constants.FAILED);
+//
+//                                    response.setStatus(false);
+//                                    response.setMessage("Failed to connect to sun system via FTP.");
+//                                }
+//                            }
+//                            else{
+//                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+//                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+//                                        "Sync sales successfully.", Constants.SUCCESS);
+//
+//                                response.setStatus(true);
+//                                response.setMessage("Sync sales successfully.");
+//                            }
+                        } else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,
                                     "No sales to add in middleware.", Constants.SUCCESS);
 
@@ -319,9 +321,9 @@ public class SalesController {
         int tryCount = 2;
 
         /*
-        * Sync days of last month
-        * */
-        if(syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
+         * Sync days of last month
+         * */
+        if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
             syncJobType.getConfiguration().timePeriod = Constants.USER_DEFINED;
 
             Calendar calendar = Calendar.getInstance();
@@ -331,22 +333,22 @@ public class SalesController {
             int numDays = calendar.getActualMaximum(Calendar.DATE);
             String startDate;
 
-            while (numDays != 0){
+            while (numDays != 0) {
                 startDate = dateFormat.format(calendar.getTime());
                 syncJobType.getConfiguration().fromDate = startDate;
                 syncJobType.getConfiguration().toDate = startDate;
                 syncJobTypeRepo.save(syncJobType);
 
                 response = getPOSSales(userId, account);
-                if (response.isStatus()){
+                if (response.isStatus()) {
                     calendar.add(Calendar.DATE, +1);
                     numDays--;
                 }
             }
 
             /*
-            * Generate single file
-            * */
+             * Generate single file
+             * */
             String month = monthFormat.format(calendar.getTime());
             String date = fileDateFormat.format(calendar.getTime());
 
@@ -364,19 +366,19 @@ public class SalesController {
         /*
          * Sync days in range
          * */
-        else if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+        else if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
             String startDate = syncJobType.getConfiguration().fromDate;
             String endDate = syncJobType.getConfiguration().toDate;
 
-            Date date= dateFormat.parse(startDate);
+            Date date = dateFormat.parse(startDate);
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(date);
 
-            while (!startDate.equals(endDate)){
+            while (!startDate.equals(endDate)) {
                 response = getPOSSales(userId, account);
 
-                if (response.isStatus() || tryCount == 0){
+                if (response.isStatus() || tryCount == 0) {
                     tryCount = 2;
                     calendar.add(Calendar.DATE, +1);
                     startDate = dateFormat.format(calendar.getTime());
@@ -389,8 +391,7 @@ public class SalesController {
             String message = "Sync sales successfully.";
             response.setStatus(true);
             response.setMessage(message);
-        }
-        else{
+        } else {
             if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
@@ -439,8 +440,8 @@ public class SalesController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> addTax(@RequestBody ArrayList<Tax> taxes,
-                                              @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                              Principal principal) {
+                                           @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                           Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -496,8 +497,8 @@ public class SalesController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> addDiscount(@RequestBody ArrayList<Discount> discounts,
-                                           @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                           Principal principal) {
+                                                @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -524,8 +525,8 @@ public class SalesController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> addServiceCharge(@RequestBody ArrayList<ServiceCharge> serviceCharges,
-                                                @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                                Principal principal) {
+                                                     @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                     Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -551,8 +552,8 @@ public class SalesController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> addSalesStatistics(@RequestBody ArrayList<SalesStatistics> statistics,
-                                                     @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                                     Principal principal) {
+                                                       @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                       Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -589,10 +590,10 @@ public class SalesController {
                 salesList.addAll(locationBatch.getSalesServiceChargeData());
                 salesList.addAll(locationBatch.getSalesDiscountData());
                 salesList.addAll(locationBatch.getSalesTenderData());
-                if(locationBatch.getSalesDifferentData().getId() != null){
+                if (locationBatch.getSalesDifferentData().getId() != null) {
                     salesList.add(locationBatch.getSalesDifferentData());
                 }
-                if(locationBatch.getStatisticsData().size() > 0){
+                if (locationBatch.getStatisticsData().size() > 0) {
                     salesList.addAll(locationBatch.getStatisticsData());
                 }
 
@@ -601,31 +602,41 @@ public class SalesController {
                 locationFiles.add(file);
             }
             return locationFiles;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
             return locationFiles;
         }
     }
-//
-//    @RequestMapping("/Simphony/sendFTPFile")
-//    @CrossOrigin(origins = "*")
-//    @ResponseBody
-//    public boolean sendFTPFile(){
-//        Optional<Account> accountOptional = accountRepo.findById("5f968c83d939da0c6ed84ae4");
-//        if (accountOptional.isPresent()) {
-//            Account account = accountOptional.get();
+
+/*    @RequestMapping("/Simphony/sendFTPFile")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public boolean sendFTPFile() {
+
+        Optional<Account> accountOptional = accountRepo.findById("5f968c83d939da0c6ed84ae4");
+
+        boolean response = false;
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+
+            AccountCredential accountCredential = ftpService.getAccountCredential(account);
+            File file = new File("https://storage.googleapis.com/oracle-integrator-bucket/src/main/resources/1.ndf?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1621253501&Signature=LmvkQ4eBBIEUNu59EMHbSvXKmK7sRk9Pq2Ea5U%2FHhnbyNu917x92aMV6Vz3Evx%2BA0%2F%2FtDlttsP0IWwT4dDA%2Fv2w74P%2B%2FGxo%2B8zgytDsx1Z79eW8hqIMnfwOrijR%2FUY97YXGw540y3MY6o6QcNdtVo1p%2Fz3eyGb6bBYl4a9kXbNKWnkzQeVA1ZUy0Zar0RxTc5Y22CTE34r%2FF3bGEbQ1WcR9Wr8TG%2BCJwB%2FFMRasmQNrCwa1d5IHZKCPMqmd5F4O7n4RZO0WIkzeebgUfDAkHqmppmwHGpdE7tU%2Fvz%2B4HTgrwlPwMc45IfqOmUExXzlsbVs79jp13bnJxoK5FliSTUA%3D%3D");
+
+            response = ftpService.sendFile(accountCredential, "https://storage.googleapis.com/oracle-integrator-bucket/src/main/resources/1.ndf?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1621253501&Signature=LmvkQ4eBBIEUNu59EMHbSvXKmK7sRk9Pq2Ea5U%2FHhnbyNu917x92aMV6Vz3Evx%2BA0%2F%2FtDlttsP0IWwT4dDA%2Fv2w74P%2B%2FGxo%2B8zgytDsx1Z79eW8hqIMnfwOrijR%2FUY97YXGw540y3MY6o6QcNdtVo1p%2Fz3eyGb6bBYl4a9kXbNKWnkzQeVA1ZUy0Zar0RxTc5Y22CTE34r%2FF3bGEbQ1WcR9Wr8TG%2BCJwB%2FFMRasmQNrCwa1d5IHZKCPMqmd5F4O7n4RZO0WIkzeebgUfDAkHqmppmwHGpdE7tU%2Fvz%2B4HTgrwlPwMc45IfqOmUExXzlsbVs79jp13bnJxoK5FliSTUA%3D%3D", "2.ndf");
+
 //            FtpClient ftpClient = new FtpClient();
 //            ftpClient = ftpClient.createFTPClient(account);
 //            try {
 //                if(ftpClient.open()){
-//                    ftpClient.putFile(imageService.storeFile(), "24042021Sat.ndf");
+//                    ftpClient.putFile(imageService.storeFile(new File("src/main/resources/1.ndf")), "1.ndf");
 //                    ftpClient.close();
 //                }
 //            } catch (IOException e) {
 //                e.printStackTrace();
 //            }
 //            return true;
-//        }
-//        return false;
-//    }
+        }
+        return response;
+    }*/
+
 }

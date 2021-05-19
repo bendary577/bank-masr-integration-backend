@@ -121,7 +121,6 @@ public class AppUserController {
                     applicationUser.setLogoUrl(logoUrl);
                     applicationUser.setAccountId(account.getId());
                     applicationUser.setCreationDate(new Date());
-                    applicationUser.setLastUpdate(new Date());
                     applicationUser.setDeleted(false);
 
 //                    String codeBuild = applicationUser.getName() + " " + group.getName() + " " + new Date().toString();

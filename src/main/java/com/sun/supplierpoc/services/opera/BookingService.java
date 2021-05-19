@@ -101,11 +101,14 @@ public class BookingService {
         Response response = new Response();
 
         SyncJob syncJob;
+        SyncJobType syncJobType;
+        SyncJobType newBookingSyncType;
         GeneralSettings generalSettings;
         BookingConfiguration bookingConfiguration;
         try{
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+            newBookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
             bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
 
 
@@ -126,7 +129,8 @@ public class BookingService {
 
             FileInputStream input = new FileInputStream(file);
 
-            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob,generalSettings, input);
+            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob,generalSettings,
+                    syncJobType, newBookingSyncType, input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

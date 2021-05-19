@@ -32,6 +32,7 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/**").authenticated()
                 .antMatchers("/activity/**").authenticated()
                 .antMatchers("/amazon/**").authenticated()
+                .antMatchers("/paymentTest").authenticated()
                 .antMatchers("/test/**").authenticated()
 
 

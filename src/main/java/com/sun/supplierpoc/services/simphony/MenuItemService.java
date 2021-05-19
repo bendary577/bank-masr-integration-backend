@@ -240,18 +240,19 @@ public class MenuItemService {
 
                     LoggerFactory.getLogger(MenuItemService.class).info(errorMessage);
 
-                    if (errorMessage.contains("Failed to find")) {
-                        final String message = errorMessage.substring(0, errorMessage.indexOf('['));
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                                new HashMap<String, Object>() {{
-                                    put("error", "Can't create check with internal response " + message + ".");
-                                    put("Date", LocalDateTime.now());
-                                }});
+                    String message = "";
+                    if (errorMessage.contains("Failed to find") ) {
+                        message = errorMessage.substring(0, errorMessage.indexOf('['));
+                    }else if(errorMessage.contains("is not a condiment")){
+                        message = errorMessage;
+                    }else{
+                        message = "can't call simphony machine";
                     }
 
+                    final String finalMessage = message;
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                             new HashMap<String, Object>() {{
-                                put("error", "Can't create check.");
+                                put("error", "Can't create check with simphony error '" + finalMessage + "'.");
                                 put("Date", LocalDateTime.now());
                             }});
 

@@ -39,14 +39,14 @@ public class SendEmailService {
     }
 
     public boolean sendMimeMail(String qrCodePath, String logoPath, String accountLogo, String accountName, ApplicationUser user) throws MailException {
+
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
         try {
+
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
 
             messageHelper.setSentDate(new Date());
-
-
 
             messageHelper.setTo(user.getEmail());
 

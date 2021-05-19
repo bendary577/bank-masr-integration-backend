@@ -151,7 +151,7 @@ public class CreateOrder {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
                     new HashMap<String, Object>() {{
-                        put("error", "Something went wrong!.");
+                        put("error", "Can't call simphony machine!.");
                         put("Date", LocalDateTime.now());
                     }});
         }

@@ -59,7 +59,9 @@ public class ImageService {
             e.printStackTrace();
         }
 
-        return downloadFile(storage, objectName);
+        String url = "https://storage.googleapis.com/" + bucketName + "/" + objectName;
+        return url;
+//        return downloadFile(storage, objectName);
     }
 
     public File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException {

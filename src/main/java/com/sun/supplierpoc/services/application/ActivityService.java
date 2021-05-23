@@ -102,6 +102,8 @@ public class ActivityService {
                     response.put("isSuccess", true);
                     response.put("message", "Discount applied successfully.");
                     response.put("discountId", group.getSimphonyDiscount().getDiscountId());
+                    response.put("group", group.getName());
+                    response.put("user", user.getName());
                     return response;
                 }
 

@@ -3,8 +3,8 @@ package com.sun.supplierpoc.models.applications;
 public class SimphonyQuota {
 
     private int transactionQuota;
-
     private int usedTransactionQuota;
+    private int revenueCenterQuota = 0;
 
     public int getTransactionQuota() {
         return transactionQuota;
@@ -20,5 +20,13 @@ public class SimphonyQuota {
 
     public void setUsedTransactionQuota(int usedTransactionQuota) {
         this.usedTransactionQuota = usedTransactionQuota;
+    }
+
+    public int getRevenueCenterQuota() {
+        return revenueCenterQuota;
+    }
+
+    public void setRevenueCenterQuota(int revenueCenterQuota) {
+        this.revenueCenterQuota = revenueCenterQuota;
     }
 }

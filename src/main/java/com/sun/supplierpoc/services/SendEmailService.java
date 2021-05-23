@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -97,4 +98,51 @@ public class SendEmailService {
             return false;
         }
     }
+
+    public boolean sendAlertMail(Account account) throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+
+        try {
+
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo("bfaisal@entrepreware.com");
+//            messageHelper.setTo("lyoussef@entrepreware.com");
+
+            String mailSubject = "Account Alert!";
+
+            String mailContent =
+                    "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);transition: 0.3s; width: 100%;'>" +
+                            "<br>";
+
+            mailContent +=
+                        "<img style=\"width:20%; height: 20%; margin-left: 30%; margin-right: 2%;\"" +
+                                "   src='" + account.getImageUrl() + "'>"  ;
+
+            mailContent +=
+                            "<h3 style='text-align:center'>Dears,</h3>" +
+                            "<p style='text-align:center'>" +
+                            "   Please notify that we have notes that the account of " +account.getName() +
+                            "   <br>" +
+                            "   have issue in the quota of the revenue centers" +
+                            "   <br>" +
+                            "   Please check and solve it." +
+                            "   Best Regards." +
+                            "</p>" ;
+;
+
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 }

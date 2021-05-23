@@ -75,14 +75,15 @@ public class AppUserController {
 
         HashMap response = new HashMap();
         try {
-            Group group;
-            ApplicationUser applicationUser;
 
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
+
+                Group group;
+                ApplicationUser applicationUser;
 
                 if (addFlag) {
                     applicationUser = new ApplicationUser();

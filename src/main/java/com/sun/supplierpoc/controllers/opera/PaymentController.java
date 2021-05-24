@@ -199,11 +199,11 @@ public class PaymentController {
 
         transactionResponse.setRespCode("00");
         transactionResponse.setRespText("APPROVAL");
-        transactionResponse.setpAN("XXXXXXXXXXXXXX2811");
-        transactionResponse.setExpiryDate("2212");
-        transactionResponse.setTransToken("131111111111112811");
+        transactionResponse.setpAN(transactionRequest.getPAN());
+        transactionResponse.setExpiryDate(transactionRequest.getExpiryDate());
+        transactionResponse.setTransToken(transactionResponse.getTransToken());
         transactionResponse.setEntryMode("01");
-        transactionResponse.setIssuerId("01");
+        transactionResponse.setIssuerId("02");
         transactionResponse.setrRN("000000000311");
         transactionResponse.setOfflineFlag("N");
         transactionResponse.setMerchantId("1");

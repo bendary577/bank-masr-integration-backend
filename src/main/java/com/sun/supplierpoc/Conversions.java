@@ -348,6 +348,11 @@ public class Conversions {
         return "1"; //Daily
     }
 
+    public int getNights(Date arrivalDate, Date departureDate){
+        int diff = (int) (departureDate.getTime() - arrivalDate.getTime());
+        return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+    }
+
     // ==> END of OPERA Report Functions
 
     // ==> OPERA Report Functions

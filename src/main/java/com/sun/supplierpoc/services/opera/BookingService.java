@@ -2,6 +2,7 @@ package com.sun.supplierpoc.services.opera;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.components.ExcelHelper;
+import com.sun.supplierpoc.components.NewBookingExcelHelper;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -36,6 +37,9 @@ public class BookingService {
     @Autowired
     ExcelHelper excelHelper;
 
+    @Autowired
+    NewBookingExcelHelper bookingExcelHelper;
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response fetchNewBookingFromReport(String userId, Account account){
@@ -69,7 +73,7 @@ public class BookingService {
 
             FileInputStream input = new FileInputStream(file);
 
-            List<SyncJobData> syncJobData = excelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+            List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

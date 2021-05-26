@@ -349,8 +349,8 @@ public class Conversions {
     }
 
     public int getNights(Date arrivalDate, Date departureDate){
-        int diff = (int) (departureDate.getTime() - arrivalDate.getTime());
-        return TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
+        long diff =  (departureDate.getTime() - arrivalDate.getTime());
+        return (int)TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);
     }
 
     // ==> END of OPERA Report Functions
@@ -398,6 +398,10 @@ public class Conversions {
         String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);
+    }
+
+    public double roundUpDouble(double value){
+        return Math.round(value * 100.0)/100.0;
     }
 
     public float roundUpFloat2Digest(float value){

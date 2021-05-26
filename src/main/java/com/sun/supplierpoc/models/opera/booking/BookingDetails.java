@@ -12,17 +12,17 @@ public class BookingDetails {
     public String checkInTime = "";
     public String checkOutTime = "";
 
-    public String totalDurationDays = "";
+    public int totalDurationDays = 0;
     public String allotedRoomNo = "";
     public String roomRentType = "";
-    public String dailyRoomRate = "";
-    public String totalRoomRate = "";
+    public Double dailyRoomRate = 0.0;
+    public Double totalRoomRate = 0.0;
 
-    public String vat = "";
-    public String municipalityTax = "";
-    public String discount = "";
+    public Double vat = 0.0;
+    public Double municipalityTax = 0.0;
+    public Double discount = 0.0;
 
-    public String grandTotal = "";
+    public Double grandTotal = 0.0;
 
     public String gender = "";
     public String customerType = "";
@@ -32,8 +32,8 @@ public class BookingDetails {
 
     public String paymentType = "";
 
-    public String noOfRooms = "";
-    public String noOfGuest = "";
+    public int noOfRooms = 0;
+    public int noOfGuest = 0;
     public String reservationStatus = "";
 
     public String cuFlag = "";

@@ -169,7 +169,7 @@ public class GeneralSettingController {
             Account account = accountOptional.get();
             try {
 
-                if (generalSettings.getSimphonyQuota().getRevenueCenterQuota() != 0 &&
+                if (generalSettings.getSimphonyQuota() != null && generalSettings.getSimphonyQuota().getRevenueCenterQuota() != 0 &&
                         generalSettings.getRevenueCenters().size() > generalSettings.getSimphonyQuota().getRevenueCenterQuota()) {
 
                     response.put("message", "You have exceed you revenue center quota.");
@@ -179,13 +179,13 @@ public class GeneralSettingController {
 
                 } else {
                     generalSettingsRepo.save(generalSettings);
-                    response.put("message", "Update over groups.");
+                    response.put("message", "Update general settings successfully.");
                     response.put("success", true);
                     return new ResponseEntity<>(response, HttpStatus.OK);
                 }
 
             } catch (Exception e) {
-                response.put("message", "Failed to update over groups.");
+                response.put("message", "Failed to update general settings.");
                 response.put("success", false);
                 return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
             }

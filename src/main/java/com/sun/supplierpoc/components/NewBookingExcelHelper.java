@@ -24,6 +24,46 @@ import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/*
+
+Get booking details from OPERA database
+
+SELECT
+  CASE WHEN name.birth_date is NULL THEN '' END as birth,
+  name.gender,
+  name.nationality,
+  reservation_name.confirmation_no as booking_no,
+  reservation_name.arrival_date_time as arrival_date,
+  reservation_name.departure_date_time as departure_date,
+  reservation_name.UDFC03 as CT,
+  reservation_name.UDFC05 as POS,
+  reservation_name.payment_method as pm,
+  reservation_name.resv_status as status,
+  reservation_daily_elements.room,
+  reservation_daily_element_name.reservation_date as res_date,
+  reservation_daily_element_name.base_rate_amount as amount,
+  CASE WHEN reservation_daily_element_name.discount_amt is NULL THEN 0 END as disc,
+  CASE WHEN reservation_daily_element_name.discount_prcnt is NULL THEN 0 END as disc_prcnt,
+  reservation_daily_element_name.adults,
+  reservation_daily_element_name.children
+FROM
+  reservation_name
+  INNER JOIN name ON reservation_name.name_id = name.name_id
+  INNER JOIN reservation_daily_element_name ON reservation_name.resv_name_id = reservation_daily_element_name.resv_name_id
+  inner join reservation_daily_elements on reservation_daily_element_name.resv_daily_el_seq = reservation_daily_elements.resv_daily_el_seq
+WHERE
+  reservation_name.update_date >= trunc(sysdate)
+  And reservation_name.update_date < trunc(sysdate) + 1
+  and (
+    reservation_name.resv_status = 'RESERVED'
+    or reservation_name.resv_status = 'CHECKED IN'
+    or reservation_name.resv_status = 'CHECKED OUT'
+  )
+ORDER BY
+  reservation_daily_element_name.reservation_date;
+
+* */
+
 @Service
 public class NewBookingExcelHelper {
     @Autowired
@@ -104,9 +144,11 @@ public class NewBookingExcelHelper {
                     bookingDetails.bookingNo = reservation.bookingNo;
                     bookingDetails.reservationStatus = typeName;
 
+                    bookingDetails.allotedRoomNo = reservation.roomNo;
                     bookingDetails.totalDurationDays = nights;
                     bookingDetails.noOfGuest = reservation.adults + reservation.children;
 
+                    bookingDetails.gender = reservation.gender;
                     bookingDetails.customerType = reservation.customerType;
                     bookingDetails.nationalityCode = reservation.nationalityCode;
                     bookingDetails.purposeOfVisit = reservation.purposeOfVisit;
@@ -221,7 +263,7 @@ public class NewBookingExcelHelper {
                 reservation.children = (int) (currentCell.getNumericCellValue());
             } else if (cellIdx == columnsName.indexOf("nights")) {
                 reservation.nights = (int) (currentCell.getNumericCellValue());
-            } else if (cellIdx == columnsName.indexOf("room no.")) {
+            } else if (cellIdx == columnsName.indexOf("room")) {
                 reservation.roomNo = String.valueOf((int) (currentCell.getNumericCellValue()));
             } else if (cellIdx == columnsName.indexOf("room type")) {
                 typeName = (currentCell.getStringCellValue());
@@ -232,7 +274,7 @@ public class NewBookingExcelHelper {
                 reservation.noOfRooms = (int) (currentCell.getNumericCellValue());
             } else if (cellIdx == columnsName.indexOf("amount")) {
                 reservation.dailyRoomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
-            } else if (cellIdx == columnsName.indexOf("reservation date")) {
+            } else if (cellIdx == columnsName.indexOf("res date")) {
                 reservation.reservationDate = currentCell.getDateCellValue();
             } else if (cellIdx == columnsName.indexOf("ct")) {
                 typeName = currentCell.getStringCellValue();
@@ -247,11 +289,8 @@ public class NewBookingExcelHelper {
                 typeName = currentCell.getStringCellValue();
                 bookingType = conversions.checkBookingTypeExistence(nationalities, typeName);
 
-                if (typeName.equals(""))
-                    bookingType.setTypeId("826");
-
                 reservation.nationalityCode = bookingType.getTypeId();
-            } else if (cellIdx == columnsName.indexOf("date of birth")) {
+            } else if (cellIdx == columnsName.indexOf("birth")) {
                 time = currentCell.getDateCellValue();
                 if (time != null) reservation.dateOfBirth = dateFormat.format(time);
                 else reservation.dateOfBirth = "";
@@ -260,7 +299,7 @@ public class NewBookingExcelHelper {
                 bookingType = conversions.checkBookingTypeExistence(purposeOfVisit, typeName);
 
                 reservation.purposeOfVisit = bookingType.getTypeId();
-            } else if (cellIdx == columnsName.indexOf("payment method")) {
+            } else if (cellIdx == columnsName.indexOf("pm")) {
                 typeName = (currentCell.getStringCellValue());
                 bookingType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
 
@@ -278,34 +317,81 @@ public class NewBookingExcelHelper {
         ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo,
                 syncJobType.getId());
 
+        boolean createUpdateFlag = false;
+
         if (list.size() > 0) {
             // Update
+            // Check if there is any changes
             bookingDetails.cuFlag = "2";
             bookingDetails.transactionId = (String) list.get(0).getData().get("transactionId");
+            createUpdateFlag = checkChanges(bookingDetails, list.get(0));
         } else {
             // New
             bookingDetails.cuFlag = "1";
             bookingDetails.transactionId = "";
+            createUpdateFlag = true;
         }
 
-        HashMap<String, Object> data = new HashMap<>();
-        Field[] allFields = bookingDetails.getClass().getDeclaredFields();
-        for (Field field : allFields) {
-            field.setAccessible(true);
-            Object value = null;
-            try {
-                value = field.get(bookingDetails);
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
+        if(createUpdateFlag){
+            HashMap<String, Object> data = new HashMap<>();
+            Field[] allFields = bookingDetails.getClass().getDeclaredFields();
+            for (Field field : allFields) {
+                field.setAccessible(true);
+                Object value = null;
+                try {
+                    value = field.get(bookingDetails);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                if (value != null && !value.equals("null")) {
+                    data.put(field.getName(), value);
+                } else {
+                    data.put(field.getName(), "");
+                }
             }
-            if (value != null && !value.equals("null")) {
-                data.put(field.getName(), value);
-            } else {
-                data.put(field.getName(), "");
-            }
-        }
 
-        SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
-        syncJobDataList.add(syncJobData);
+            SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+            syncJobDataList.add(syncJobData);
+        }
+    }
+
+    private boolean checkChanges(BookingDetails bookingDetails, SyncJobData data){
+        if(!bookingDetails.nationalityCode.equals(data.getData().get("nationalityCode")))
+            return true;
+        else if (!bookingDetails.nationalityCode.equals(data.getData().get("nationalityCode")))
+            return true;
+        else if (!bookingDetails.checkInDate.equals(data.getData().get("checkInDate")))
+            return true;
+        else if (!bookingDetails.checkOutDate.equals(data.getData().get("checkOutDate")))
+            return true;
+        else if (!bookingDetails.checkInTime.equals(data.getData().get("checkInTime")))
+            return true;
+        else if (!bookingDetails.checkOutTime.equals(data.getData().get("checkOutTime")))
+            return true;
+        else if (bookingDetails.totalDurationDays != (int) data.getData().get("nationalityCode"))
+            return true;
+        else if (!bookingDetails.allotedRoomNo.equals(data.getData().get("allotedRoomNo")))
+            return true;
+        else if (!bookingDetails.roomRentType.equals(data.getData().get("roomRentType")))
+            return true;
+        else if (!bookingDetails.allotedRoomNo.equals(data.getData().get("allotedRoomNo")))
+            return true;
+        else if (bookingDetails.noOfRooms != (int) data.getData().get("noOfRooms"))
+            return true;
+        else if (bookingDetails.noOfGuest != (int) data.getData().get("noOfGuest"))
+            return true;
+
+        else if (!bookingDetails.gender.equals(data.getData().get("gender")))
+            return true;
+        else if (!bookingDetails.customerType.equals(data.getData().get("customerType")))
+            return true;
+        else if (!bookingDetails.roomType.equals(data.getData().get("roomType")))
+            return true;
+        else if (!bookingDetails.purposeOfVisit.equals(data.getData().get("purposeOfVisit")))
+            return true;
+        else if (!bookingDetails.dateOfBirth.equals(data.getData().get("dateOfBirth")))
+            return true;
+
+        else return !bookingDetails.paymentType.equals(data.getData().get("paymentType"));
     }
 }

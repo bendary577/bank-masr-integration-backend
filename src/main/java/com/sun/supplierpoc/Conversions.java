@@ -301,7 +301,7 @@ public class Conversions {
 
     public BookingType checkBookingTypeExistence(ArrayList<BookingType> bookingTypes, String typeName){
         if(typeName.equals("") || bookingTypes.size() == 0){
-            return new BookingType("0");
+            typeName = "not applicable";
         }
         for (BookingType paymentType : bookingTypes) {
             if (paymentType.getType().toLowerCase().equals(typeName.toLowerCase())) {

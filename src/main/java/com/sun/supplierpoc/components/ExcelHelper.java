@@ -260,12 +260,12 @@ public class ExcelHelper {
 
                 // 1=Yes, 2=No
                 if (paymentAmount > 0 || transactionAmount > 0)
-                    bookingDetails.cancelWithCharges = "1";
+                    bookingDetails.cancelWithCharges = 1;
                 else {
-                    bookingDetails.cancelWithCharges = "2";
+                    bookingDetails.cancelWithCharges = 2;
                 }
 
-                if (bookingDetails.cancelWithCharges.equals("1")) {
+                if (bookingDetails.cancelWithCharges == 1) {
                     serviceCharge = (roomRate * rateCode.serviceChargeRate)/100;
                     vat = ((serviceCharge + roomRate) * rateCode.vatRate)/100;
                     municipalityTax = (roomRate * rateCode.municipalityTaxRate)/100;
@@ -276,20 +276,20 @@ public class ExcelHelper {
 
                     // check if there is discount percent
                     if(discount > 0)
-                        bookingDetails.discount = String.valueOf(discount);
+                        bookingDetails.discount = discount;
                     else if (discountPercent > 0){
                         discount = (grandTotal * discountPercent) / 100;
-                        bookingDetails.discount = String.valueOf(discount);
+                        bookingDetails.discount = discount;
                     }
 
                     grandTotal = grandTotal - discount;
 
-                    bookingDetails.vat = String.valueOf(vat);
-                    bookingDetails.municipalityTax = String.valueOf(municipalityTax);
-                    bookingDetails.dailyRoomRate = String.valueOf(roomRate + rateCode.basicPackageValue);
-                    bookingDetails.totalRoomRate = String.valueOf(totalRoomRate);
-                    bookingDetails.grandTotal = String.valueOf(grandTotal);
-                    bookingDetails.chargeableDays = String.valueOf(nights);
+                    bookingDetails.vat = vat;
+                    bookingDetails.municipalityTax = municipalityTax;
+                    bookingDetails.dailyRoomRate = roomRate + rateCode.basicPackageValue;
+                    bookingDetails.totalRoomRate = totalRoomRate;
+                    bookingDetails.grandTotal = grandTotal;
+                    bookingDetails.chargeableDays = nights;
 
                     if (arrivalDate != null && departureDate != null) {
                         bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);

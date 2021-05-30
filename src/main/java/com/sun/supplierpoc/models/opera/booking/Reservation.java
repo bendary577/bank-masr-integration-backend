@@ -30,5 +30,7 @@ public class Reservation {
     public int noOfRooms = 0;
     public int adults = 0;
     public int children = 0;
-    public ArrayList<Double> packages = new ArrayList<>();
+
+    public int cancelReason = 0;
+    public int cancelWithCharges = 2;
 }

@@ -40,6 +40,7 @@ public class GeneralSettings {
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
 
     private SimphonyQuota simphonyQuota;
+    private String mailSubj;
 
     private Date creationDate;
     private boolean deleted;
@@ -259,6 +260,14 @@ public class GeneralSettings {
 
     public void setSimphonyQuota(SimphonyQuota simphonyQuota) {
         this.simphonyQuota = simphonyQuota;
+    }
+
+    public String getMailSub() {
+        return mailSubj;
+    }
+
+    public void setMailSub(String mailSubj) {
+        this.mailSubj = mailSubj;
     }
 }
 

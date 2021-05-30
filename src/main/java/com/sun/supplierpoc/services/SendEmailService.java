@@ -18,7 +18,7 @@ import java.util.Date;
 
 @Service
 public class SendEmailService {
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
     @Autowired
     public SendEmailService(JavaMailSender mailSender) {
@@ -39,7 +39,7 @@ public class SendEmailService {
         System.out.println("Finish");
     }
 
-    public boolean sendMimeMail(String qrCodePath, String logoPath, String accountLogo, String accountName, ApplicationUser user) throws MailException {
+    public boolean sendMimeMail(String qrCodePath, String logoPath, String mailSubj, String accountName, ApplicationUser user) throws MailException {
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
 
@@ -51,38 +51,56 @@ public class SendEmailService {
 
             messageHelper.setTo(user.getEmail());
 
-            String mailSubject = "We crafted some offers JUST FOR YOU!";
+            String mailSubject = "More rewards, just for YOU!";
 
             String mailContent =
-                    "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);transition: 0.3s; width: 100%;'>" +
-                            "<br>";
+                    "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 10%; margin-right: 10%;padding-left: 5%;"+
+                            "transition: 0.3s; width: 80%; border:2px solid #ae0a3b;\n'>" +
 
-            if(!logoPath.equals(Constants.GROUP_IMAGE_URL)){
-                mailContent +=
-                        "<img style=\"width:20%; height: 20%; margin-left: 30%; margin-right: 2%;\"" +
-                                "   src='" + logoPath + "'>"  +
+                    "<br>";
 
-                                "<img style=\"width:20%; height: 20%; margin-left: auto; margin-right: auto;\"" +
-                        "   src='" + accountLogo + "'>" + "<br>\n";
-            }
             mailContent +=
-                            "<img style=\"width:100%\"" +
-                            "   src='https://vistapointe.net/images/gift-1.jpg'>" +
-                            "<h3 style='text-align:center'>Hello " + user.getName() + ",</h3>" +
-                            "<p style='text-align:center'>" +
-                            "   Welcome to "+ accountName + " loyalty program." +
-                            "   <br>" +
-                            "   Please feel free to use the below QR code in each visit to enjoy your special discount." +
+                    "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
+                            "   src='" + logoPath + "'>" + "<br> <br> \n";
+
+            mailContent +=
+                    "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
+                            "   src='" + mailSubj + "'>" + "<br>\n";
+
+            mailContent +=
+
+                    "<p style='text-align:left'>" +
+                            "   Dear  " + user.getName() + ",<br><br>" +
+                            "As a privileged guest, benefit from the most rewarding <br>" + "" +
+                            "advantages with great discounts on laundry services or <br>" +
+                            "food and beverages at participating outlets.<br>" +
+
                             "</p>" +
 
-                            "<p style=\"text-align: center;font-weight: bold;\"> Show this code to our staff</p>" +
+                            "<p style=\"text-align: center ;font-weight: bold; margin-button : 10%\"> SCAN QR CODE <br> TO REDEEM OFFER</p>" +
                             "<img src='cid:image001' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
-                            "<p style='text-align:center'>" + " code : " + user.getCode() + "</p>" +
-                            "<p style='text-align:center'>Look forward to seeing you at out store</p>" +
-                            "<br>" +
-                            "<br>" +
-                            "<div style=\"display: table;margin-left: auto; margin-right: auto;\">";
+                            "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" +
 
+                            "<br>" +
+
+                            "<p style='text-align:left'>" +
+
+                            "<span style='text-align:left; font-weight: bold;'> " + "PARTICIPATING OUTLETS:" + "</span> <br>" +
+                            "SANKOFA RESTAURANT | ONE2ONE BAR | POOL BAR & BBQ" +
+
+                            "<br> <br>" +
+
+                            "CONTACT US: +233 302 611 000 / hotel.accra@movenpick.com" +
+
+                            "</p>" +
+
+                            "<br>" +
+
+                            "<div style=\"margin-left: 70%; color: #ffffff;  "+
+                                "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 20%; height : 15% \">" +
+                            "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
+                            "</div>"+
+                            "<div style=\"display: table;margin-left: auto; margin-right: auto;\">";
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
@@ -118,20 +136,19 @@ public class SendEmailService {
                             "<br>";
 
             mailContent +=
-                        "<img style=\"width:20%; height: 20%; margin-left: 30%; margin-right: 2%;\"" +
-                                "   src='" + account.getImageUrl() + "'>"  ;
+                    "<img style=\"width:20%; height: 20%; margin-left: 30%; margin-right: 2%;\"" +
+                            "   src='" + account.getImageUrl() + "'>";
 
             mailContent +=
-                            "<h3 style='text-align:center'>Dears,</h3>" +
+                    "<h3 style='text-align:center'>Dears,</h3>" +
                             "<p style='text-align:center'>" +
-                            "   Please notify that we have notes that the account of " +account.getName() +
+                            "   Please notify that we have notes that the account of " + account.getName() +
                             "   <br>" +
                             "   have issue in the quota of the revenue centers" +
                             "   <br>" +
                             "   Please check and solve it." +
                             "   Best Regards." +
-                            "</p>" ;
-;
+                            "</p>";
 
 
             messageHelper.setSubject(mailSubject);

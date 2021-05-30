@@ -3,11 +3,13 @@ package com.sun.supplierpoc.controllers.application;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.ImageService;
@@ -48,6 +50,9 @@ public class AppUserController {
     @Autowired
     private GroupRepo groupRepo;
 
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -79,8 +84,11 @@ public class AppUserController {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
+
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
+
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                 Group group;
                 ApplicationUser applicationUser;
@@ -133,13 +141,13 @@ public class AppUserController {
                     String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
 
                     String accountLogo = account.getImageUrl();
-                    String groupLogo = group.getLogoUrl();
+                    String mailSubj = generalSettings.getMailSub();
                     String QRPath = "QRCodes/" + code + ".png";
                     applicationUser.setCode(code);
 
                     try {
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
-                        if (emailService.sendMimeMail(QrPath, groupLogo, accountLogo, account.getName(), applicationUser)) {
+                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj,account.getName(), applicationUser)) {
                             userRepo.save(applicationUser);
                             response.put("message", "User added successfully.");
                             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -181,12 +189,12 @@ public class AppUserController {
                             }
 
                             String accountLogo = account.getImageUrl();
-                            String logoPath = group.getLogoUrl();
+                            String mailSubj = generalSettings.getMailSub();
                             String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
 
                             try {
                                 String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
-                                boolean emailStatus = emailService.sendMimeMail(QrPath, logoPath, accountLogo, account.getName(), applicationUser);
+                                boolean emailStatus = emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser);
                                 if (!emailStatus) {
                                     response.put("message", "Invalid user email.");
                                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -243,6 +251,7 @@ public class AppUserController {
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             Optional<ApplicationUser> applicationUser = userRepo.findById(userId);
 
@@ -261,11 +270,11 @@ public class AppUserController {
                         String code = appUser.getEmail().substring(0, appUser.getEmail().indexOf('@')) + random.nextInt(100);
                         String QRPath = "QRCodes/" + code + ".png";
                         String accountLogo = account.getImageUrl();
-                        String groupLogo = group.getLogoUrl();
+                        String mailSubj = generalSettings.getMailSub();
 
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
                         appUser.setCode(code);
-                        if (emailService.sendMimeMail(QrPath, groupLogo, accountLogo, account.getName(), appUser)) {
+                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), appUser)) {
                             userRepo.save(appUser);
 
                             response.put("message", "QRCode send successfully.");

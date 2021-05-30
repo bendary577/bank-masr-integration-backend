@@ -11,20 +11,21 @@ public class Reservation {
     public String checkInTime = "";
     public String checkOutTime = "";
     public Date reservationDate;
+    public String reservationStatus = "";
 
     public int nights = 0;
     public String roomNo = "";
     public String roomRentType = "";
     public double dailyRoomRate = 0.0;
-    public String roomType = "";
+    public int roomType = 0;
 
-    public String gender = "";
-    public String customerType = "";
-    public String purposeOfVisit = "";
+    public int gender = 0;
+    public int customerType = 0;
+    public int purposeOfVisit = 0;
     public String dateOfBirth = "";
-    public String nationalityCode = "";
+    public int nationalityCode = 0;
 
-    public String paymentType = "";
+    public int paymentType = 0;
 
     public int noOfRooms = 0;
     public int adults = 0;

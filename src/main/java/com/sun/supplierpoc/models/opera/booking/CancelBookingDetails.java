@@ -3,7 +3,7 @@ public class CancelBookingDetails {
     public String transactionId = "";
     public String bookingNo = "";
 
-    public String cancelReason = "0";
+    public int cancelReason = 0;
     public String cancelWithCharges = "";
     public String chargeableDays = "0";
     public String roomRentType = "0";
@@ -13,6 +13,6 @@ public class CancelBookingDetails {
     public String municipalityTax = "0";
     public String discount = "0";
     public String grandTotal = "0";
-    public String paymentType = "";
+    public int paymentType = 0;
     public String cuFlag = "";
 }

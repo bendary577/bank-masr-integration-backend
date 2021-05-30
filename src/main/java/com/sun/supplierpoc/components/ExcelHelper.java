@@ -594,7 +594,7 @@ public class ExcelHelper {
                     expenseItem.vat = "0";
                     expenseItem.municipalityTax = "0";
 
-                    if (!expenseItem.expenseTypeId.equals("") && !expenseItem.unitPrice.equals("0.0")) {
+                    if (expenseItem.expenseTypeId != 0 && !expenseItem.unitPrice.equals("0.0")) {
                         expenseObject.items.add(expenseItem);
 
                         HashMap<String, Object> data = new HashMap<>();
@@ -663,7 +663,7 @@ public class ExcelHelper {
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
-            String transactionDescription = "";
+            int transactionDescription = 0;
             String groupCodeDescription = "";
 
             ArrayList<String> columnsName = new ArrayList<>();
@@ -775,7 +775,7 @@ public class ExcelHelper {
                 expenseItem.unitPrice = String.valueOf(transactionAmount);
                 expenseItem.grandTotal = String.valueOf(unitPrice + vat + municipalityTax + serviceCharge);
 
-                if (!expenseItem.expenseTypeId.equals("") && !expenseItem.unitPrice.equals("0.0")) {
+                if (expenseItem.expenseTypeId != 0 && !expenseItem.unitPrice.equals("0.0")) {
                     expenseObject.items.add(expenseItem);
 
                     HashMap<String, Object> data = new HashMap<>();

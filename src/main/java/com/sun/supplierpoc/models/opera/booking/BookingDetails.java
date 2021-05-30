@@ -2,10 +2,9 @@ package com.sun.supplierpoc.models.opera.booking;
 
 public class BookingDetails {
     public String transactionId = "";
-    public String transactionTypeId = "";
+    public int transactionTypeId = 0;
 
     public String bookingNo = "";
-    public String nationalityCode = "";
 
     public String checkInDate = "";
     public String checkOutDate = "";
@@ -24,13 +23,14 @@ public class BookingDetails {
 
     public Double grandTotal = 0.0;
 
-    public String gender = "";
-    public String customerType = "";
-    public String roomType = "";
-    public String purposeOfVisit = "";
+    public int gender = 0;
+    public int customerType = 0;
+    public int roomType = 0;
+    public int purposeOfVisit = 0;
+    public int nationalityCode = 0;
     public String dateOfBirth = "";
 
-    public String paymentType = "";
+    public int paymentType = 0;
 
     public int noOfRooms = 0;
     public int noOfGuest = 0;

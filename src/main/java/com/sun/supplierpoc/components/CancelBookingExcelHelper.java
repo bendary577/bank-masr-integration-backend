@@ -115,7 +115,7 @@ public class CancelBookingExcelHelper {
                             bookingDetails.roomRentType = "";
                             bookingDetails.paymentType = 0;
                         }
-                        saveBooking(bookingDetails, syncJob, newBookingSyncType, syncJobDataList);
+                        saveBooking(bookingDetails, syncJob, syncJobType, newBookingSyncType, syncJobDataList);
                     }
 
                     // Create new one
@@ -161,7 +161,7 @@ public class CancelBookingExcelHelper {
                 bookingDetails.paymentType = 0;
             }
 
-            saveBooking(bookingDetails, syncJob, newBookingSyncType, syncJobDataList);
+            saveBooking(bookingDetails, syncJob, syncJobType, newBookingSyncType, syncJobDataList);
 
             workbook.close();
 
@@ -241,23 +241,26 @@ public class CancelBookingExcelHelper {
     }
 
     private void saveBooking(CancelBookingDetails bookingDetails, SyncJob syncJob,
-                             SyncJobType syncJobType, List<SyncJobData> syncJobDataList) {
-        // check if it was new booking or update
+                             SyncJobType syncJobType, SyncJobType newBookingSyncType,
+                             List<SyncJobData> syncJobDataList) {
+        // Get booking number
         ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo,
-                syncJobType.getId());
+                newBookingSyncType.getId());
 
-        boolean createUpdateFlag;
-
-        if (list.size() > 0) {
-            // Update
-            // Check if there is any changes
-            bookingDetails.cuFlag = "2";
+        if (list.size() > 0)
             bookingDetails.transactionId = (String) list.get(0).getData().get("transactionId");
-            createUpdateFlag = checkChanges(bookingDetails, list.get(0));
-        } else {
-            // New
-            bookingDetails.cuFlag = "1";
+        else
             bookingDetails.transactionId = "";
+
+        // Check it was create or update
+        boolean createUpdateFlag;
+        list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo,
+                syncJobType.getId());
+        if (list.size() > 0){
+            bookingDetails.cuFlag = "2";
+            createUpdateFlag = checkChanges(bookingDetails, list.get(0));
+        } else{
+            bookingDetails.cuFlag = "1";
             createUpdateFlag = true;
         }
 

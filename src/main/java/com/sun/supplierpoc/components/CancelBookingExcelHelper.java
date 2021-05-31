@@ -57,8 +57,6 @@ public class CancelBookingExcelHelper {
     public List<SyncJobData> getCancelBookingFromExcel(SyncJob syncJob, GeneralSettings generalSettings,
                                                     SyncJobType syncJobType, SyncJobType newBookingSyncType,
                                                        InputStream is) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-
         List<SyncJobData> syncJobDataList = new ArrayList<>();
 
         double basicRoomRate;

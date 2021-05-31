@@ -129,7 +129,7 @@ public class NewBookingExcelHelper {
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
                     // Save old one
                     if (!bookingDetails.bookingNo.equals("")) {
-                        bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate * bookingDetails.noOfRooms);
+                        bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal * bookingDetails.noOfRooms);
                         saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
                     }
 
@@ -184,7 +184,8 @@ public class NewBookingExcelHelper {
                     bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + rateCode.basicPackageValue);
                 }
             }
-            bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate * bookingDetails.noOfRooms);
+
+            bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal * bookingDetails.noOfRooms);
             saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
 
             workbook.close();
@@ -330,7 +331,7 @@ public class NewBookingExcelHelper {
         ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(bookingDetails.bookingNo,
                 syncJobType.getId());
 
-        boolean createUpdateFlag = false;
+        boolean createUpdateFlag;
 
         if (list.size() > 0) {
             // Update

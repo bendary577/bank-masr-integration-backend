@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.components;
 
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
@@ -365,6 +366,7 @@ public class NewBookingExcelHelper {
             }
 
             SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+            checkNewBookingStatus(syncJobData);
             syncJobDataList.add(syncJobData);
         }
     }
@@ -417,5 +419,25 @@ public class NewBookingExcelHelper {
             return true;
 
         else return bookingDetails.paymentType != (int) data.getData().get("paymentType");
+    }
+
+    private void checkNewBookingStatus(SyncJobData cancelBookingDetails){
+        String status;
+        String reason = "";
+        HashMap<String, Object> data = cancelBookingDetails.getData();
+
+        if(data.get("transactionId").equals("") && !data.get("transactionTypeId").equals("3")){
+            status = Constants.FAILED;
+            reason = "Can not check-out, before check-in first.";
+        }else{
+            if(data.get("bookingNo").equals("")){
+                status = Constants.FAILED;
+                reason = "Booking No is required and should be numeric only.";
+            } else{
+                status = Constants.SUCCESS;
+            }
+        }
+        cancelBookingDetails.setReason(reason);
+        cancelBookingDetails.setStatus(status);
     }
 }

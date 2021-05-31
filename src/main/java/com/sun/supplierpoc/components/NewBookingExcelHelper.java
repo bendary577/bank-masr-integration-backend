@@ -40,6 +40,8 @@ SELECT
   reservation_name.payment_method as pm,
   reservation_name.resv_status as status,
   reservation_daily_elements.room,
+  room.description,
+  reservation_daily_elements.quantity,
   reservation_daily_element_name.reservation_date as res_date,
   reservation_daily_element_name.base_rate_amount as amount,
   CASE WHEN reservation_daily_element_name.discount_amt is NULL THEN 0 END as disc,
@@ -51,6 +53,7 @@ FROM
   INNER JOIN name ON reservation_name.name_id = name.name_id
   INNER JOIN reservation_daily_element_name ON reservation_name.resv_name_id = reservation_daily_element_name.resv_name_id
   inner join reservation_daily_elements on reservation_daily_element_name.resv_daily_el_seq = reservation_daily_elements.resv_daily_el_seq
+  LEFT join room on reservation_daily_elements.room = room.room
 WHERE
   reservation_name.update_date >= trunc(sysdate)
   And reservation_name.update_date < trunc(sysdate) + 1
@@ -145,6 +148,8 @@ public class NewBookingExcelHelper {
                     bookingDetails.reservationStatus = typeName;
 
                     bookingDetails.allotedRoomNo = reservation.roomNo;
+                    bookingDetails.noOfRooms = reservation.noOfRooms;
+                    bookingDetails.roomType = reservation.roomType;
                     bookingDetails.totalDurationDays = nights;
                     bookingDetails.noOfGuest = reservation.adults + reservation.children;
 
@@ -265,16 +270,21 @@ public class NewBookingExcelHelper {
                 reservation.children = (int) (currentCell.getNumericCellValue());
             } else if (cellIdx == columnsName.indexOf("nights")) {
                 reservation.nights = (int) (currentCell.getNumericCellValue());
-            } else if (cellIdx == columnsName.indexOf("room")) {
+            }
+
+            else if (cellIdx == columnsName.indexOf("room")) {
                 reservation.roomNo = String.valueOf((int) (currentCell.getNumericCellValue()));
-            } else if (cellIdx == columnsName.indexOf("room type")) {
+            } else if (cellIdx == columnsName.indexOf("description")) {
                 typeName = (currentCell.getStringCellValue());
                 bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
 
                 reservation.roomType = bookingType.getTypeId();
-            } else if (cellIdx == columnsName.indexOf("no. of rooms")) {
+            } else if (cellIdx == columnsName.indexOf("quantity")) {
                 reservation.noOfRooms = (int) (currentCell.getNumericCellValue());
-            } else if (cellIdx == columnsName.indexOf("amount")) {
+            }
+
+
+            else if (cellIdx == columnsName.indexOf("amount")) {
                 reservation.dailyRoomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
             } else if (cellIdx == columnsName.indexOf("res date")) {
                 reservation.reservationDate = currentCell.getDateCellValue();

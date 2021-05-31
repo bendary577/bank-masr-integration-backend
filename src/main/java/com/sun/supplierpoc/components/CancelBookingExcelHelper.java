@@ -71,7 +71,7 @@ public class CancelBookingExcelHelper {
         rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
         rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
         rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
-        rateCode.basicPackageValue = 20;
+        rateCode.basicPackageValue = 0;
 
         CancelBookingDetails bookingDetails = new CancelBookingDetails();
         Reservation reservation;
@@ -111,7 +111,7 @@ public class CancelBookingExcelHelper {
                             bookingDetails.totalRoomRate = 0;
                             bookingDetails.grandTotal = 0;
                             bookingDetails.chargeableDays = 0;
-                            bookingDetails.roomRentType = "";
+                            bookingDetails.roomRentType = "0";
                             bookingDetails.paymentType = 0;
                         }
                         saveBooking(bookingDetails, syncJob, syncJobType, newBookingSyncType, syncJobDataList);
@@ -156,7 +156,7 @@ public class CancelBookingExcelHelper {
                 bookingDetails.totalRoomRate = 0;
                 bookingDetails.grandTotal = 0;
                 bookingDetails.chargeableDays = 0;
-                bookingDetails.roomRentType = "";
+                bookingDetails.roomRentType = "0";
                 bookingDetails.paymentType = 0;
             }
 
@@ -214,12 +214,30 @@ public class CancelBookingExcelHelper {
                     reservation.checkOutDate = currentCell.getDateCellValue();
                 }
             } else if (cellIdx == columnsName.indexOf("cancellation_date")) {
+//                try {
+//                    if (!currentCell.getStringCellValue().equals("")) {
+//                        try{
+//                            reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+//                        } catch (ParseException e) {
+//                            // 03-DEC-20
+//                            reservation.reservationDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+//                        }
+//                    }
+//                } catch (Exception e) {
+//                    reservation.checkOutDate = currentCell.getDateCellValue();
+//                }
+            } else if (cellIdx == columnsName.indexOf("res_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        try{
+                            reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        } catch (ParseException e) {
+                            // 03-DEC-20
+                            reservation.reservationDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+                        }
                     }
                 } catch (Exception e) {
-                    reservation.checkOutDate = currentCell.getDateCellValue();
+                    reservation.reservationDate = currentCell.getDateCellValue();
                 }
             } else if (cellIdx == columnsName.indexOf("Cancel_reason")) {
                 typeName = (currentCell.getStringCellValue());

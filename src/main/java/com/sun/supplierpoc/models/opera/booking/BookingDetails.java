@@ -13,7 +13,7 @@ public class BookingDetails {
 
     public int totalDurationDays = 0;
     public int allotedRoomNo = -1;
-    public String roomRentType = "";
+    public String roomRentType = "1"; // Daily
     public Double dailyRoomRate = 0.0;
     public Double totalRoomRate = 0.0;
 

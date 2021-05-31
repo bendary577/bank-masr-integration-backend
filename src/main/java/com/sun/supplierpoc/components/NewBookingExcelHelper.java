@@ -129,6 +129,7 @@ public class NewBookingExcelHelper {
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
                     // Save old one
                     if (!bookingDetails.bookingNo.equals("")) {
+                        bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate * bookingDetails.noOfRooms);
                         saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
                     }
 
@@ -183,7 +184,7 @@ public class NewBookingExcelHelper {
                     bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + rateCode.basicPackageValue);
                 }
             }
-
+            bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate * bookingDetails.noOfRooms);
             saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
 
             workbook.close();
@@ -368,9 +369,7 @@ public class NewBookingExcelHelper {
     }
 
     private boolean checkChanges(BookingDetails bookingDetails, SyncJobData data){
-        if(bookingDetails.nationalityCode != (int) data.getData().get("nationalityCode"))
-            return true;
-        else if (bookingDetails.transactionTypeId != (int) data.getData().get("transactionTypeId"))
+        if (bookingDetails.transactionTypeId != (int) data.getData().get("transactionTypeId"))
             return true;
         else if (!bookingDetails.checkInDate.equals(data.getData().get("checkInDate")))
             return true;
@@ -380,26 +379,40 @@ public class NewBookingExcelHelper {
             return true;
         else if (!bookingDetails.checkOutTime.equals(data.getData().get("checkOutTime")))
             return true;
+
         else if (bookingDetails.totalDurationDays != (int) data.getData().get("totalDurationDays"))
             return true;
         else if (!bookingDetails.allotedRoomNo.equals(data.getData().get("allotedRoomNo")))
             return true;
         else if (!bookingDetails.roomRentType.equals(data.getData().get("roomRentType")))
             return true;
+        else if (bookingDetails.roomType != (int) data.getData().get("roomType"))
+            return true;
         else if (bookingDetails.noOfRooms != (int) data.getData().get("noOfRooms"))
             return true;
         else if (bookingDetails.noOfGuest != (int) data.getData().get("noOfGuest"))
             return true;
 
+        else if(bookingDetails.nationalityCode != (int) data.getData().get("nationalityCode"))
+            return true;
         else if (bookingDetails.gender != (int) data.getData().get("gender"))
             return true;
         else if (bookingDetails.customerType != (int) data.getData().get("customerType"))
             return true;
-        else if (bookingDetails.roomType != (int) data.getData().get("roomType"))
-            return true;
         else if (bookingDetails.purposeOfVisit != (int) data.getData().get("purposeOfVisit"))
             return true;
         else if (!bookingDetails.dateOfBirth.equals(data.getData().get("dateOfBirth")))
+            return true;
+
+        else if (bookingDetails.dailyRoomRate != (double) data.getData().get("dailyRoomRate"))
+            return true;
+        else if (bookingDetails.totalRoomRate != (double) data.getData().get("totalRoomRate"))
+            return true;
+        else if (bookingDetails.vat != (double) data.getData().get("vat"))
+            return true;
+        else if (bookingDetails.municipalityTax != (double) data.getData().get("municipalityTax"))
+            return true;
+        else if (bookingDetails.discount != (double) data.getData().get("discount"))
             return true;
 
         else return bookingDetails.paymentType != (int) data.getData().get("paymentType");

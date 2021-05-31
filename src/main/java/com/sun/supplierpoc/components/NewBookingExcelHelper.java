@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -98,7 +99,7 @@ public class NewBookingExcelHelper {
         rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
         rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
         rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
-        rateCode.basicPackageValue = 20;
+        rateCode.basicPackageValue = 0;
 
         BookingDetails bookingDetails = new BookingDetails();
         Reservation reservation;
@@ -162,8 +163,10 @@ public class NewBookingExcelHelper {
                     bookingDetails.dateOfBirth = reservation.dateOfBirth;
                     bookingDetails.paymentType = reservation.paymentType;
 
-                    bookingDetails.checkInDate = dateFormat.format(reservation.checkInDate);
-                    bookingDetails.checkOutDate = dateFormat.format(reservation.checkOutDate);
+                    if(reservation.checkInDate != null)
+                        bookingDetails.checkInDate = dateFormat.format(reservation.checkInDate);
+                    if(reservation.checkOutDate != null)
+                        bookingDetails.checkOutDate = dateFormat.format(reservation.checkOutDate);
                 }
 
                 if(nights > 0){
@@ -218,27 +221,37 @@ public class NewBookingExcelHelper {
         while (cellsInRow.hasNext()) {
             Cell currentCell = cellsInRow.next();
 
-            if (cellIdx == columnsName.indexOf("booking no")) {
+            if (cellIdx == columnsName.indexOf("booking_no")) {
                 reservation.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
             } else if (cellIdx == columnsName.indexOf("status")) {
                 reservation.reservationStatus = currentCell.getStringCellValue();
-            } else if (cellIdx == columnsName.indexOf("arrival date")) {
+            } else if (cellIdx == columnsName.indexOf("arrival_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        try{
+                            reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        } catch (ParseException e) {
+                            // 03-DEC-20
+                            reservation.checkInDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+                        }
                     }
                 } catch (Exception e) {
                     reservation.checkInDate = currentCell.getDateCellValue();
                 }
-            } else if (cellIdx == columnsName.indexOf("departure date")) {
+            } else if (cellIdx == columnsName.indexOf("departure_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        try{
+                            reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        } catch (ParseException e) {
+                            // 03-DEC-20
+                            reservation.checkOutDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+                        }
                     }
                 } catch (Exception e) {
                     reservation.checkOutDate = currentCell.getDateCellValue();
                 }
-            } else if (cellIdx == columnsName.indexOf("arrival time")) {
+            } else if (cellIdx == columnsName.indexOf("arrival_time")) {
                 try {
                     if (currentCell.getStringCellValue().equals(""))
                         reservation.checkInTime = "00:00";
@@ -253,7 +266,7 @@ public class NewBookingExcelHelper {
                     time = currentCell.getDateCellValue();
                     reservation.checkInTime = (timeFormat.format(time));
                 }
-            } else if (cellIdx == columnsName.indexOf("departure time")) {
+            } else if (cellIdx == columnsName.indexOf("departure_time")) {
                 try {
                     if (currentCell.getStringCellValue().equals(""))
                         reservation.checkOutTime = "00:00";
@@ -276,7 +289,11 @@ public class NewBookingExcelHelper {
             }
 
             else if (cellIdx == columnsName.indexOf("room")) {
-                reservation.roomNo = String.valueOf((int) (currentCell.getNumericCellValue()));
+                try {
+                    reservation.roomNo = (int) (currentCell.getNumericCellValue());
+                } catch (Exception e) {
+                    reservation.roomNo = -1;
+                }
             } else if (cellIdx == columnsName.indexOf("description")) {
                 typeName = (currentCell.getStringCellValue());
                 bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
@@ -289,8 +306,19 @@ public class NewBookingExcelHelper {
 
             else if (cellIdx == columnsName.indexOf("amount")) {
                 reservation.dailyRoomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
-            } else if (cellIdx == columnsName.indexOf("res date")) {
-                reservation.reservationDate = currentCell.getDateCellValue();
+            } else if (cellIdx == columnsName.indexOf("res_date")) {
+                try {
+                    if (!currentCell.getStringCellValue().equals("")) {
+                        try{
+                            reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        } catch (ParseException e) {
+                            // 03-DEC-20
+                            reservation.reservationDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+                        }
+                    }
+                } catch (Exception e) {
+                    reservation.reservationDate = currentCell.getDateCellValue();
+                }
             } else if (cellIdx == columnsName.indexOf("ct")) {
                 typeName = currentCell.getStringCellValue();
                 bookingType = conversions.checkBookingTypeExistence(customerTypes, typeName);
@@ -385,7 +413,7 @@ public class NewBookingExcelHelper {
 
         else if (bookingDetails.totalDurationDays != (int) data.getData().get("totalDurationDays"))
             return true;
-        else if (!bookingDetails.allotedRoomNo.equals(data.getData().get("allotedRoomNo")))
+        else if (bookingDetails.allotedRoomNo != (int) data.getData().get("allotedRoomNo"))
             return true;
         else if (!bookingDetails.roomRentType.equals(data.getData().get("roomRentType")))
             return true;
@@ -433,6 +461,9 @@ public class NewBookingExcelHelper {
             if(data.get("bookingNo").equals("")){
                 status = Constants.FAILED;
                 reason = "Booking No is required and should be numeric only.";
+            } else if(data.get("roomNo").equals("-1")){
+                status = Constants.FAILED;
+                reason = "Invalid Room No. It must be Numeric.";
             } else{
                 status = Constants.SUCCESS;
             }

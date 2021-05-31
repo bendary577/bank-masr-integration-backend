@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -182,19 +183,37 @@ public class CancelBookingExcelHelper {
         while (cellsInRow.hasNext()) {
             Cell currentCell = cellsInRow.next();
 
-            if (cellIdx == columnsName.indexOf("booking no")) {
+            if (cellIdx == columnsName.indexOf("booking_no")) {
                 reservation.bookingNo = String.valueOf((int) (currentCell.getNumericCellValue()));
             }  else if (cellIdx == columnsName.indexOf("status")) {
                 reservation.reservationStatus = currentCell.getStringCellValue();
-            } else if (cellIdx == columnsName.indexOf("arrival date")) {
+            } else if (cellIdx == columnsName.indexOf("arrival_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        try{
+                            reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        } catch (ParseException e) {
+                            // 03-DEC-20
+                            reservation.checkInDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+                        }
                     }
                 } catch (Exception e) {
                     reservation.checkInDate = currentCell.getDateCellValue();
                 }
-            } else if (cellIdx == columnsName.indexOf("departure date")) {
+            } else if (cellIdx == columnsName.indexOf("departure_date")) {
+                try {
+                    if (!currentCell.getStringCellValue().equals("")) {
+                        try{
+                            reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
+                        } catch (ParseException e) {
+                            // 03-DEC-20
+                            reservation.checkOutDate = new SimpleDateFormat("dd-MMMM-yy").parse(currentCell.getStringCellValue());
+                        }
+                    }
+                } catch (Exception e) {
+                    reservation.checkOutDate = currentCell.getDateCellValue();
+                }
+            } else if (cellIdx == columnsName.indexOf("cancellation_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
                         reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
@@ -202,15 +221,7 @@ public class CancelBookingExcelHelper {
                 } catch (Exception e) {
                     reservation.checkOutDate = currentCell.getDateCellValue();
                 }
-            } else if (cellIdx == columnsName.indexOf("cancellation date")) {
-                try {
-                    if (!currentCell.getStringCellValue().equals("")) {
-                        reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
-                    }
-                } catch (Exception e) {
-                    reservation.checkOutDate = currentCell.getDateCellValue();
-                }
-            } else if (cellIdx == columnsName.indexOf("Cancel Reason")) {
+            } else if (cellIdx == columnsName.indexOf("Cancel_reason")) {
                 typeName = (currentCell.getStringCellValue());
                 bookingType = conversions.checkBookingTypeExistence(cancelReasons, typeName);
 

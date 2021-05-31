@@ -12,7 +12,7 @@ public class BookingDetails {
     public String checkOutTime = "";
 
     public int totalDurationDays = 0;
-    public String allotedRoomNo = "";
+    public int allotedRoomNo = -1;
     public String roomRentType = "";
     public Double dailyRoomRate = 0.0;
     public Double totalRoomRate = 0.0;

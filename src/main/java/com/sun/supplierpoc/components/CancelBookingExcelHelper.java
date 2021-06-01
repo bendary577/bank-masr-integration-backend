@@ -90,7 +90,8 @@ public class CancelBookingExcelHelper {
             cellsInRow = currentRow.iterator();
             while (cellsInRow.hasNext()) {
                 Cell currentCell = cellsInRow.next();
-                columnsName.add(currentCell.getStringCellValue().toLowerCase().trim());
+//                columnsName.add(currentCell.getStringCellValue().toLowerCase().trim());
+                columnsName.add(conversions.transformColName(currentCell.getStringCellValue().toLowerCase().trim()));
             }
 
             while (rows.hasNext()) {
@@ -114,6 +115,7 @@ public class CancelBookingExcelHelper {
                             bookingDetails.roomRentType = "0";
                             bookingDetails.paymentType = 0;
                         }
+
                         saveBooking(bookingDetails, syncJob, syncJobType, newBookingSyncType, syncJobDataList);
                     }
 
@@ -135,8 +137,9 @@ public class CancelBookingExcelHelper {
                     basicRoomRate = reservation.dailyRoomRate;
 
                     serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
-                    vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
                     municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
+
+                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
 
                     grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
 

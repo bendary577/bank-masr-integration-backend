@@ -118,7 +118,7 @@ public class NewBookingExcelHelper {
             cellsInRow = currentRow.iterator();
             while (cellsInRow.hasNext()) {
                 Cell currentCell = cellsInRow.next();
-                columnsName.add(currentCell.getStringCellValue().toLowerCase().trim());
+                columnsName.add(conversions.transformColName(currentCell.getStringCellValue().toLowerCase().trim()));
             }
 
             while (rows.hasNext()) {
@@ -131,7 +131,15 @@ public class NewBookingExcelHelper {
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
                     // Save old one
                     if (!bookingDetails.bookingNo.equals("")) {
-                        bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal * bookingDetails.noOfRooms);
+                        if(bookingDetails.checkInTime.equals(""))
+                            bookingDetails.checkInTime = "14:00";
+
+                        if(bookingDetails.checkOutTime.equals(""))
+                            bookingDetails.checkOutTime = "12:00";
+
+                        bookingDetails.grandTotal = conversions.roundUpDouble(
+                                bookingDetails.grandTotal * bookingDetails.noOfRooms);
+
                         saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
                     }
 
@@ -175,8 +183,9 @@ public class NewBookingExcelHelper {
                     basicRoomRate = reservation.dailyRoomRate;
 
                     serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
-                    vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
                     municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
+
+                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
 
                     grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
 
@@ -189,7 +198,14 @@ public class NewBookingExcelHelper {
                 }
             }
 
-            bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal * bookingDetails.noOfRooms);
+            if(bookingDetails.checkInTime.equals(""))
+                bookingDetails.checkInTime = "14:00";
+
+            if(bookingDetails.checkOutTime.equals(""))
+                bookingDetails.checkOutTime = "12:00";
+            bookingDetails.grandTotal = conversions.roundUpDouble(
+                    bookingDetails.grandTotal * bookingDetails.noOfRooms);
+
             saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
 
             workbook.close();
@@ -292,7 +308,9 @@ public class NewBookingExcelHelper {
                 try {
                     reservation.roomNo = (int) (currentCell.getNumericCellValue());
                 } catch (Exception e) {
-                    reservation.roomNo = -1;
+                    if(!currentCell.getStringCellValue().equals("")){
+                        reservation.roomNo = -1;
+                    }
                 }
             } else if (cellIdx == columnsName.indexOf("description")) {
                 typeName = (currentCell.getStringCellValue());
@@ -375,6 +393,10 @@ public class NewBookingExcelHelper {
             createUpdateFlag = true;
         }
 
+        // check if this rooms for non guests or not
+        if(bookingDetails.noOfRooms == -1)
+            createUpdateFlag = false;
+
         if(createUpdateFlag){
             HashMap<String, Object> data = new HashMap<>();
             Field[] allFields = bookingDetails.getClass().getDeclaredFields();
@@ -454,14 +476,14 @@ public class NewBookingExcelHelper {
         String reason = "";
         HashMap<String, Object> data = cancelBookingDetails.getData();
 
-        if(data.get("transactionId").equals("") && !data.get("transactionTypeId").equals("3")){
+        if(data.get("transactionId").equals("") && data.get("transactionTypeId").equals("3")){
             status = Constants.FAILED;
             reason = "Can not check-out, before check-in first.";
         }else{
             if(data.get("bookingNo").equals("")){
                 status = Constants.FAILED;
                 reason = "Booking No is required and should be numeric only.";
-            } else if(data.get("roomNo").equals("-1")){
+            } else if(data.containsKey("allotedRoomNo") && data.get("allotedRoomNo").equals("-1")){
                 status = Constants.FAILED;
                 reason = "Invalid Room No. It must be Numeric.";
             } else{

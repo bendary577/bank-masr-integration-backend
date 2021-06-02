@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services.opera;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.components.CancelBookingExcelHelper;
 import com.sun.supplierpoc.components.ExcelHelper;
 import com.sun.supplierpoc.components.NewBookingExcelHelper;
 import com.sun.supplierpoc.models.*;
@@ -39,6 +40,9 @@ public class BookingService {
 
     @Autowired
     NewBookingExcelHelper bookingExcelHelper;
+
+    @Autowired
+    CancelBookingExcelHelper cancelBookingExcelHelper;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -133,8 +137,8 @@ public class BookingService {
 
             FileInputStream input = new FileInputStream(file);
 
-            List<SyncJobData> syncJobData = excelHelper.getCancelBookingFromExcel(syncJob,generalSettings,
-                    syncJobType, newBookingSyncType, input);
+            List<SyncJobData> syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob,generalSettings,
+                    syncJobType, newBookingSyncType,input);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

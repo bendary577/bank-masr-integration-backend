@@ -260,12 +260,12 @@ public class ExcelHelper {
 
                 // 1=Yes, 2=No
                 if (paymentAmount > 0 || transactionAmount > 0)
-                    bookingDetails.cancelWithCharges = "1";
+                    bookingDetails.cancelWithCharges = 1;
                 else {
-                    bookingDetails.cancelWithCharges = "2";
+                    bookingDetails.cancelWithCharges = 2;
                 }
 
-                if (bookingDetails.cancelWithCharges.equals("1")) {
+                if (bookingDetails.cancelWithCharges == 1) {
                     serviceCharge = (roomRate * rateCode.serviceChargeRate)/100;
                     vat = ((serviceCharge + roomRate) * rateCode.vatRate)/100;
                     municipalityTax = (roomRate * rateCode.municipalityTaxRate)/100;
@@ -276,20 +276,20 @@ public class ExcelHelper {
 
                     // check if there is discount percent
                     if(discount > 0)
-                        bookingDetails.discount = String.valueOf(discount);
+                        bookingDetails.discount = discount;
                     else if (discountPercent > 0){
                         discount = (grandTotal * discountPercent) / 100;
-                        bookingDetails.discount = String.valueOf(discount);
+                        bookingDetails.discount = discount;
                     }
 
                     grandTotal = grandTotal - discount;
 
-                    bookingDetails.vat = String.valueOf(vat);
-                    bookingDetails.municipalityTax = String.valueOf(municipalityTax);
-                    bookingDetails.dailyRoomRate = String.valueOf(roomRate + rateCode.basicPackageValue);
-                    bookingDetails.totalRoomRate = String.valueOf(totalRoomRate);
-                    bookingDetails.grandTotal = String.valueOf(grandTotal);
-                    bookingDetails.chargeableDays = String.valueOf(nights);
+                    bookingDetails.vat = vat;
+                    bookingDetails.municipalityTax = municipalityTax;
+                    bookingDetails.dailyRoomRate = roomRate + rateCode.basicPackageValue;
+                    bookingDetails.totalRoomRate = totalRoomRate;
+                    bookingDetails.grandTotal = grandTotal;
+                    bookingDetails.chargeableDays = nights;
 
                     if (arrivalDate != null && departureDate != null) {
                         bookingDetails.roomRentType = conversions.checkRoomRentType(arrivalDate, departureDate);
@@ -401,7 +401,8 @@ public class ExcelHelper {
                     cellsInRow = currentRow.iterator();
                     while (cellsInRow.hasNext()) {
                         Cell currentCell = cellsInRow.next();
-                        columnsName.add(currentCell.getStringCellValue().strip());
+//                        columnsName.add(currentCell.getStringCellValue().strip());
+                        columnsName.add(conversions.transformColName(currentCell.getStringCellValue().toLowerCase().trim()));
                     }
                     rowNumber++;
                     continue;
@@ -413,23 +414,25 @@ public class ExcelHelper {
                 int cellIdx = 0;
                 while (cellsInRow.hasNext()) {
                     Cell currentCell = cellsInRow.next();
-                    if (cellIdx == columnsName.indexOf("Rooms Occupied")) {
+                    if (cellIdx == columnsName.indexOf("rooms_occupied")) {
                         occupancyDetails.roomsOccupied = (int) currentCell.getNumericCellValue();
-                    } else if (cellIdx == columnsName.indexOf("Rooms Available")) {
+                    } else if (cellIdx == columnsName.indexOf("rooms_available")) {
                         occupancyDetails.roomsAvailable = (int) currentCell.getNumericCellValue();
-                    } else if (cellIdx == columnsName.indexOf("Rooms On Maintenance")) {
+                    } else if (cellIdx == columnsName.indexOf("rooms_on_maintenance")) {
                         occupancyDetails.roomsOnMaintenance = (int) currentCell.getNumericCellValue();
-                    } else if (cellIdx == columnsName.indexOf("Total Rooms")) {
+                    } else if (cellIdx == columnsName.indexOf("total_rooms")) {
                         totalRooms = (int) currentCell.getNumericCellValue();
                     }
                     cellIdx++;
                 }
 
-                if (totalRooms == 0)
-                    continue;
+//                if (totalRooms == 0)
+//                    continue;
 
-                occupancyDetails.roomsBooked = totalRooms -
-                        (occupancyDetails.roomsOccupied + occupancyDetails.roomsAvailable + occupancyDetails.roomsOnMaintenance);
+//                occupancyDetails.roomsBooked = totalRooms -
+//                        (occupancyDetails.roomsOccupied + occupancyDetails.roomsAvailable + occupancyDetails.roomsOnMaintenance);
+
+                occupancyDetails.roomsBooked = 0;
 
                 Date updateDate = new Date();
                 occupancyDetails.updateDate = dateFormat.format(updateDate);
@@ -594,7 +597,7 @@ public class ExcelHelper {
                     expenseItem.vat = "0";
                     expenseItem.municipalityTax = "0";
 
-                    if (!expenseItem.expenseTypeId.equals("") && !expenseItem.unitPrice.equals("0.0")) {
+                    if (expenseItem.expenseTypeId != 0 && !expenseItem.unitPrice.equals("0.0")) {
                         expenseObject.items.add(expenseItem);
 
                         HashMap<String, Object> data = new HashMap<>();
@@ -663,7 +666,7 @@ public class ExcelHelper {
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
-            String transactionDescription = "";
+            int transactionDescription = 0;
             String groupCodeDescription = "";
 
             ArrayList<String> columnsName = new ArrayList<>();
@@ -775,7 +778,7 @@ public class ExcelHelper {
                 expenseItem.unitPrice = String.valueOf(transactionAmount);
                 expenseItem.grandTotal = String.valueOf(unitPrice + vat + municipalityTax + serviceCharge);
 
-                if (!expenseItem.expenseTypeId.equals("") && !expenseItem.unitPrice.equals("0.0")) {
+                if (expenseItem.expenseTypeId != 0 && !expenseItem.unitPrice.equals("0.0")) {
                     expenseObject.items.add(expenseItem);
 
                     HashMap<String, Object> data = new HashMap<>();

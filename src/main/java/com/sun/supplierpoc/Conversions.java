@@ -308,12 +308,12 @@ public class Conversions {
                 return paymentType;
             }
         }
-        return new BookingType("0");
+        return new BookingType(0);
     }
 
     public BookingType checkExpenseTypeExistence(ArrayList<BookingType> expenseTypes, String typeName){
         if(typeName.equals("")){
-            return new BookingType("1");
+            return new BookingType(1);
         }
         for (BookingType paymentType : expenseTypes) {
             if(typeName.toLowerCase().contains(paymentType.getType().toLowerCase())){
@@ -321,7 +321,7 @@ public class Conversions {
             }
         }
 
-        return new BookingType("1");
+        return new BookingType(1);
     }
 
     public RateCode checkRateCodeExistence(ArrayList<RateCode> rateCodes, String code){

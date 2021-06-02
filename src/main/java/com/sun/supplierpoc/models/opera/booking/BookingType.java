@@ -2,13 +2,13 @@ package com.sun.supplierpoc.models.opera.booking;
 
 public class BookingType {
     private boolean checked = false;
-    private String typeId = "";
+    private int typeId = 0;
     private String type = "";
     private String typeDescription = "";
 
     public BookingType() { }
 
-    public BookingType(String typeId) {
+    public BookingType(int typeId) {
         this.typeId = typeId;
     }
 
@@ -20,11 +20,11 @@ public class BookingType {
         this.checked = checked;
     }
 
-    public String getTypeId() {
+    public int getTypeId() {
         return typeId;
     }
 
-    public void setTypeId(String typeId) {
+    public void setTypeId(int typeId) {
         this.typeId = typeId;
     }
 

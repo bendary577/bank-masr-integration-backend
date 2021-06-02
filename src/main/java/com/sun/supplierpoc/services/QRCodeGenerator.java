@@ -48,14 +48,15 @@ public class QRCodeGenerator {
         } catch (IOException ex) {
             LoggerFactory.getLogger(QRCodeGenerator.class).info(ex.getMessage());
         }
-////
-////        FileInputStream input = new FileInputStream(file);
-////        MultipartFile multipartFile = new MockMultipartFile("file",
-////                file.getName(), "PNG", IOUtils.toByteArray(input));
-////
-////        String QRPath = imageService.store(multipartFile);
-//
-//        return QRPath;
-        return filePath;
+
+        FileInputStream input = new FileInputStream(file);
+        MultipartFile multipartFile = new MockMultipartFile("file",
+                file.getName(), "PNG", IOUtils.toByteArray(input));
+
+        String QRPath = imageService.store(multipartFile);
+
+        new File(filePath).delete();
+
+        return QRPath;
     }
 }

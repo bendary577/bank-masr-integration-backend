@@ -52,7 +52,7 @@ public class ActivityService {
                 response.put("message", "This user is deleted.");
             } else if(!user.getAccountId().equals(account.getId())){
                 response.put("message", "This user does not belong to this account loyalty program.");
-            } else if(transactionRepo.existsByCheckNumberAndUser(transaction.getCheckNumber(), user)){
+            } else if(transactionRepo.existsByCheckNumberAndRevenueCentreId(transaction.getCheckNumber(), transaction.getRevenueCentreId())){
                 response.put("message", "Can't use code for the same check twice.");
             }else {
 

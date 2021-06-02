@@ -121,6 +121,9 @@
             <artifactId>bson</artifactId>
             <version>3.11.2</version>
         </dependency>
+
+
+
         <!--        <dependency>-->
         <!--            <groupId>com.google.code.gson</groupId>-->
         <!--            <artifactId>gson</artifactId>-->
@@ -315,6 +318,7 @@
             <artifactId>core</artifactId>
             <version>3.4.0</version>
         </dependency>
+
         <dependency>
             <groupId>com.google.zxing</groupId>
             <artifactId>javase</artifactId>

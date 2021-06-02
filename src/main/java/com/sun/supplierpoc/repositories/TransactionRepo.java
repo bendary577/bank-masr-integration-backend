@@ -16,5 +16,7 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
     boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 
+    boolean existsByCheckNumberAndRevenueCentreId(String checkNumber, int revenueCentreId);
+
 //    boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 }

@@ -54,8 +54,8 @@ public class SendEmailService {
             String mailSubject = "More rewards, just for YOU!";
 
             String mailContent =
-                    "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 10%; margin-right: 10%;padding-left: 5%;"+
-                            "transition: 0.3s; width: 80%; border:2px solid #ae0a3b;\n'>" +
+                    "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 7%; margin-right: 7%;padding-left: 5%;"+
+                            "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
 
                     "<br>";
 
@@ -78,7 +78,7 @@ public class SendEmailService {
                             "</p>" +
 
                             "<p style=\"text-align: center ;font-weight: bold; margin-button : 10%\"> SCAN QR CODE <br> TO REDEEM OFFER</p>" +
-                            "<img src='cid:image001' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
+                            "<img src='"+qrCodePath+"' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
                             "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" +
 
                             "<br>" +
@@ -96,20 +96,22 @@ public class SendEmailService {
 
                             "<br>" +
 
-                            "<div style=\"margin-left: 70%; color: #ffffff;  "+
-                                "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 20%; height : 15% \">" +
+                            "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
+                                "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
                             "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
                             "</div>"+
-                            "<div style=\"display: table;margin-left: auto; margin-right: auto;\">";
+                            "</div>"
+//                            + "<div style=\"display: table;margin-left: auto; margin-right: auto;\">"
+            ;
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
 
-            FileSystemResource resource = new FileSystemResource(new File(qrCodePath));
-            messageHelper.addInline("image001", resource);
+//            FileSystemResource resource = new FileSystemResource(new File(qrCodePath)); cid:image001
+//            messageHelper.addInline("image001", resource);
+
             mailSender.send(mailMessage);
 
-            new File(qrCodePath).delete();
             return true;
         } catch (MessagingException e) {
             e.printStackTrace();

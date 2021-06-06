@@ -43,16 +43,12 @@ public class AppUserController {
     SendEmailService emailService;
     @Autowired
     private AppUserService appUserService;
-
     @Autowired
     private ImageService imageService;
-
     @Autowired
     private GroupRepo groupRepo;
-
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -147,7 +143,7 @@ public class AppUserController {
 
                     try {
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
-                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj,account.getName(), applicationUser)) {
+                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj,account.getName(), applicationUser, account)) {
                             userRepo.save(applicationUser);
                             response.put("message", "User added successfully.");
                             return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -194,7 +190,7 @@ public class AppUserController {
 
                             try {
                                 String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
-                                boolean emailStatus = emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser);
+                                boolean emailStatus = emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account);
                                 if (!emailStatus) {
                                     response.put("message", "Invalid user email.");
                                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
@@ -274,7 +270,7 @@ public class AppUserController {
 
                         String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
                         appUser.setCode(code);
-                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), appUser)) {
+                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), appUser, account)) {
                             userRepo.save(appUser);
 
                             response.put("message", "QRCode send successfully.");

@@ -1,28 +1,50 @@
 package com.sun.supplierpoc.services;
 
-import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.AccountEmailConfig;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.*;
-import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.Properties;
 
 @Service
 public class SendEmailService {
-    private final JavaMailSender mailSender;
 
     @Autowired
-    public SendEmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    private AccountRepo accountRepo;
+
+    public JavaMailSender getJavaMailSender(Account account)
+    {
+
+        AccountEmailConfig emailConfig = account.getEmailConfig();
+
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(emailConfig.getHost());
+        mailSender.setPort(emailConfig.getPort());
+
+        mailSender.setUsername(emailConfig.getUsername());
+        mailSender.setPassword(emailConfig.getPassword());
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.connectiontimeout", "10000");
+        props.put("mail.smtp.timeout", "10000");
+        props.put("mail.smtp.writetimeout", "10000");
+
+        return mailSender;
     }
 
     public void sendSimpleMail() throws MailException {
@@ -35,20 +57,23 @@ public class SendEmailService {
 
         mailMessage.setText(messageBody);
 
-        mailSender.send(mailMessage);
+        getJavaMailSender(new Account()).send(mailMessage);
         System.out.println("Finish");
     }
 
-    public boolean sendMimeMail(String qrCodePath, String logoPath, String mailSubj, String accountName, ApplicationUser user) throws MailException {
+    public boolean sendMimeMail(String qrCodePath, String logoPath, String mailSubj, String accountName, ApplicationUser user, Account account) throws MailException {
 
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-
+        MimeMessage mailMessage = getJavaMailSender(account).createMimeMessage();
         try {
 
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            try {
+                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
 
             messageHelper.setSentDate(new Date());
-
             messageHelper.setTo(user.getEmail());
 
             String mailSubject = "More rewards, just for YOU!";
@@ -56,7 +81,6 @@ public class SendEmailService {
             String mailContent =
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 7%; margin-right: 7%;padding-left: 5%;"+
                             "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
-
                     "<br>";
 
             mailContent +=
@@ -110,7 +134,7 @@ public class SendEmailService {
 //            FileSystemResource resource = new FileSystemResource(new File(qrCodePath)); cid:image001
 //            messageHelper.addInline("image001", resource);
 
-            mailSender.send(mailMessage);
+            getJavaMailSender(account).send(mailMessage);
 
             return true;
         } catch (MessagingException e) {
@@ -121,7 +145,7 @@ public class SendEmailService {
 
     public boolean sendAlertMail(Account account) throws MailException {
 
-        MimeMessage mailMessage = mailSender.createMimeMessage();
+        MimeMessage mailMessage = getJavaMailSender(accountRepo.findByIdAndDeleted("60759205d942776de5025f82", false).orElseThrow()).createMimeMessage();
 
         try {
 
@@ -156,7 +180,7 @@ public class SendEmailService {
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
 
-            mailSender.send(mailMessage);
+            getJavaMailSender(accountRepo.findByIdAndDeleted("60759205d942776de5025f82", false).orElseThrow()).send(mailMessage);
             return true;
         } catch (MessagingException e) {
             e.printStackTrace();

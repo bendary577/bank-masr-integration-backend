@@ -14,6 +14,7 @@ public class Account implements Serializable {
     private String imageUrl;
     private String domain;
     private String ERD;
+    private AccountEmailConfig emailConfig;
     private ArrayList<AccountCredential> accountCredentials;
     private int locationQuota;
     private Date creationDate;
@@ -32,6 +33,14 @@ public class Account implements Serializable {
         this.locationQuota = locationQuota;
         this.creationDate = creationDate;
         this.deleted = deleted;
+    }
+
+    public AccountEmailConfig getEmailConfig() {
+        return emailConfig;
+    }
+
+    public void setEmailConfig(AccountEmailConfig emailConfig) {
+        this.emailConfig = emailConfig;
     }
 
     public String getId() {

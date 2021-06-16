@@ -14,6 +14,11 @@ public class Account implements Serializable {
     private String imageUrl;
     private String domain;
     private String ERD;
+    /*
+     * Version 1: https://mte03-ohra-prod.hospitality.oracleindustry.com/mainPortal.jsp
+     * Version 2: https://mte4-ohra-idm.oracleindustry.com/oidc-ui/
+     * */
+    private String microsVersion;
     private ArrayList<AccountCredential> accountCredentials;
     private int locationQuota;
     private Date creationDate;
@@ -64,6 +69,14 @@ public class Account implements Serializable {
 
     public void setERD(String ERD) {
         this.ERD = ERD;
+    }
+
+    public String getMicrosVersion() {
+        return microsVersion;
+    }
+
+    public void setMicrosVersion(String microsVersion) {
+        this.microsVersion = microsVersion;
     }
 
     public ArrayList<AccountCredential> getAccountCredentials() {

@@ -234,7 +234,7 @@ public class SalesService {
         response.setStatus(true);
     }
 
-    private boolean checkSalesFunctionResponse(WebDriver driver, Response response, Response reportResponse) {
+    public boolean checkSalesFunctionResponse(WebDriver driver, Response response, Response reportResponse) {
         if (!reportResponse.isStatus()) {
             response.setMessage(reportResponse.getMessage());
             response.setStatus(false);

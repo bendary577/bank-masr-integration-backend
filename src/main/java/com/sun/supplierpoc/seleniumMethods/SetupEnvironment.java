@@ -39,7 +39,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-                    "--headless",
+//                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -47,7 +47,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -91,6 +91,7 @@ public class SetupEnvironment {
             } catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
+
             driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
             driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
             driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
@@ -434,7 +435,7 @@ public class SetupEnvironment {
         return response;
     }
 
-    private Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
+    public Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
         Response response = new Response();
         try {
             driver.findElement(By.id("clear0")).click();

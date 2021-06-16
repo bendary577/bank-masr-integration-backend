@@ -231,4 +231,56 @@ public class PaymentController {
         return transactionResponse;
     }
 
+    @PostMapping(value = "/posMachine", produces = MediaType.APPLICATION_XML_VALUE)
+    @ResponseBody
+    public TransactionResponse operaPosMachine(@RequestBody TransactionRequest transactionRequest) {
+        System.out.println("TransactionType start : " + transactionRequest);
+        System.out.println("TransactionType : " + transactionRequest.getTransType());
+
+        TransactionResponse transactionResponse = new TransactionResponse();
+        if(transactionRequest.getTransType() == null || transactionRequest.getTransType().equals(""))
+            return transactionResponse;
+
+        transactionResponse=  payTransactionOnMachine(transactionRequest);
+        return transactionResponse;
+    }
+
+    private TransactionResponse payTransactionOnMachine(TransactionRequest transactionRequest){
+        TransactionResponse transactionResponse = new TransactionResponse();
+        TransactionObjectResponse result = new TransactionObjectResponse();
+
+        // send payment transaction to POS Machine (HTTP)
+        final String uri = "http://192.168.1.40:4040/";
+        TransactionObject transactionObject = new TransactionObject() ;
+        transactionObject.setAmount(transactionRequest.getTransAmount());
+        transactionObject.setTransCurrency(transactionRequest.getTransCurrency());
+
+        try {
+            result = restTemplate.postForObject(uri, transactionObject, TransactionObjectResponse.class);
+        }catch (Exception e ){
+            logger.info("Payment Pre-authorization Error: " + e.getMessage());
+        }
+
+        if(result != null){
+            transactionResponse.setSequenceNo(transactionRequest.getSequenceNo());
+            transactionResponse.setTransType(transactionRequest.getTransType());
+            transactionResponse.setTransAmount(transactionRequest.getTransAmount());
+
+            transactionResponse.setRespCode("00");
+            transactionResponse.setRespText("APPROVAL");
+            transactionResponse.setpAN(transactionRequest.getPAN());
+            transactionResponse.setExpiryDate(transactionRequest.getExpiryDate());
+            transactionResponse.setTransToken(transactionResponse.getTransToken());
+            transactionResponse.setEntryMode("01");
+            transactionResponse.setIssuerId("02");
+            transactionResponse.setrRN("000000000311");
+            transactionResponse.setOfflineFlag("N");
+            transactionResponse.setMerchantId("1");
+            transactionResponse.setdCCIndicator("0");
+            transactionResponse.setTerminalId("1");
+        }
+
+        return transactionResponse;
+    }
+
 }

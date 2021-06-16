@@ -135,11 +135,20 @@ public class SalesV2Services {
 //            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 //        }
 
+        // Set Statistics Info
+        journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
+
+        // Calculate different
+        journalBatch.setSalesDifferent(0.0);
+        journalBatch.setCostCenter(costCenter);
+        journalBatches.add(journalBatch);
+        response.setStatus(true);
     }
 
     private Response getSalesStatistics(String businessDate, String fromDate, String toDate, CostCenter location,
                                         ArrayList<SalesStatistics> statistics, WebDriver driver) {
         Response response = new Response();
+        String statisticType;
         SalesStatistics salesStatistics = conversions.checkSalesStatisticsExistence(location.locationName, statistics);
 
         if(!salesStatistics.checked){
@@ -156,7 +165,7 @@ public class SalesV2Services {
 
         // Choose "Daily Operations" Report
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_4")));
-        driver.findElement(By.id("link_4")).findElement(By.tagName("h4")).click();
+        driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
 
         // Filter Report
         Response dateResponse = basicFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
@@ -168,7 +177,42 @@ public class SalesV2Services {
             return response;
         }
 
+        // Run
+        driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
         try {
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table")));
+            WebElement statTable = driver.findElement(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table"));
+            List<WebElement> rows = statTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1){
+                response.setStatus(true);
+                response.setMessage("There is no statistics info in this location");
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+                statisticType = cols.get(columns.indexOf("name")).getText().toLowerCase().strip();
+                if (statisticType.equals("guests")){
+                    salesStatistics.NoGuest = cols.get(columns.indexOf("count")).getText();
+                } else if (statisticType.equals("checks")){
+                    salesStatistics.NoChecks = cols.get(columns.indexOf("count")).getText();
+                } else if (statisticType.equals("tables")){
+                    salesStatistics.NoTables = cols.get(columns.indexOf("count")).getText();
+                }
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesStatistics(salesStatistics);
 
         } catch (Exception e) {
             driver.quit();

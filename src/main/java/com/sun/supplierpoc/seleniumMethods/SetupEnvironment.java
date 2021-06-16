@@ -39,7 +39,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -47,7 +47,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -438,6 +438,9 @@ public class SetupEnvironment {
     public Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
         Response response = new Response();
         try {
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+
             driver.findElement(By.id("clear0")).click();
             try {
                 Select businessDate = new Select(driver.findElement(By.id("selectYear")));

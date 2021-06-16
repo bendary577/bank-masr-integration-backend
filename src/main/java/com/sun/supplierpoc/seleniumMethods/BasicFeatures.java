@@ -57,29 +57,42 @@ public class BasicFeatures {
                                          String location, String revenueCenter, String orderType, WebDriver driver){
         Response response = new Response();
         try {
+            WebDriverWait wait = new WebDriverWait(driver, 30);
             if (timePeriod.equals(Constants.USER_DEFINED)) {
                 try {
                     // Edit Parameters
-                    driver.findElement(By.id("[['edit_filter_button']]")).click();
+                    try {
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
+                        driver.findElement(By.id("edit_filter_button")).click();
+                    }catch (Exception e){
+                        response.setStatus(false);
+                        response.setMessage(e.getMessage());
+                        return response;
+                    }
 
                     // Advanced
-                    driver.findElement(By.id("businessDateFilter_href_link")).click();
+                    try {
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
+                        driver.findElement(By.id("businessDateFilter_href_link")).click();
+                    } catch (Exception e){
+                        response.setStatus(false);
+                        response.setMessage(e.getMessage());
+                        return response;
+                    }
 
                     // Choose Date
                     response = setupEnvironment.chooseDayDateOHRA(dayDate,driver);
 
-                    // Apply
-                    driver.findElement(By.xpath("//*[@id=\"advance_filter_busDates_apply\"]/button"));
-
-                    // Run
-                    driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button"));
-
                     if (!response.isStatus()){
                         return response;
                     }
+
+                    // Apply
+                    driver.findElement(By.xpath("//*[@id=\"advance_filter_busDates_apply\"]/button")).click();
+
                 } catch (Exception e) {
                     driver.quit();
-
+                    e.printStackTrace();
                     response.setStatus(false);
                     response.setMessage(Constants.INVALID_BUSINESS_DATE);
                     response.setEntries(new ArrayList<>());

@@ -18,7 +18,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -125,7 +130,7 @@ public class NewBookingExcelHelper {
                 currentRow = rows.next();
                 cellsInRow = currentRow.iterator();
 
-                reservation = readReservationRow(cellsInRow, columnsName, generalSettings);
+                reservation = readReservationExcelRow(cellsInRow, columnsName, generalSettings);
 
                 // New Booking
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
@@ -211,8 +216,8 @@ public class NewBookingExcelHelper {
         }
     }
 
-    private Reservation readReservationRow(Iterator<Cell> cellsInRow, ArrayList<String> columnsName,
-                                           GeneralSettings generalSettings) {
+    private Reservation readReservationExcelRow(Iterator<Cell> cellsInRow, ArrayList<String> columnsName,
+                                                GeneralSettings generalSettings) {
         SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -365,6 +370,43 @@ public class NewBookingExcelHelper {
         }
 
         return reservation;
+    }
+
+    public List<SyncJobData> getNewBookingFromXML(SyncJob syncJob, GeneralSettings generalSettings,
+                                                    SyncJobType syncJobType, String filePath) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+        List<SyncJobData> syncJobDataList = new ArrayList<>();
+        ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
+
+        String typeName;
+        BookingType bookingType;
+
+        double basicRoomRate;
+        double vat;
+        double municipalityTax;
+        double serviceCharge;
+        double grandTotal;
+        int nights = 0;
+
+        RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
+
+        BookingDetails bookingDetails = new BookingDetails();
+        Reservation reservation;
+
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        try {
+            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+            return syncJobDataList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Fail to parse XML file: " + e.getMessage());
+        }
     }
 
     private void saveBooking(BookingDetails bookingDetails, SyncJob syncJob,

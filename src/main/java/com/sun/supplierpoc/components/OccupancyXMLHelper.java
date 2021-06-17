@@ -47,6 +47,7 @@ public class OccupancyXMLHelper {
             syncJobDataList.add(syncJobData);
         } catch (Exception e) {
             e.printStackTrace();
+            throw new RuntimeException("Fail to parse XML file: " + e.getMessage());
         }
         return syncJobDataList;
     }

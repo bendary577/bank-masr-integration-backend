@@ -79,15 +79,23 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Booking/" + fileName;
             String localFilePath = account.getName() + "/Booking/";
 
-            try (BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
-                 FileOutputStream fileOutputStream = new FileOutputStream(localFilePath + fileName)) {
+            try {
+                BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
+
+                File file = new File(localFilePath + fileName);
+                boolean status = file.getParentFile().mkdirs();
+                if (status)
+                    file.createNewFile();
+
+                FileOutputStream fileOutputStream = new FileOutputStream(localFilePath + fileName);
+
                 byte[] dataBuffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
                     fileOutputStream.write(dataBuffer, 0, bytesRead);
                 }
 
-                File file = new File(fileName);
+                file = new File(fileName);
 
                 FileInputStream input = new FileInputStream(file);
 

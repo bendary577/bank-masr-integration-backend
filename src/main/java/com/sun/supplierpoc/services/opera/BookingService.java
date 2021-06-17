@@ -79,52 +79,23 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Booking/" + fileName;
             String localFilePath = account.getName() + "/Booking/";
 
-            try {
-                BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
+            downloadFile(fileName, filePath, localFilePath);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
-                File file = new File(localFilePath + fileName);
-                boolean status = file.getParentFile().mkdirs();
-                if (status)
-                    file.createNewFile();
+            List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
 
-                FileOutputStream fileOutputStream = new FileOutputStream(localFilePath + fileName);
+            syncJob.setStatus(Constants.SUCCESS);
+            syncJob.setEndDate(new Date(System.currentTimeMillis()));
+            syncJob.setRowsFetched(syncJobData.size());
+            syncJobRepo.save(syncJob);
 
-                byte[] dataBuffer = new byte[1024];
-                int bytesRead;
-                while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
-                    fileOutputStream.write(dataBuffer, 0, bytesRead);
-                }
+            syncJobDataRepo.saveAll(syncJobData);
 
-                file = new File(fileName);
-
-                FileInputStream input = new FileInputStream(file);
-
-                List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
-
-                syncJob.setStatus(Constants.SUCCESS);
-                syncJob.setEndDate(new Date(System.currentTimeMillis()));
-                syncJob.setRowsFetched(syncJobData.size());
-                syncJobRepo.save(syncJob);
-
-                syncJobDataRepo.saveAll(syncJobData);
-
-                message = "Sync new booking successfully.";
-                response.setStatus(true);
-                response.setMessage(message);
+            message = "Sync new booking successfully.";
+            response.setStatus(true);
+            response.setMessage(message);
 
 
-            } catch (IOException e) {
-                // handle exception
-                e.printStackTrace();
-
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setEndDate(new Date(System.currentTimeMillis()));
-                syncJobRepo.save(syncJob);
-
-                message = "Failed to sync new booking.";
-                response.setMessage(message);
-                response.setStatus(false);
-            }
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -167,11 +138,14 @@ public class BookingService {
         }
 
         try {
-            String filePath = bookingConfiguration.fileBaseName;
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
 
-            File file = new File(filePath);
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/CancelBooking/" + fileName;
+            String localFilePath = account.getName() + "/CancelBooking/";
 
-            FileInputStream input = new FileInputStream(file);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
             List<SyncJobData> syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
                     syncJobType, newBookingSyncType, input);
@@ -223,10 +197,15 @@ public class BookingService {
         }
 
         try {
-            String filePath = bookingConfiguration.fileBaseName;
-            File file = new File(filePath);
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
 
-            FileInputStream input = new FileInputStream(file);
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/Occupancy/" + fileName;
+            String localFilePath = account.getName() + "/Occupancy/";
+
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+
             List<SyncJobData> syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
 
             syncJob.setStatus(Constants.SUCCESS);
@@ -281,10 +260,15 @@ public class BookingService {
         }
 
         try {
-            String filePath = bookingConfiguration.fileBaseName;
-            File file = new File(filePath);
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
 
-            FileInputStream input = new FileInputStream(file);
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/Expenses/" + fileName;
+            String localFilePath = account.getName() + "/Expenses/";
+
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+
             List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcelV2(syncJob, input,
                     generalSettings, bookingConfiguration);
 
@@ -312,5 +296,25 @@ public class BookingService {
         }
 
         return response;
+    }
+
+    private FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
+
+        File file = new File(localFilePath + fileName);
+        boolean status = file.getParentFile().mkdirs();
+        if (status)
+            file.createNewFile();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(localFilePath + fileName);
+
+        byte[] dataBuffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+            fileOutputStream.write(dataBuffer, 0, bytesRead);
+        }
+
+        file = new File(fileName);
+        return new FileInputStream(file);
     }
 }

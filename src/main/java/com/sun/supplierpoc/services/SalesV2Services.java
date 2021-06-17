@@ -201,12 +201,16 @@ public class SalesV2Services {
                     continue;
                 }
                 statisticType = cols.get(columns.indexOf("name")).getText().toLowerCase().strip();
-                if (statisticType.equals("guests")){
-                    salesStatistics.NoGuest = cols.get(columns.indexOf("count")).getText();
-                } else if (statisticType.equals("checks")){
-                    salesStatistics.NoChecks = cols.get(columns.indexOf("count")).getText();
-                } else if (statisticType.equals("tables")){
-                    salesStatistics.NoTables = cols.get(columns.indexOf("count")).getText();
+                switch (statisticType) {
+                    case "guests":
+                        salesStatistics.NoGuest = cols.get(columns.indexOf("count")).getText();
+                        break;
+                    case "checks":
+                        salesStatistics.NoChecks = cols.get(columns.indexOf("count")).getText();
+                        break;
+                    case "tables":
+                        salesStatistics.NoTables = cols.get(columns.indexOf("count")).getText();
+                        break;
                 }
             }
 

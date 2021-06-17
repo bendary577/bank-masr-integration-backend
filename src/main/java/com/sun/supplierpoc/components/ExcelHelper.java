@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.models.opera.Reservation;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -24,6 +25,16 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 @Service
 public class ExcelHelper {
     @Autowired
@@ -401,7 +412,6 @@ public class ExcelHelper {
                     cellsInRow = currentRow.iterator();
                     while (cellsInRow.hasNext()) {
                         Cell currentCell = cellsInRow.next();
-//                        columnsName.add(currentCell.getStringCellValue().strip());
                         columnsName.add(conversions.transformColName(currentCell.getStringCellValue().toLowerCase().trim()));
                     }
                     rowNumber++;
@@ -426,13 +436,11 @@ public class ExcelHelper {
                     cellIdx++;
                 }
 
-//                if (totalRooms == 0)
-//                    continue;
+                if (totalRooms == 0)
+                    continue;
 
-//                occupancyDetails.roomsBooked = totalRooms -
-//                        (occupancyDetails.roomsOccupied + occupancyDetails.roomsAvailable + occupancyDetails.roomsOnMaintenance);
-
-                occupancyDetails.roomsBooked = 0;
+                occupancyDetails.roomsBooked = totalRooms -
+                        (occupancyDetails.roomsOccupied + occupancyDetails.roomsAvailable + occupancyDetails.roomsOnMaintenance);
 
                 Date updateDate = new Date();
                 occupancyDetails.updateDate = dateFormat.format(updateDate);

@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.components.CancelBookingExcelHelper;
 import com.sun.supplierpoc.components.ExcelHelper;
 import com.sun.supplierpoc.components.NewBookingExcelHelper;
+import com.sun.supplierpoc.components.OccupancyXMLHelper;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -18,6 +19,7 @@ import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -43,6 +45,9 @@ public class BookingService {
 
     @Autowired
     CancelBookingExcelHelper cancelBookingExcelHelper;
+
+    @Autowired
+    OccupancyXMLHelper occupancyXMLHelper;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,7 +85,8 @@ public class BookingService {
             String localFilePath = account.getName() + "/Booking/";
 
             downloadFile(fileName, filePath, localFilePath);
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+            File file = downloadFile(fileName, filePath, localFilePath);
+            FileInputStream input = new FileInputStream(file);
 
             List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
 
@@ -145,7 +151,8 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/CancelBooking/" + fileName;
             String localFilePath = account.getName() + "/CancelBooking/";
 
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+            File file = downloadFile(fileName, filePath, localFilePath);
+            FileInputStream input = new FileInputStream(file);
 
             List<SyncJobData> syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
                     syncJobType, newBookingSyncType, input);
@@ -181,9 +188,10 @@ public class BookingService {
         Response response = new Response();
 
         SyncJob syncJob;
+        SyncJobType syncJobType;
         BookingConfiguration bookingConfiguration;
         try {
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
+            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
             bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
@@ -204,9 +212,15 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Occupancy/" + fileName;
             String localFilePath = account.getName() + "/Occupancy/";
 
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+            File file = downloadFile(fileName, filePath, localFilePath);
+            List<SyncJobData> syncJobData = new ArrayList<>();
 
-            List<SyncJobData> syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
+            if(bookingConfiguration.fileExtension.equals("xlsx")){
+                FileInputStream input = new FileInputStream(file);
+                syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
+            } else if(bookingConfiguration.fileExtension.equals("xml")) {
+                syncJobData = occupancyXMLHelper.getOccupancyFromXML(syncJob, localFilePath + fileName);
+            }
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -267,7 +281,8 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+            File file = downloadFile(fileName, filePath, localFilePath);
+            FileInputStream input = new FileInputStream(file);
 
             List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcelV2(syncJob, input,
                     generalSettings, bookingConfiguration);
@@ -298,7 +313,7 @@ public class BookingService {
         return response;
     }
 
-    private FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
+    private File downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
         BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
 
         File file = new File(localFilePath + fileName);
@@ -315,6 +330,6 @@ public class BookingService {
         }
 
         file = new File(fileName);
-        return new FileInputStream(file);
+        return file;
     }
 }

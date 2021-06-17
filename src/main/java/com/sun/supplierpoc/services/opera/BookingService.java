@@ -84,9 +84,7 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Booking/" + fileName;
             String localFilePath = account.getName() + "/Booking/";
 
-            downloadFile(fileName, filePath, localFilePath);
-            File file = downloadFile(fileName, filePath, localFilePath);
-            FileInputStream input = new FileInputStream(file);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
             List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
 
@@ -151,8 +149,7 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/CancelBooking/" + fileName;
             String localFilePath = account.getName() + "/CancelBooking/";
 
-            File file = downloadFile(fileName, filePath, localFilePath);
-            FileInputStream input = new FileInputStream(file);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
             List<SyncJobData> syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
                     syncJobType, newBookingSyncType, input);
@@ -212,11 +209,10 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Occupancy/" + fileName;
             String localFilePath = account.getName() + "/Occupancy/";
 
-            File file = downloadFile(fileName, filePath, localFilePath);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
             List<SyncJobData> syncJobData = new ArrayList<>();
 
             if(bookingConfiguration.fileExtension.equals("xlsx")){
-                FileInputStream input = new FileInputStream(file);
                 syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
             } else if(bookingConfiguration.fileExtension.equals("xml")) {
                 syncJobData = occupancyXMLHelper.getOccupancyFromXML(syncJob, localFilePath + fileName);
@@ -281,8 +277,7 @@ public class BookingService {
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
-            File file = downloadFile(fileName, filePath, localFilePath);
-            FileInputStream input = new FileInputStream(file);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
             List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcelV2(syncJob, input,
                     generalSettings, bookingConfiguration);
@@ -313,7 +308,7 @@ public class BookingService {
         return response;
     }
 
-    private File downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
+    private FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
         BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
 
         File file = new File(localFilePath + fileName);
@@ -329,7 +324,6 @@ public class BookingService {
             fileOutputStream.write(dataBuffer, 0, bytesRead);
         }
 
-        file = new File(fileName);
-        return file;
+        return new FileInputStream(file);
     }
 }

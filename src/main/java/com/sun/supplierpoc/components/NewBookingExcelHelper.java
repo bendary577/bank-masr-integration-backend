@@ -198,11 +198,6 @@ public class NewBookingExcelHelper {
                 }
             }
 
-            if(bookingDetails.checkInTime.equals(""))
-                bookingDetails.checkInTime = "14:00";
-
-            if(bookingDetails.checkOutTime.equals(""))
-                bookingDetails.checkOutTime = "12:00";
             bookingDetails.grandTotal = conversions.roundUpDouble(
                     bookingDetails.grandTotal * bookingDetails.noOfRooms);
 

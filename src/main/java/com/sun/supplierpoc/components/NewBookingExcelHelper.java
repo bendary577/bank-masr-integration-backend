@@ -19,11 +19,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -398,15 +401,97 @@ public class NewBookingExcelHelper {
         BookingDetails bookingDetails = new BookingDetails();
         Reservation reservation;
 
+        File file = new File(filePath);
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try {
             dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(file);
+            doc.getDocumentElement().normalize();
+
+            NodeList list = doc.getElementsByTagName("LIST_G_BIRTH");
+
+            for (int temp = 0; temp < list.getLength(); temp++) {
+                readReservationXMLRow(list, temp, generalSettings);
+            }
 
             return syncJobDataList;
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Fail to parse XML file: " + e.getMessage());
         }
+    }
+
+    private Reservation readReservationXMLRow(NodeList list, int rowIndex,
+                                                GeneralSettings generalSettings){
+        Reservation reservation = new Reservation();
+
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+
+        Date time;
+        String typeName;
+        BookingType bookingType;
+
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> roomTypes = generalSettings.getRoomTypes();
+        ArrayList<BookingType> genders = generalSettings.getGenders();
+        ArrayList<BookingType> nationalities = generalSettings.getNationalities();
+        ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
+        ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
+
+        Node node = list.item(0);
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+            reservation.bookingNo = element.getElementsByTagName("BOOKING_NO").item(0).getTextContent();
+
+            reservation.dateOfBirth = element.getElementsByTagName("BIRTH").item(0).getTextContent();
+            typeName = element.getElementsByTagName("GENDER").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(genders, typeName);
+            reservation.gender = bookingType.getTypeId();
+
+            typeName = element.getElementsByTagName("NATIONALITY").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(nationalities, typeName);
+            reservation.nationalityCode = bookingType.getTypeId();
+
+            typeName = element.getElementsByTagName("CT").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(customerTypes, typeName);
+            reservation.customerType = bookingType.getTypeId();
+
+            typeName = element.getElementsByTagName("POS").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(purposeOfVisit, typeName);
+            reservation.purposeOfVisit = bookingType.getTypeId();
+
+
+            typeName = element.getElementsByTagName("PM").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
+            reservation.paymentType = bookingType.getTypeId();
+
+            reservation.adults = Integer.parseInt(element.getElementsByTagName("ADULTS").item(0).getTextContent());
+            reservation.children = Integer.parseInt(element.getElementsByTagName("CHILDREN").item(0).getTextContent());
+
+            reservation.reservationStatus = element.getElementsByTagName("STATUS").item(0).getTextContent();
+
+            reservation.bookingNo = element.getElementsByTagName("ARRIVAL_DATE").item(0).getTextContent();
+            reservation.bookingNo = element.getElementsByTagName("UPDATE_DATE").item(0).getTextContent();
+            reservation.bookingNo = element.getElementsByTagName("DEPARTURE_DATE").item(0).getTextContent();
+        }
+
+
+//      <UPDATE_DATE>16-JUN-21</UPDATE_DATE>
+//      <ARRIVAL_DATE>05-JUN-21</ARRIVAL_DATE>
+//      <DEPARTURE_DATE>16-JUN-21</DEPARTURE_DATE>
+//      <RES_DATE>05-JUN-21</RES_DATE>
+
+//      <ROOM>207</ROOM>
+//      <DESCRIPTION>Deluxe Room with one King Bed</DESCRIPTION>
+//      <QUANTITY>1</QUANTITY>
+//      <AMOUNT>603.33</AMOUNT>
+//      <DISC>0</DISC>
+//      <DISC_PRCNT>0</DISC_PRCNT>
+
+        return reservation;
     }
 
     private void saveBooking(BookingDetails bookingDetails, SyncJob syncJob,

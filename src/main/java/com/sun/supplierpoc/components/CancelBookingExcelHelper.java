@@ -14,7 +14,17 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.XMLConstants;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -267,6 +277,183 @@ public class CancelBookingExcelHelper {
 //        }
         reservation.cancelWithCharges = 1;
 
+        return reservation;
+    }
+
+    public List<SyncJobData> getCancelBookingFromXML(SyncJob syncJob, GeneralSettings generalSettings,
+                                                       SyncJobType syncJobType, SyncJobType newBookingSyncType,
+                                                       String filePath) {
+        List<SyncJobData> syncJobDataList = new ArrayList<>();
+
+        double basicRoomRate;
+        double vat;
+        double municipalityTax;
+        double serviceCharge;
+        double grandTotal;
+        int nights = 0;
+
+        RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
+
+        CancelBookingDetails bookingDetails = new CancelBookingDetails();
+        Reservation reservation;
+
+        try {
+            File file = new File(filePath);
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+
+            DocumentBuilder db = dbf.newDocumentBuilder();
+            Document doc = db.parse(file);
+            doc.getDocumentElement().normalize();
+
+            NodeList list = doc.getElementsByTagName("G_BIRTH");
+
+            for (int temp = 0; temp < list.getLength(); temp++)  {
+
+                reservation = readReservationXMLRow(list, temp, generalSettings);
+
+                // New Booking
+                if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
+                    // Save old one
+                    if (!bookingDetails.bookingNo.equals("")) {
+                        // check if it cancel with charges
+                        if(bookingDetails.cancelWithCharges == 2){
+                            bookingDetails.vat = 0;
+                            bookingDetails.municipalityTax = 0;
+                            bookingDetails.dailyRoomRate = 0;
+                            bookingDetails.totalRoomRate = 0;
+                            bookingDetails.grandTotal = 0;
+                            bookingDetails.chargeableDays = 0;
+                            bookingDetails.roomRentType = "0";
+                            bookingDetails.paymentType = 0;
+                        }
+
+                        saveBooking(bookingDetails, syncJob, syncJobType, newBookingSyncType, syncJobDataList);
+                    }
+
+                    // Create new one
+                    bookingDetails = new CancelBookingDetails();
+
+                    if (reservation.checkInDate != null && reservation.checkOutDate != null) {
+                        nights = conversions.getNights(reservation.checkInDate, reservation.checkOutDate);
+                        bookingDetails.roomRentType = conversions.checkRoomRentType(reservation.checkInDate, reservation.checkOutDate);
+                    }
+
+                    bookingDetails.bookingNo = reservation.bookingNo;
+                    bookingDetails.paymentType = reservation.paymentType;
+                }
+
+                if(nights > 0){
+                    nights --;
+
+                    basicRoomRate = reservation.dailyRoomRate;
+
+                    serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
+                    municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
+
+                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
+
+                    grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
+
+                    bookingDetails.vat = conversions.roundUpDouble(bookingDetails.vat + vat);
+                    bookingDetails.municipalityTax = conversions.roundUpDouble(bookingDetails.municipalityTax + municipalityTax);
+                    bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal + grandTotal);
+
+                    bookingDetails.dailyRoomRate = conversions.roundUpDouble(basicRoomRate + rateCode.basicPackageValue);
+                    bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + rateCode.basicPackageValue);
+                }
+            }
+
+            if(bookingDetails.cancelWithCharges == 2){
+                bookingDetails.vat = 0;
+                bookingDetails.municipalityTax = 0;
+                bookingDetails.dailyRoomRate = 0;
+                bookingDetails.totalRoomRate = 0;
+                bookingDetails.grandTotal = 0;
+                bookingDetails.chargeableDays = 0;
+                bookingDetails.roomRentType = "0";
+                bookingDetails.paymentType = 0;
+            }
+
+            saveBooking(bookingDetails, syncJob, syncJobType, newBookingSyncType, syncJobDataList);
+
+            return syncJobDataList;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Fail to parse XML file: " + e.getMessage());
+        }
+    }
+
+    private Reservation readReservationXMLRow(NodeList list, int rowIndex,
+                                              GeneralSettings generalSettings){
+        Reservation reservation = new Reservation();
+
+        String typeName;
+        BookingType bookingType;
+
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> cancelReasons = generalSettings.getCancelReasons();
+
+        Node node = list.item(rowIndex);
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+            reservation.bookingNo = element.getElementsByTagName("BOOKING_NO").item(0).getTextContent();
+
+            typeName = element.getElementsByTagName("CANCEL_REASON").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(cancelReasons, typeName);
+            reservation.cancelReason = bookingType.getTypeId();
+
+            typeName = element.getElementsByTagName("PM").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(paymentTypes, typeName);
+            reservation.paymentType = bookingType.getTypeId();
+
+            reservation.dailyRoomRate = conversions.roundUpFloat(Float.parseFloat(element.getElementsByTagName("AMOUNT").item(0).getTextContent()));
+            reservation.reservationStatus = element.getElementsByTagName("STATUS").item(0).getTextContent();
+
+            String tempDate;
+            try {
+                tempDate = element.getElementsByTagName("ARRIVAL_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try{
+                        reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) { // 03-DEC-20
+                        reservation.checkInDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                reservation.checkInDate = null;
+            }
+
+            try {
+                tempDate = element.getElementsByTagName("DEPARTURE_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try{
+                        reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) { // 03-DEC-20
+                        reservation.checkOutDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                reservation.checkOutDate = null;
+            }
+
+            try {
+                tempDate = element.getElementsByTagName("RES_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try{
+                        reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) { // 03-DEC-20
+                        reservation.reservationDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                reservation.reservationDate = null;
+            }
+        }
         return reservation;
     }
 

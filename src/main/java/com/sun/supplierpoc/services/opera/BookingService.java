@@ -86,7 +86,11 @@ public class BookingService {
 
             FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
-            List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+            List<SyncJobData> syncJobData = new ArrayList<>();
+            if(bookingConfiguration.fileExtension.equals("xlsx"))
+                syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+            else if(bookingConfiguration.fileExtension.equals("xml"))
+                syncJobData = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

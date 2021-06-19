@@ -18,10 +18,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
+import org.w3c.dom.*;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -205,6 +202,12 @@ public class NewBookingExcelHelper {
                     bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + rateCode.basicPackageValue);
                 }
             }
+
+            if(bookingDetails.checkInTime.equals(""))
+                bookingDetails.checkInTime = "14:00";
+
+            if(bookingDetails.checkOutTime.equals(""))
+                bookingDetails.checkOutTime = "12:00";
 
             bookingDetails.grandTotal = conversions.roundUpDouble(
                     bookingDetails.grandTotal * bookingDetails.noOfRooms);
@@ -410,11 +413,92 @@ public class NewBookingExcelHelper {
             Document doc = db.parse(file);
             doc.getDocumentElement().normalize();
 
-            NodeList list = doc.getElementsByTagName("LIST_G_BIRTH");
+            NodeList list = doc.getElementsByTagName("G_BIRTH");
 
             for (int temp = 0; temp < list.getLength(); temp++) {
-                readReservationXMLRow(list, temp, generalSettings);
+                reservation =  readReservationXMLRow(list, temp, generalSettings);
+
+                // New Booking
+                if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
+                    // Save old one
+                    if (!bookingDetails.bookingNo.equals("")) {
+                        if(bookingDetails.checkInTime.equals(""))
+                            bookingDetails.checkInTime = "14:00";
+
+                        if(bookingDetails.checkOutTime.equals(""))
+                            bookingDetails.checkOutTime = "12:00";
+
+                        bookingDetails.grandTotal = conversions.roundUpDouble(
+                                bookingDetails.grandTotal * bookingDetails.noOfRooms);
+
+                        saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
+                    }
+
+                    // Create new one
+                    bookingDetails = new BookingDetails();
+
+                    typeName = reservation.reservationStatus;
+                    bookingType = conversions.checkBookingTypeExistence(transactionTypes, typeName);
+                    bookingDetails.transactionTypeId = bookingType.getTypeId();
+
+                    if (reservation.checkInDate != null && reservation.checkOutDate != null) {
+                        nights = conversions.getNights(reservation.checkInDate, reservation.checkOutDate);
+                        bookingDetails.roomRentType = conversions.checkRoomRentType(reservation.checkInDate, reservation.checkOutDate);
+                    }
+
+                    bookingDetails.bookingNo = reservation.bookingNo;
+                    bookingDetails.reservationStatus = typeName;
+
+                    bookingDetails.allotedRoomNo = reservation.roomNo;
+                    bookingDetails.noOfRooms = reservation.noOfRooms;
+                    bookingDetails.roomType = reservation.roomType;
+                    bookingDetails.totalDurationDays = nights;
+                    bookingDetails.noOfGuest = reservation.adults + reservation.children;
+
+                    bookingDetails.gender = reservation.gender;
+                    bookingDetails.customerType = reservation.customerType;
+                    bookingDetails.nationalityCode = reservation.nationalityCode;
+                    bookingDetails.purposeOfVisit = reservation.purposeOfVisit;
+                    bookingDetails.dateOfBirth = reservation.dateOfBirth;
+                    bookingDetails.paymentType = reservation.paymentType;
+
+                    if(reservation.checkInDate != null)
+                        bookingDetails.checkInDate = dateFormat.format(reservation.checkInDate);
+                    if(reservation.checkOutDate != null)
+                        bookingDetails.checkOutDate = dateFormat.format(reservation.checkOutDate);
+                }
+
+                if(nights > 0){
+                    nights --;
+
+                    basicRoomRate = reservation.dailyRoomRate;
+
+                    serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
+                    municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
+
+                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
+
+                    grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
+
+                    bookingDetails.vat = conversions.roundUpDouble(bookingDetails.vat + vat);
+                    bookingDetails.municipalityTax = conversions.roundUpDouble(bookingDetails.municipalityTax + municipalityTax);
+                    bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal + grandTotal);
+
+                    bookingDetails.dailyRoomRate = conversions.roundUpDouble(basicRoomRate + rateCode.basicPackageValue);
+                    bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + rateCode.basicPackageValue);
+                }
             }
+
+            if(bookingDetails.checkInTime.equals(""))
+                bookingDetails.checkInTime = "14:00";
+
+            if(bookingDetails.checkOutTime.equals(""))
+                bookingDetails.checkOutTime = "12:00";
+
+            bookingDetails.grandTotal = conversions.roundUpDouble(
+                    bookingDetails.grandTotal * bookingDetails.noOfRooms);
+
+            saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
 
             return syncJobDataList;
         } catch (Exception e) {
@@ -427,10 +511,6 @@ public class NewBookingExcelHelper {
                                                 GeneralSettings generalSettings){
         Reservation reservation = new Reservation();
 
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HHmmss");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-
-        Date time;
         String typeName;
         BookingType bookingType;
 
@@ -441,7 +521,7 @@ public class NewBookingExcelHelper {
         ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
         ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
 
-        Node node = list.item(0);
+        Node node = list.item(rowIndex);
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) node;
             reservation.bookingNo = element.getElementsByTagName("BOOKING_NO").item(0).getTextContent();
@@ -471,26 +551,61 @@ public class NewBookingExcelHelper {
             reservation.adults = Integer.parseInt(element.getElementsByTagName("ADULTS").item(0).getTextContent());
             reservation.children = Integer.parseInt(element.getElementsByTagName("CHILDREN").item(0).getTextContent());
 
+            try{
+                reservation.roomNo = Integer.parseInt(element.getElementsByTagName("ROOM").item(0).getTextContent());
+            } catch (NumberFormatException e) {
+                if(!element.getElementsByTagName("ROOM").item(0).getTextContent().equals(""))
+                    reservation.roomNo = -1;
+            }
+            typeName = element.getElementsByTagName("DESCRIPTION").item(0).getTextContent();
+            bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
+            reservation.roomType = bookingType.getTypeId();
+
+            reservation.noOfRooms = Integer.parseInt(element.getElementsByTagName("QUANTITY").item(0).getTextContent());
+            reservation.dailyRoomRate = conversions.roundUpFloat(Float.parseFloat(element.getElementsByTagName("AMOUNT").item(0).getTextContent()));
+
             reservation.reservationStatus = element.getElementsByTagName("STATUS").item(0).getTextContent();
 
-            reservation.bookingNo = element.getElementsByTagName("ARRIVAL_DATE").item(0).getTextContent();
-            reservation.bookingNo = element.getElementsByTagName("UPDATE_DATE").item(0).getTextContent();
-            reservation.bookingNo = element.getElementsByTagName("DEPARTURE_DATE").item(0).getTextContent();
+            String tempDate;
+            try {
+                tempDate = element.getElementsByTagName("ARRIVAL_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try{
+                        reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) { // 03-DEC-20
+                        reservation.checkInDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                reservation.checkInDate = null;
+            }
+
+            try {
+                tempDate = element.getElementsByTagName("DEPARTURE_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try{
+                        reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) { // 03-DEC-20
+                        reservation.checkOutDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                reservation.checkOutDate = null;
+            }
+
+            try {
+                tempDate = element.getElementsByTagName("RES_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try{
+                        reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) { // 03-DEC-20
+                        reservation.reservationDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                reservation.reservationDate = null;
+            }
         }
-
-
-//      <UPDATE_DATE>16-JUN-21</UPDATE_DATE>
-//      <ARRIVAL_DATE>05-JUN-21</ARRIVAL_DATE>
-//      <DEPARTURE_DATE>16-JUN-21</DEPARTURE_DATE>
-//      <RES_DATE>05-JUN-21</RES_DATE>
-
-//      <ROOM>207</ROOM>
-//      <DESCRIPTION>Deluxe Room with one King Bed</DESCRIPTION>
-//      <QUANTITY>1</QUANTITY>
-//      <AMOUNT>603.33</AMOUNT>
-//      <DISC>0</DISC>
-//      <DISC_PRCNT>0</DISC_PRCNT>
-
         return reservation;
     }
 

@@ -631,7 +631,7 @@ public class NewBookingExcelHelper {
         }
 
         // check if this rooms for non guests or not
-        if(bookingDetails.noOfRooms == -1)
+        if(bookingDetails.allotedRoomNo == -1)
             createUpdateFlag = false;
 
         if(createUpdateFlag){

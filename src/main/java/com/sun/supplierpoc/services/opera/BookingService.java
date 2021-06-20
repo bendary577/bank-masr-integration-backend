@@ -1,10 +1,7 @@
 package com.sun.supplierpoc.services.opera;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.components.CancelBookingExcelHelper;
-import com.sun.supplierpoc.components.ExcelHelper;
-import com.sun.supplierpoc.components.NewBookingExcelHelper;
-import com.sun.supplierpoc.components.OccupancyXMLHelper;
+import com.sun.supplierpoc.components.*;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -39,6 +36,9 @@ public class BookingService {
 
     @Autowired
     ExcelHelper excelHelper;
+
+    @Autowired
+    ExpensesXMLHelper expensesXMLHelper;
 
     @Autowired
     NewBookingExcelHelper bookingExcelHelper;
@@ -281,15 +281,20 @@ public class BookingService {
         try {
             DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
             String currentDate = fileDateFormat.format(new Date());
-
+            // fileName = "Expenses20210617.xls"
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
             String filePath = Constants.REPORTS_BUCKET_PATH + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
             FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
-            List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcelV2(syncJob, input,
-                    generalSettings, bookingConfiguration);
+            List<SyncJobData> syncJobData = new ArrayList<>();
+            if(bookingConfiguration.fileExtension.equals("xlsx")){
+                syncJobData = excelHelper.getExpensesUpdateFromXLS(syncJob, input, generalSettings, bookingConfiguration);
+            } else if(bookingConfiguration.fileExtension.equals("xml")) {
+                syncJobData = expensesXMLHelper.getExpensesUpdateFromXLS(syncJob, localFilePath + fileName,
+                        generalSettings, bookingConfiguration);
+            }
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));

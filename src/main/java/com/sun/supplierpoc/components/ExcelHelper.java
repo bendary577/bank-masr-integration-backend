@@ -10,7 +10,7 @@ import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.models.opera.Reservation;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -18,23 +18,13 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.sun.supplierpoc.services.SyncJobDataService;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 @Service
 public class ExcelHelper {
     @Autowired
@@ -497,7 +487,7 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
-            String roomNo = "";
+            int roomNo = 0;
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
@@ -538,9 +528,10 @@ public class ExcelHelper {
 
                     } else if (cellIdx == columnsName.indexOf("Room No.")) {
                         try{
-                            roomNo = String.valueOf(currentCell.getNumericCellValue());
+                            roomNo = (int)currentCell.getNumericCellValue();
                         } catch (Exception e) {
-                            roomNo = currentCell.getStringCellValue();
+                            if(!currentCell.getStringCellValue().equals(""))
+                                roomNo = -1;
                         }
                     } else if (cellIdx == columnsName.indexOf("Transaction Date")) {
                         Date updateDate = currentCell.getDateCellValue();
@@ -637,8 +628,8 @@ public class ExcelHelper {
         return syncJobDataList;
     }
 
-    public List<SyncJobData> getExpensesUpdateFromExcelV2(SyncJob syncJob, InputStream is, GeneralSettings generalSettings,
-                                                        BookingConfiguration configuration) {
+    public List<SyncJobData> getExpensesUpdateFromXLS(SyncJob syncJob, FileInputStream is, GeneralSettings generalSettings,
+                                                      BookingConfiguration configuration) {
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -658,10 +649,11 @@ public class ExcelHelper {
         ArrayList<BookingType> expenseTypes = generalSettings.getExpenseTypes();
 
         try {
-            XSSFWorkbook workbook = new XSSFWorkbook(is);
+            Iterator<Row> rows = null;
 
+            Workbook workbook = new XSSFWorkbook(is);
             Sheet sheet = workbook.getSheetAt(0);
-            Iterator<Row> rows = sheet.iterator();
+            rows = sheet.iterator();
 
             int rowNumber = 0;
             Row currentRow;
@@ -670,7 +662,7 @@ public class ExcelHelper {
             ExpenseObject expenseObject;
             ExpenseItem expenseItem;
 
-            String roomNo = "";
+            int roomNo = 0;
             float transactionAmount = 0;
             String typeName;
             BookingType paymentType = new BookingType();
@@ -713,9 +705,10 @@ public class ExcelHelper {
 
                     } else if (cellIdx == columnsName.indexOf("Room No.")) {
                         try{
-                            roomNo = String.valueOf((int)currentCell.getNumericCellValue());
+                            roomNo = (int)currentCell.getNumericCellValue();
                         } catch (Exception e) {
-                            roomNo = currentCell.getStringCellValue();
+                            if(!currentCell.getStringCellValue().equals(""))
+                                roomNo = -1;
                         }
                     } else if (cellIdx == columnsName.indexOf("Transaction Date")) {
                         try{
@@ -808,10 +801,9 @@ public class ExcelHelper {
                 expenseObject = new ExpenseObject();
                 expenseItem = new ExpenseItem();
 
-
             }
-            workbook.close();
 
+            workbook.close();
             return syncJobDataList;
         } catch (IOException e) {
             throw new RuntimeException("fail to parse Excel file: " + e.getMessage());

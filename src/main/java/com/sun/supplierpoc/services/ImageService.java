@@ -64,6 +64,43 @@ public class ImageService {
 //        return downloadFile(storage, objectName);
     }
 
+    public String storeFile(MultipartFile file, String bucketPath, String fileName) {
+
+        File  fileImage = null;
+        try {
+            fileImage = multipartToFile(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String projectId = "oracle-symphony-integrator";
+        String bucketName = "oracle-integrator-bucket";
+
+        String objectName = bucketPath + fileName;
+
+        StorageOptions storageOptions = null;
+        try {
+            storageOptions = StorageOptions.newBuilder()
+                    .setProjectId(projectId)
+                    .setCredentials(GoogleCredentials.fromStream(new
+                            FileInputStream(baseConfigPath))).build();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Storage storage = storageOptions.getService();
+
+        BlobId blobId = BlobId.of(bucketName, objectName);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+        try {
+            storage.create(blobInfo, Files.readAllBytes(Paths.get(fileImage.toPath().toString())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return "https://storage.googleapis.com/" + bucketName + "/" + objectName;
+    }
+
     public File multipartToFile(MultipartFile multipart) throws IllegalStateException, IOException {
         File convFile = new File(System.getProperty("java.io.tmpdir")+"/"+multipart.getOriginalFilename());
         multipart.transferTo(convFile);

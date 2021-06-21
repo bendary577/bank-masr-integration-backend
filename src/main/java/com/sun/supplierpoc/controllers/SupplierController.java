@@ -9,6 +9,7 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
+import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.SupplierService;
 import com.sun.supplierpoc.soapModels.Supplier;
 import com.systemsunion.ssc.client.ComponentException;
@@ -21,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
 import java.util.*;
@@ -45,7 +47,7 @@ public class SupplierController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @GetMapping("/hello")
+    @GetMapping("/test/hello")
     public String sayHello() {
         return "Hello World!";
     }

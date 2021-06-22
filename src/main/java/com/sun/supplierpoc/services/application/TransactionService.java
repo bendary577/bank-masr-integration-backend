@@ -38,6 +38,8 @@ public class TransactionService {
     @Autowired
     private TransactionTypeRepo transactionTypeRepo;
 
+    private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
+
     public List<Transactions> getTransactionByType(String transactionTypeId, String time, Account account) {
 
         TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
@@ -172,7 +174,7 @@ public class TransactionService {
         return transactions;
     }
 
-    public List<Transactions> getTransactionsByTimeInRAngAndGroup(TransactionType transactionType, String startDate, String endDate, String group, Account account) {
+    public List<Transactions> getTransactionsByTimeInRAngAndGroup(TransactionType transactionType, String startDate, String endDate, String groupId, Account account) {
 
         List<Transactions> transactions = new ArrayList<>();
 
@@ -181,15 +183,15 @@ public class TransactionService {
 
         try {
 
-            if (startDate == null || startDate.equals("") || endDate == null || endDate.equals("") && group != null && group.equals("") ) {
+            if (startDate == null || startDate.equals("") || endDate == null || endDate.equals("") && groupId != null && groupId.equals("") ) {
 
-                Optional<Group> transGroupOptional = groupRepo.findByNameAndAccountId(group, account.getId());
+                Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
 
                 if (transGroupOptional.isPresent()) {
 
                     Group transGroup = transGroupOptional.get();
 
-                    transactions = transactionRepo.findAllByGroupAndTransactionTypeIdOrderByTransactionDateDesc(transGroup, transactionType.getId());
+                    transactions = transactionRepo.findAllByGroupIdAndTransactionTypeIdOrderByTransactionDateDesc(transGroup.getId(), transactionType.getId());
 
                 }else {
                     return transactions;
@@ -200,17 +202,17 @@ public class TransactionService {
 
                 start = df.parse(startDate);
 
-                end = df.parse(endDate);
+                end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
 
-                if (group != null && !group.equals("")) {
+                if (groupId != null && !groupId.equals("")) {
 
-                    Optional<Group> transGroupOptional = groupRepo.findByNameAndAccountId(group, account.getId());
+                    Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
 
                     if (transGroupOptional.isPresent()) {
 
                         Group transGroup = transGroupOptional.get();
 
-                        transactions = transactionRepo.findAllByGroupAndTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transGroup, transactionType.getId(), start, end);
+                        transactions = transactionRepo.findAllByGroupIdAndTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transGroup.getId(), transactionType.getId(), start, end);
 
                     } else {
                         return transactions;

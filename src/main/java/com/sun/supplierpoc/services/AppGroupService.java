@@ -18,7 +18,7 @@ public class AppGroupService {
 
     public List<Group> getTopGroups(Account account) {
 
-        List<Group> groups = groupRepo.findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);
+        List<Group> groups = groupRepo.findAllByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);
 
         return groups;
     }

@@ -14,7 +14,7 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
     List<Transactions> findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(String accountI,Date from, Date to);
 
-    List<Transactions> findAllByGroupAndTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(Group group, String accountI, Date from, Date to);
+    List<Transactions> findAllByGroupIdAndTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(String groupId, String accountI, Date from, Date to);
 
     List<Transactions> findAllByGroupAndTransactionTypeIdOrderByTransactionDateDesc(Group group, String accountI);
 
@@ -23,6 +23,8 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
     boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 
     boolean existsByCheckNumberAndRevenueCentreId(String checkNumber, int revenueCentreId);
+
+    List<Transactions> findAllByGroupIdAndTransactionTypeIdOrderByTransactionDateDesc(String groupId, String id);
 
 //    boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 }

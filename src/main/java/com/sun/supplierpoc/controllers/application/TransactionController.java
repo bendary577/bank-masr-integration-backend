@@ -98,7 +98,8 @@ public class TransactionController {
             TransInRange transInRange = transactionService.getTotalSpendTransactionsInRang(startTime, endTime, transactionType, group, account);
 
             if(transInRange.getTransactions().size() == 0){
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No transaction in This rang");
+                response.put("message", "No transactions in This range.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             return ResponseEntity.status(HttpStatus.OK).body(transInRange);
 

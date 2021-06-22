@@ -138,9 +138,26 @@ public class SalesV2Services {
         boolean syncTotalTax = configuration.syncTotalTax;
         String totalTaxAccount = configuration.totalTaxAccount;
 
-        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
-                totalTaxAccount, includedTax, driver);
-        if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
+        Response taxResponse = new Response();
+//        if(includedTax.size() > 0 || syncTotalTax){
+//            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+//                    totalTaxAccount, includedTax, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
+//        }
+
+        // Get discounts
+        Response discountResponse;
+        boolean syncTotalDiscounts = configuration.syncTotalDiscounts;
+        String totalDiscountsAccount = configuration.totalDiscountsAccount;
+        ArrayList<Discount> salesDiscounts = new ArrayList<>();
+
+        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
+
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
@@ -150,6 +167,7 @@ public class SalesV2Services {
 
         // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
         journalBatch.setSalesTax(taxResponse.getSalesTax());
+        journalBatch.setSalesDiscount(salesDiscounts);
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
@@ -415,6 +433,105 @@ public class SalesV2Services {
             response.setEntries(new ArrayList<>());
         }
 
+        return response;
+    }
+
+    private Response getSalesDiscount(String businessDate, String fromDate, String toDate, CostCenter location,
+                                      boolean getDiscountTotalFlag, String totalDiscountsAccount,
+                                      ArrayList<Discount> discounts, WebDriver driver) {
+        Response response = new Response();
+        ArrayList<Discount> salesDiscount = new ArrayList<>();
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_DISCOUNT_REPORTS);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Fetch tenders table
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table")));
+            WebElement discountsTable = driver.findElement(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table"));
+            List<WebElement> rows = discountsTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1){
+                response.setStatus(true);
+                response.setMessage("There is no discount entries in this location");
+                response.setSalesTender(new ArrayList<>());
+
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+                Discount discount;
+
+                WebElement td = cols.get(columns.indexOf("discount_type"));
+                if(getDiscountTotalFlag){
+                    if (td.getText().equals("Total Discounts:")) {
+                        Discount newDiscount = new Discount();
+
+                        float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+
+                        newDiscount.setDiscount("Total Discount");
+                        newDiscount.setAccount(totalDiscountsAccount);
+                        newDiscount.setTotal(discountTotal);
+                        newDiscount.setCostCenter(location);
+                        salesDiscount.add(newDiscount);
+                        break;
+                    }
+                }else{
+                    if (columns.indexOf("discount_type") != -1){
+                        td = cols.get(columns.indexOf("discount_type"));
+                        discount = conversions.checkDiscountExistence(discounts, td.getText().strip().toLowerCase());
+
+                        if (!discount.isChecked()) {
+                            continue;
+                        }
+
+                        Discount newDiscount = new Discount();
+
+                        float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+
+                        newDiscount.setDiscount(discount.getDiscount());
+                        newDiscount.setAccount(discount.getAccount());
+                        newDiscount.setTotal(discountTotal);
+                        newDiscount.setCostCenter(location);
+                        salesDiscount.add(newDiscount);
+                    }else{
+                        driver.quit();
+                        response.setStatus(false);
+                        response.setMessage("Failed to get discount entries, Please contact support team.");
+                    }
+                }
+            }
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesDiscount(salesDiscount);
+        } catch (Exception e) {
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+        }
         return response;
     }
 }

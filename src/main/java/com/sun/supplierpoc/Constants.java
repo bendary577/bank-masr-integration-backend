@@ -182,6 +182,9 @@ public class Constants {
     // Reports >> Taxes >> Daily Taxes by Tax Type
     public static String MICROS_TAXES_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
 
+    // Reports >> Discount >> Daily Discounts
+    public static String MICROS_DISCOUNT_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100046";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

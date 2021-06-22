@@ -17,7 +17,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-public class BasicFeatures {
+public class MicrosFeatures {
     SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -58,18 +58,19 @@ public class BasicFeatures {
         Response response = new Response();
         try {
             WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Edit Parameters
+            try {
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
+                driver.findElement(By.id("edit_filter_button")).click();
+            }catch (Exception e){
+                response.setStatus(false);
+                response.setMessage(e.getMessage());
+                return response;
+            }
+
             if (timePeriod.equals(Constants.USER_DEFINED)) {
                 try {
-                    // Edit Parameters
-                    try {
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
-                        driver.findElement(By.id("edit_filter_button")).click();
-                    }catch (Exception e){
-                        response.setStatus(false);
-                        response.setMessage(e.getMessage());
-                        return response;
-                    }
-
                     // Advanced
                     try {
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
@@ -103,22 +104,16 @@ public class BasicFeatures {
             else if (timePeriod.equals(Constants.YESTERDAY) || timePeriod.equals(Constants.LAST_MONTH)
                     || timePeriod.equals(Constants.TODAY)) {
                 try {
-                    Select businessDate = new Select(driver.findElement(By.id("selectQuick")));
-                    try {
-                        businessDate.selectByVisibleText(timePeriod);
-                    } catch (Exception e) {
-                        driver.quit();
+                    // Business Date
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_businessdates_select")));
+                    driver.findElement(By.id("oj-select-choice-search_businessdates_select")).click();
 
-                        response.setStatus(false);
-                        response.setMessage(Constants.INVALID_BUSINESS_DATE);
-                        response.setEntries(new ArrayList<>());
-                        return response;
-                    }
+                    // Filter by range
+                    WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div[2]/div/input"));
+                    input.sendKeys(timePeriod);
 
-                    String selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    while (!selectedOption.equals(timePeriod)) {
-                        selectedOption = businessDate.getFirstSelectedOption().getText().strip();
-                    }
+                    driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")).sendKeys(Keys.ARROW_DOWN);
+                    driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")).sendKeys(Keys.ENTER);
                 } catch (Exception e) {
                     driver.quit();
 

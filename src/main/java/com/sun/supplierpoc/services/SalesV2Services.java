@@ -120,25 +120,36 @@ public class SalesV2Services {
 
         // Get statistics
         Response statisticsResponse = new Response();
-        if (statistics.size() > 0){
-            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
-        }
+//        if (statistics.size() > 0){
+//            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
+//        }
 
 
         // Get tender
         Response tenderResponse = new Response();
-        if(includedTenders.size() > 0){
-            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-                    costCenter, includedTenders, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
-        }
+//        if(includedTenders.size() > 0){
+//            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
+//                    costCenter, includedTenders, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+//        }
+
+        // Get taxes
+        boolean syncTotalTax = configuration.syncTotalTax;
+        String totalTaxAccount = configuration.totalTaxAccount;
+
+        Response taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+                totalTaxAccount, includedTax, driver);
+        if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
 
         // Set Debit Entries (Tenders)
         journalBatch.setSalesTender(tenderResponse.getSalesTender());
+
+        // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
+        journalBatch.setSalesTax(taxResponse.getSalesTax());
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
@@ -307,6 +318,101 @@ public class SalesV2Services {
             driver.quit();
             response.setStatus(false);
             response.setMessage("Failed to get sales payment entries from Oracle Micros Simphony.");
+        }
+
+        return response;
+    }
+
+    private Response getSalesTaxes(String businessDate, String fromDate, String toDate,
+                                   CostCenter location, boolean getTaxTotalFlag, String totalTaxAccount,
+                                   ArrayList<Tax> includedTaxes, WebDriver driver) {
+        Response response = new Response();
+        ArrayList<Tax> salesTax = new ArrayList<>();
+
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_TAXES_REPORTS);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Fetch tenders table
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_4254_0\"]/table")));
+            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_4254_0\"]/table"));
+            List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 3) {
+                response.setStatus(true);
+                response.setMessage("There is no tax entries in this location");
+                response.setSalesTax(new ArrayList<>());
+
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                Tax tax = new Tax();
+
+                WebElement td = cols.get(columns.indexOf("tax_name"));
+                if(getTaxTotalFlag){
+                    if (td.getText().equals("Total")) {
+                        tax.setTax("Total Tax");
+                        tax.setAccount(totalTaxAccount);
+                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip()));
+                        tax.setCostCenter(location);
+                        salesTax.add(tax);
+                        break;
+                    }
+                }else{
+                    // Check if tax exists
+                    Tax taxData = conversions.checkTaxExistence(includedTaxes, td.getText().strip());
+                    if (!taxData.isChecked()) {
+                        continue;
+                    }
+
+                    tax.setTax(taxData.getTax());
+                    tax.setAccount(taxData.getAccount());
+                    tax.setCostCenter(location);
+                    float taxAmount;
+                    taxAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip());
+
+
+                    tax.setTotal(taxAmount);
+                    salesTax.add(tax);
+                }
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesTax(salesTax);
+            response.setEntries(new ArrayList<>());
+
+        } catch (Exception e) {
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+            response.setEntries(new ArrayList<>());
         }
 
         return response;

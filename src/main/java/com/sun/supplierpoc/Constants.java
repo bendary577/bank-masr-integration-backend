@@ -179,6 +179,9 @@ public class Constants {
     // Reports >> Tenders Media >> Payments bye Tender Types
     public static String MICROS_TENDERS_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
 
+    // Reports >> Taxes >> Daily Taxes by Tax Type
+    public static String MICROS_TAXES_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

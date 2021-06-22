@@ -58,7 +58,7 @@ public class MicrosFeatures {
         Response response = new Response();
         try {
             WebDriverWait wait = new WebDriverWait(driver, 30);
-            WebDriverWait shortWait = new WebDriverWait(driver, 10);
+            WebDriverWait shortWait = new WebDriverWait(driver, 5);
 
             // Edit Parameters
             try {
@@ -171,6 +171,38 @@ public class MicrosFeatures {
                         input.sendKeys("all");
                     }else{
                         input.sendKeys(revenueCenter);
+                    }
+
+                    Thread.sleep(500);
+                    input.sendKeys(Keys.ARROW_DOWN);
+                    input.sendKeys(Keys.ENTER);
+                } catch (Exception e) {
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_REVENUE_CENTER);
+                    response.setEntries(new ArrayList<>());
+                    return response;
+                }
+            }
+
+            if (driver.findElements(By.id("ordery_type_filter_label")).size() != 0){
+                try {
+                    // Business Revenue Center
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_orderType_select")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_orderType_select")));
+                    driver.findElement(By.id("oj-select-choice-search_orderType_select")).click();
+
+                    // Filter by range
+                    try {
+                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"oj-listbox-drop\"]/div[2]/div/input")));
+                    } catch (Exception e) {
+                        driver.findElement(By.id("oj-select-choice-search_orderType_select")).click();
+                    }
+                    WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div[2]/div/input"));
+
+                    if (orderType == null || orderType.equals("")){
+                        input.sendKeys("all");
+                    }else{
+                        input.sendKeys(orderType);
                     }
 
                     Thread.sleep(500);

@@ -221,10 +221,9 @@ public class SalesController {
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        } else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
+                        }
+                        else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
-//                            FtpClient ftpClient = new FtpClient();
-//                            ftpClient = ftpClient.createFTPClient(account);
 
                             File file = null;
                             String fileStoragePath = "";
@@ -240,11 +239,20 @@ public class SalesController {
                                 fileStoragePath = imageService.storeFile(file);
                             }
 
-//                            if (ftpClient != null){
-//                                if(ftpClient.open()){
-////                                    if (file != null && !fileStoragePath.equals("") && ftpClient.putFile(fileStoragePath, file.getName())){
+                            // Check if the account configured for FTP
+                            AccountCredential credential = ftpService.getAccountCredential(account);
+
+                            if(credential.getHost().equals("") || credential.getPassword().equals("") ){
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
+                                        "Get sales successfully.", Constants.SUCCESS);
+
+                                response.setStatus(true);
+                                response.setMessage("Get sales successfully.");
+                            }
+
                             if (file != null && !fileStoragePath.equals("") &&
-                                    ftpService.sendFile(ftpService.getAccountCredential(account), fileStoragePath, file.getName())) {
+                                    ftpService.sendFile(credential, fileStoragePath, file.getName())) {
 
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
@@ -260,24 +268,6 @@ public class SalesController {
                                 response.setStatus(true);
                                 response.setMessage("Failed to sync sales to sun system via FTP.");
                             }
-//                                    ftpClient.close();
-//                                }
-//                                else {
-//                                    syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-//                                            "Failed to connect to sun system via FTP.", Constants.FAILED);
-//
-//                                    response.setStatus(false);
-//                                    response.setMessage("Failed to connect to sun system via FTP.");
-//                                }
-//                            }
-//                            else{
-//                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
-//                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-//                                        "Sync sales successfully.", Constants.SUCCESS);
-//
-//                                response.setStatus(true);
-//                                response.setMessage("Sync sales successfully.");
-//                            }
                         } else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,
                                     "No sales to add in middleware.", Constants.SUCCESS);
@@ -613,36 +603,5 @@ public class SalesController {
             return locationFiles;
         }
     }
-
-/*    @RequestMapping("/Simphony/sendFTPFile")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public boolean sendFTPFile() {
-
-        Optional<Account> accountOptional = accountRepo.findById("5f968c83d939da0c6ed84ae4");
-
-        boolean response = false;
-        if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-
-            AccountCredential accountCredential = ftpService.getAccountCredential(account);
-            File file = new File("https://storage.googleapis.com/oracle-integrator-bucket/src/main/resources/1.ndf?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1621253501&Signature=LmvkQ4eBBIEUNu59EMHbSvXKmK7sRk9Pq2Ea5U%2FHhnbyNu917x92aMV6Vz3Evx%2BA0%2F%2FtDlttsP0IWwT4dDA%2Fv2w74P%2B%2FGxo%2B8zgytDsx1Z79eW8hqIMnfwOrijR%2FUY97YXGw540y3MY6o6QcNdtVo1p%2Fz3eyGb6bBYl4a9kXbNKWnkzQeVA1ZUy0Zar0RxTc5Y22CTE34r%2FF3bGEbQ1WcR9Wr8TG%2BCJwB%2FFMRasmQNrCwa1d5IHZKCPMqmd5F4O7n4RZO0WIkzeebgUfDAkHqmppmwHGpdE7tU%2Fvz%2B4HTgrwlPwMc45IfqOmUExXzlsbVs79jp13bnJxoK5FliSTUA%3D%3D");
-
-            response = ftpService.sendFile(accountCredential, "https://storage.googleapis.com/oracle-integrator-bucket/src/main/resources/1.ndf?GoogleAccessId=accour@oracle-symphony-integrator.iam.gserviceaccount.com&Expires=1621253501&Signature=LmvkQ4eBBIEUNu59EMHbSvXKmK7sRk9Pq2Ea5U%2FHhnbyNu917x92aMV6Vz3Evx%2BA0%2F%2FtDlttsP0IWwT4dDA%2Fv2w74P%2B%2FGxo%2B8zgytDsx1Z79eW8hqIMnfwOrijR%2FUY97YXGw540y3MY6o6QcNdtVo1p%2Fz3eyGb6bBYl4a9kXbNKWnkzQeVA1ZUy0Zar0RxTc5Y22CTE34r%2FF3bGEbQ1WcR9Wr8TG%2BCJwB%2FFMRasmQNrCwa1d5IHZKCPMqmd5F4O7n4RZO0WIkzeebgUfDAkHqmppmwHGpdE7tU%2Fvz%2B4HTgrwlPwMc45IfqOmUExXzlsbVs79jp13bnJxoK5FliSTUA%3D%3D", "2.ndf");
-
-//            FtpClient ftpClient = new FtpClient();
-//            ftpClient = ftpClient.createFTPClient(account);
-//            try {
-//                if(ftpClient.open()){
-//                    ftpClient.putFile(imageService.storeFile(new File("src/main/resources/1.ndf")), "1.ndf");
-//                    ftpClient.close();
-//                }
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//            return true;
-        }
-        return response;
-    }*/
 
 }

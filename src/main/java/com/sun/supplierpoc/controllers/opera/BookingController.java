@@ -4,17 +4,19 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.opera.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Optional;
 
 @RestController
@@ -24,8 +26,49 @@ public class BookingController {
     private AccountRepo accountRepo;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private ImageService imageService;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @PostMapping("/opera/uploadFile")
+    public String uploadFile(@RequestParam("file") MultipartFile file) {
+        if (file != null) {
+            try {
+                String bucketPath = "";
+                String fileName = "";
+
+                DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+                Date date = new Date();
+
+                if(file.getOriginalFilename().contains("booking")){
+                    bucketPath = "operaReports/Booking/";
+                    fileName = "Booking";
+                } else if(file.getOriginalFilename().contains("cancel_booking")){
+                    bucketPath = "operaReports/CancelBooking/";
+                    fileName = "CancelBooking";
+                } else if(file.getOriginalFilename().contains("Occupancy")){
+                    bucketPath = "operaReports/Occupancy/";
+                    fileName = "Occupancy";
+                } else if(file.getOriginalFilename().contains("Expenses")){
+                    bucketPath = "operaReports/Expenses/";
+                    fileName = "Expenses";
+                }
+
+                fileName += (dateFormat.format(date) + ".xml");
+
+                if((bucketPath.equals("") || fileName.equals(""))){
+                    return "Failed to upload file, please try agian.";
+                } else{
+                    String fileURL = imageService.storeFile(file, bucketPath, fileName);
+                    System.out.println(fileURL);
+                }
+            } catch (Exception e) {
+                return "Failed to upload file, please try agian.";
+            }
+        }
+        return "File uploaded successfully.";
+    }
 
     @RequestMapping("/fetchNewBooking")
     @CrossOrigin(origins = "*")

@@ -8,9 +8,8 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.seleniumMethods.BasicFeatures;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -33,7 +32,7 @@ public class SalesV2Services {
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
-    private BasicFeatures basicFeatures = new BasicFeatures();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +61,7 @@ public class SalesV2Services {
         }
 
         try {
-            if (!basicFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+            if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
                 driver.quit();
 
                 response.setStatus(false);
@@ -121,22 +120,54 @@ public class SalesV2Services {
 
         // Get statistics
         Response statisticsResponse = new Response();
-        if (statistics.size() > 0){
-            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
-        }
+//        if (statistics.size() > 0){
+//            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
+//        }
 
 
-//        // Get tender
-//        Response tenderResponse = new Response();
+        // Get tender
+        Response tenderResponse = new Response();
 //        if(includedTenders.size() > 0){
 //            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
 //                    costCenter, includedTenders, driver);
 //            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
 //        }
 
+        // Get taxes
+        boolean syncTotalTax = configuration.syncTotalTax;
+        String totalTaxAccount = configuration.totalTaxAccount;
+
+        Response taxResponse = new Response();
+//        if(includedTax.size() > 0 || syncTotalTax){
+//            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+//                    totalTaxAccount, includedTax, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
+//        }
+
+        // Get discounts
+        Response discountResponse;
+        boolean syncTotalDiscounts = configuration.syncTotalDiscounts;
+        String totalDiscountsAccount = configuration.totalDiscountsAccount;
+        ArrayList<Discount> salesDiscounts = new ArrayList<>();
+
+        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
+
+
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
+
+        // Set Debit Entries (Tenders)
+        journalBatch.setSalesTender(tenderResponse.getSalesTender());
+
+        // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
+        journalBatch.setSalesTax(taxResponse.getSalesTax());
+        journalBatch.setSalesDiscount(salesDiscounts);
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
@@ -157,30 +188,30 @@ public class SalesV2Services {
             return response;
         }
 
-        // Open reports
-        WebDriverWait wait = new WebDriverWait(driver, 30);
-
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
-        driver.findElement(By.partialLinkText("My Reports")).click();
-
-        // Choose "Daily Operations" Report
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_4")));
-        driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
-
-        // Filter Report
-        Response dateResponse = basicFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
-                null,"", driver);
-
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage(dateResponse.getMessage());
-            return response;
-        }
-
-        // Run
-        driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
-
         try {
+            // Open reports
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
+            driver.findElement(By.partialLinkText("My Reports")).click();
+
+            // Choose "Daily Operations" Report
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_1")));
+            driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table")));
             WebElement statTable = driver.findElement(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));
@@ -203,13 +234,13 @@ public class SalesV2Services {
                 statisticType = cols.get(columns.indexOf("name")).getText().toLowerCase().strip();
                 switch (statisticType) {
                     case "guests":
-                        salesStatistics.NoGuest = cols.get(columns.indexOf("count")).getText();
+                        salesStatistics.NoGuest = conversions.filterString(cols.get(columns.indexOf("count")).getText());
                         break;
                     case "checks":
-                        salesStatistics.NoChecks = cols.get(columns.indexOf("count")).getText();
+                        salesStatistics.NoChecks = conversions.filterString(cols.get(columns.indexOf("count")).getText());
                         break;
                     case "tables":
-                        salesStatistics.NoTables = cols.get(columns.indexOf("count")).getText();
+                        salesStatistics.NoTables = conversions.filterString(cols.get(columns.indexOf("count")).getText());
                         break;
                 }
             }
@@ -230,8 +261,277 @@ public class SalesV2Services {
     private Response getSalesTenders(String businessDate, String fromDate, String toDate,
                                      CostCenter location, ArrayList<Tender> includedTenders, WebDriver driver){
         Response response = new Response();
+        Tender tender;
         ArrayList<Tender> tenders = new ArrayList<>();
 
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_TENDERS_REPORTS);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Fetch tenders table
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table")));
+            WebElement tendersTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table"));
+            List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1){
+                response.setStatus(true);
+                response.setMessage("There is no payments in this location");
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
+            for (int i = 2; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                // Check if tender exists
+                Tender tenderData = conversions.checkTenderExistence(includedTenders, cols.get(columns.indexOf("tender_type")).getText().strip(),
+                        location.locationName, 0);
+                if (!tenderData.isChecked()) {
+                    continue;
+                }
+
+                tender = new Tender();
+                tender.setTender(tenderData.getTender());
+                tender.setAccount(tenderData.getAccount());
+                tender.setAnalysisCodeT5(tenderData.getAnalysisCodeT5());
+                tender.setCommunicationAccount(tenderData.getCommunicationAccount());
+                tender.setCommunicationRate(tenderData.getCommunicationRate());
+                tender.setCommunicationTender(tenderData.getCommunicationTender());
+                tender.setCostCenter(location);
+                tender.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("amount")).getText().strip()));
+
+                // Check if it already exist, increment its value
+                tenderData = conversions.checkTenderExistence(tenders, tender.getTender(), location.locationName,
+                        tender.getTotal());
+                if (tenderData.getTender().equals("")) {
+                    tenders.add(tender);
+                }
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesTender(tenders);
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+            response.setStatus(false);
+            response.setMessage("Failed to get sales payment entries from Oracle Micros Simphony.");
+        }
+
+        return response;
+    }
+
+    private Response getSalesTaxes(String businessDate, String fromDate, String toDate,
+                                   CostCenter location, boolean getTaxTotalFlag, String totalTaxAccount,
+                                   ArrayList<Tax> includedTaxes, WebDriver driver) {
+        Response response = new Response();
+        ArrayList<Tax> salesTax = new ArrayList<>();
+
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_TAXES_REPORTS);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Fetch tenders table
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_4254_0\"]/table")));
+            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_4254_0\"]/table"));
+            List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 3) {
+                response.setStatus(true);
+                response.setMessage("There is no tax entries in this location");
+                response.setSalesTax(new ArrayList<>());
+
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                Tax tax = new Tax();
+
+                WebElement td = cols.get(columns.indexOf("tax_name"));
+                if(getTaxTotalFlag){
+                    if (td.getText().equals("Total")) {
+                        tax.setTax("Total Tax");
+                        tax.setAccount(totalTaxAccount);
+                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip()));
+                        tax.setCostCenter(location);
+                        salesTax.add(tax);
+                        break;
+                    }
+                }else{
+                    // Check if tax exists
+                    Tax taxData = conversions.checkTaxExistence(includedTaxes, td.getText().strip());
+                    if (!taxData.isChecked()) {
+                        continue;
+                    }
+
+                    tax.setTax(taxData.getTax());
+                    tax.setAccount(taxData.getAccount());
+                    tax.setCostCenter(location);
+                    float taxAmount;
+                    taxAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip());
+
+
+                    tax.setTotal(taxAmount);
+                    salesTax.add(tax);
+                }
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesTax(salesTax);
+            response.setEntries(new ArrayList<>());
+
+        } catch (Exception e) {
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+            response.setEntries(new ArrayList<>());
+        }
+
+        return response;
+    }
+
+    private Response getSalesDiscount(String businessDate, String fromDate, String toDate, CostCenter location,
+                                      boolean getDiscountTotalFlag, String totalDiscountsAccount,
+                                      ArrayList<Discount> discounts, WebDriver driver) {
+        Response response = new Response();
+        ArrayList<Discount> salesDiscount = new ArrayList<>();
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_DISCOUNT_REPORTS);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Fetch tenders table
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table")));
+            WebElement discountsTable = driver.findElement(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table"));
+            List<WebElement> rows = discountsTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1){
+                response.setStatus(true);
+                response.setMessage("There is no discount entries in this location");
+                response.setSalesTender(new ArrayList<>());
+
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+                Discount discount;
+
+                WebElement td = cols.get(columns.indexOf("discount_type"));
+                if(getDiscountTotalFlag){
+                    if (td.getText().equals("Total Discounts:")) {
+                        Discount newDiscount = new Discount();
+
+                        float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+
+                        newDiscount.setDiscount("Total Discount");
+                        newDiscount.setAccount(totalDiscountsAccount);
+                        newDiscount.setTotal(discountTotal);
+                        newDiscount.setCostCenter(location);
+                        salesDiscount.add(newDiscount);
+                        break;
+                    }
+                }else{
+                    if (columns.indexOf("discount_type") != -1){
+                        td = cols.get(columns.indexOf("discount_type"));
+                        discount = conversions.checkDiscountExistence(discounts, td.getText().strip().toLowerCase());
+
+                        if (!discount.isChecked()) {
+                            continue;
+                        }
+
+                        Discount newDiscount = new Discount();
+
+                        float discountTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());
+
+                        newDiscount.setDiscount(discount.getDiscount());
+                        newDiscount.setAccount(discount.getAccount());
+                        newDiscount.setTotal(discountTotal);
+                        newDiscount.setCostCenter(location);
+                        salesDiscount.add(newDiscount);
+                    }else{
+                        driver.quit();
+                        response.setStatus(false);
+                        response.setMessage("Failed to get discount entries, Please contact support team.");
+                    }
+                }
+            }
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesDiscount(salesDiscount);
+        } catch (Exception e) {
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+        }
         return response;
     }
 }

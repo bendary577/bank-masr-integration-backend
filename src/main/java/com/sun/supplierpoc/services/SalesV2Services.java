@@ -205,13 +205,13 @@ public class SalesV2Services {
                 statisticType = cols.get(columns.indexOf("name")).getText().toLowerCase().strip();
                 switch (statisticType) {
                     case "guests":
-                        salesStatistics.NoGuest = cols.get(columns.indexOf("count")).getText();
+                        salesStatistics.NoGuest = conversions.filterString(cols.get(columns.indexOf("count")).getText());
                         break;
                     case "checks":
-                        salesStatistics.NoChecks = cols.get(columns.indexOf("count")).getText();
+                        salesStatistics.NoChecks = conversions.filterString(cols.get(columns.indexOf("count")).getText());
                         break;
                     case "tables":
-                        salesStatistics.NoTables = cols.get(columns.indexOf("count")).getText();
+                        salesStatistics.NoTables = conversions.filterString(cols.get(columns.indexOf("count")).getText());
                         break;
                 }
             }

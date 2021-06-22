@@ -8,9 +8,8 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
-import com.sun.supplierpoc.seleniumMethods.BasicFeatures;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -33,7 +32,7 @@ public class SalesV2Services {
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
-    private BasicFeatures basicFeatures = new BasicFeatures();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +61,7 @@ public class SalesV2Services {
         }
 
         try {
-            if (!basicFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+            if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
                 driver.quit();
 
                 response.setStatus(false);
@@ -127,16 +126,19 @@ public class SalesV2Services {
         }
 
 
-//        // Get tender
-//        Response tenderResponse = new Response();
-//        if(includedTenders.size() > 0){
-//            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-//                    costCenter, includedTenders, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
-//        }
+        // Get tender
+        Response tenderResponse = new Response();
+        if(includedTenders.size() > 0){
+            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
+                    costCenter, includedTenders, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+        }
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
+
+        // Set Debit Entries (Tenders)
+        journalBatch.setSalesTender(tenderResponse.getSalesTender());
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
@@ -165,11 +167,11 @@ public class SalesV2Services {
             driver.findElement(By.partialLinkText("My Reports")).click();
 
             // Choose "Daily Operations" Report
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_4")));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_1")));
             driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
 
             // Filter Report
-            Response dateResponse = basicFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -230,7 +232,82 @@ public class SalesV2Services {
     private Response getSalesTenders(String businessDate, String fromDate, String toDate,
                                      CostCenter location, ArrayList<Tender> includedTenders, WebDriver driver){
         Response response = new Response();
+        Tender tender;
         ArrayList<Tender> tenders = new ArrayList<>();
+
+        try{
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_TENDERS_REPORTS);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Fetch tenders table
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table")));
+            WebElement tendersTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table"));
+            List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1){
+                response.setStatus(true);
+                response.setMessage("There is no payments in this location");
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
+            for (int i = 2; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                // Check if tender exists
+                Tender tenderData = conversions.checkTenderExistence(includedTenders, cols.get(columns.indexOf("tender_type")).getText().strip(),
+                        location.locationName, 0);
+                if (!tenderData.isChecked()) {
+                    continue;
+                }
+
+                tender = new Tender();
+                tender.setTender(tenderData.getTender());
+                tender.setAccount(tenderData.getAccount());
+                tender.setAnalysisCodeT5(tenderData.getAnalysisCodeT5());
+                tender.setCommunicationAccount(tenderData.getCommunicationAccount());
+                tender.setCommunicationRate(tenderData.getCommunicationRate());
+                tender.setCommunicationTender(tenderData.getCommunicationTender());
+                tender.setCostCenter(location);
+                tender.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("amount")).getText().strip()));
+
+                // Check if it already exist, increment its value
+                tenderData = conversions.checkTenderExistence(tenders, tender.getTender(), location.locationName,
+                        tender.getTotal());
+                if (tenderData.getTender().equals("")) {
+                    tenders.add(tender);
+                }
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesTender(tenders);
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+            response.setStatus(false);
+            response.setMessage("Failed to get sales payment entries from Oracle Micros Simphony.");
+        }
 
         return response;
     }

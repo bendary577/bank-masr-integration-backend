@@ -173,7 +173,11 @@ public class Constants {
 
     public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
     public static String MICROS_SALES_SUMMARY  = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
-    public static String MICROS_REPORTS  = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports";
+    public static String MICROS_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports";
+
+    // SALES LINKS
+    // Reports >> Tenders Media >> Payments bye Tender Types
+    public static String MICROS_TENDERS_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";

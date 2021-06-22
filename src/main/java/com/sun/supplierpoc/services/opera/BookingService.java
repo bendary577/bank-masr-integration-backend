@@ -1,23 +1,22 @@
 package com.sun.supplierpoc.services.opera;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.components.CancelBookingExcelHelper;
-import com.sun.supplierpoc.components.ExcelHelper;
-import com.sun.supplierpoc.components.NewBookingExcelHelper;
+import com.sun.supplierpoc.components.*;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.FileInputStream;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -39,14 +38,20 @@ public class BookingService {
     ExcelHelper excelHelper;
 
     @Autowired
+    ExpensesXMLHelper expensesXMLHelper;
+
+    @Autowired
     NewBookingExcelHelper bookingExcelHelper;
 
     @Autowired
     CancelBookingExcelHelper cancelBookingExcelHelper;
 
+    @Autowired
+    OccupancyXMLHelper occupancyXMLHelper;
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public Response fetchNewBookingFromReport(String userId, Account account){
+    public Response fetchNewBookingFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
 
@@ -55,7 +60,7 @@ public class BookingService {
         GeneralSettings generalSettings;
         BookingConfiguration bookingConfiguration;
 
-        try{
+        try {
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
             syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
@@ -71,13 +76,21 @@ public class BookingService {
             return response;
         }
 
-        try{
-            String filePath = bookingConfiguration.filePath;
-            File file = new File(filePath);
+        try {
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
 
-            FileInputStream input = new FileInputStream(file);
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/Booking/" + fileName;
+            String localFilePath = account.getName() + "/Booking/";
 
-            List<SyncJobData> syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+
+            List<SyncJobData> syncJobData = new ArrayList<>();
+            if(bookingConfiguration.fileExtension.equals("xlsx"))
+                syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+            else if(bookingConfiguration.fileExtension.equals("xml"))
+                syncJobData = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -89,6 +102,8 @@ public class BookingService {
             message = "Sync new booking successfully.";
             response.setStatus(true);
             response.setMessage(message);
+
+
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -104,7 +119,7 @@ public class BookingService {
         return response;
     }
 
-    public Response fetchCancelBookingFromReport(String userId, Account account){
+    public Response fetchCancelBookingFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
 
@@ -113,7 +128,7 @@ public class BookingService {
         SyncJobType newBookingSyncType;
         GeneralSettings generalSettings;
         BookingConfiguration bookingConfiguration;
-        try{
+        try {
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
             newBookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
@@ -130,15 +145,23 @@ public class BookingService {
             return response;
         }
 
-        try{
-            String filePath = bookingConfiguration.filePath;
+        try {
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
 
-            File file = new File(filePath);
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/CancelBooking/" + fileName;
+            String localFilePath = account.getName() + "/CancelBooking/";
 
-            FileInputStream input = new FileInputStream(file);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
-            List<SyncJobData> syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob,generalSettings,
-                    syncJobType, newBookingSyncType,input);
+            List<SyncJobData> syncJobData = new ArrayList<>();
+            if(bookingConfiguration.fileExtension.equals("xlsx"))
+                syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
+                        syncJobType, newBookingSyncType, input);
+            else if(bookingConfiguration.fileExtension.equals("xml"))
+                syncJobData = cancelBookingExcelHelper.getCancelBookingFromXML(syncJob, generalSettings,
+                        syncJobType, newBookingSyncType, localFilePath + fileName);
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -166,14 +189,15 @@ public class BookingService {
         return response;
     }
 
-    public Response fetchOccupancyFromReport(String userId, Account account){
+    public Response fetchOccupancyFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
 
         SyncJob syncJob;
+        SyncJobType syncJobType;
         BookingConfiguration bookingConfiguration;
-        try{
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
+        try {
+            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
             bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
 
             syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
@@ -186,12 +210,22 @@ public class BookingService {
             return response;
         }
 
-        try{
-            String filePath = bookingConfiguration.filePath;
-            File file = new File(filePath);
+        try {
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
 
-            FileInputStream input = new FileInputStream(file);
-            List<SyncJobData> syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/Occupancy/" + fileName;
+            String localFilePath = account.getName() + "/Occupancy/";
+
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+            List<SyncJobData> syncJobData = new ArrayList<>();
+
+            if(bookingConfiguration.fileExtension.equals("xlsx")){
+                syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
+            } else if(bookingConfiguration.fileExtension.equals("xml")) {
+                syncJobData = occupancyXMLHelper.getOccupancyFromXML(syncJob, localFilePath + fileName);
+            }
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -219,7 +253,7 @@ public class BookingService {
         return response;
     }
 
-    public Response fetchExpensesDetailsFromReport(String userId, Account account){
+    public Response fetchExpensesDetailsFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
 
@@ -228,7 +262,7 @@ public class BookingService {
         SyncJobType expensesDetailsSyncType;
         GeneralSettings generalSettings;
 
-        try{
+        try {
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             expensesDetailsSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.EXPENSES_DETAILS_REPORT, account.getId(), false);
             bookingConfiguration = expensesDetailsSyncType.getConfiguration().bookingConfiguration;
@@ -244,13 +278,23 @@ public class BookingService {
             return response;
         }
 
-        try{
-            String filePath = bookingConfiguration.filePath;
-            File file = new File(filePath);
+        try {
+            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+            String currentDate = fileDateFormat.format(new Date());
+            // fileName = "Expenses20210617.xls"
+            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            String filePath = Constants.REPORTS_BUCKET_PATH + "/Expenses/" + fileName;
+            String localFilePath = account.getName() + "/Expenses/";
 
-            FileInputStream input = new FileInputStream(file);
-            List<SyncJobData> syncJobData = excelHelper.getExpensesUpdateFromExcelV2(syncJob, input,
-                    generalSettings, bookingConfiguration);
+            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+
+            List<SyncJobData> syncJobData = new ArrayList<>();
+            if(bookingConfiguration.fileExtension.equals("xlsx")){
+                syncJobData = excelHelper.getExpensesUpdateFromXLS(syncJob, input, generalSettings, bookingConfiguration);
+            } else if(bookingConfiguration.fileExtension.equals("xml")) {
+                syncJobData = expensesXMLHelper.getExpensesUpdateFromXLS(syncJob, localFilePath + fileName,
+                        generalSettings, bookingConfiguration);
+            }
 
             syncJob.setStatus(Constants.SUCCESS);
             syncJob.setEndDate(new Date(System.currentTimeMillis()));
@@ -276,5 +320,24 @@ public class BookingService {
         }
 
         return response;
+    }
+
+    private FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
+        BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
+
+        File file = new File(localFilePath + fileName);
+        boolean status = file.getParentFile().mkdirs();
+        if (status)
+            file.createNewFile();
+
+        FileOutputStream fileOutputStream = new FileOutputStream(localFilePath + fileName);
+
+        byte[] dataBuffer = new byte[1024];
+        int bytesRead;
+        while ((bytesRead = in.read(dataBuffer, 0, 1024)) != -1) {
+            fileOutputStream.write(dataBuffer, 0, bytesRead);
+        }
+
+        return new FileInputStream(file);
     }
 }

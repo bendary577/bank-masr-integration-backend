@@ -1,6 +1,7 @@
 package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.controllers.*;
+import com.sun.supplierpoc.controllers.opera.BookingController;
 import com.sun.supplierpoc.controllers.simphony.MenuItemsController;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
@@ -8,6 +9,7 @@ import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.services.opera.BookingService;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
 import org.slf4j.Logger;
@@ -53,19 +55,21 @@ public class ScheduledTasks {
     private BookedProductionController bookedProductionController;
     @Autowired
     private MenuItemsController menuItemsController;
+    @Autowired
+    private BookingService bookingService;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-//    @Scheduled(fixedRate = 2000)  // 2 sec
+    // @Scheduled(fixedRate = 2000)  // 2 sec
     public void scheduleTaskWithFixedRate() {
-        logger.info("Fixed Rate Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()) );
+        logger.info("Fixed Rate Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
     }
 
     // run every 60 min
-//    @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
-    @Scheduled(cron="0 0/60 * * * SUN-SAT")
+    // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
+    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException, ParseException, IOException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
@@ -101,19 +105,19 @@ public class ScheduledTasks {
                 String[] arrOfStr = schedulerHour.split(":");
 
                 // check hours
-                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY)){
-                    if (Integer.parseInt(arrOfStr[0]) == hour){
+                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY)) {
+                    if (Integer.parseInt(arrOfStr[0]) == hour) {
                         syncJobsQueue.add(syncJobType);
                         System.out.println(Constants.DAILY);
                         System.out.println(syncJobType.getName());
                     }
                 }
                 // check hours and day_name
-                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.WEEKLY)){
-                    if (syncJobType.getConfiguration().schedulerConfiguration.dayName != null){
-                        if (Integer.parseInt(arrOfStr[0]) == hour){
+                if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.WEEKLY)) {
+                    if (syncJobType.getConfiguration().schedulerConfiguration.dayName != null) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
                             String schedulerDay = (syncJobType.getConfiguration().schedulerConfiguration.dayName).toLowerCase();
-                            if (dayOfWeekName.equals(schedulerDay)){
+                            if (dayOfWeekName.equals(schedulerDay)) {
                                 syncJobsQueue.add(syncJobType);
                                 System.out.println(Constants.WEEKLY);
                                 System.out.println(syncJobType.getName());
@@ -123,11 +127,11 @@ public class ScheduledTasks {
                 }
                 // check hours and day
                 if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.MONTHLY)
-                        || syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)){
-                    if (syncJobType.getConfiguration().schedulerConfiguration.day != null){
-                        if (Integer.parseInt(arrOfStr[0]) == hour){
+                        || syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
+                    if (syncJobType.getConfiguration().schedulerConfiguration.day != null) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
                             int schedulerDay = Integer.parseInt(syncJobType.getConfiguration().schedulerConfiguration.day);
-                            if (dayOfMonth == schedulerDay){
+                            if (dayOfMonth == schedulerDay) {
                                 syncJobsQueue.add(syncJobType);
                                 System.out.println(Constants.MONTHLY);
                                 System.out.println(syncJobType.getName());
@@ -137,45 +141,45 @@ public class ScheduledTasks {
                 }
             }
 
-            for (SyncJobType syncJobType : syncJobsQueue){
-                if (syncJobType.getName().equals(Constants.SUPPLIERS)){
+            for (SyncJobType syncJobType : syncJobsQueue) {
+                if (syncJobType.getName().equals(Constants.SUPPLIERS)) {
                     supplierController.getSuppliers("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES)){
+                } else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES)) {
                     invoiceController.getApprovedInvoices("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)){
+                } else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)) {
                     creditNoteController.getCreditNotes("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.TRANSFERS)){
+                } else if (syncJobType.getName().equals(Constants.TRANSFERS)) {
                     transferController.getBookedTransfer("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.CONSUMPTION)){
+                } else if (syncJobType.getName().equals(Constants.CONSUMPTION)) {
                     journalController.getJournals("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.COST_OF_GOODS)){
+                } else if (syncJobType.getName().equals(Constants.COST_OF_GOODS)) {
                     costOfGoodsController.syncCostOfGoodsInDayRange("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.SALES)){
+                } else if (syncJobType.getName().equals(Constants.SALES)) {
                     salesController.syncPOSSalesInDayRange("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.WASTAGE)){
+                } else if (syncJobType.getName().equals(Constants.WASTAGE)) {
                     wastageController.getWastage("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)){
+                } else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)) {
                     bookedProductionController.getBookedProduction("Automated User", account);
-                }
-                else if (syncJobType.getName().equals(Constants.MENU_ITEMS)){
+                } else if (syncJobType.getName().equals(Constants.MENU_ITEMS)) {
                     // sync per revenue center
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                     ArrayList<SimphonyLocation> locations = generalSettings.getSimphonyLocations();
-                    for (SimphonyLocation location : locations){
-                        if(location.isChecked()){
+                    for (SimphonyLocation location : locations) {
+                        if (location.isChecked()) {
                             menuItemsController.SyncSimphonyMenuItems("Automated User", account, location.getRevenueCenterID());
                         }
                     }
+                } else if (syncJobType.getName().equals(Constants.NEW_BOOKING_REPORT)) {
+                    bookingService.fetchNewBookingFromReport("Automated User", account);
+                } else if (syncJobType.getName().equals(Constants.CANCEL_BOOKING_REPORT)) {
+                    bookingService.fetchCancelBookingFromReport("Automated User", account);
+                } else if (syncJobType.getName().equals(Constants.OCCUPANCY_UPDATE_REPORT)) {
+                    bookingService.fetchOccupancyFromReport("Automated User", account);
+                } else if (syncJobType.getName().equals(Constants.EXPENSES_DETAILS_REPORT)) {
+                    bookingService.fetchExpensesDetailsFromReport("Automated User", account);
                 }
+
             }
         }
 

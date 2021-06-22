@@ -400,15 +400,15 @@ public class Conversions {
         return Float.parseFloat(temp);
     }
 
-    public double roundUpDouble(double value){
-        return Math.round(value * 100.0)/100.0;
-    }
-
     public float roundUpFloat2Digest(float value){
         DecimalFormat df = new DecimalFormat("###.##");
         String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);
+    }
+
+    public double roundUpDouble(double value){
+        return Math.round(value * 100.0)/100.0;
     }
 
     public String getTransactionDate(String businessDate, String fromDate){

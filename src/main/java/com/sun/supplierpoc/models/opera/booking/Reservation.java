@@ -14,7 +14,7 @@ public class Reservation {
     public String reservationStatus = "";
 
     public int nights = 0;
-    public int roomNo = -1;
+    public int roomNo = 0;
     public String roomRentType = "";
     public double dailyRoomRate = 0.0;
     public int roomType = 0;

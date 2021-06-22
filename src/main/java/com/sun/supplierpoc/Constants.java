@@ -56,6 +56,7 @@ public class Constants {
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
+    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/operaReports";
 
     public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
     public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";
@@ -67,24 +68,21 @@ public class Constants {
     public static String ORACLE_OHIM = "HospitalityOHIM";
     public static String ORACLE_OHRA = "HospitalityOHRA";
 
-    //////////////////////////////////////////////// ERD //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////// ERD ///////////////////////////////////////////////////////////////
     public static String EXPORT_TO_SUN_ERD = "ExportSun";
     public static String SUN_ERD = "Sun";
     public static String FUSION_ERD = "Fusion";
     public static String SIMPHONY_ERD = "Simphony";
 
-    ///////////////////////////////////////// Links ////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 
     public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
-//    public static String OHIM_LINK = "https://mte03-ohim-prod.hospitality.oracleindustry.com";
     public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
-
     public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
 
     public static String SUPPLIER_GROUPS_URL = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/MasterData/VendorGroups/VendorGroupsOverview.aspx";
 
     public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
-//    public static String APPROVED_INVOICES_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
     public static String ACCOUNT_PAYABLE_LINK =  OHIM_LINK + "/Webclient/Purchase/Invoicing/IvcOverviewView.aspx?type=2";
 
     /*
@@ -169,6 +167,13 @@ public class Constants {
     ///////////////////////////////////////// Sales over group gross types /////////////////////////////////////////////
     public static String SALES_GROSS = "Gross";
     public static String SALES_GROSS_LESS_DISCOUNT = "Gross Less Discount";
+
+
+    ///////////////////////////////////////// Micros Version#3 Links ///////////////////////////////////////////////////
+
+    public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
+    public static String MICROS_SALES_SUMMARY  = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
+    public static String MICROS_REPORTS  = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";

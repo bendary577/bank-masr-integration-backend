@@ -16,6 +16,7 @@ public class GeneralSettings {
     @Id
     private String id;
     private String accountId;
+
     private ArrayList<Item> items = new ArrayList<>();
     private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
     private ArrayList<MajorGroup> majorGroups = new ArrayList<>();

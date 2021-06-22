@@ -39,6 +39,8 @@ public class SalesController {
     @Autowired
     private SalesService salesService;
     @Autowired
+    private SalesV2Services salesV2Services;
+    @Autowired
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
@@ -167,8 +169,14 @@ public class SalesController {
             syncJobRepo.save(syncJob);
 
             try {
-                Response salesResponse = salesService.getSalesData(syncJobType, locations,
-                        majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
+                Response salesResponse;
+                if(account.getMicrosVersion().equals("version1")){
+                    salesResponse = salesService.getSalesData(syncJobType, locations,
+                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
+                }else{
+                    salesResponse = salesV2Services.getSalesData(syncJobType, locations,
+                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
+                }
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {

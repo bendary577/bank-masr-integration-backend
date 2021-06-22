@@ -91,6 +91,7 @@ public class SetupEnvironment {
             } catch (NoAlertPresentException Ex) {
                 System.out.println("No alert exits");
             }
+
             driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
             driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
             driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
@@ -434,9 +435,12 @@ public class SetupEnvironment {
         return response;
     }
 
-    private Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
+    public Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
         Response response = new Response();
         try {
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+
             driver.findElement(By.id("clear0")).click();
             try {
                 Select businessDate = new Select(driver.findElement(By.id("selectYear")));

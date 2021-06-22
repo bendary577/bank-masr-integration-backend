@@ -157,30 +157,30 @@ public class SalesV2Services {
             return response;
         }
 
-        // Open reports
-        WebDriverWait wait = new WebDriverWait(driver, 30);
-
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
-        driver.findElement(By.partialLinkText("My Reports")).click();
-
-        // Choose "Daily Operations" Report
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_4")));
-        driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
-
-        // Filter Report
-        Response dateResponse = basicFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
-                null,"", driver);
-
-        if (!dateResponse.isStatus()){
-            response.setStatus(false);
-            response.setMessage(dateResponse.getMessage());
-            return response;
-        }
-
-        // Run
-        driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
-
         try {
+            // Open reports
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
+            driver.findElement(By.partialLinkText("My Reports")).click();
+
+            // Choose "Daily Operations" Report
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_4")));
+            driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
+
+            // Filter Report
+            Response dateResponse = basicFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table")));
             WebElement statTable = driver.findElement(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));

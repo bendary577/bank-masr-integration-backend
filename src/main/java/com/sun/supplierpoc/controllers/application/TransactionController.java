@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.simphony.response.TransInRange;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.application.TransactionService;
@@ -18,10 +19,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/transaction")
@@ -76,6 +74,36 @@ public class TransactionController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+        }
+    }
+
+    @RequestMapping("/getTransactionsInRange")
+    @CrossOrigin("*")
+    public ResponseEntity getTotalSpendInTransactions(Principal principal,
+                                                      @RequestParam("transactionType") String transactionType,
+                                                      @RequestParam("startTime") String startTime,
+                                                      @RequestParam("endTime") String endTime,
+                                                      @RequestParam("group") String group) {
+
+        HashMap response = new HashMap();
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            TransInRange transInRange = transactionService.getTotalSpendTransactionsInRang(startTime, endTime, transactionType, group, account);
+
+            if(transInRange.getTransactions().size() == 0){
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No transaction in This rang");
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(transInRange);
+
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Constants.INVALID_USER);
         }
     }
 

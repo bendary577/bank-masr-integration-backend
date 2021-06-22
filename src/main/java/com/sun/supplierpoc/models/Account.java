@@ -23,6 +23,7 @@ public class Account implements Serializable {
     private int locationQuota;
     private Date creationDate;
     private boolean deleted;
+    private AccountEmailConfig emailConfig;
 
     public Account() {
     }
@@ -126,5 +127,13 @@ public class Account implements Serializable {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    public AccountEmailConfig getEmailConfig() {
+        return emailConfig;
+    }
+
+    public void setEmailConfig(AccountEmailConfig emailConfig) {
+        this.emailConfig = emailConfig;
     }
 }

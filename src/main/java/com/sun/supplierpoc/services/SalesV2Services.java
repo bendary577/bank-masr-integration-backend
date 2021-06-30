@@ -2,10 +2,7 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.JournalBatch;
-import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
@@ -158,6 +155,35 @@ public class SalesV2Services {
             salesDiscounts.addAll(discountResponse.getSalesDiscount());
         }
 
+        // Get Major Groups/Family Groups net sales
+        String grossDiscountSales = configuration.grossDiscountSales;
+        boolean majorGroupDiscount = configuration.MGDiscount;
+        boolean revenueCenterDiscount = configuration.RVDiscount;
+        boolean syncMajorGroups = configuration.syncMG;
+        boolean taxIncluded = configuration.taxIncluded;
+
+        ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
+        if (revenueCenters.size() > 0 ){
+            for (RevenueCenter rc : revenueCenters)
+            {
+                if(!rc.isChecked()){
+                    continue;
+                }
+                Response overGroupGrossResponse;
+
+                overGroupGrossResponse = getSalesMajorGroups(taxIncluded, rc, timePeriod, fromDate, toDate, costCenter,
+                        majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
+                        driver);
+
+                if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
+
+                if (majorGroupDiscount || revenueCenterDiscount){
+                    salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
+                }
+
+                salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+            }
+        }
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
@@ -168,6 +194,7 @@ public class SalesV2Services {
         // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
         journalBatch.setSalesTax(taxResponse.getSalesTax());
         journalBatch.setSalesDiscount(salesDiscounts);
+        journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
@@ -532,6 +559,44 @@ public class SalesV2Services {
             response.setStatus(false);
             response.setMessage(e.getMessage());
         }
+        return response;
+    }
+
+    private Response getSalesMajorGroups(boolean taxIncluded, RevenueCenter revenueCenter, String businessDate,
+                                         String fromDate, String toDate,
+                                         CostCenter location, ArrayList<MajorGroup> majorGroups,
+                                         String grossDiscountSales, boolean majorGroupDiscount,
+                                         boolean revenueCenterDiscount, boolean syncMajorGroups,
+                                         WebDriver driver) {
+        Response response = new Response();
+        ArrayList<Journal> majorGroupsGross = new ArrayList<>();
+        ArrayList<Discount> salesDiscount = new ArrayList<>();
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+
+            // Open reports
+            driver.get(Constants.MICROS_SALES_SUMMARY);
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+        } catch (Exception e) {
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+        }
+
         return response;
     }
 }

@@ -26,10 +26,14 @@ public class OccupancyXMLHelper {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
         try {
-            OccupancyDetails occupancyDetails = readOccupancyRow(new File(filePath));
+            File file = new File(filePath);
+            OccupancyDetails occupancyDetails = readOccupancyRow(file);
 
             Date updateDate = new Date();
-            occupancyDetails.updateDate = dateFormat.format(updateDate);
+
+//            String dateString = dateFormat.format(updateDate);
+            String dateString = file.getName().substring(9, file.getName().indexOf('.'));
+            occupancyDetails.updateDate = dateString;
 
             HashMap<String, Object> data = new HashMap<>();
             Field[] allFields = occupancyDetails.getClass().getDeclaredFields();

@@ -562,7 +562,12 @@ public class NewBookingExcelHelper {
             reservation.roomType = bookingType.getTypeId();
 
             reservation.noOfRooms = Integer.parseInt(element.getElementsByTagName("QUANTITY").item(0).getTextContent());
-            reservation.dailyRoomRate = conversions.roundUpFloat(Float.parseFloat(element.getElementsByTagName("AMOUNT").item(0).getTextContent()));
+            String amount = element.getElementsByTagName("AMOUNT").item(0).getTextContent();
+            if(amount.equals("")){
+                reservation.dailyRoomRate = 0;
+            }else{
+                reservation.dailyRoomRate = conversions.roundUpFloat(Float.parseFloat(amount));
+            }
 
             reservation.reservationStatus = element.getElementsByTagName("STATUS").item(0).getTextContent();
 

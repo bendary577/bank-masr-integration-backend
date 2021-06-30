@@ -32,7 +32,7 @@ public class BookingController {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @PostMapping("/opera/uploadFile")
-    public String uploadFile(@RequestParam("file") MultipartFile file) {
+    public String uploadFile(@RequestParam(value = "file", required = false ) MultipartFile file) {
         if (file != null) {
             try {
                 String bucketPath = "";
@@ -41,12 +41,12 @@ public class BookingController {
                 DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
                 Date date = new Date();
 
-                if(file.getOriginalFilename().contains("booking")){
-                    bucketPath = "operaReports/Booking/";
-                    fileName = "Booking";
-                } else if(file.getOriginalFilename().contains("cancel_booking")){
+                if(file.getOriginalFilename().contains("cancel_booking")){
                     bucketPath = "operaReports/CancelBooking/";
                     fileName = "CancelBooking";
+                } else if(file.getOriginalFilename().contains("booking")){
+                    bucketPath = "operaReports/Booking/";
+                    fileName = "Booking";
                 } else if(file.getOriginalFilename().contains("Occupancy")){
                     bucketPath = "operaReports/Occupancy/";
                     fileName = "Occupancy";
@@ -63,11 +63,14 @@ public class BookingController {
                     String fileURL = imageService.storeFile(file, bucketPath, fileName);
                     System.out.println(fileURL);
                 }
+                return "File uploaded successfully.";
             } catch (Exception e) {
                 return "Failed to upload file, please try agian.";
             }
         }
-        return "File uploaded successfully.";
+        else{
+            return "File can not be empty, Please try again";
+        }
     }
 
     @RequestMapping("/fetchNewBooking")

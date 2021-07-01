@@ -158,13 +158,13 @@ public class MicrosFeatures {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_rvc_select")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_rvc_select")));
                     driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
-
+                    driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
                     // Filter by range
-                    try {
-                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")));
-                    } catch (Exception e) {
-                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
-                    }
+//                    try {
+//                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")));
+//                    } catch (Exception e) {
+//                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
+//                    }
                     WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){

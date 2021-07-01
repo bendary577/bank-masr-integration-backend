@@ -117,30 +117,30 @@ public class SalesV2Services {
 
         // Get statistics
         Response statisticsResponse = new Response();
-//        if (statistics.size() > 0){
-//            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
-//        }
+        if (statistics.size() > 0){
+            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
+        }
 
 
         // Get tender
         Response tenderResponse = new Response();
-//        if(includedTenders.size() > 0){
-//            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-//                    costCenter, includedTenders, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
-//        }
+        if(includedTenders.size() > 0){
+            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
+                    costCenter, includedTenders, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+        }
 
         // Get taxes
         boolean syncTotalTax = configuration.syncTotalTax;
         String totalTaxAccount = configuration.totalTaxAccount;
 
         Response taxResponse = new Response();
-//        if(includedTax.size() > 0 || syncTotalTax){
-//            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
-//                    totalTaxAccount, includedTax, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
-//        }
+        if(includedTax.size() > 0 || syncTotalTax){
+            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+                    totalTaxAccount, includedTax, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
+        }
 
         // Get discounts
         Response discountResponse;
@@ -163,27 +163,41 @@ public class SalesV2Services {
         boolean taxIncluded = configuration.taxIncluded;
 
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
-        if (revenueCenters.size() > 0 ){
-            for (RevenueCenter rc : revenueCenters)
-            {
-                if(!rc.isChecked()){
-                    continue;
-                }
-                Response overGroupGrossResponse;
+//        if (revenueCenters.size() > 0 ){
+//            for (RevenueCenter rc : revenueCenters)
+//            {
+//                if(!rc.isChecked()){
+//                    continue;
+//                }
+//                Response overGroupGrossResponse;
+//
+//                overGroupGrossResponse = getSalesMajorGroups(taxIncluded, rc, timePeriod, fromDate, toDate, costCenter,
+//                        majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
+//                        driver);
+//
+//                if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
+//
+//                if (majorGroupDiscount || revenueCenterDiscount){
+//                    salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
+//                }
+//
+//                salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+//            }
+//        }else{
+            Response overGroupGrossResponse;
 
-                overGroupGrossResponse = getSalesMajorGroups(taxIncluded, rc, timePeriod, fromDate, toDate, costCenter,
-                        majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
-                        driver);
+            overGroupGrossResponse = getSalesMajorGroups(taxIncluded, new RevenueCenter(), timePeriod, fromDate, toDate, costCenter,
+                    majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
+                    driver);
 
-                if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
+            if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
 
-                if (majorGroupDiscount || revenueCenterDiscount){
-                    salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
-                }
-
-                salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+            if (majorGroupDiscount || revenueCenterDiscount){
+                salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
             }
-        }
+
+            salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+//        }
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
@@ -219,12 +233,13 @@ public class SalesV2Services {
             // Open reports
             WebDriverWait wait = new WebDriverWait(driver, 30);
 
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
-            driver.findElement(By.partialLinkText("My Reports")).click();
-
-            // Choose "Daily Operations" Report
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_1")));
-            driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
+            driver.get("https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=1");
+//            wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
+//            driver.findElement(By.partialLinkText("My Reports")).click();
+//
+//            // Choose "Daily Operations" Report
+//            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_1")));
+//            driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
@@ -239,8 +254,8 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table")));
-            WebElement statTable = driver.findElement(By.xpath("//*[@id=\"report_tile3631_1\"]/oj-module/oj-module/table"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table")));
+            WebElement statTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -394,8 +409,8 @@ public class SalesV2Services {
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_4254_0\"]/table")));
-            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_4254_0\"]/table"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_5450_0\"]/table")));
+            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_5450_0\"]/table"));
             List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 3) {
@@ -579,7 +594,7 @@ public class SalesV2Services {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
-                    null,"", driver);
+                    revenueCenter.getRevenueCenter(),"", driver);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -590,6 +605,64 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
+            // Fetch major groups table
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_4527_0\"]/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage("There is no sales per major group found in this location");
+                return response;
+            }
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_4527_0\"]/table"));
+            List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1){
+                response.setStatus(true);
+                response.setMessage("There is no sales per major group found in this location");
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
+            MajorGroup majorGroup;
+            RevenueCenter MGRevenueCenter = new RevenueCenter();
+            String majorGroupName = "";
+
+            float majorGroupAmount;
+
+            for (int i = 2; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                Journal journal = new Journal();
+                WebElement col = cols.get(columns.indexOf("name"));
+                majorGroupName = col.getText().strip().toLowerCase();
+                majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+
+                if (!majorGroup.getChecked()) {
+                    continue;
+                }
+
+                if(!revenueCenter.getRevenueCenter().equals("")){
+                    MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+                }
+
+                if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
+                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
+                }else {
+                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
+                }
+
+                majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
+                        , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesMajorGroupGross(majorGroupsGross);
         } catch (Exception e) {
             driver.quit();
 

@@ -249,6 +249,7 @@ public class SalesController {
 
                                 response.setStatus(true);
                                 response.setMessage("Get sales successfully.");
+                                return response;
                             }
 
                             if (file != null && !fileStoragePath.equals("") &&

@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.excelExporters;
 
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Transactions;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -11,6 +12,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class TransactionExcelExport {
@@ -40,15 +43,20 @@ public class TransactionExcelExport {
         style.setFillForegroundColor(IndexedColors.CORAL.getIndex());
 
         commonFunctions.createCell(row, 0, "User Name", style);
-        commonFunctions.createCell(row, 1, "Transaction Date", style);
-        commonFunctions.createCell(row, 2, "Group", style);
-        commonFunctions.createCell(row, 3, "Total Payment", style);
-        commonFunctions.createCell(row, 4, "Discount Rate", style);
-        commonFunctions.createCell(row, 5, "After Discount", style);
+        commonFunctions.createCell(row, 1, "Group", style);
+        commonFunctions.createCell(row, 2, "Total Payment", style);
+        commonFunctions.createCell(row, 3, "Discount Rate", style);
+        commonFunctions.createCell(row, 4, "After Discount", style);
+        commonFunctions.createCell(row, 5, "Transaction Date", style);
+
 
     }
 
     private void writeDataLines() {
+
+        Conversions conversion = new Conversions();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
         int rowCount = 1;
 
         CellStyle style = workbook.createCellStyle();
@@ -59,12 +67,13 @@ public class TransactionExcelExport {
         for (Transactions transaction : transactions) {
             Row row = sheet.createRow(rowCount++);
             int columnCount = 0;
+
             commonFunctions.createCell(row, columnCount++, transaction.getUser().getName(), style);
-            commonFunctions.createCell(row, columnCount++, transaction.getTransactionDate().toString(), style);
             commonFunctions.createCell(row, columnCount++, transaction.getGroup().getName(), style);
-            commonFunctions.createCell(row, columnCount++, String.valueOf(transaction.getTotalPayment()), style);
+            commonFunctions.createCell(row, columnCount++, String.valueOf(conversion.roundUpDouble(transaction.getTotalPayment())), style);
             commonFunctions.createCell(row, columnCount++,  String.valueOf(transaction.getDiscountRate()) + " %", style);
-            commonFunctions.createCell(row, columnCount++,  String.valueOf(transaction.getAfterDiscount()) , style);
+            commonFunctions.createCell(row, columnCount++,  String.valueOf(conversion.roundUpDouble(transaction.getAfterDiscount())) , style);
+            commonFunctions.createCell(row, columnCount++, (dateFormat.format(transaction.getAfterDiscount())), style);
 
         }
     }

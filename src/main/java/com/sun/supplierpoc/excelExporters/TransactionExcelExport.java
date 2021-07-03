@@ -73,7 +73,7 @@ public class TransactionExcelExport {
             commonFunctions.createCell(row, columnCount++, String.valueOf(conversion.roundUpDouble(transaction.getTotalPayment())), style);
             commonFunctions.createCell(row, columnCount++,  String.valueOf(transaction.getDiscountRate()) + " %", style);
             commonFunctions.createCell(row, columnCount++,  String.valueOf(conversion.roundUpDouble(transaction.getAfterDiscount())) , style);
-            commonFunctions.createCell(row, columnCount++, (dateFormat.format(transaction.getAfterDiscount())), style);
+            commonFunctions.createCell(row, columnCount++, (dateFormat.format(transaction.getTransactionDate())), style);
 
         }
     }

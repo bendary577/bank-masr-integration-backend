@@ -7,10 +7,8 @@ import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
-import com.sun.supplierpoc.models.opera.booking.BookingDetails;
-import com.sun.supplierpoc.models.opera.booking.BookingType;
-import com.sun.supplierpoc.models.opera.booking.RateCode;
-import com.sun.supplierpoc.models.opera.booking.Reservation;
+import com.sun.supplierpoc.models.opera.booking.*;
+import com.sun.supplierpoc.models.opera.booking.Package;
 import com.sun.supplierpoc.services.SyncJobDataService;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -413,10 +411,15 @@ public class NewBookingExcelHelper {
             Document doc = db.parse(file);
             doc.getDocumentElement().normalize();
 
-            NodeList list = doc.getElementsByTagName("G_BIRTH");
+            NodeList list = doc.getElementsByTagName("G_BOOKING_NO");
 
             for (int temp = 0; temp < list.getLength(); temp++) {
                 reservation =  readReservationXMLRow(list, temp, generalSettings);
+
+                // loop over products
+
+
+                // Calculate room basic rate (amount - packages)
 
                 // New Booking
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
@@ -512,6 +515,7 @@ public class NewBookingExcelHelper {
         Reservation reservation = new Reservation();
 
         String typeName;
+        String tempDate;
         BookingType bookingType;
 
         ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
@@ -571,7 +575,6 @@ public class NewBookingExcelHelper {
 
             reservation.reservationStatus = element.getElementsByTagName("STATUS").item(0).getTextContent();
 
-            String tempDate;
             try {
                 tempDate = element.getElementsByTagName("ARRIVAL_DATE").item(0).getTextContent();
                 if (!tempDate.equals("")) {
@@ -610,8 +613,90 @@ public class NewBookingExcelHelper {
             } catch (Exception e) {
                 reservation.reservationDate = null;
             }
+
+            // Read reservation packages
+            Package aPackage;
+            do {
+                aPackage = readReservationPackageXMLRow(list, rowIndex, reservation);
+                reservation.packages.add(aPackage);
+                rowIndex ++;
+            }while (aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0);
+            rowIndex --;
+            // Calculate Taxes
         }
         return reservation;
+    }
+
+    private Package readReservationPackageXMLRow(NodeList list, int rowIndex, Reservation reservation){
+        Node node = list.item(rowIndex);
+        com.sun.supplierpoc.models.opera.booking.Package aPackage = new Package();
+        String tempDate;
+        String amount;
+
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+
+            aPackage.packageName = element.getElementsByTagName("PRODUCT").item(0).getTextContent();
+            if(!aPackage.packageName.equals("")){
+                try {
+                    tempDate = element.getElementsByTagName("CONSUMPTION_DATE").item(0).getTextContent();
+                    if (!tempDate.equals("")) {
+                        try{
+                            aPackage.consumptionDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                        } catch (ParseException e) {
+                            aPackage.consumptionDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                        }
+                    }
+                } catch (Exception e) {
+                    aPackage.consumptionDate= null;
+                }
+
+                aPackage.calculationRule = element.getElementsByTagName("CALCULATION_RULE").item(0).getTextContent();
+
+                amount = element.getElementsByTagName("AMOUNT").item(0).getTextContent();
+                if(amount.equals("")){
+                    aPackage.price  = 0;
+                }else{
+                    aPackage.price = conversions.roundUpFloat(Float.parseFloat(amount));
+                }
+
+                switch (aPackage.calculationRule) {
+                    case "A":
+                        aPackage.price = aPackage.price * reservation.adults;
+                        break;
+                    case "C":
+                        aPackage.price = aPackage.price * reservation.children;
+                        break;
+                    case "R":
+                        aPackage.price = aPackage.price * reservation.noOfRooms;
+                        break;
+                }
+
+                // Read package generates
+                Generate generate = new Generate();
+                do {
+                    generate = readPackageGenerateXMLRow(list, rowIndex);
+                    aPackage.generates.add(generate);
+                    rowIndex ++;
+                }while (generate.packageName.equals(aPackage.packageName));
+
+                rowIndex --;
+            }
+        }
+        return aPackage;
+    }
+
+    private Generate readPackageGenerateXMLRow(NodeList list, int rowIndex){
+        Node node = list.item(rowIndex);
+        Generate generate = new Generate();
+        if (node.getNodeType() == Node.ELEMENT_NODE) {
+            Element element = (Element) node;
+            generate.packageName = element.getElementsByTagName("PRODUCT").item(0).getTextContent();
+            generate.description = element.getElementsByTagName("DESCRIPTION1").item(0).getTextContent();
+            generate.percentage = Integer.parseInt(element.getElementsByTagName("PERCENTAGE").item(0).getTextContent());
+            generate.percentageBaseCode = Integer.parseInt(element.getElementsByTagName("PERCENTAGE_BASE_CODE").item(0).getTextContent());
+        }
+        return generate;
     }
 
     private void saveBooking(BookingDetails bookingDetails, SyncJob syncJob,

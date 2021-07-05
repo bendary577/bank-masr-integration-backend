@@ -33,4 +33,6 @@ public class Reservation {
 
     public int cancelReason = 0;
     public int cancelWithCharges = 2;
+
+    public ArrayList<Package> packages = new ArrayList<>();
 }

@@ -35,4 +35,5 @@ public class Reservation {
     public int cancelWithCharges = 2;
 
     public ArrayList<Package> packages = new ArrayList<>();
+    public int lastIndex = 0;
 }

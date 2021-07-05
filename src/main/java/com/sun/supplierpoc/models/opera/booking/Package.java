@@ -7,14 +7,15 @@ public class Package {
     public String packageName = "";
 
     // (price * quantity)
-    public float price = 0;
+    public double price = 0;
     public String calculationRule = "";
     public Date consumptionDate;
 
-    public Double serviceCharge = 0.0;
-    public Double municipalityTax = 0.0;
-    public Double vat = 0.0;
+    public double serviceCharge = 0.0;
+    public double municipalityTax = 0.0;
+    public double vat = 0.0;
 
     public ArrayList<Generate> generates = new ArrayList<>();
+    public int lastIndex = 0;
 }
 

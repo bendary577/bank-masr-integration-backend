@@ -387,6 +387,11 @@ public class NewBookingExcelHelper {
         BookingType bookingType;
 
         double basicRoomRate;
+        double totalPackageAmount;
+        double totalPackageVat;
+        double totalPackageMunicipality;
+        double totalPackageServiceCharges;
+
         double vat;
         double municipalityTax;
         double serviceCharge;
@@ -416,10 +421,7 @@ public class NewBookingExcelHelper {
             for (int temp = 0; temp < list.getLength(); temp++) {
                 reservation =  readReservationXMLRow(list, temp, generalSettings);
 
-                // loop over products
-
-
-                // Calculate room basic rate (amount - packages)
+                temp = reservation.lastIndex;
 
                 // New Booking
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
@@ -474,12 +476,35 @@ public class NewBookingExcelHelper {
                 if(nights > 0){
                     nights --;
 
+                    totalPackageAmount = 0;
+                    totalPackageVat = 0;
+                    totalPackageMunicipality = 0;
+                    totalPackageServiceCharges = 0;
+
                     basicRoomRate = reservation.dailyRoomRate;
+                    // get total packages
+                    for (Package pkg: reservation.packages) {
+                        if(pkg.calculationRule.equals("F"))
+                            rateCode.basicPackageValue += pkg.price;
+                        if(!pkg.calculationRule.equals("F"))
+                            totalPackageAmount += pkg.price;
+                        totalPackageVat += pkg.vat;
+                        totalPackageMunicipality += pkg.municipalityTax;
+                        totalPackageServiceCharges += pkg.serviceCharge;
+                    }
+
+                    basicRoomRate -= totalPackageAmount;
 
                     serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
                     municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
 
-                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
+//                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100 + totalPackageVat;
+                    vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
+
+                    vat += totalPackageVat;
+                    municipalityTax += totalPackageMunicipality;
+                    serviceCharge += totalPackageServiceCharges;
+                    basicRoomRate += totalPackageAmount;
 
                     grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
 
@@ -617,19 +642,33 @@ public class NewBookingExcelHelper {
             // Read reservation packages
             Package aPackage;
             do {
+                if(rowIndex > list.getLength()-1){
+                    aPackage = null;
+                    break;
+                }
+
                 aPackage = readReservationPackageXMLRow(list, rowIndex, reservation);
-                reservation.packages.add(aPackage);
-                rowIndex ++;
+                if(!aPackage.packageName.equals("")){
+                    // Calculate Taxes
+                    calculatePackageTax(aPackage);
+                    reservation.packages.add(aPackage);
+                }
+                rowIndex = aPackage.lastIndex;
             }while (aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0);
+
+            if(aPackage != null && !aPackage.packageName.equals("")){
+                reservation.packages.remove(reservation.packages.size() - 1);
+            }
+
             rowIndex --;
-            // Calculate Taxes
+            reservation.lastIndex = rowIndex;
         }
         return reservation;
     }
 
     private Package readReservationPackageXMLRow(NodeList list, int rowIndex, Reservation reservation){
         Node node = list.item(rowIndex);
-        com.sun.supplierpoc.models.opera.booking.Package aPackage = new Package();
+        Package aPackage = new Package();
         String tempDate;
         String amount;
 
@@ -653,7 +692,7 @@ public class NewBookingExcelHelper {
 
                 aPackage.calculationRule = element.getElementsByTagName("CALCULATION_RULE").item(0).getTextContent();
 
-                amount = element.getElementsByTagName("AMOUNT").item(0).getTextContent();
+                amount = element.getElementsByTagName("PROD_PRICE").item(0).getTextContent();
                 if(amount.equals("")){
                     aPackage.price  = 0;
                 }else{
@@ -673,14 +712,20 @@ public class NewBookingExcelHelper {
                 }
 
                 // Read package generates
-                Generate generate = new Generate();
+                Generate generate;
                 do {
                     generate = readPackageGenerateXMLRow(list, rowIndex);
-                    aPackage.generates.add(generate);
+                    if(!generate.description.equals("")){
+                        aPackage.generates.add(generate);
+                    }
                     rowIndex ++;
                 }while (generate.packageName.equals(aPackage.packageName));
 
+                if(!generate.description.equals(""))
+                    aPackage.generates.remove(aPackage.generates.size() - 1);
+
                 rowIndex --;
+                aPackage.lastIndex = rowIndex;
             }
         }
         return aPackage;
@@ -693,10 +738,45 @@ public class NewBookingExcelHelper {
             Element element = (Element) node;
             generate.packageName = element.getElementsByTagName("PRODUCT").item(0).getTextContent();
             generate.description = element.getElementsByTagName("DESCRIPTION1").item(0).getTextContent();
-            generate.percentage = Integer.parseInt(element.getElementsByTagName("PERCENTAGE").item(0).getTextContent());
-            generate.percentageBaseCode = Integer.parseInt(element.getElementsByTagName("PERCENTAGE_BASE_CODE").item(0).getTextContent());
+
+            // check if there is any generate for this package
+            String percentage = element.getElementsByTagName("PERCENTAGE").item(0).getTextContent();
+            if(percentage != null && !percentage.equals("")){
+                generate.percentage = Integer.parseInt(percentage);
+            }
+
+            String baseCode = element.getElementsByTagName("PERCENTAGE_BASE_CODE").item(0).getTextContent();
+            if(baseCode != null && !baseCode.equals("")){
+                generate.percentageBaseCode = Integer.parseInt(baseCode);
+            }
         }
         return generate;
+    }
+
+    private void calculatePackageTax(Package aPackage){
+        double amount = aPackage.price;
+
+        for (Generate generate: aPackage.generates) {
+            if(generate.percentageBaseCode != 0){
+                String desc = aPackage.generates.get(generate.percentageBaseCode - 1).description;
+
+                if(desc.toLowerCase().contains("service charge")){
+                    amount += aPackage.serviceCharge;
+                } else if(desc.toLowerCase().contains("muncipality")){
+                    amount += aPackage.municipalityTax;
+                } else if(desc.toLowerCase().contains("vat")){
+                    amount += aPackage.vat;
+                }
+            }
+
+            if(generate.description.toLowerCase().contains("service charge")){
+                aPackage.serviceCharge = (amount * generate.percentage) / 100;
+            } else if(generate.description.toLowerCase().contains("muncipality")){
+                aPackage.municipalityTax = (amount * generate.percentage) / 100;
+            } else if(generate.description.toLowerCase().contains("vat")){
+                aPackage.vat = (amount * generate.percentage) / 100;
+            }
+        }
     }
 
     private void saveBooking(BookingDetails bookingDetails, SyncJob syncJob,

@@ -475,6 +475,7 @@ public class NewBookingExcelHelper {
 
                 if(nights > 0){
                     nights --;
+                    rateCode.basicPackageValue = 0;
 
                     totalPackageAmount = 0;
                     totalPackageVat = 0;
@@ -642,23 +643,16 @@ public class NewBookingExcelHelper {
             // Read reservation packages
             Package aPackage;
             do {
-                if(rowIndex > list.getLength()-1){
-                    aPackage = null;
-                    break;
-                }
-
                 aPackage = readReservationPackageXMLRow(list, rowIndex, reservation);
-                if(!aPackage.packageName.equals("")){
+                if(!aPackage.packageName.equals("") && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0){
                     // Calculate Taxes
                     calculatePackageTax(aPackage);
                     reservation.packages.add(aPackage);
+                    rowIndex = aPackage.lastIndex;
+                }else if(aPackage.packageName.equals("")){
+                    rowIndex = aPackage.lastIndex;
                 }
-                rowIndex = aPackage.lastIndex;
-            }while (aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0);
-
-            if(aPackage != null && !aPackage.packageName.equals("")){
-                reservation.packages.remove(reservation.packages.size() - 1);
-            }
+            }while (aPackage.consumptionDate != null && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0);
 
             rowIndex --;
             reservation.lastIndex = rowIndex;
@@ -726,6 +720,9 @@ public class NewBookingExcelHelper {
 
                 rowIndex --;
                 aPackage.lastIndex = rowIndex;
+            }
+            else{
+                aPackage.lastIndex = rowIndex + 1;
             }
         }
         return aPackage;

@@ -382,6 +382,7 @@ public class NewBookingExcelHelper {
 
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
+        ArrayList<String> neglectedRoomTypes = syncJobType.getConfiguration().bookingConfiguration.neglectedRoomTypes;
 
         String typeName;
         BookingType bookingType;
@@ -419,7 +420,10 @@ public class NewBookingExcelHelper {
             NodeList list = doc.getElementsByTagName("G_BOOKING_NO");
 
             for (int temp = 0; temp < list.getLength(); temp++) {
-                reservation =  readReservationXMLRow(list, temp, generalSettings);
+                reservation =  readReservationXMLRow(list, temp, neglectedRoomTypes, generalSettings);
+
+                if(reservation == null)
+                    continue;
 
                 temp = reservation.lastIndex;
 
@@ -537,6 +541,7 @@ public class NewBookingExcelHelper {
     }
 
     private Reservation readReservationXMLRow(NodeList list, int rowIndex,
+                                              ArrayList<String> neglectedRoomTypes,
                                                 GeneralSettings generalSettings){
         Reservation reservation = new Reservation();
 
@@ -587,7 +592,13 @@ public class NewBookingExcelHelper {
                 if(!element.getElementsByTagName("ROOM").item(0).getTextContent().equals(""))
                     reservation.roomNo = -1;
             }
+
             typeName = element.getElementsByTagName("DESCRIPTION").item(0).getTextContent();
+
+            // Skip neglected room types
+            if(neglectedRoomTypes.contains(typeName))
+                return null;
+
             bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
             reservation.roomType = bookingType.getTypeId();
 

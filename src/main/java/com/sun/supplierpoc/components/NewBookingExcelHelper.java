@@ -134,10 +134,10 @@ public class NewBookingExcelHelper {
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
                     // Save old one
                     if (!bookingDetails.bookingNo.equals("")) {
-                        if(bookingDetails.checkInTime.equals(""))
+                        if (bookingDetails.checkInTime.equals(""))
                             bookingDetails.checkInTime = "14:00";
 
-                        if(bookingDetails.checkOutTime.equals(""))
+                        if (bookingDetails.checkOutTime.equals(""))
                             bookingDetails.checkOutTime = "12:00";
 
                         bookingDetails.grandTotal = conversions.roundUpDouble(
@@ -174,14 +174,14 @@ public class NewBookingExcelHelper {
                     bookingDetails.dateOfBirth = reservation.dateOfBirth;
                     bookingDetails.paymentType = reservation.paymentType;
 
-                    if(reservation.checkInDate != null)
+                    if (reservation.checkInDate != null)
                         bookingDetails.checkInDate = dateFormat.format(reservation.checkInDate);
-                    if(reservation.checkOutDate != null)
+                    if (reservation.checkOutDate != null)
                         bookingDetails.checkOutDate = dateFormat.format(reservation.checkOutDate);
                 }
 
-                if(nights > 0){
-                    nights --;
+                if (nights > 0) {
+                    nights--;
 
                     basicRoomRate = reservation.dailyRoomRate;
 
@@ -201,10 +201,10 @@ public class NewBookingExcelHelper {
                 }
             }
 
-            if(bookingDetails.checkInTime.equals(""))
+            if (bookingDetails.checkInTime.equals(""))
                 bookingDetails.checkInTime = "14:00";
 
-            if(bookingDetails.checkOutTime.equals(""))
+            if (bookingDetails.checkOutTime.equals(""))
                 bookingDetails.checkOutTime = "12:00";
 
             bookingDetails.grandTotal = conversions.roundUpDouble(
@@ -248,7 +248,7 @@ public class NewBookingExcelHelper {
             } else if (cellIdx == columnsName.indexOf("arrival_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        try{
+                        try {
                             reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
                         } catch (ParseException e) {
                             // 03-DEC-20
@@ -261,7 +261,7 @@ public class NewBookingExcelHelper {
             } else if (cellIdx == columnsName.indexOf("departure_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        try{
+                        try {
                             reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
                         } catch (ParseException e) {
                             // 03-DEC-20
@@ -306,13 +306,11 @@ public class NewBookingExcelHelper {
                 reservation.children = (int) (currentCell.getNumericCellValue());
             } else if (cellIdx == columnsName.indexOf("nights")) {
                 reservation.nights = (int) (currentCell.getNumericCellValue());
-            }
-
-            else if (cellIdx == columnsName.indexOf("room")) {
+            } else if (cellIdx == columnsName.indexOf("room")) {
                 try {
                     reservation.roomNo = (int) (currentCell.getNumericCellValue());
                 } catch (Exception e) {
-                    if(!currentCell.getStringCellValue().equals("")){
+                    if (!currentCell.getStringCellValue().equals("")) {
                         reservation.roomNo = -1;
                     }
                 }
@@ -323,15 +321,12 @@ public class NewBookingExcelHelper {
                 reservation.roomType = bookingType.getTypeId();
             } else if (cellIdx == columnsName.indexOf("quantity")) {
                 reservation.noOfRooms = (int) (currentCell.getNumericCellValue());
-            }
-
-
-            else if (cellIdx == columnsName.indexOf("amount")) {
+            } else if (cellIdx == columnsName.indexOf("amount")) {
                 reservation.dailyRoomRate = conversions.roundUpFloat((float) currentCell.getNumericCellValue());
             } else if (cellIdx == columnsName.indexOf("res_date")) {
                 try {
                     if (!currentCell.getStringCellValue().equals("")) {
-                        try{
+                        try {
                             reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(currentCell.getStringCellValue());
                         } catch (ParseException e) {
                             // 03-DEC-20
@@ -377,7 +372,7 @@ public class NewBookingExcelHelper {
     }
 
     public List<SyncJobData> getNewBookingFromXML(SyncJob syncJob, GeneralSettings generalSettings,
-                                                    SyncJobType syncJobType, String filePath) {
+                                                  SyncJobType syncJobType, String filePath) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
         List<SyncJobData> syncJobDataList = new ArrayList<>();
@@ -393,10 +388,10 @@ public class NewBookingExcelHelper {
         double totalPackageMunicipality;
         double totalPackageServiceCharges;
 
-        double vat;
-        double municipalityTax;
-        double serviceCharge;
-        double grandTotal;
+        double vat = 0;
+        double municipalityTax = 0;
+        double serviceCharge = 0;
+        double grandTotal = 0;
         int nights = 0;
 
         RateCode rateCode = new RateCode();
@@ -420,9 +415,9 @@ public class NewBookingExcelHelper {
             NodeList list = doc.getElementsByTagName("G_BOOKING_NO");
 
             for (int temp = 0; temp < list.getLength(); temp++) {
-                reservation =  readReservationXMLRow(list, temp, neglectedRoomTypes, generalSettings);
+                reservation = readReservationXMLRow(list, temp, neglectedRoomTypes, generalSettings);
 
-                if(reservation == null)
+                if (reservation == null)
                     continue;
 
                 temp = reservation.lastIndex;
@@ -431,10 +426,10 @@ public class NewBookingExcelHelper {
                 if (bookingDetails.bookingNo.equals("") || !bookingDetails.bookingNo.equals(reservation.bookingNo)) {
                     // Save old one
                     if (!bookingDetails.bookingNo.equals("")) {
-                        if(bookingDetails.checkInTime.equals(""))
+                        if (bookingDetails.checkInTime.equals(""))
                             bookingDetails.checkInTime = "14:00";
 
-                        if(bookingDetails.checkOutTime.equals(""))
+                        if (bookingDetails.checkOutTime.equals(""))
                             bookingDetails.checkOutTime = "12:00";
 
                         bookingDetails.grandTotal = conversions.roundUpDouble(
@@ -471,14 +466,14 @@ public class NewBookingExcelHelper {
                     bookingDetails.dateOfBirth = reservation.dateOfBirth;
                     bookingDetails.paymentType = reservation.paymentType;
 
-                    if(reservation.checkInDate != null)
+                    if (reservation.checkInDate != null)
                         bookingDetails.checkInDate = dateFormat.format(reservation.checkInDate);
-                    if(reservation.checkOutDate != null)
+                    if (reservation.checkOutDate != null)
                         bookingDetails.checkOutDate = dateFormat.format(reservation.checkOutDate);
                 }
 
-                if(nights > 0){
-                    nights --;
+                if (nights > 0) {
+                    nights--;
                     rateCode.basicPackageValue = 0;
 
                     totalPackageAmount = 0;
@@ -487,31 +482,37 @@ public class NewBookingExcelHelper {
                     totalPackageServiceCharges = 0;
 
                     basicRoomRate = reservation.dailyRoomRate;
-                    // get total packages
-                    for (Package pkg: reservation.packages) {
-                        if(pkg.calculationRule.equals("F"))
-                            rateCode.basicPackageValue += pkg.price;
-                        if(!pkg.calculationRule.equals("F"))
+                    if (basicRoomRate != 0) {
+                        // get total packages
+                        for (Package pkg : reservation.packages) {
+//                        if(pkg.calculationRule.equals("F"))
+//                            rateCode.basicPackageValue += pkg.price;
+//                        if(!pkg.calculationRule.equals("F"))
                             totalPackageAmount += pkg.price;
-                        totalPackageVat += pkg.vat;
-                        totalPackageMunicipality += pkg.municipalityTax;
-                        totalPackageServiceCharges += pkg.serviceCharge;
-                    }
+                            totalPackageVat += pkg.vat;
+                            totalPackageMunicipality += pkg.municipalityTax;
+                            totalPackageServiceCharges += pkg.serviceCharge;
+                        }
 
-                    basicRoomRate -= totalPackageAmount;
+                        basicRoomRate -= totalPackageAmount;
 
-                    serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
-                    municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
+                        serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
+                        municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
 
 //                    vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
-                    vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
+                        vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
 
-                    vat += totalPackageVat;
-                    municipalityTax += totalPackageMunicipality;
-                    serviceCharge += totalPackageServiceCharges;
-                    basicRoomRate += totalPackageAmount;
+                        vat += totalPackageVat;
+                        municipalityTax += totalPackageMunicipality;
+                        serviceCharge += totalPackageServiceCharges;
+                        basicRoomRate += totalPackageAmount;
+                    } else {
+                        vat = 0;
+                        municipalityTax = 0;
+                        serviceCharge = 0;
+                    }
 
-                    grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge + rateCode.basicPackageValue;
+                    grandTotal = reservation.dailyRoomRate + vat + municipalityTax + serviceCharge;
 
                     bookingDetails.vat = conversions.roundUpDouble(bookingDetails.vat + vat);
                     bookingDetails.municipalityTax = conversions.roundUpDouble(bookingDetails.municipalityTax + municipalityTax);
@@ -522,10 +523,10 @@ public class NewBookingExcelHelper {
                 }
             }
 
-            if(bookingDetails.checkInTime.equals(""))
+            if (bookingDetails.checkInTime.equals(""))
                 bookingDetails.checkInTime = "14:00";
 
-            if(bookingDetails.checkOutTime.equals(""))
+            if (bookingDetails.checkOutTime.equals(""))
                 bookingDetails.checkOutTime = "12:00";
 
             bookingDetails.grandTotal = conversions.roundUpDouble(
@@ -542,7 +543,7 @@ public class NewBookingExcelHelper {
 
     private Reservation readReservationXMLRow(NodeList list, int rowIndex,
                                               ArrayList<String> neglectedRoomTypes,
-                                                GeneralSettings generalSettings){
+                                              GeneralSettings generalSettings) {
         Reservation reservation = new Reservation();
 
         String typeName;
@@ -586,17 +587,17 @@ public class NewBookingExcelHelper {
             reservation.adults = Integer.parseInt(element.getElementsByTagName("ADULTS").item(0).getTextContent());
             reservation.children = Integer.parseInt(element.getElementsByTagName("CHILDREN").item(0).getTextContent());
 
-            try{
+            try {
                 reservation.roomNo = Integer.parseInt(element.getElementsByTagName("ROOM").item(0).getTextContent());
             } catch (NumberFormatException e) {
-                if(!element.getElementsByTagName("ROOM").item(0).getTextContent().equals(""))
+                if (!element.getElementsByTagName("ROOM").item(0).getTextContent().equals(""))
                     reservation.roomNo = -1;
             }
 
             typeName = element.getElementsByTagName("DESCRIPTION").item(0).getTextContent();
 
             // Skip neglected room types
-            if(neglectedRoomTypes.contains(typeName))
+            if (neglectedRoomTypes.contains(typeName))
                 return null;
 
             bookingType = conversions.checkBookingTypeExistence(roomTypes, typeName);
@@ -604,9 +605,9 @@ public class NewBookingExcelHelper {
 
             reservation.noOfRooms = Integer.parseInt(element.getElementsByTagName("QUANTITY").item(0).getTextContent());
             String amount = element.getElementsByTagName("AMOUNT").item(0).getTextContent();
-            if(amount.equals("")){
+            if (amount.equals("")) {
                 reservation.dailyRoomRate = 0;
-            }else{
+            } else {
                 reservation.dailyRoomRate = conversions.roundUpFloat(Float.parseFloat(amount));
             }
 
@@ -615,7 +616,7 @@ public class NewBookingExcelHelper {
             try {
                 tempDate = element.getElementsByTagName("ARRIVAL_DATE").item(0).getTextContent();
                 if (!tempDate.equals("")) {
-                    try{
+                    try {
                         reservation.checkInDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
                     } catch (ParseException e) { // 03-DEC-20
                         reservation.checkInDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
@@ -628,7 +629,7 @@ public class NewBookingExcelHelper {
             try {
                 tempDate = element.getElementsByTagName("DEPARTURE_DATE").item(0).getTextContent();
                 if (!tempDate.equals("")) {
-                    try{
+                    try {
                         reservation.checkOutDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
                     } catch (ParseException e) { // 03-DEC-20
                         reservation.checkOutDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
@@ -641,7 +642,7 @@ public class NewBookingExcelHelper {
             try {
                 tempDate = element.getElementsByTagName("RES_DATE").item(0).getTextContent();
                 if (!tempDate.equals("")) {
-                    try{
+                    try {
                         reservation.reservationDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
                     } catch (ParseException e) { // 03-DEC-20
                         reservation.reservationDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
@@ -655,23 +656,26 @@ public class NewBookingExcelHelper {
             Package aPackage;
             do {
                 aPackage = readReservationPackageXMLRow(list, rowIndex, reservation);
-                if(!aPackage.packageName.equals("") && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0){
-                    // Calculate Taxes
-                    calculatePackageTax(aPackage);
-                    reservation.packages.add(aPackage);
+                if (!aPackage.packageName.equals("") && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0) {
+                    // Check if package already exists
+                    if (!conversions.checkPackageExistence(reservation.packages, aPackage.packageName)) {
+                        // Calculate Taxes
+                        calculatePackageTax(aPackage);
+                        reservation.packages.add(aPackage);
+                    }
                     rowIndex = aPackage.lastIndex;
-                }else if(aPackage.packageName.equals("")){
+                } else if (aPackage.packageName.equals("")) {
                     rowIndex = aPackage.lastIndex;
                 }
-            }while (aPackage.consumptionDate != null && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0);
+            } while (aPackage.consumptionDate != null && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0);
 
-            rowIndex --;
+            rowIndex--;
             reservation.lastIndex = rowIndex;
         }
         return reservation;
     }
 
-    private Package readReservationPackageXMLRow(NodeList list, int rowIndex, Reservation reservation){
+    private Package readReservationPackageXMLRow(NodeList list, int rowIndex, Reservation reservation) {
         Node node = list.item(rowIndex);
         Package aPackage = new Package();
         String tempDate;
@@ -681,26 +685,26 @@ public class NewBookingExcelHelper {
             Element element = (Element) node;
 
             aPackage.packageName = element.getElementsByTagName("PRODUCT").item(0).getTextContent();
-            if(!aPackage.packageName.equals("")){
+            if (!aPackage.packageName.equals("")) {
                 try {
                     tempDate = element.getElementsByTagName("CONSUMPTION_DATE").item(0).getTextContent();
                     if (!tempDate.equals("")) {
-                        try{
+                        try {
                             aPackage.consumptionDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
                         } catch (ParseException e) {
                             aPackage.consumptionDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
                         }
                     }
                 } catch (Exception e) {
-                    aPackage.consumptionDate= null;
+                    aPackage.consumptionDate = null;
                 }
 
                 aPackage.calculationRule = element.getElementsByTagName("CALCULATION_RULE").item(0).getTextContent();
 
                 amount = element.getElementsByTagName("PROD_PRICE").item(0).getTextContent();
-                if(amount.equals("")){
-                    aPackage.price  = 0;
-                }else{
+                if (amount.equals("")) {
+                    aPackage.price = 0;
+                } else {
                     aPackage.price = conversions.roundUpFloat(Float.parseFloat(amount));
                 }
 
@@ -720,26 +724,25 @@ public class NewBookingExcelHelper {
                 Generate generate;
                 do {
                     generate = readPackageGenerateXMLRow(list, rowIndex);
-                    if(!generate.description.equals("")){
+                    if (!generate.description.equals("")) {
                         aPackage.generates.add(generate);
                     }
-                    rowIndex ++;
-                }while (generate.packageName.equals(aPackage.packageName));
+                    rowIndex++;
+                } while (generate.packageName.equals(aPackage.packageName));
 
-                if(!generate.description.equals(""))
+                if (!generate.description.equals(""))
                     aPackage.generates.remove(aPackage.generates.size() - 1);
 
-                rowIndex --;
+                rowIndex--;
                 aPackage.lastIndex = rowIndex;
-            }
-            else{
+            } else {
                 aPackage.lastIndex = rowIndex + 1;
             }
         }
         return aPackage;
     }
 
-    private Generate readPackageGenerateXMLRow(NodeList list, int rowIndex){
+    private Generate readPackageGenerateXMLRow(NodeList list, int rowIndex) {
         Node node = list.item(rowIndex);
         Generate generate = new Generate();
         if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -749,39 +752,39 @@ public class NewBookingExcelHelper {
 
             // check if there is any generate for this package
             String percentage = element.getElementsByTagName("PERCENTAGE").item(0).getTextContent();
-            if(percentage != null && !percentage.equals("")){
+            if (percentage != null && !percentage.equals("")) {
                 generate.percentage = Integer.parseInt(percentage);
             }
 
             String baseCode = element.getElementsByTagName("PERCENTAGE_BASE_CODE").item(0).getTextContent();
-            if(baseCode != null && !baseCode.equals("")){
+            if (baseCode != null && !baseCode.equals("")) {
                 generate.percentageBaseCode = Integer.parseInt(baseCode);
             }
         }
         return generate;
     }
 
-    private void calculatePackageTax(Package aPackage){
+    private void calculatePackageTax(Package aPackage) {
         double amount = aPackage.price;
 
-        for (Generate generate: aPackage.generates) {
-            if(generate.percentageBaseCode != 0){
+        for (Generate generate : aPackage.generates) {
+            if (generate.percentageBaseCode != 0) {
                 String desc = aPackage.generates.get(generate.percentageBaseCode - 1).description;
 
-                if(desc.toLowerCase().contains("service charge")){
+                if (desc.toLowerCase().contains("service charge")) {
                     amount += aPackage.serviceCharge;
-                } else if(desc.toLowerCase().contains("muncipality")){
+                } else if (desc.toLowerCase().contains("muncipality")) {
                     amount += aPackage.municipalityTax;
-                } else if(desc.toLowerCase().contains("vat")){
+                } else if (desc.toLowerCase().contains("vat")) {
                     amount += aPackage.vat;
                 }
             }
 
-            if(generate.description.toLowerCase().contains("service charge")){
+            if (generate.description.toLowerCase().contains("service charge")) {
                 aPackage.serviceCharge = (amount * generate.percentage) / 100;
-            } else if(generate.description.toLowerCase().contains("muncipality")){
+            } else if (generate.description.toLowerCase().contains("muncipality")) {
                 aPackage.municipalityTax = (amount * generate.percentage) / 100;
-            } else if(generate.description.toLowerCase().contains("vat")){
+            } else if (generate.description.toLowerCase().contains("vat")) {
                 aPackage.vat = (amount * generate.percentage) / 100;
             }
         }
@@ -809,10 +812,10 @@ public class NewBookingExcelHelper {
         }
 
         // check if this rooms for non guests or not
-        if(bookingDetails.allotedRoomNo == -1)
+        if (bookingDetails.allotedRoomNo == -1)
             createUpdateFlag = false;
 
-        if(createUpdateFlag){
+        if (createUpdateFlag) {
             HashMap<String, Object> data = new HashMap<>();
             Field[] allFields = bookingDetails.getClass().getDeclaredFields();
             for (Field field : allFields) {
@@ -836,7 +839,7 @@ public class NewBookingExcelHelper {
         }
     }
 
-    private boolean checkChanges(BookingDetails bookingDetails, SyncJobData data){
+    private boolean checkChanges(BookingDetails bookingDetails, SyncJobData data) {
         if (bookingDetails.transactionTypeId != (int) data.getData().get("transactionTypeId"))
             return true;
         else if (!bookingDetails.checkInDate.equals(data.getData().get("checkInDate")))
@@ -861,7 +864,7 @@ public class NewBookingExcelHelper {
         else if (bookingDetails.noOfGuest != (int) data.getData().get("noOfGuest"))
             return true;
 
-        else if(bookingDetails.nationalityCode != (int) data.getData().get("nationalityCode"))
+        else if (bookingDetails.nationalityCode != (int) data.getData().get("nationalityCode"))
             return true;
         else if (bookingDetails.gender != (int) data.getData().get("gender"))
             return true;
@@ -886,22 +889,22 @@ public class NewBookingExcelHelper {
         else return bookingDetails.paymentType != (int) data.getData().get("paymentType");
     }
 
-    private void checkNewBookingStatus(SyncJobData cancelBookingDetails){
+    private void checkNewBookingStatus(SyncJobData cancelBookingDetails) {
         String status;
         String reason = "";
         HashMap<String, Object> data = cancelBookingDetails.getData();
 
-        if(data.get("transactionId").equals("") && data.get("transactionTypeId").equals("3")){
+        if (data.get("transactionId").equals("") && data.get("transactionTypeId").equals("3")) {
             status = Constants.FAILED;
             reason = "Can not check-out, before check-in first.";
-        }else{
-            if(data.get("bookingNo").equals("")){
+        } else {
+            if (data.get("bookingNo").equals("")) {
                 status = Constants.FAILED;
                 reason = "Booking No is required and should be numeric only.";
-            } else if(data.containsKey("allotedRoomNo") && data.get("allotedRoomNo").equals("-1")){
+            } else if (data.containsKey("allotedRoomNo") && data.get("allotedRoomNo").equals("-1")) {
                 status = Constants.FAILED;
                 reason = "Invalid Room No. It must be Numeric.";
-            } else{
+            } else {
                 status = Constants.SUCCESS;
             }
         }

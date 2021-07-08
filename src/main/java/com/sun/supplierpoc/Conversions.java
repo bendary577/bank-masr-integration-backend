@@ -4,6 +4,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.Package;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
 
@@ -334,6 +335,15 @@ public class Conversions {
             }
         }
         return new RateCode();
+    }
+
+    public boolean checkPackageExistence(ArrayList<Package> packages, String name){
+        for (Package pkg : packages) {
+            if (pkg.packageName.toLowerCase().equals(name.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public String checkRoomRentType(Date arrivalDate, Date departureDate){

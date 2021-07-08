@@ -11,6 +11,7 @@ public class BookingConfiguration {
     public int serviceChargeRate= 0;
 
     public ArrayList<String> neglectedGroupCodes = new ArrayList<>();
+    public ArrayList<String> neglectedRoomTypes = new ArrayList<>();
 
 }
 

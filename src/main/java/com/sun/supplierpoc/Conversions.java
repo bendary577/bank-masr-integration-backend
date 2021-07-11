@@ -53,7 +53,7 @@ public class Conversions {
 
     public MajorGroup checkMajorGroupExistence(ArrayList<MajorGroup> majorGroups, String majorGroupName) throws CloneNotSupportedException {
         for (MajorGroup majorGroup : majorGroups) {
-            if (majorGroup.getMajorGroup().toLowerCase().equals(majorGroupName.toLowerCase())
+            if (majorGroup.getMajorGroup().toLowerCase().strip().equals(majorGroupName.toLowerCase().strip())
                     || majorGroup.getChildren().contains(majorGroupName)) {
                 /*
                 * Return copy of object

@@ -420,6 +420,10 @@ public class NewBookingExcelHelper {
                 if (reservation == null)
                     continue;
 
+                if(reservation.bookingNo.equals("1409969")){
+                    System.out.println("2oaf hana");
+                }
+
                 temp = reservation.lastIndex;
 
                 // New Booking
@@ -485,16 +489,15 @@ public class NewBookingExcelHelper {
                     if (basicRoomRate != 0) {
                         // get total packages
                         for (Package pkg : reservation.packages) {
-//                        if(pkg.calculationRule.equals("F"))
-//                            rateCode.basicPackageValue += pkg.price;
-//                        if(!pkg.calculationRule.equals("F"))
                             totalPackageAmount += pkg.price;
                             totalPackageVat += pkg.vat;
                             totalPackageMunicipality += pkg.municipalityTax;
                             totalPackageServiceCharges += pkg.serviceCharge;
                         }
 
-                        basicRoomRate -= totalPackageAmount;
+
+                        // if daily room rate include packages
+//                        basicRoomRate -= totalPackageAmount;
 
                         serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
                         municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
@@ -505,14 +508,16 @@ public class NewBookingExcelHelper {
                         vat += totalPackageVat;
                         municipalityTax += totalPackageMunicipality;
                         serviceCharge += totalPackageServiceCharges;
-                        basicRoomRate += totalPackageAmount;
+
+                        // if daily room rate include packages
+//                        basicRoomRate += totalPackageAmount;
                     } else {
                         vat = 0;
                         municipalityTax = 0;
                         serviceCharge = 0;
                     }
 
-                    grandTotal = reservation.dailyRoomRate + vat + municipalityTax + serviceCharge;
+                    grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge;
 
                     bookingDetails.vat = conversions.roundUpDouble(bookingDetails.vat + vat);
                     bookingDetails.municipalityTax = conversions.roundUpDouble(bookingDetails.municipalityTax + municipalityTax);
@@ -728,7 +733,8 @@ public class NewBookingExcelHelper {
                         aPackage.generates.add(generate);
                     }
                     rowIndex++;
-                } while (generate.packageName.equals(aPackage.packageName));
+                } while (generate.packageName.equals(aPackage.packageName) && aPackage.consumptionDate != null
+                        && aPackage.consumptionDate.compareTo(generate.consumptionDate) == 0);
 
                 if (!generate.description.equals(""))
                     aPackage.generates.remove(aPackage.generates.size() - 1);
@@ -759,6 +765,19 @@ public class NewBookingExcelHelper {
             String baseCode = element.getElementsByTagName("PERCENTAGE_BASE_CODE").item(0).getTextContent();
             if (baseCode != null && !baseCode.equals("")) {
                 generate.percentageBaseCode = Integer.parseInt(baseCode);
+            }
+
+            try {
+                String tempDate = element.getElementsByTagName("CONSUMPTION_DATE").item(0).getTextContent();
+                if (!tempDate.equals("")) {
+                    try {
+                        generate.consumptionDate = new SimpleDateFormat("dd.MM.yy").parse(tempDate);
+                    } catch (ParseException e) {
+                        generate.consumptionDate = new SimpleDateFormat("dd-MMMM-yy").parse(tempDate);
+                    }
+                }
+            } catch (Exception e) {
+                generate.consumptionDate = null;
             }
         }
         return generate;

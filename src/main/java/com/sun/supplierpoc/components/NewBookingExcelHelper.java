@@ -420,10 +420,6 @@ public class NewBookingExcelHelper {
                 if (reservation == null)
                     continue;
 
-                if(reservation.bookingNo.equals("1409969")){
-                    System.out.println("2oaf hana");
-                }
-
                 temp = reservation.lastIndex;
 
                 // New Booking
@@ -496,28 +492,23 @@ public class NewBookingExcelHelper {
                         }
 
 
-                        // if daily room rate include packages
-//                        basicRoomRate -= totalPackageAmount;
-
                         serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
                         municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
 
-//                    vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
-                        vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
+                        vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
+//                        vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
 
                         vat += totalPackageVat;
                         municipalityTax += totalPackageMunicipality;
                         serviceCharge += totalPackageServiceCharges;
 
-                        // if daily room rate include packages
-//                        basicRoomRate += totalPackageAmount;
                     } else {
                         vat = 0;
                         municipalityTax = 0;
                         serviceCharge = 0;
                     }
 
-                    grandTotal = basicRoomRate + vat + municipalityTax + serviceCharge;
+                    grandTotal = basicRoomRate + totalPackageAmount + vat + municipalityTax + serviceCharge;
 
                     bookingDetails.vat = conversions.roundUpDouble(bookingDetails.vat + vat);
                     bookingDetails.municipalityTax = conversions.roundUpDouble(bookingDetails.municipalityTax + municipalityTax);

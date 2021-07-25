@@ -160,7 +160,7 @@ public class MicrosFeatures {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_rvc_select")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_rvc_select")));
                     driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
-                    driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
+//                    driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
                     // Filter by range
 //                    try {
 //                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")));

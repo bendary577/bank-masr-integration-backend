@@ -403,8 +403,8 @@ public class CostOfGoodsService {
                         continue;
                     }
 
-                    if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
-                        driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+                    if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK_MICROS)) {
+                        driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK_MICROS);
                         try {
                             WebDriverWait wait = new WebDriverWait(driver, 60);
                             wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
@@ -428,7 +428,7 @@ public class CostOfGoodsService {
                                 }
                             }
 
-                            Response response1 = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
+                            dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
 
                             if (!dateResponse.isStatus()){
                                 response.setStatus(false);
@@ -436,21 +436,20 @@ public class CostOfGoodsService {
                                 return response;
                             }
 
-                            fetchCostOfGoodsRows(majorGroups, location, revenueCenter, orderType, journals, driver);
+                            fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, orderType, journals, driver);
                         }
                     }else {
-                        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
-                            if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
-                                driver.quit();
-                                response.setStatus(false);
-                                response.setMessage(dateResponse.getMessage());
-                                return response;
-                            } else {
-                                continue;
-                            }
+
+                        dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  "", driver);
+
+                            if (!dateResponse.isStatus()){
+                            response.setStatus(false);
+                            response.setMessage(dateResponse.getMessage());
+                            return response;
                         }
 
-                        fetchCostOfGoodsRows(majorGroups, location, revenueCenter, null, journals, driver);
+
+                        fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, null, journals, driver);
                     }
                 }
 
@@ -472,6 +471,103 @@ public class CostOfGoodsService {
             response.setMessage("Failed to get cost of goods entries from Oracle Hospitality.");
             return response;
         }
+    }
+
+    private void fetchCostOfGoodsRowsVersion2(ArrayList<MajorGroup> majorGroups, CostCenter location,
+                                      RevenueCenter revenueCenter, OrderType orderType,
+                                      ArrayList<Journal> journals, WebDriver driver) throws CloneNotSupportedException {
+        try { Journal journal = new Journal();
+
+//        driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
+
+            WebElement table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
+
+            if (rows.size() < 4)
+                return;
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+            MajorGroup majorGroup;
+            RevenueCenter MGRevenueCenter;
+            String majorGroupName = "";
+            float majorGroupAmountTotal = 0;
+
+            for (int i = 2; i < rows.size(); i++) {
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size())
+                    continue;
+
+                WebElement col;
+
+                col = cols.get(columns.indexOf("item_group"));
+
+                float majorGroupAmount = 0;
+
+                if (col.getAttribute("class").equals("header_1")) {
+                    majorGroupAmountTotal = 0;
+
+                    majorGroupName = col.getText().strip().toLowerCase();
+                    majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+
+                    if (!majorGroup.getChecked()) {
+                        continue;
+                    }
+
+                    MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+
+//                if(orderType != null)
+//                    MGRevenueCenter.setAccountCode(orderType.getAccount());
+
+                    CostCenter costCenter = new CostCenter();
+                    List<CostCenter> costCenters = majorGroup.getCostCenters();
+                    for (CostCenter costCenter1 : costCenters) {
+                        if (location.locationName.equals(costCenter1.locationName)) {
+                            costCenter = costCenter1;
+                        }
+                    }
+
+                    // Debit lines
+                    for (int j = i + 1; j < rows.size(); j++) {
+                        WebElement FGRow = rows.get(j);
+                        List<WebElement> FGCols = FGRow.findElements(By.tagName("td"));
+                        WebElement FGCol;
+
+                        FGCol = FGCols.get(columns.indexOf("item_group"));
+                        if (FGCol.getAttribute("class").equals("header_1")) {
+                            i = j - 1;
+                            break;
+                        }
+
+                        if (FGCols.size() != columns.size()) {
+                            continue;
+                        }
+
+                        FamilyGroup familyGroup;
+
+                        // Check if family group exists
+                        String familyGroupName = FGCol.getText().strip().toLowerCase();
+                        familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+                                , familyGroupName);
+
+                        if (familyGroup.familyGroup.equals(""))
+                            continue;
+
+                        majorGroupAmount = Math.abs(conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText()));
+                        majorGroupAmountTotal += majorGroupAmount;
+
+                        journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
+                                , location, MGRevenueCenter, orderType, familyGroup.departmentCode);
+                    }
+
+                    // Credit line
+                    journals = journal.checkExistence(journals, majorGroup,majorGroupAmountTotal,
+                            costCenter, MGRevenueCenter,orderType, "", "C");
+                }
+            }}catch(Exception e){e.getMessage();}
     }
 
 }

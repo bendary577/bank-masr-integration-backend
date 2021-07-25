@@ -337,9 +337,9 @@ public class Conversions {
         return new RateCode();
     }
 
-    public boolean checkPackageExistence(ArrayList<Package> packages, String name){
+    public boolean checkPackageExistence(ArrayList<Package> packages, String name, String source){
         for (Package pkg : packages) {
-            if (pkg.packageName.toLowerCase().equals(name.toLowerCase())) {
+            if (pkg.packageName.toLowerCase().equals(name.toLowerCase()) && pkg.source.toLowerCase().equals(source.toLowerCase())) {
                 return true;
             }
         }

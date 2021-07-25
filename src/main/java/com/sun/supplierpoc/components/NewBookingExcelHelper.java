@@ -654,7 +654,7 @@ public class NewBookingExcelHelper {
                 aPackage = readReservationPackageXMLRow(list, rowIndex, reservation);
                 if (!aPackage.packageName.equals("") && aPackage.consumptionDate.compareTo(reservation.reservationDate) == 0) {
                     // Check if package already exists
-                    if (!conversions.checkPackageExistence(reservation.packages, aPackage.packageName)) {
+                    if (!conversions.checkPackageExistence(reservation.packages, aPackage.packageName, aPackage.source)) {
                         // Calculate Taxes
                         calculatePackageTax(aPackage);
                         reservation.packages.add(aPackage);
@@ -682,6 +682,8 @@ public class NewBookingExcelHelper {
 
             aPackage.packageName = element.getElementsByTagName("PRODUCT").item(0).getTextContent();
             if (!aPackage.packageName.equals("")) {
+                aPackage.source = element.getElementsByTagName("PRODUCT_SOURCE").item(0).getTextContent();
+
                 try {
                     tempDate = element.getElementsByTagName("CONSUMPTION_DATE").item(0).getTextContent();
                     if (!tempDate.equals("")) {
@@ -724,7 +726,8 @@ public class NewBookingExcelHelper {
                         aPackage.generates.add(generate);
                     }
                     rowIndex++;
-                } while (generate.packageName.equals(aPackage.packageName) && aPackage.consumptionDate != null
+                } while (generate.packageName.equals(aPackage.packageName) && generate.source.equals(aPackage.source)
+                        && aPackage.consumptionDate != null
                         && aPackage.consumptionDate.compareTo(generate.consumptionDate) == 0);
 
                 if (!generate.description.equals(""))
@@ -745,6 +748,8 @@ public class NewBookingExcelHelper {
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) node;
             generate.packageName = element.getElementsByTagName("PRODUCT").item(0).getTextContent();
+            generate.source = element.getElementsByTagName("PRODUCT_SOURCE").item(0).getTextContent();
+
             generate.description = element.getElementsByTagName("DESCRIPTION1").item(0).getTextContent();
 
             // check if there is any generate for this package

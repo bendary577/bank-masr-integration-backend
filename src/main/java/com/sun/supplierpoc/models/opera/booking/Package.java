@@ -5,6 +5,7 @@ import java.util.Date;
 
 public class Package {
     public String packageName = "";
+    public String source = "";
 
     // (price * quantity)
     public double price = 0;

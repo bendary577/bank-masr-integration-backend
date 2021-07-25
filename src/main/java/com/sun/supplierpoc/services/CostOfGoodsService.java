@@ -6,6 +6,7 @@ import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -28,6 +29,9 @@ public class CostOfGoodsService {
     InvoiceController invoiceController;
     @Autowired
     private SyncJobDataService syncJobDataService;
+
+    @Autowired
+    private MicrosFeatures microsFeatures;
 
     private final Conversions conversions = new Conversions();
     private final SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -339,4 +343,137 @@ public class CostOfGoodsService {
         }
         return addedJournalBatches;
     }
+
+
+    public Response getJournalDataByRevenueCenterVersion2(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCentersLocation,
+                                                  ArrayList<MajorGroup> majorGroups, List<RevenueCenter> revenueCenters,
+                                                  Account account) {
+        Response response = new Response();
+        WebDriver driver;
+        try {
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        } catch (Exception ex) {
+            response.setStatus(false);
+            response.setMessage("Failed to establish connection with firefox driver.");
+            return response;
+        }
+
+        ArrayList<Journal> journals;
+        JournalBatch journalBatch;
+        ArrayList<JournalBatch> journalBatches = new ArrayList<>();
+
+        String businessDate = journalSyncJobType.getConfiguration().timePeriod;
+        String fromDate = journalSyncJobType.getConfiguration().fromDate;
+        String toDate = journalSyncJobType.getConfiguration().toDate;
+
+        try {
+//            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
+//                driver.quit();
+//                response.setStatus(false);
+//                response.setMessage("Invalid username and password.");
+//                return response;
+//            }
+
+
+            if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                driver.quit();
+
+                response.setStatus(false);
+                response.setMessage("Invalid username and password.");
+                response.setEntries(new ArrayList<>());
+                return response;
+            }
+
+            //            try {
+//                WebDriverWait wait = new WebDriverWait(driver, 5);
+//                wait.until(ExpectedConditions.alertIsPresent());
+//            } catch (Exception ignored) {
+//            }
+
+            for (CostCenter location : costCentersLocation) {
+                journals = new ArrayList<>();
+                journalBatch = new JournalBatch();
+                if (!location.checked)
+                    continue;
+
+                for (RevenueCenter revenueCenter : revenueCenters) {
+                    Response dateResponse = new Response();
+
+                    if (!revenueCenter.isChecked()) {
+                        continue;
+                    }
+
+                    if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK)) {
+                        driver.get(Constants.CONSUMPTION_COSTOFGOODS_REPORT_LINK);
+                        try {
+                            WebDriverWait wait = new WebDriverWait(driver, 60);
+                            wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                        } catch (Exception ex) {
+                            System.out.println(ex.getMessage());
+                        }
+                    }
+
+                    // Check if this revenue center has order types
+                    List<OrderType> orderTypes = revenueCenter.getOrderTypes();
+
+                    if (orderTypes.size() != 0) {
+                        for (OrderType orderType : orderTypes) {
+                            if (!driver.getCurrentUrl().equals(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK_MICROS)) {
+                                driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK_MICROS);
+                                try {
+                                    WebDriverWait wait = new WebDriverWait(driver, 60);
+                                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("loadingFrame")));
+                                } catch (Exception ex) {
+                                    System.out.println(ex.getMessage());
+                                }
+                            }
+
+                            Response response1 = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
+
+                            if (!dateResponse.isStatus()){
+                                response.setStatus(false);
+                                response.setMessage(dateResponse.getMessage());
+                                return response;
+                            }
+
+                            fetchCostOfGoodsRows(majorGroups, location, revenueCenter, orderType, journals, driver);
+                        }
+                    }else {
+                        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, revenueCenter, driver, dateResponse)) {
+                            if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
+                                driver.quit();
+                                response.setStatus(false);
+                                response.setMessage(dateResponse.getMessage());
+                                return response;
+                            } else {
+                                continue;
+                            }
+                        }
+
+                        fetchCostOfGoodsRows(majorGroups, location, revenueCenter, null, journals, driver);
+                    }
+                }
+
+                journalBatch.setLocation(location);
+                journalBatch.setConsumption(journals);
+                journalBatches.add(journalBatch);
+            }
+
+            driver.quit();
+
+            response.setStatus(true);
+            response.setJournalBatches(journalBatches);
+            return response;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+            response.setStatus(false);
+            response.setMessage("Failed to get cost of goods entries from Oracle Hospitality.");
+            return response;
+        }
+    }
+
 }
+
+

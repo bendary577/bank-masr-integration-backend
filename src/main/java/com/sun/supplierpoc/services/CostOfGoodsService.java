@@ -351,7 +351,7 @@ public class CostOfGoodsService {
         Response response = new Response();
         WebDriver driver;
         try {
-            driver = setupEnvironment.setupSeleniumEnv(true);
+            driver = setupEnvironment.setupSeleniumEnv(false);
         } catch (Exception ex) {
             response.setStatus(false);
             response.setMessage("Failed to establish connection with firefox driver.");
@@ -486,7 +486,7 @@ public class CostOfGoodsService {
             if (rows.size() < 4)
                 return;
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 1);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
 
             MajorGroup majorGroup;
             RevenueCenter MGRevenueCenter;
@@ -508,7 +508,10 @@ public class CostOfGoodsService {
                 float majorGroupAmount = 0;
 
                 //col.getAttribute("class").equals("header_1")
-                if (conversions.checkIfMajorGroup(col.getText().strip().toLowerCase())) {
+                //conversions.checkIfMajorGroup(col.getText().strip().toLowerCase())
+                if (col.getAttribute("class").
+                        equals("oj-helper-text-align-left oj-table-data-cell oj-form-control-inherit")) {
+
                     majorGroupAmountTotal = 0;
 
                     majorGroupName = col.getText().strip().toLowerCase();
@@ -531,6 +534,15 @@ public class CostOfGoodsService {
                         }
                     }
 
+                   WebElement link = col.findElement(By.tagName("a"));
+                   if(link.getAttribute("class").
+                           equals("oj-component-icon oj-clickable-icon-nocontext oj-rowexpander-expand-icon")){
+                       link.click();
+                   }
+
+                   table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+                   rows = table.findElements(By.tagName("tr"));
+
                     // Debit lines
                     for (int j = i + 1; j < rows.size(); j++) {
                         WebElement FGRow = rows.get(j);
@@ -538,7 +550,9 @@ public class CostOfGoodsService {
                         WebElement FGCol;
 
                         FGCol = FGCols.get(columns.indexOf("name"));
-                        if (conversions.checkIfMajorGroup(col.getText().strip().toLowerCase())) {
+
+                        if (!FGCol.getAttribute("class").
+                                equals("oj-helper-text-align-left indent_3 oj-table-data-cell oj-form-control-inherit")) {
                             i = j - 1;
                             break;
                         }
@@ -557,11 +571,21 @@ public class CostOfGoodsService {
                         if (familyGroup.familyGroup.equals(""))
                             continue;
 
-                        majorGroupAmount = Math.abs(conversions.convertStringToFloat(FGCols.get(columns.indexOf("cogs")).getText()));
+                        majorGroupAmount = Math.abs(conversions.convertStringToFloat(FGCols.get(columns.indexOf("margin_less_item_discounts")).getText()));
                         majorGroupAmountTotal += majorGroupAmount;
 
                         journals = journal.checkFGExistence(journals, majorGroup, familyGroup, majorGroupAmount
                                 , location, MGRevenueCenter, orderType, familyGroup.departmentCode);
+
+                        link = FGCol.findElement(By.tagName("a"));
+                        if(link.getAttribute("class").
+                                equals("oj-component-icon oj-clickable-icon-nocontext oj-rowexpander-collapse-icon")){
+                            link.click();
+                        }
+
+                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+                        rows = table.findElements(By.tagName("tr"));
+
                     }
 
                     // Credit line

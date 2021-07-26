@@ -351,7 +351,7 @@ public class CostOfGoodsService {
         Response response = new Response();
         WebDriver driver;
         try {
-            driver = setupEnvironment.setupSeleniumEnv(false);
+            driver = setupEnvironment.setupSeleniumEnv(true);
         } catch (Exception ex) {
             response.setStatus(false);
             response.setMessage("Failed to establish connection with firefox driver.");
@@ -384,7 +384,7 @@ public class CostOfGoodsService {
                 return response;
             }
 
-            //            try {
+//            try {
 //                WebDriverWait wait = new WebDriverWait(driver, 5);
 //                wait.until(ExpectedConditions.alertIsPresent());
 //            } catch (Exception ignored) {
@@ -486,7 +486,7 @@ public class CostOfGoodsService {
             if (rows.size() < 4)
                 return;
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 1);
 
             MajorGroup majorGroup;
             RevenueCenter MGRevenueCenter;
@@ -503,11 +503,12 @@ public class CostOfGoodsService {
 
                 WebElement col;
 
-                col = cols.get(columns.indexOf("item_group"));
+                col = cols.get(columns.indexOf("name"));
 
                 float majorGroupAmount = 0;
 
-                if (col.getAttribute("class").equals("header_1")) {
+                //col.getAttribute("class").equals("header_1")
+                if (conversions.checkIfMajorGroup(col.getText().strip().toLowerCase())) {
                     majorGroupAmountTotal = 0;
 
                     majorGroupName = col.getText().strip().toLowerCase();
@@ -536,8 +537,8 @@ public class CostOfGoodsService {
                         List<WebElement> FGCols = FGRow.findElements(By.tagName("td"));
                         WebElement FGCol;
 
-                        FGCol = FGCols.get(columns.indexOf("item_group"));
-                        if (FGCol.getAttribute("class").equals("header_1")) {
+                        FGCol = FGCols.get(columns.indexOf("name"));
+                        if (conversions.checkIfMajorGroup(col.getText().strip().toLowerCase())) {
                             i = j - 1;
                             break;
                         }
@@ -567,7 +568,8 @@ public class CostOfGoodsService {
                     journals = journal.checkExistence(journals, majorGroup,majorGroupAmountTotal,
                             costCenter, MGRevenueCenter,orderType, "", "C");
                 }
-            }}catch(Exception e){e.getMessage();}
+            }
+        }catch(Exception e){e.getMessage();}
     }
 
 }

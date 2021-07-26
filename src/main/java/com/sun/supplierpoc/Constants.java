@@ -169,21 +169,26 @@ public class Constants {
     public static String SALES_GROSS_LESS_DISCOUNT = "Gross Less Discount";
 
 
-    ///////////////////////////////////////// Micros Version#3 Links ///////////////////////////////////////////////////
+    ///////////////////////////////////////// Micros Version#2 Links ///////////////////////////////////////////////////
 
     public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
-    public static String MICROS_SALES_SUMMARY  = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
-    public static String MICROS_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports";
+    public static String MICROS_REPORT_BASE_LINK = "https://mte4-ohra.oracleindustry.com/portal/";
+    public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
+    public static String MICROS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports";
 
     // SALES LINKS
     // Reports >> Tenders Media >> Payments bye Tender Types
-    public static String MICROS_TENDERS_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
+    public static String MICROS_TENDERS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
 
     // Reports >> Taxes >> Daily Taxes by Tax Type
-    public static String MICROS_TAXES_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
+    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
 
     // Reports >> Discount >> Daily Discounts
-    public static String MICROS_DISCOUNT_REPORTS = "https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100046";
+    public static String MICROS_DISCOUNT_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100046";
+
+    // CONSUMPTION LINKS
+    // My Reports >> Inventory Cost of Sales
+    public static String MICROS_COS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100881";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";

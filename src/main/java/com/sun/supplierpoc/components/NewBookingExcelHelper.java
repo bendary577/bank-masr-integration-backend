@@ -495,8 +495,8 @@ public class NewBookingExcelHelper {
                         serviceCharge = (basicRoomRate * rateCode.serviceChargeRate) / 100;
                         municipalityTax = (basicRoomRate * rateCode.municipalityTaxRate) / 100;
 
-                        vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
-//                        vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
+//                        vat = ((serviceCharge + basicRoomRate) * rateCode.vatRate) / 100;
+                        vat = ((municipalityTax + basicRoomRate) * rateCode.vatRate) / 100;
 
                         vat += totalPackageVat;
                         municipalityTax += totalPackageMunicipality;

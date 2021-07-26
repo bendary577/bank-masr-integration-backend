@@ -39,8 +39,12 @@ public class JournalController {
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
+
     @Autowired
     private JournalService journalService;
+    @Autowired
+    private JournalV2Service journalV2Service;
+
     @Autowired
     private SyncJobService syncJobService;
     @Autowired
@@ -212,15 +216,19 @@ public class JournalController {
         try {
             Response data;
 
-            if (consumptionBasedOnType.equals("Cost Center")) {
-                data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
-            } else if (consumptionBasedOnType.equals("Location")){
-                data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
-            } else{
-                ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
-                ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
-                data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
-                        consumptionCostCenters, account);
+            if(account.getMicrosVersion().equals("version1")){
+                if (consumptionBasedOnType.equals("Cost Center")) {
+                    data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+                } else if (consumptionBasedOnType.equals("Location")){
+                    data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
+                } else{
+                    ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
+                    ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+                    data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
+                            consumptionCostCenters, account);
+                }
+            }else{
+                data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
             }
 
             if (data.isStatus()) {

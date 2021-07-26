@@ -8,6 +8,7 @@ import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.springframework.stereotype.Component;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,6 +18,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+@Component
 public class MicrosFeatures {
     SetupEnvironment setupEnvironment = new SetupEnvironment();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -158,7 +160,7 @@ public class MicrosFeatures {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_rvc_select")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_rvc_select")));
                     driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
-                    driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
+//                    driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
                     // Filter by range
 //                    try {
 //                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")));

@@ -25,6 +25,7 @@ public class Account implements Serializable {
     private boolean deleted;
     private AccountEmailConfig emailConfig;
 
+
     public Account() {
     }
 

@@ -530,4 +530,15 @@ public class Conversions {
                 s.substring(1).toLowerCase();
     }
 
+    public boolean checkIfMajorGroup(String majorGroup) {
+
+        String[] majors = {"food", "beverage", "condiment"};
+
+        if(Arrays.stream(majors).anyMatch(majorGroup::equals)){
+            return true;
+        }
+
+        return false;
+
+    }
 }

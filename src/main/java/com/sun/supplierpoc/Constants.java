@@ -142,6 +142,10 @@ public class Constants {
     public static String CONSUMPTION_COSTOFGOODS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=12";
     public static String CONSUMPTION_COSTOFGOODS_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=12&method=run&reportID=EAME_COGSDailyDetail_VAT";
 
+    // ( Micros ) Daily Reports >> Cost Of Goods
+    public static String CONSUMPTION_COSTOFGOODS_TABLE_LINK_MICROS = "https://mte4-ohra.oracleindustry.com/portal/?root" +
+            "=reports&reports=myReports&myReports=reportGroup&reportGroup=26";
+
     // More Reports >> Summary >> System Sales Summary
     public static String SALES_SUMMARY_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
 

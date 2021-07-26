@@ -184,12 +184,12 @@ public class CostOfGoodsController {
             }
         }
 
-//        if (generalSettings.getCostCenterAccountMapping().size() == 0) {
-//            String message = "Map cost centers before sync cost of goods.";
-//            response.setStatus(false);
-//            response.setMessage(message);
-//            return response;
-//        }
+        if (generalSettings.getCostCenterAccountMapping().size() == 0) {
+            String message = "Map cost centers before sync cost of goods.";
+            response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
 
         if (costCentersLocation.size() == 0) {
             String message = "Map cost centers to location before sync sales.";
@@ -198,12 +198,12 @@ public class CostOfGoodsController {
             return response;
         }
 
-//        if (generalSettings.getItemGroups().size() == 0) {
-//            String message = "Map items before sync cost of goods.";
-//            response.setStatus(false);
-//            response.setMessage(message);
-//            return response;
-//        }
+        if (generalSettings.getItemGroups().size() == 0) {
+            String message = "Map items before sync cost of goods.";
+            response.setStatus(false);
+            response.setMessage(message);
+            return response;
+        }
 
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                 account.getId(), journalSyncJobType.getId(), 0);

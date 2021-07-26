@@ -367,13 +367,6 @@ public class CostOfGoodsService {
         String toDate = journalSyncJobType.getConfiguration().toDate;
 
         try {
-//            if (!setupEnvironment.loginOHRA(driver, Constants.OHRA_LINK, account)) {
-//                driver.quit();
-//                response.setStatus(false);
-//                response.setMessage("Invalid username and password.");
-//                return response;
-//            }
-
 
             if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
                 driver.quit();
@@ -383,12 +376,6 @@ public class CostOfGoodsService {
                 response.setEntries(new ArrayList<>());
                 return response;
             }
-
-//            try {
-//                WebDriverWait wait = new WebDriverWait(driver, 5);
-//                wait.until(ExpectedConditions.alertIsPresent());
-//            } catch (Exception ignored) {
-//            }
 
             for (CostCenter location : costCentersLocation) {
                 journals = new ArrayList<>();
@@ -436,18 +423,20 @@ public class CostOfGoodsService {
                                 return response;
                             }
 
+                            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
                             fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, orderType, journals, driver);
                         }
                     }else {
 
                         dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  "", driver);
 
-                            if (!dateResponse.isStatus()){
+                        if (!dateResponse.isStatus()){
                             response.setStatus(false);
                             response.setMessage(dateResponse.getMessage());
                             return response;
                         }
-
+                        driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
                         fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, null, journals, driver);
                     }
@@ -523,8 +512,6 @@ public class CostOfGoodsService {
 
                     MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
 
-//                if(orderType != null)
-//                    MGRevenueCenter.setAccountCode(orderType.getAccount());
 
                     CostCenter costCenter = new CostCenter();
                     List<CostCenter> costCenters = majorGroup.getCostCenters();

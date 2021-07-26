@@ -229,6 +229,7 @@ public class JournalController {
                 }
             }else{
                 data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+
             }
 
             if (data.isStatus()) {

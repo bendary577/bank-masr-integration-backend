@@ -76,7 +76,7 @@ public class Constants {
 
     ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 
-    public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+        public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
     public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
     public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
 

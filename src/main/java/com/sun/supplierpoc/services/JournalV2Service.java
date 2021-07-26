@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -86,7 +87,39 @@ public class JournalV2Service {
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            driver.quit();
+            if(rows.size() < 4 ) {
+
+                driver.quit();
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+
+            ArrayList columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+            ArrayList<HashMap<String, Object>> selectedCostCenter = new ArrayList<>();
+
+            for(int i = 0 ; i < rows.size() ; i ++){
+
+                HashMap<String, String> journal = new HashMap<>();
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements((By.tagName("td")));
+
+                if(cols.size() != columns.size()){
+                    continue;
+                }
+
+                WebElement td = cols.get(columns.indexOf("cost_center"));
+                CostCenter oldCostCenter = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+
+                if(!oldCostCenter.checked){
+                    continue;
+                }
+
+                String extensions = cols.get(0).findElement(By.tagName("div")).getAttribute("onCLick")
+
+            }
 
             response.setStatus(true);
             response.setJournalBatches(journalBatches);

@@ -101,7 +101,7 @@ public class JournalV2Service {
 
             for(int i = 0 ; i < rows.size() ; i ++){
 
-                HashMap<String, String> journal = new HashMap<>();
+                HashMap<String, Object> costCenter = new HashMap<>();
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements((By.tagName("td")));
@@ -110,15 +110,76 @@ public class JournalV2Service {
                     continue;
                 }
 
+          ////////////////////////////////      ////////////////////////////////////////////////////////////
                 WebElement td = cols.get(columns.indexOf("cost_center"));
-                CostCenter oldCostCenter = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                CostCenter oldCostCenter = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), true);
 
                 if(!oldCostCenter.checked){
                     continue;
                 }
 
-                String extensions = cols.get(0).findElement(By.tagName("div")).getAttribute("onCLick")
+                String extensions = cols.get(0).findElement(By.tagName("a")).getAttribute("href");
+                extensions = extensions.substring(extensions.indexOf(":")).substring(0, extensions.indexOf("'"));
 
+                costCenter.put("extension", extensions);
+                costCenter.put("costCenter", oldCostCenter);
+
+                selectedCostCenter.add(costCenter);
+
+            }
+
+            for(HashMap<String, Object> costCenter : selectedCostCenter){
+
+                journalBatch = new JournalBatch();
+                journals = new ArrayList<>();
+
+                driver.get(Constants.MICROS_REPORT_BASE_LINK + "         " +costCenter.get("extensions") );
+
+                rows = driver.findElements(By.tagName("te"));
+
+                if(rows.size() <= 3){
+                    continue;
+                }
+
+                columns  = setupEnvironment.getTableColumns(rows, false, 0 );
+
+                String group;
+                for(int i = 3 ; i < rows.size() ; i++){
+                    HashMap<String, Object> transferDetails = new HashMap<>();
+
+                    WebElement row = rows.get(i);
+
+                    List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                    if(cols.size() != columns.size()){
+                        continue;
+                    }
+
+                    WebElement td = cols.get(columns.indexOf("item_group"));
+
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, td.getText().strip());
+
+                    if(!itemGroup.getChecked()){
+                        continue;
+                    }
+
+                    if(journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroup")){
+                        group = itemGroup.getOverGroup();
+                    }else{
+                        group = itemGroup.getItemGroup();
+                    }
+
+                    transferDetails.put("actual_cost", cols.get(columns.indexOf("actual_cost")).getText().strip());
+
+                    Journal journal = new Journal();
+
+                    float cost = conversions.convertStringToFloat(transferDetails.get("actual_cost").toString());
+                    journals = journal.checkExistence(journals, group, 0, cost, 0);
+                }
+
+                journalBatch.setCostCenter((CostCenter) costCenter.get("costCenter"));
+                journalBatch.setConsumption(journals);
+                journalBatches.add(journalBatch);
             }
 
             response.setStatus(true);
@@ -134,7 +195,5 @@ public class JournalV2Service {
             return response;
         }
     }
-
-
 
 }

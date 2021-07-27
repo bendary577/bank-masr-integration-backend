@@ -66,7 +66,6 @@ public class JournalService {
                 response.setMessage("Invalid username and password.");
                 return response;
             }
-
             // just wait to make sure credentials of user saved to be able to move to another pages.
             try {
                 WebDriverWait wait = new WebDriverWait(driver, 5);

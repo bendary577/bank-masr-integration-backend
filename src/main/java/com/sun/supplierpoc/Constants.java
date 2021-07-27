@@ -194,6 +194,10 @@ public class Constants {
     // My Reports >> Inventory Cost of Sales
     public static String MICROS_COS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100881";
 
+    // CONSUMPTION LINKS
+    // My Reports >> Inventory Cost of Sales
+    public static String MICROS_COS_REPORTS_COST_CENTER = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100238";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

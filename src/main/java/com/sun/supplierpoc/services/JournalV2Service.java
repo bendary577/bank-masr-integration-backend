@@ -10,8 +10,10 @@ import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,7 +59,7 @@ public class JournalV2Service {
         String businessDate = journalSyncJobType.getConfiguration().timePeriod;
         String fromDate = journalSyncJobType.getConfiguration().fromDate;
         String toDate = journalSyncJobType.getConfiguration().toDate;
-        WebDriverWait wait = new WebDriverWait(driver, 30);
+        WebDriverWait wait;
 
         try {
             if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
@@ -69,8 +71,22 @@ public class JournalV2Service {
                 return response;
             }
 
-            String journalUrl = Constants.MICROS_COS_REPORTS;
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
+            String journalUrl = Constants.MICROS_COS_REPORTS_COST_CENTER;
             driver.get(journalUrl);
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, null,
@@ -85,6 +101,14 @@ public class JournalV2Service {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
             if(rows.size() < 4 ) {
@@ -95,11 +119,11 @@ public class JournalV2Service {
                 return response;
             }
 
-            ArrayList columns = setupEnvironment.getTableColumns(rows, false, 0);
+            ArrayList columns = setupEnvironment.getTableColumns(rows, false, 5);
 
             ArrayList<HashMap<String, Object>> selectedCostCenter = new ArrayList<>();
 
-            for(int i = 0 ; i < rows.size() ; i ++){
+            for(int i = 7 ; i < rows.size() ; i ++){
 
                 HashMap<String, Object> costCenter = new HashMap<>();
 
@@ -111,8 +135,18 @@ public class JournalV2Service {
                 }
 
           ////////////////////////////////      ////////////////////////////////////////////////////////////
+                try {
+                    WebElement td = cols.get(columns.indexOf("cost_center"));
+
+                }catch (Exception e){
+
+                }
                 WebElement td = cols.get(columns.indexOf("cost_center"));
                 CostCenter oldCostCenter = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), true);
+
+//                td.sendKeys(Keys.CONTROL +"t");
+                ArrayList<String> tabs = new ArrayList<String> (driver.getWindowHandles());
+                driver.switchTo().window(tabs.get(0));
 
                 if(!oldCostCenter.checked){
                     continue;
@@ -135,7 +169,16 @@ public class JournalV2Service {
 
                 driver.get(Constants.MICROS_REPORT_BASE_LINK + "         " +costCenter.get("extensions") );
 
-                rows = driver.findElements(By.tagName("te"));
+                try {
+                    wait = new WebDriverWait(driver, 5);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                    System.out.println("No Alert");
+                } catch (Exception e) {
+                    System.out.println("Waiting");
+                }
+
+                WebElement table = driver.findElement(By.xpath("/html/body/div[1]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[1]/div[7]/iframe-cca/div[1]/div/div[2]/table"));
+                rows = table.findElements(By.tagName("tr"));
 
                 if(rows.size() <= 3){
                     continue;

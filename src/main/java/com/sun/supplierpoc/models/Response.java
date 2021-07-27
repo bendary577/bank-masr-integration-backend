@@ -3,9 +3,11 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
+import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Response {
     private boolean status;
@@ -35,6 +37,8 @@ public class Response {
 
     private ArrayList<SyncJobData> addedSyncJobData = new ArrayList<>();
     private ArrayList<OperationData> addedOperationData = new ArrayList<>();
+
+    private List<WebElement> rows = new ArrayList<>();
 
     public Response() {
     }
@@ -181,5 +185,13 @@ public class Response {
 
     public void setMenuItemClasses(ArrayList<DbMenuItemClass> menuItemClasses) {
         this.menuItemClasses = menuItemClasses;
+    }
+
+    public List<WebElement> getRows() {
+        return rows;
+    }
+
+    public void setRows(List<WebElement> rows) {
+        this.rows = rows;
     }
 }

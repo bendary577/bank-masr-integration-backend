@@ -445,7 +445,6 @@ public class JournalService {
                 if (setupEnvironment.runReport(businessDate, fromDate, toDate, consumptionLocation.costCenter, new RevenueCenter(), driver, dateResponse)) {
                     if (dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                         driver.quit();
-
                         response.setStatus(false);
                         response.setMessage(dateResponse.getMessage());
                         return response;

@@ -228,6 +228,8 @@ public class JournalController {
                             consumptionCostCenters, account);
                 }
             }else{
+                ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+
                 data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
 
             }

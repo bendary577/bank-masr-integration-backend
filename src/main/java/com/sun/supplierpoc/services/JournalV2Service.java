@@ -423,7 +423,7 @@ public class JournalV2Service {
 
     private Response getRows(WebDriver driver, String businessDate, String fromDate) {
 
-        Response response = new Response();
+            Response response = new Response();
 
         WebDriverWait wait;
 
@@ -551,6 +551,7 @@ public class JournalV2Service {
 
                 boolean costCenterExist = false;
                 ConsumptionLocation consumptionCostCenter = conversions.checkConCostCenterExistence(costCenters, td.getText().strip());
+
                 if(!consumptionCostCenter.accountCode.equals("")){
                     costCenterExist = true;
                 }
@@ -614,7 +615,7 @@ public class JournalV2Service {
 
                 }
 
-                journalBatch.setCostCenter((CostCenter) costCenter.get("costCenter"));
+                journalBatch.setCostCenter(consumptionCostCenter.costCenter);
                 journalBatch.setConsumptionJournals(costCenterJournals);
                 journalBatches.add(journalBatch);
 

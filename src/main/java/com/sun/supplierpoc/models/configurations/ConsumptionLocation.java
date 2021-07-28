@@ -6,5 +6,4 @@ public class ConsumptionLocation {
     public CostCenter costCenter;
     public String accountCode = "";
     public ArrayList<ItemGroup> itemGroups = new ArrayList<>();
-
 }

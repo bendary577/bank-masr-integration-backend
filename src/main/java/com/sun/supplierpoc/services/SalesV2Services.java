@@ -231,7 +231,7 @@ public class SalesV2Services {
 
         try {
             // Open reports
-            WebDriverWait wait = new WebDriverWait(driver, 30);
+            WebDriverWait wait = new WebDriverWait(driver, 29);
 
             driver.get("https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=1");
 //            wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
@@ -243,7 +243,7 @@ public class SalesV2Services {
 
             try {
                 wait = new WebDriverWait(driver, 5);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                wait.until(ExpectedConditions.alertIsPresent());
                 System.out.println("No Alert");
             } catch (Exception e) {
                 System.out.println("Waiting");
@@ -257,6 +257,14 @@ public class SalesV2Services {
                 response.setStatus(false);
                 response.setMessage(dateResponse.getMessage());
                 return response;
+            }
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
             }
 
             // Run
@@ -315,14 +323,14 @@ public class SalesV2Services {
         ArrayList<Tender> tenders = new ArrayList<>();
 
         try{
-            WebDriverWait wait = new WebDriverWait(driver, 30);
+            WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
             driver.get(Constants.MICROS_TENDERS_REPORTS);
 
             try {
                 wait = new WebDriverWait(driver, 5);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                wait.until(ExpectedConditions.alertIsPresent());
                 System.out.println("No Alert");
             } catch (Exception e) {
                 System.out.println("Waiting");
@@ -336,6 +344,14 @@ public class SalesV2Services {
                 response.setStatus(false);
                 response.setMessage(dateResponse.getMessage());
                 return response;
+            }
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
             }
 
             // Run
@@ -406,14 +422,14 @@ public class SalesV2Services {
         ArrayList<Tax> salesTax = new ArrayList<>();
 
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 30);
+            WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
             driver.get(Constants.MICROS_TAXES_REPORTS);
 
             try {
                 wait = new WebDriverWait(driver, 5);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                wait.until(ExpectedConditions.alertIsPresent());
                 System.out.println("No Alert");
             } catch (Exception e) {
                 System.out.println("Waiting");
@@ -427,6 +443,14 @@ public class SalesV2Services {
                 response.setStatus(false);
                 response.setMessage(dateResponse.getMessage());
                 return response;
+            }
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
             }
 
             // Run
@@ -508,14 +532,14 @@ public class SalesV2Services {
         Response response = new Response();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 30);
+            WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
             driver.get(Constants.MICROS_DISCOUNT_REPORTS);
 
             try {
                 wait = new WebDriverWait(driver, 5);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                wait.until(ExpectedConditions.alertIsPresent());
                 System.out.println("No Alert");
             } catch (Exception e) {
                 System.out.println("Waiting");
@@ -529,6 +553,14 @@ public class SalesV2Services {
                 response.setStatus(false);
                 response.setMessage(dateResponse.getMessage());
                 return response;
+            }
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
             }
 
             // Run
@@ -619,14 +651,14 @@ public class SalesV2Services {
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 30);
+            WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
             driver.get(Constants.MICROS_SALES_SUMMARY);
 
             try {
                 wait = new WebDriverWait(driver, 10);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                wait.until(ExpectedConditions.alertIsPresent());
                 System.out.println("No Alert");
             } catch (Exception e) {
                 System.out.println("Waiting");
@@ -640,6 +672,14 @@ public class SalesV2Services {
                 response.setStatus(false);
                 response.setMessage(dateResponse.getMessage());
                 return response;
+            }
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
             }
 
             // Run
@@ -679,9 +719,18 @@ public class SalesV2Services {
 
                 Journal journal = new Journal();
                 WebElement col = cols.get(columns.indexOf("name"));
+                
                 majorGroupName = col.getText().strip().toLowerCase();
-                majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
-
+                
+                if (col.getAttribute("class").
+                        equals("oj-helper-text-align-left oj-table-data-cell oj-form-control-inherit")) {
+                    
+                    majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
+                    
+                }else{
+                    continue;
+                }
+                
                 if (!majorGroup.getChecked()) {
                     continue;
                 }
@@ -697,7 +746,13 @@ public class SalesV2Services {
                         majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
                     }
                 }else{
-                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
+
+                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
+                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
+                    } else {
+                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip())
+                                - conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
+                    }
                 }
 
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup

@@ -670,10 +670,14 @@ public class JournalService {
             journals = batch.getConsumption();
 
             for (Journal journal : journals) {
-                costCenter = journal.getCostCenter();
+                if(journal.getCostCenter() != null){
+                    costCenter = journal.getCostCenter();
+                }else{
+                    costCenter = batch.getCostCenter();
+                }
 
                 if (costCenter.costCenterReference.equals("")) {
-                    costCenter.costCenterReference = journal.getCostCenter().costCenter;
+                    costCenter.costCenterReference = costCenter.costCenter;
                 }
 
                 // check zero entries (not needed)
@@ -681,7 +685,7 @@ public class JournalService {
                     HashMap<String, Object> costData = new HashMap<>();
 
                     costData.put("inventoryAccount", costCenter.accountCode);
-                    costData.put("expensesAccount", costCenter.costCenter);
+                    costData.put("expensesAccount", costCenter.accountCode);
 
                     if (costCenter.location != null && !costCenter.location.locationName.equals("")) {
                         syncJobDataService.prepareAnalysis(costData, syncJobType.getConfiguration(), costCenter, null, null);

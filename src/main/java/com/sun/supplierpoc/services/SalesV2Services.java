@@ -241,6 +241,14 @@ public class SalesV2Services {
 //            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("link_1")));
 //            driver.findElement(By.id("link_1")).findElement(By.tagName("h4")).click();
 
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
                     null,"", driver);
@@ -311,6 +319,14 @@ public class SalesV2Services {
 
             // Open reports
             driver.get(Constants.MICROS_TENDERS_REPORTS);
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
@@ -394,6 +410,14 @@ public class SalesV2Services {
 
             // Open reports
             driver.get(Constants.MICROS_TAXES_REPORTS);
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
@@ -488,6 +512,14 @@ public class SalesV2Services {
 
             // Open reports
             driver.get(Constants.MICROS_DISCOUNT_REPORTS);
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
@@ -592,6 +624,14 @@ public class SalesV2Services {
             // Open reports
             driver.get(Constants.MICROS_SALES_SUMMARY);
 
+            try {
+                wait = new WebDriverWait(driver, 10);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
                     revenueCenter.getRevenueCenter(),"", driver);
@@ -650,10 +690,14 @@ public class SalesV2Services {
                     MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
                 }
 
-                if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
-                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
-                }else {
-                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
+                if(taxIncluded) {
+                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
+                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
+                    } else {
+                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
+                    }
+                }else{
+                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                 }
 
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup

@@ -20,7 +20,6 @@ public class SalesFileDelimiterExporter {
     private StringBuilder fileContent = new StringBuilder();
     private Conversions conversions = new Conversions();
 
-
     public SalesFileDelimiterExporter(SyncJobType syncJobType, List<SyncJobData> listSyncJobData) {
         this.syncJobType = syncJobType;
         this.listSyncJobData = listSyncJobData;

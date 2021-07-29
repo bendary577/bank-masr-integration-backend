@@ -310,7 +310,7 @@ public class CancelBookingExcelHelper {
             Document doc = db.parse(file);
             doc.getDocumentElement().normalize();
 
-            NodeList list = doc.getElementsByTagName("G_BIRTH");
+            NodeList list = doc.getElementsByTagName("G_BOOKING_NO");
 
             for (int temp = 0; temp < list.getLength(); temp++)  {
 

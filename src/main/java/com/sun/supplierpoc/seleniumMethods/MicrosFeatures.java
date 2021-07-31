@@ -159,14 +159,23 @@ public class MicrosFeatures {
                     // Business Revenue Center
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_rvc_select")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_rvc_select")));
+
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 3);
+                        newWait.until(ExpectedConditions.alertIsPresent());
+                    } catch (Exception ex) {
+                        System.out.println(ex.getMessage());
+                    }
+
                     driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
-//                    driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
+
                     // Filter by range
 //                    try {
 //                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")));
 //                    } catch (Exception e) {
 //                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
 //                    }
+
                     WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){

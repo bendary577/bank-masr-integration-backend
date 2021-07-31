@@ -269,9 +269,9 @@ public class SalesService {
 
                 return response;
             }
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
 
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 8; i < rows.size(); i++) {
                 Tender tender;
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -358,9 +358,9 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
 
-            for (int i = 6; i < rows.size(); i++) {
+            for (int i = 7; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -454,7 +454,7 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
 
             if ((!taxIncluded && columns.indexOf("group") == -1) && (taxIncluded && columns.indexOf("item_group") != -1)){
                 driver.quit();
@@ -655,9 +655,9 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
 
-            for (int i = 6; i < rows.size(); i++) {
+            for (int i = 8; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -739,10 +739,10 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
 
             ServiceCharge serviceCharge;
-            for (int i = 6; i < rows.size(); i++) {
+            for (int i = 7; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 

@@ -454,17 +454,18 @@ public class JournalService {
                 }
 
                 driver.get(Constants.CONSUMPTION_TABLE_LINK);
+                WebElement table = driver.findElement(By.id("tableContainer"));
 
-                List<WebElement> rows = driver.findElements(By.tagName("tr"));
+                List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-                if (rows.size() < 4)
+                if (rows.size() < 2)
                     continue;
 
-                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
+                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
                 ArrayList<HashMap<String, String>> costExtensions = new ArrayList<>();
 
-                for (int i = 7; i < rows.size(); i++) {
+                for (int i = 3; i < rows.size(); i++) {
 
                     WebElement row = rows.get(i);
                     List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -474,12 +475,14 @@ public class JournalService {
 
                     String extension = cols.get(0).findElement(By.tagName("div")).getAttribute("onclick").substring(7);
                     String costCenterName = cols.get(0).findElement(By.tagName("div")).getText();
-                    int index = extension.indexOf('\'');
-                    extension = extension.substring(0, index);
-                    HashMap<String, String> map = new HashMap<>();
-                    map.put("extension", extension);
-                    map.put("costCenterName", costCenterName);
-                    costExtensions.add(map);
+                    if(!costCenterName.equals("")){
+                        int index = extension.indexOf('\'');
+                        extension = extension.substring(0, index);
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put("extension", extension);
+                        map.put("costCenterName", costCenterName);
+                        costExtensions.add(map);
+                    }
                 }
 
                 String group;
@@ -500,13 +503,15 @@ public class JournalService {
                             costCenterExist = true;
                         }
 
-                        rows = driver.findElements(By.tagName("tr"));
+                        table = driver.findElement(By.id("tableContainer"));
+
+                        rows = table.findElements(By.tagName("tr"));
 
                         if (rows.size() <= 3)
                             continue;
-                        columns = setupEnvironment.getTableColumns(rows, false, 3);
+                        columns = setupEnvironment.getTableColumns(rows, false, 0);
 
-                        for (int i = 6; i < rows.size(); i++) {
+                        for (int i = 3; i < rows.size(); i++) {
                             WebElement row = rows.get(i);
                             List<WebElement> cols = row.findElements(By.tagName("td"));
 

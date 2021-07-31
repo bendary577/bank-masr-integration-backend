@@ -328,7 +328,7 @@ public class JournalController {
                         } else {
                             syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
+                                    "Sync consumption successfully.", Constants.SUCCESS);
 
                             response.put("success", true);
                             response.put("message", "Sync sales successfully.");

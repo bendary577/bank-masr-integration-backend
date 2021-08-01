@@ -423,6 +423,13 @@ public class CostOfGoodsService {
                                 return response;
                             }
 
+                            try {
+                                WebDriverWait wait = new WebDriverWait(driver, 3);
+                                wait.until(ExpectedConditions.alertIsPresent());
+                            } catch (Exception ex) {
+                                System.out.println(ex.getMessage());
+                            }
+
                             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
                             fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, orderType, journals, driver);
@@ -436,6 +443,14 @@ public class CostOfGoodsService {
                             response.setMessage(dateResponse.getMessage());
                             return response;
                         }
+
+                        try {
+                            WebDriverWait wait = new WebDriverWait(driver, 3);
+                            wait.until(ExpectedConditions.alertIsPresent());
+                        } catch (Exception ex) {
+                            System.out.println(ex.getMessage());
+                        }
+
                         driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
                         fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, null, journals, driver);

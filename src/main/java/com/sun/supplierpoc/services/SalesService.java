@@ -269,9 +269,9 @@ public class SalesService {
 
                 return response;
             }
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
-            for (int i = 8; i < rows.size(); i++) {
+            for (int i = 7; i < rows.size(); i++) {
                 Tender tender;
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -358,9 +358,9 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 6; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -454,7 +454,7 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
             if ((!taxIncluded && columns.indexOf("group") == -1) && (taxIncluded && columns.indexOf("item_group") != -1)){
                 driver.quit();
@@ -655,9 +655,9 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
-            for (int i = 8; i < rows.size(); i++) {
+            for (int i = 6; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -718,7 +718,7 @@ public class SalesService {
     }
 
     private Response getTotalSalesServiceCharge(String businessDate, String fromDate, String toDate,
-                                      CostCenter location, boolean getSCTotalFlag, String totalSCAccount,
+                                                CostCenter location, boolean getSCTotalFlag, String totalSCAccount,
                                                 ArrayList<ServiceCharge> serviceCharges,WebDriver driver) {
         Response response = new Response();
         ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
@@ -739,10 +739,10 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 6);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
 
             ServiceCharge serviceCharge;
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 6; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -868,7 +868,7 @@ public class SalesService {
             syncJobDataRepo.save(data);
         }
     }
-    
+
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob,
                                                                Configuration configuration , Account account) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
@@ -1257,7 +1257,7 @@ public class SalesService {
     }
 
     private void saveTender(JournalBatch journalBatch, String transactionDate, Configuration configuration,
-                                     SyncJob syncJob, Tender tender){
+                            SyncJob syncJob, Tender tender){
         float subTenderTotal = tender.getTotal();
         float tenderCommunicationTotal;
 
@@ -1366,7 +1366,7 @@ public class SalesService {
     }
 
     private void saveTax(JournalBatch journalBatch, String transactionDate, Configuration configuration,
-                            SyncJob syncJob, Tax tax){
+                         SyncJob syncJob, Tax tax){
         HashMap<String, Object> taxData = new HashMap<>();
 
         taxData.put("accountingPeriod", transactionDate.substring(2,6));
@@ -1408,7 +1408,7 @@ public class SalesService {
     }
 
     private void saveMajorGroup(JournalBatch journalBatch, String transactionDate, Configuration configuration,
-                                   SyncJob syncJob, Journal majorGroupJournal){
+                                SyncJob syncJob, Journal majorGroupJournal){
 
         HashMap<String, Object> majorGroupData = new HashMap<>();
 
@@ -1464,7 +1464,7 @@ public class SalesService {
     }
 
     private void saveServiceCharge(JournalBatch journalBatch, String transactionDate, Configuration configuration,
-                         SyncJob syncJob, ServiceCharge serviceCharge){
+                                   SyncJob syncJob, ServiceCharge serviceCharge){
         HashMap<String, Object> serviceChargeData = new HashMap<>();
 
         serviceChargeData.put("accountingPeriod", transactionDate.substring(2,6));

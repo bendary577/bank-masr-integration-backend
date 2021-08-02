@@ -426,6 +426,9 @@ public class JournalService {
             }
 
             for (ConsumptionLocation consumptionLocation : costCentersLocation) {
+                if(!consumptionLocation.check)
+                    continue;
+
                 journalBatch = new JournalBatch();
                 journals = new ArrayList<>();
                 costCenterJournals = new ArrayList<>();

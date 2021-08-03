@@ -47,31 +47,34 @@ public class SalesFileDelimiterExporter {
     }
 
     public File prepareNDFFile(List<SyncJobData> jobData, SyncJobType syncJobType, String accountName, String location) throws ParseException {
-        String transactionDate = jobData.get(0).getData().get("transactionDate").toString();
-        Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
-
-        DateFormatSymbols dfs = new DateFormatSymbols();
-        String[] weekdays = dfs.getWeekdays();
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(date);
-
-        int day = cal.get(Calendar.DAY_OF_WEEK);
-        int Month = cal.get(Calendar.MONTH) + 1;
-        String dayName = weekdays[day];
-        String fileExtension = ".ndf";
-
-        File file;
-        String fileDirectory;
-        if (location.equals("")) {
-            fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/";
-            this.fileName = fileDirectory + transactionDate + dayName.substring(0, 3) + fileExtension;
-        } else {
-            fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/" + location + "/";
-            this.fileName = fileDirectory + transactionDate + dayName.substring(0, 3) + " - " + location + fileExtension;
+        if(jobData.size() <= 0){
+            return null;
         }
-
         try {
+            String transactionDate = jobData.get(0).getData().get("transactionDate").toString();
+            Date date = new SimpleDateFormat("ddMMyyyy").parse(transactionDate);
+
+            DateFormatSymbols dfs = new DateFormatSymbols();
+            String[] weekdays = dfs.getWeekdays();
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(date);
+
+            int day = cal.get(Calendar.DAY_OF_WEEK);
+            int Month = cal.get(Calendar.MONTH) + 1;
+            String dayName = weekdays[day];
+            String fileExtension = ".ndf";
+
+            File file;
+            String fileDirectory;
+            if (location.equals("")) {
+                fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/";
+                this.fileName = fileDirectory + transactionDate + dayName.substring(0, 3) + fileExtension;
+            } else {
+                fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/" + location + "/";
+                this.fileName = fileDirectory + transactionDate + dayName.substring(0, 3) + " - " + location + fileExtension;
+            }
+
             /*
              * Check sync job type here
              * */

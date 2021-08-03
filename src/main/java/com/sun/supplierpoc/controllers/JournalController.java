@@ -287,9 +287,9 @@ public class JournalController {
                             }
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
-                            try{
+                            if(file != null){
                                 imageService.storeFile(file);
-                            } catch (Exception e) {}
+                            }
                         }
 
                         if (ftpClient != null) {
@@ -411,7 +411,8 @@ public class JournalController {
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
 
                 file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
-                locationFiles.add(file);
+                if(file != null)
+                    locationFiles.add(file);
             }
             return locationFiles;
         } catch (Exception e) {

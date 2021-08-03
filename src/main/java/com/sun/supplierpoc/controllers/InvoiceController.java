@@ -218,7 +218,7 @@ public class InvoiceController {
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(invoiceSyncJobType, addedInvoices);
                         File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName(), "");
 
-                        if(ftpClient != null){
+                        if(file != null && ftpClient != null){
                             if(ftpClient.open()){
 
                                 boolean sendFileFlag = false;

@@ -404,7 +404,8 @@ public class WastageController {
  
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, wasteList);
                 file = excelExporter.prepareNDFFile(wasteList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
-                locationFiles.add(file);
+                if(file != null)
+                    locationFiles.add(file);
             }
             return locationFiles;
         }catch (Exception e){

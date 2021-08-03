@@ -236,7 +236,8 @@ public class SalesController {
                                 }
                             } else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
-                                fileStoragePath = imageService.storeFile(file);
+                                if(file != null)
+                                    fileStoragePath = imageService.storeFile(file);
                             }
 
                             // Check if the account configured for FTP
@@ -596,7 +597,8 @@ public class SalesController {
 
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
                 file = excelExporter.prepareNDFFile(salesList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
-                locationFiles.add(file);
+                if(file != null)
+                    locationFiles.add(file);
             }
             return locationFiles;
         } catch (Exception e) {

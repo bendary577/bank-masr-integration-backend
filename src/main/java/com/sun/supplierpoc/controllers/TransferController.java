@@ -180,7 +180,7 @@ public class TransferController {
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(transferSyncJobType, addedTransfers);
                         File file = exporter.prepareNDFFile(addedTransfers, transferSyncJobType, account.getName(), "");
 
-                        if(ftpClient != null){
+                        if(file != null && ftpClient != null){
                             if(ftpClient.open()){
                                 boolean sendFileFlag = false;
                                 try {

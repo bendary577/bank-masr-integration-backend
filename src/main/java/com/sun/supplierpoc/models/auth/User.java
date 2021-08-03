@@ -6,10 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by jeebb on 11/8/14.
@@ -23,7 +20,7 @@ public class User implements UserDetails  {
     private String username ;
     private String password;
     private String accountId;
-    private ArrayList<UserAccess> userAccesses;
+//    private ArrayList<UserAccess> userAccesses;
     private Date creationDate;
     private Date updateDate;
 
@@ -34,6 +31,7 @@ public class User implements UserDetails  {
     private Boolean accountNonLocked;
     private boolean credentialsNonExpired;
 
+    private List<String> roleIds;
     public User() {
     }
 
@@ -180,13 +178,13 @@ public class User implements UserDetails  {
         return accountNonExpired;
     }
 
-    public ArrayList<UserAccess> getUserAccesses() {
-        return userAccesses;
-    }
+//    public ArrayList<UserAccess> getUserAccesses() {
+//        return userAccesses;
+//    }
 
-    public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
-        this.userAccesses = userAccesses;
-    }
+//    public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
+//        this.userAccesses = userAccesses;
+//    }
 
     public static long getSerialVersionUID() {
         return serialVersionUID;
@@ -208,4 +206,11 @@ public class User implements UserDetails  {
         return accountNonLocked;
     }
 
+    public List<String> getRoleIds() {
+        return roleIds;
+    }
+
+    public void setRoleIds(List<String> roleIds) {
+        this.roleIds = roleIds;
+    }
 }

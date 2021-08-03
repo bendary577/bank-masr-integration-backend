@@ -6,6 +6,7 @@ import org.springframework.data.annotation.Id;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Account implements Serializable {
     @Id
@@ -25,12 +26,13 @@ public class Account implements Serializable {
     private boolean deleted;
     private AccountEmailConfig emailConfig;
 
+    private List<String> FeatureIds;
 
     public Account() {
     }
 
     public Account(String id, String name, String domain, String ERD, ArrayList<AccountCredential> accountCredentials,
-                   int locationQuota, Date creationDate, boolean deleted) {
+                   int locatRoleionQuota, Date creationDate, boolean deleted) {
         this.id = id;
         this.name = name;
         this.domain = domain;
@@ -136,5 +138,13 @@ public class Account implements Serializable {
 
     public void setEmailConfig(AccountEmailConfig emailConfig) {
         this.emailConfig = emailConfig;
+    }
+
+    public List<String> getFeatureIds() {
+        return FeatureIds;
+    }
+
+    public void setFeatureIds(List<String> featureIds) {
+        FeatureIds = featureIds;
     }
 }

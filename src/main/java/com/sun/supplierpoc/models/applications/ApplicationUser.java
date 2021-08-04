@@ -6,6 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Document
 public class ApplicationUser implements Serializable {
@@ -22,6 +23,9 @@ public class ApplicationUser implements Serializable {
     private String code;
     private Date lastUpdate;
     private boolean deleted;
+    private Wallet wallet;
+    private String mobile;
+    private List<ApplicationUser> accompaniedGuests;
 
     public String getId() {
         return id;
@@ -111,4 +115,27 @@ public class ApplicationUser implements Serializable {
         this.accountId = accountId;
     }
 
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
+    }
+
+    public List<ApplicationUser> getAccompaniedGuests() {
+        return accompaniedGuests;
+    }
+
+    public void setAccompaniedGuests(List<ApplicationUser> accompaniedGuests) {
+        this.accompaniedGuests = accompaniedGuests;
+    }
 }

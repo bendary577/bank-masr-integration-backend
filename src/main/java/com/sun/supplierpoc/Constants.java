@@ -1,14 +1,19 @@
 package com.sun.supplierpoc;
 
 public class Constants {
+
     ///////////////////////////////////////// Sync Job Data Status//////////////////////////////////////////////////////
     public static String SUCCESS = "Success";
     public static String FAILED = "Failed";
     public static String RECEIVED = "Received";
     public static String RETRY_TO_SEND = "Retry to Send";
 
+    public static String GENERIC = "Generic";
+
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_USER = "Invalid user.";
+    public static String NOT_ELIGIBLE_ACCOUNT = "This account not eligible for this action.";
+    public static String NOT_ELIGIBLE_USER = "This user not eligible for this action.";
 
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
@@ -217,7 +222,9 @@ public class Constants {
 
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
 
+    ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
 
+    public static final String ADD_ROLE = "add role";
 
     public Constants() {}
 }

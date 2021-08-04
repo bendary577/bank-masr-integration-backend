@@ -33,22 +33,21 @@ import java.util.*;
 @RestController
 
 public class AppUserController {
-    @Autowired
-    ApplicationUserRepo userRepo;
-    @Autowired
-    AccountRepo accountRepo;
-    @Autowired
-    QRCodeGenerator qrCodeGenerator;
-    @Autowired
-    SendEmailService emailService;
-    @Autowired
-    private AppUserService appUserService;
-    @Autowired
-    private ImageService imageService;
-    @Autowired
-    private GroupRepo groupRepo;
-    @Autowired
-    private GeneralSettingsRepo generalSettingsRepo;
+
+
+    @Autowired ApplicationUserRepo userRepo;
+
+    @Autowired AccountRepo accountRepo;
+
+    @Autowired QRCodeGenerator qrCodeGenerator;
+
+    @Autowired SendEmailService emailService;
+
+    @Autowired private AppUserService appUserService;
+    @Autowired private ImageService imageService;
+    @Autowired private GroupRepo groupRepo;
+    @Autowired private GeneralSettingsRepo generalSettingsRepo;
+
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -67,11 +66,14 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
-                                                   @RequestPart(name = "name", required = false) String name,
-                                                   @RequestPart(name = "email", required = false) String email,
+                                                   @RequestParam(name = "isGeneric") boolean isGeneric,
+                                                   @RequestPart(name = "name") String name,
+                                                   @RequestPart(name = "email") String email,
                                                    @RequestPart(name = "groupId") String groupId,
-                                                   @RequestPart(name = "userId", required = false) String userId,
-                                                   @RequestPart(name = "image", required = false) MultipartFile image,
+                                                   @RequestPart(name = "userId") String userId,
+                                                   @RequestPart(name = "image") MultipartFile image,
+                                                   @RequestParam(name = "mobile") String mobile,
+                                                   @RequestParam(name = "balance") String balance,
                                                    Principal principal) {
 
         HashMap response = new HashMap();
@@ -80,152 +82,21 @@ public class AppUserController {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
-
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
-                Group group;
-                ApplicationUser applicationUser;
+               response = appUserService
+                       .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, image, account, generalSettings);
 
-                if (addFlag) {
-                    applicationUser = new ApplicationUser();
+               if( (Boolean) response.get("success")){
+                   return ResponseEntity.status(HttpStatus.OK).body(response);
+               }else{
+                   return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+               }
 
-                    if (groupId != null) {
-                         Optional<Group> groupOptional = groupRepo.findById(groupId);
-                        if (groupOptional.isEmpty()) {
-                            response.put("message", "User group doesn't exist");
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                        }
-                        group = groupOptional.get();
-                        applicationUser.setGroup(group);
-                    } else {
-                        response.put("message", "User group can't be empty.");
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
 
-                    ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
-                    if (oldApplicationUser != null) {
-                        response.put("message", "There is user exist with this email.");
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-
-                    String logoUrl = Constants.USER_IMAGE_URL;
-                    if (image != null) {
-                        try {
-                            logoUrl = imageService.store(image);
-                        } catch (Exception e) {
-                            response.put("message", "Can't save image.");
-                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-                        }
-                    }
-
-                    applicationUser.setName(name);
-                    applicationUser.setEmail(email);
-                    applicationUser.setLogoUrl(logoUrl);
-                    applicationUser.setAccountId(account.getId());
-                    applicationUser.setCreationDate(new Date());
-                    applicationUser.setDeleted(false);
-
-//                    String codeBuild = applicationUser.getName() + " " + group.getName() + " " + new Date().toString();
-//                    Base64.Encoder encoder = Base64.getEncoder().withoutPadding();
-//                    byte[] encodedBytes = Base64.getEncoder().encode(codeBuild.getBytes());
-//                    String code = new String(encodedBytes);
-
-                    Random random = new Random();
-                    String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
-
-                    String accountLogo = account.getImageUrl();
-                    String mailSubj = generalSettings.getMailSub();
-                    String QRPath = "QRCodes/" + code + ".png";
-                    applicationUser.setCode(code);
-
-                    try {
-                        String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
-                        if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj,account.getName(), applicationUser, account)) {
-                            userRepo.save(applicationUser);
-                            response.put("message", "User added successfully.");
-                            return ResponseEntity.status(HttpStatus.OK).body(response);
-                        } else {
-                            response.put("message", "Invalid user email.");
-                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-                        }
-                    } catch (WriterException | IOException e) {
-                        LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
-                        response.put("message", "Invalid user email.");
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-                    }
-                } else {
-                    Optional<ApplicationUser> userOptional = userRepo.findById(userId);
-
-                    if (userOptional.isPresent()) {
-                        applicationUser = userOptional.get();
-
-                        if (groupId != null) {
-                            Optional<Group> groupOptional = groupRepo.findById(groupId);
-                            if (groupOptional.isPresent()) {
-                                group = groupOptional.get();
-                                applicationUser.setGroup(group);
-                            } else {
-                                response.put("message", "Group doesn't exist");
-                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                            }
-                        } else {
-                            response.put("message", "Group can't be empty.");
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                        }
-
-                        if (!applicationUser.getEmail().equals(email)) {
-                            ApplicationUser oldApplicationUser = userRepo.findFirstByEmailAndAccountId(email, account.getId());
-
-                            if (oldApplicationUser != null) {
-                                response.put("message", "There is user exist with this email.");
-                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                            }
-
-                            String accountLogo = account.getImageUrl();
-                            String mailSubj = generalSettings.getMailSub();
-                            String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
-
-                            try {
-                                String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
-                                boolean emailStatus = emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account);
-                                if (!emailStatus) {
-                                    response.put("message", "Invalid user email.");
-                                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-                                }
-                            } catch (WriterException | IOException e) {
-                                LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
-                                response.put("message", "Invalid user email.");
-                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-                            }
-                            applicationUser.setEmail(email);
-                        }
-
-                        if (image != null) {
-                            String logoUrl = Constants.USER_IMAGE_URL;
-                            try {
-                                logoUrl = imageService.store(image);
-                            } catch (Exception e) {
-                                response.put("message", "Can't save image.");
-                                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-                            }
-                            applicationUser.setLogoUrl(logoUrl);
-                        }
-
-                        applicationUser.setName(name);
-                        applicationUser.setAccountId(account.getId());
-                        group.setLastUpdate(new Date());
-                        userRepo.save(applicationUser);
-
-                        response.put("message", "User Updated successfully.");
-                        return ResponseEntity.status(HttpStatus.OK).body(response);
-                    } else {
-                        response.put("message", "Can't find user with this id.");
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-                }
             } else {
                 response.put("message", "Invalid user.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);

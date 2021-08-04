@@ -8,9 +8,7 @@ public class Role {
 
     @Id
     private String id;
-
     private String name;
-
     private String featureId;
 
     public Role() {

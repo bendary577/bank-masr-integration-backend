@@ -14,7 +14,6 @@ import com.google.api.client.util.store.FileDataStoreFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
-import com.google.api.services.drive.model.FileList;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -68,11 +67,13 @@ public class GoogleDriveService {
                     .build();
 
             File file = new File();
-            file.setName(originalFile.getPath());
+            file.setFolderColorRgb("FF 45 00");
+            file.setName(originalFile.getPath().replace('\\', '/'));
 
             FileContent content = new FileContent("text/plain", originalFile);
 
-            service.files().create(file, content).setFields("id").execute();
+            File uploadedFile  = service.files().create(file, content).setFields("id").execute();
+            System.out.println("File ID: " + uploadedFile.getId());
 
             return true;
         } catch (GeneralSecurityException | IOException e) {

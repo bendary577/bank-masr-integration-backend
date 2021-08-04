@@ -291,30 +291,7 @@ public class JournalController {
                                 files.add(file);
                         }
 
-                        for (File f : files) {
-                            try {
-                                fileStoragePath = imageService.storeFile(f);
-                            } catch (Exception e) {
-                                System.out.println("Failed to upload file to bucket.");
-                            }
-
-                            // Send file
-                            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
-                                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
-                            } else if (account.getSendMethod().equals(Constants.FTP_METHOD)) {
-                                // Check if the account configured for FTP
-                                AccountCredential credential = ftpService.getAccountCredential(account);
-
-                                if (credential.getHost().equals("") || credential.getPassword().equals("")) {
-                                    sendStatus = false;
-                                    break;
-                                }
-
-                                if (f != null && !fileStoragePath.equals("")){
-                                    sendStatus = ftpService.sendFile(credential, fileStoragePath, f.getName());
-                                }
-                            }
-                        }
+                        sendStatus = SalesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
 
                         if (sendStatus) {
                             syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);

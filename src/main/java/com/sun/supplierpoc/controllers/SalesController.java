@@ -50,6 +50,8 @@ public class SalesController {
     private ImageService imageService;
     @Autowired
     FtpService ftpService;
+    @Autowired
+    private GoogleDriveService googleDriveService;
 
     public Conversions conversions = new Conversions();
 
@@ -224,25 +226,23 @@ public class SalesController {
                         } else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
+                            boolean sendStatus = true;
                             File file = null;
                             String fileStoragePath = "";
+                            ArrayList<File> files = new ArrayList<>();
                             SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(syncJobType, salesList);
+
                             if (syncJobType.getConfiguration().exportFilePerLocation) {
-                                ArrayList<File> files = createSalesFilePerLocation(addedSalesBatches,
-                                        syncJobType, account.getName());
-                                for (File f : files) {
-                                    imageService.storeFile(f);
-                                }
+                                files = createSalesFilePerLocation(addedSalesBatches, syncJobType, account.getName());
                             } else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
                                 if (file != null)
-                                    fileStoragePath = imageService.storeFile(file);
+                                    files.add(file);
                             }
 
-                            // Check if the account configured for FTP
-                            AccountCredential credential = ftpService.getAccountCredential(account);
+                            sendStatus = isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
 
-                            if (credential.getHost().equals("") || credential.getPassword().equals("")) {
+                            if (sendStatus) {
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Get sales successfully.", Constants.SUCCESS);
@@ -250,25 +250,16 @@ public class SalesController {
                                 response.setStatus(true);
                                 response.setMessage("Get sales successfully.");
                                 return response;
-                            }
-
-                            if (file != null && !fileStoragePath.equals("") &&
-                                    ftpService.sendFile(credential, fileStoragePath, file.getName())) {
-
-                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
-                                syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                        "Sync sales successfully.", Constants.SUCCESS);
-
-                                response.setStatus(true);
-                                response.setMessage("Sync sales successfully.");
                             } else {
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                        "Failed to sync sales to sun system via FTP.", Constants.FAILED);
+                                        "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
 
                                 response.setStatus(true);
-                                response.setMessage("Failed to sync sales to sun system via FTP.");
+                                response.setMessage("Failed to send files via " + account.getSendMethod() + ".");
+                                return response;
                             }
+
                         } else {
                             syncJobService.saveSyncJobStatus(syncJob, 0,
                                     "No sales to add in middleware.", Constants.SUCCESS);
@@ -304,6 +295,35 @@ public class SalesController {
             response.setMessage(message);
         }
         return response;
+    }
+
+    public static boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
+        for (File f : files) {
+            try {
+                fileStoragePath = imageService.storeFile(f);
+            } catch (Exception e) {
+                System.out.println("Failed to upload file to bucket.");
+            }
+
+            // Send file
+            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
+                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
+            } else if (account.getSendMethod().equals(Constants.FTP_METHOD)) {
+                // Check if the account configured for FTP
+                AccountCredential credential = ftpService.getAccountCredential(account);
+
+                if (credential.getHost().equals("") || credential.getPassword().equals("")) {
+                    sendStatus = false;
+                    break;
+                }
+
+                if (f != null && !fileStoragePath.equals("")){
+                    sendStatus = ftpService.sendFile(credential, fileStoragePath, f.getName());
+                }
+            }
+
+        }
+        return sendStatus;
     }
 
 

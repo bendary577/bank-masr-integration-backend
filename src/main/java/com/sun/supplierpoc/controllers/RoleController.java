@@ -36,64 +36,48 @@ public class RoleController {
     private UserRepo userRepo;
 
     @PostMapping("addRole")
-    public ResponseEntity<?> addRole(@RequestBody Role roleRequest, Principal principal){
+    public ResponseEntity<?> addRole(@RequestBody Role roleRequest, Principal principal) {
 
         Response response = new Response();
-
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-        if(user != null){
-
+        if (user != null) {
             Account account = accountService.getAccount(user.getAccountId());
-            if(account != null){
-                Role role =  roleService.addRole(roleRequest);
+            if (account != null) {
+                Role role = roleService.addRole(roleRequest);
                 response.setData(role);
                 return new ResponseEntity<>(response, HttpStatus.OK);
-
-            }else{
+            } else {
                 response.setMessage(Constants.NOT_ELIGIBLE_ACCOUNT);
                 return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
             }
-
-        }else{
-                response.setMessage(Constants.INVALID_USER);
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        } else {
+            response.setMessage(Constants.INVALID_USER);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
 
     }
 
     @PostMapping("/addUserRole")
-    public ResponseEntity<?> addUserRole(@RequestPart("roleId") String userId,
-                                         @RequestPart("userId") String roleId,
-                                         Principal principal){
+    public ResponseEntity<?> addUserRole(@RequestParam("userId") String userId,
+                                         @RequestParam("roleIds") List<String> roleIds,
+                                         Principal principal) {
 
         Response response = new Response();
-
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        if(user != null){
-            if(userService.eligibleForRole(user, Constants.ADD_ROLE)){
-
-                Optional<User> userOptional = userRepo.findById(userId);
-
-                if(userOptional.isPresent()){
-
-                    User requiredUser = userOptional.get();
-                    requiredUser.getRoleIds().add(roleId);
-
-                    response.setStatus(true);
+        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (authedUser != null) {
+            if (userService.eligibleForRole(authedUser, Constants.ADD_ROLE)) {
+                response = roleService.addUserRole(userId, roleIds);
+                if (response.isStatus()) {
                     return new ResponseEntity<>(response, HttpStatus.OK);
-
-                }else {
-                    response.setStatus(false);
-                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
-                    return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+                } else {
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 }
-            }else{
+            } else {
                 response.setStatus(false);
                 response.setMessage(Constants.NOT_ELIGIBLE_USER);
                 return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
             }
-        }else{
+        } else {
             response.setStatus(false);
             response.setMessage(Constants.INVALID_USER);
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
@@ -101,36 +85,21 @@ public class RoleController {
     }
 
     @GetMapping("/getRoles")
+    @CrossOrigin("*")
     public ResponseEntity<?> getRoles(@RequestParam("userId") String userId,
-                                      @RequestParam("sameUser") boolean sameUSer,
-                                      Principal principal){
+                                      @RequestParam("sameUser") boolean sameUser,
+                                      Principal principal) {
 
         Response response = new Response();
-
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-        List<Role> roleList;
-
-        if(user != null){
-
-            if(!userId.equals("")) {
-
-                Optional<User> userOptional = userRepo.findById(userId);
-
-                if (userOptional.isPresent()) {
-                    roleList = roleService.getAllRoles(userOptional.get());
-                } else {
-                    response.setStatus(false);
-                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
-                    return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-                }
-            }else{
-                roleList = roleService.getAllRoles(user);
-            }
-                response.setStatus(true);
-                response.setData(roleList);
+        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (authedUser != null) {
+            response = roleService.getUserRoles(userId, sameUser, authedUser);
+            if(response.isStatus()) {
                 return new ResponseEntity<>(response, HttpStatus.OK);
-        }else{
+            }else{
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        } else {
             response.setStatus(false);
             response.setMessage(Constants.INVALID_USER);
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);

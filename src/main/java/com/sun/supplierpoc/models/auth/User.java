@@ -1,7 +1,9 @@
 package com.sun.supplierpoc.models.auth;
 
+import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.models.roles.UserAccess;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,7 +33,9 @@ public class User implements UserDetails  {
     private Boolean accountNonLocked;
     private boolean credentialsNonExpired;
 
-    private List<String> roleIds;
+    @DBRef
+    private List<Role> roles;
+
     public User() {
     }
 
@@ -206,11 +210,11 @@ public class User implements UserDetails  {
         return accountNonLocked;
     }
 
-    public List<String> getRoleIds() {
-        return roleIds;
+    public List<Role> getRoles() {
+        return roles;
     }
 
-    public void setRoleIds(List<String> roleIds) {
-        this.roleIds = roleIds;
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 }

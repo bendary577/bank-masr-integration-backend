@@ -192,7 +192,7 @@ public class AppUserService {
                 return response;
             }
         }
-
+        return response;
     }
 
     public String encodeUserCOde(String code) {

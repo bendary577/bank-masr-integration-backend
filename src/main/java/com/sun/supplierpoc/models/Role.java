@@ -9,6 +9,7 @@ public class Role {
     @Id
     private String id;
     private String name;
+    private String reference;
     private String featureId;
 
     public Role() {
@@ -36,5 +37,13 @@ public class Role {
 
     public void setFeatureId(String featureId) {
         this.featureId = featureId;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 }

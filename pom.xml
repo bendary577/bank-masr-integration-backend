@@ -359,6 +359,7 @@
 
         <!-- https://mvnrepository.com/artifact/com.google.api-client/google-api-client-extensions -->
 
+        <!--        Google APIs        -->
         <dependency>
             <groupId>com.google.api-client</groupId>
             <artifactId>google-api-client</artifactId>

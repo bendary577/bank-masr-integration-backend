@@ -61,6 +61,7 @@ public class SalesFileDelimiterExporter {
             cal.setTime(date);
 
             int day = cal.get(Calendar.DAY_OF_WEEK);
+            int year = cal.get(Calendar.YEAR);
             int Month = cal.get(Calendar.MONTH) + 1;
             String dayName = weekdays[day];
             String fileExtension = ".ndf";
@@ -68,10 +69,10 @@ public class SalesFileDelimiterExporter {
             File file;
             String fileDirectory;
             if (location.equals("")) {
-                fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/";
+                fileDirectory = accountName + "/" + syncJobType.getName() + "/" + year + "/" +Month + "/";
                 this.fileName = fileDirectory + transactionDate + dayName.substring(0, 3) + fileExtension;
             } else {
-                fileDirectory = accountName + "/" + syncJobType.getName() + "/" + Month + "/" + location + "/";
+                fileDirectory = accountName + "/" + syncJobType.getName() + "/" + year + "/" + Month + "/" + location + "/";
                 this.fileName = fileDirectory + transactionDate + dayName.substring(0, 3) + " - " + location + fileExtension;
             }
 

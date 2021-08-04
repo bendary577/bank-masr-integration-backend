@@ -170,10 +170,10 @@ public class SalesController {
 
             try {
                 Response salesResponse;
-                if(account.getMicrosVersion().equals("version1")){
+                if (account.getMicrosVersion().equals("version1")) {
                     salesResponse = salesService.getSalesData(syncJobType, locations,
                             majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
-                }else{
+                } else {
                     salesResponse = salesV2Services.getSalesData(syncJobType, locations,
                             majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
                 }
@@ -221,8 +221,7 @@ public class SalesController {
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        }
-                        else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
+                        } else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                             File file = null;
@@ -236,14 +235,14 @@ public class SalesController {
                                 }
                             } else {
                                 file = exporter.prepareNDFFile(salesList, syncJobType, account.getName(), "");
-                                if(file != null)
+                                if (file != null)
                                     fileStoragePath = imageService.storeFile(file);
                             }
 
                             // Check if the account configured for FTP
                             AccountCredential credential = ftpService.getAccountCredential(account);
 
-                            if(credential.getHost().equals("") || credential.getPassword().equals("") ){
+                            if (credential.getHost().equals("") || credential.getPassword().equals("")) {
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Get sales successfully.", Constants.SUCCESS);
@@ -597,7 +596,7 @@ public class SalesController {
 
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, salesList);
                 file = excelExporter.prepareNDFFile(salesList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
-                if(file != null)
+                if (file != null)
                     locationFiles.add(file);
             }
             return locationFiles;

@@ -34,7 +34,7 @@ public class User implements UserDetails  {
     private boolean credentialsNonExpired;
 
     @DBRef
-    private List<Role> roles;
+    private List<Role> roles = new ArrayList<>();
 
     public User() {
     }

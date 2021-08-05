@@ -40,7 +40,6 @@ public class TransactionController {
     @Autowired
     private AccountRepo accountRepo;
 
-
     @RequestMapping("/getTransactions")
     public List<Transactions> getTransactionByType(Principal principal,@RequestParam("time") String time,
                                                    @RequestParam("transactionType") String transactionType) {

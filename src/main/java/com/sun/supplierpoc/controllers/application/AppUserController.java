@@ -4,6 +4,7 @@ import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.SmsPojo;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
@@ -15,12 +16,15 @@ import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
+import com.sun.supplierpoc.services.SmsService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.MailException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +35,6 @@ import java.security.Principal;
 import java.util.*;
 
 @RestController
-
 public class AppUserController {
 
 
@@ -47,6 +50,16 @@ public class AppUserController {
     @Autowired private ImageService imageService;
     @Autowired private GroupRepo groupRepo;
     @Autowired private GeneralSettingsRepo generalSettingsRepo;
+
+
+    @Autowired
+    SmsService service;
+
+    @Autowired
+    private SimpMessagingTemplate webSocket;
+
+    private final String  TOPIC_DESTINATION = "/lesson/sms";
+
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
@@ -65,15 +78,17 @@ public class AppUserController {
     @RequestMapping("/addApplicationUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
-                                                   @RequestParam(name = "isGeneric") boolean isGeneric,
-                                                   @RequestPart(name = "name") String name,
-                                                   @RequestPart(name = "email") String email,
-                                                   @RequestPart(name = "groupId") String groupId,
-                                                   @RequestPart(name = "userId") String userId,
-                                                   @RequestPart(name = "image") MultipartFile image,
-                                                   @RequestParam(name = "mobile") String mobile,
-                                                   @RequestParam(name = "balance") String balance,
+    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag", required = true) boolean addFlag,
+                                                   @RequestParam(name = "isGeneric", required = true) boolean isGeneric,
+                                                   @RequestPart(name = "name" , required = true) String name,
+                                                   @RequestPart(name = "cardCode" , required = true) String cardCode,
+                                                   @RequestPart(name = "email", required = true) String email,
+                                                   @RequestPart(name = "groupId", required = true) String groupId,
+                                                   @RequestPart(name = "userId", required = true) String userId,
+                                                   @RequestPart(name = "image", required = false) MultipartFile image,
+                                                   @RequestParam(name = "mobile", required = true) String mobile,
+                                                   @RequestParam(name = "balance", required = true) String balance,
+                                                   @RequestPart(name="accompaniedGuests", required = true) String accompaniedGuests,
                                                    Principal principal) {
 
         HashMap response = new HashMap();
@@ -88,7 +103,8 @@ public class AppUserController {
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                response = appUserService
-                       .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, image, account, generalSettings);
+                       .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId,
+                               image, account, generalSettings, accompaniedGuests, balance, cardCode);
 
                if( (Boolean) response.get("success")){
                    return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -169,6 +185,58 @@ public class AppUserController {
         }
     }
 
+    @PostMapping(path = "/sendWelcomeMail")
+    public ResponseEntity sendWelcomeMail(@RequestParam(name = "userId") String userId,
+                                            Principal principal) {
+        HashMap response = new HashMap();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            Optional<ApplicationUser> applicationUser = userRepo.findById(userId);
+
+            if(applicationUser.isPresent()) {
+
+                ApplicationUser appUser = applicationUser.get();
+
+                Optional<Group> groupOptional = groupRepo.findById(appUser.getGroup().getId());
+                if(groupOptional.isPresent()) {
+                    Group group = groupOptional.get();
+                    try {
+                        String accountLogo = account.getImageUrl();
+                        String mailSubj = generalSettings.getMailSub();
+                        if (emailService.sendWelcomeEmail(accountLogo, mailSubj, account.getName(), appUser, account)) {
+                            response.put("message", "Mail send successfully.");
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
+                        } else {
+                            response.put("message", "Invalid user email.");
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                        }
+                    } catch (Exception e) {
+                        LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                        response.put("message", "Invalid user email.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
+                }else{
+                    response.put("message", "User group not found.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+            }else{
+                response.put("message", "User not found.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        } else {
+            response.put("message", "Invalid user.");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+    }
+
+
+
     @RequestMapping("/deleteApplicationUsers")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -228,24 +296,6 @@ public class AppUserController {
         }
     }
 
-
-    @RequestMapping("/deleteAllUsersDeeply")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public ResponseEntity deleteAllUsersDeeply(Principal principal) {
-
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        if (accountOptional.isPresent()) {
-
-            userRepo.deleteAll();
-
-            return ResponseEntity.status(HttpStatus.OK).body("Deleted");
-        }
-        return new ResponseEntity(HttpStatus.FORBIDDEN);
-    }
-
-
     @GetMapping(path = "/generateAndDownloadQRCode")
     public void generateAndDownloadQRCode(
             @RequestParam(name = "codeText") String codeText,
@@ -253,6 +303,51 @@ public class AppUserController {
             @RequestParam(name = "height") Integer height)
             throws Exception {
         qrCodeGenerator.getQRCodeImage(codeText, width, height, "C:\\Users\\basse\\.Bassel Work Space\\infor-sun-poc\\src\\main\\resources\\Qr.png");
+    }
+
+    @GetMapping("filterGuest")
+    public ResponseEntity<?> filterGuests(@RequestParam("name") String name,
+                                          @RequestParam("creationDateStart") String fromDate,
+                                          @RequestParam("creationDateEnd") String toDate,
+                                          @RequestParam("cardNumber") String cardNumber,
+                                          @RequestParam("cardStatues") String cardStatues,
+                                          @RequestParam("groupId") String groupId,
+                                          Principal principal){
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        if(user != null){
+
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+            if(accountOptional != null){
+
+                List<ApplicationUser> applicationUsers = appUserService.filterByParameters(name, fromDate, toDate,
+                        cardNumber, cardStatues, groupId);
+
+
+            }else{
+
+            }
+
+        }
+        return new ResponseEntity<>("", HttpStatus.OK);
+    }
+
+
+    @RequestMapping(value = "/sms", method = RequestMethod.POST)
+    public void smsSubmit(@RequestBody SmsPojo sms) {
+        LoggerFactory.getLogger("new T");
+        try{
+            service.send(sms);
+        }
+        catch(Exception e){
+
+//            webSocket.convertAndSend(TOPIC_DESTINATION, getTimeStamp() + ": Error sending the SMS: "+e.getMessage());
+            throw e;
+        }
+        webSocket.convertAndSend(TOPIC_DESTINATION,  ": SMS has been sent!: "+sms.getTo());
+
     }
 
 //    @GetMapping(value = "/Simphony/generateQRCode")

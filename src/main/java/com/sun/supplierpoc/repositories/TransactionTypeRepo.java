@@ -9,4 +9,5 @@ public interface TransactionTypeRepo extends MongoRepository<TransactionType, St
 
     TransactionType findByNameAndAccountId(String name, String accountId);
 
+    TransactionType findByIdAndAccountId(String transactionTypeId, String id);
 }

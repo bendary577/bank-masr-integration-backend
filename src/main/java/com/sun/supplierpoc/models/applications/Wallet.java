@@ -1,14 +1,26 @@
 package com.sun.supplierpoc.models.applications;
 
-public class Wallet {
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+public class Wallet implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String Id;
     private String appUserId;
-
     private double balance;
-
-    private WalletHistory walletHistory;
+    private List<WalletHistory> walletHistory = new ArrayList<WalletHistory>();
+    private List<RevenueCenter> revenueCenters = new ArrayList<>();
 
     public Wallet() {
+    }
+
+    public Wallet(double balance) {
+        this.balance = balance;
     }
 
     public String getAppUserId() {
@@ -27,11 +39,11 @@ public class Wallet {
         this.balance = balance;
     }
 
-    public WalletHistory getWalletHistory() {
+    public List<WalletHistory> getWalletHistory() {
         return walletHistory;
     }
 
-    public void setWalletHistory(WalletHistory walletHistory) {
+    public void setWalletHistory(List<WalletHistory> walletHistory) {
         this.walletHistory = walletHistory;
     }
 }

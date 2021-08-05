@@ -35,7 +35,7 @@ public class RoleController {
     @Autowired
     private UserRepo userRepo;
 
-    @PostMapping("addRole")
+    @PostMapping("/addRole")
     public ResponseEntity<?> addRole(@RequestBody Role roleRequest, Principal principal) {
 
         Response response = new Response();

@@ -6,11 +6,18 @@ public class WalletHistory {
 
     private double amount;
 
-    private double previousAmount;
+    private double previousBalance;
 
-    private double newAmount;
+    private double newBalance;
 
     public WalletHistory() {
+    }
+
+    public WalletHistory(String operation, double amount, double previousBalance, double newBalance) {
+        this.operation = operation;
+        this.amount = amount;
+        this.previousBalance = previousBalance;
+        this.newBalance = newBalance;
     }
 
     public String getOperation() {
@@ -29,19 +36,19 @@ public class WalletHistory {
         this.amount = amount;
     }
 
-    public double getPreviousAmount() {
-        return previousAmount;
+    public double getPreviousBalance() {
+        return previousBalance;
     }
 
-    public void setPreviousAmount(double previousAmount) {
-        this.previousAmount = previousAmount;
+    public void setPreviousBalance(double previousBalance) {
+        this.previousBalance = previousBalance;
     }
 
-    public double getNewAmount() {
-        return newAmount;
+    public double getNewBalance() {
+        return newBalance;
     }
 
-    public void setNewAmount(double newAmount) {
-        this.newAmount = newAmount;
+    public void setNewBalance(double newBalance) {
+        this.newBalance = newBalance;
     }
 }

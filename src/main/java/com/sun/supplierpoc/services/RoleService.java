@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.models.auth.User;
@@ -22,6 +23,9 @@ public class RoleService {
 
     @Autowired
     UserRepo userRepo;
+
+    @Autowired
+    private Conversions conversions;
 
     public Role addRole(Role roleRequest) {
 
@@ -52,7 +56,7 @@ public class RoleService {
             try {
                 User user = userOptional.get();
                 List<Role> roles = roleRepository.findAllByIdIn(roleIds);
-                user.setRoles(roles);
+                user.getRoles().addAll(roles);
                 userRepo.save(user);
                 response.setStatus(true);
                 response.setData(user);
@@ -93,5 +97,17 @@ public class RoleService {
         response.setStatus(true);
         response.setData(roleList);
         return response;
+    }
+
+    public boolean hasRole(User authedUser, String chargeWallet) {
+
+        User user = userRepo.findById(authedUser.getId())
+                .orElseThrow(() -> new RuntimeException("An Unexpected Error Accord."));
+
+        List<Role> roles = user.getRoles();
+
+        boolean hasRole = conversions.checkIfUserHasRole(roles, chargeWallet);
+
+        return hasRole;
     }
 }

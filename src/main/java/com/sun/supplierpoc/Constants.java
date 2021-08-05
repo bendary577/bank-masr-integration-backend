@@ -12,8 +12,8 @@ public class Constants {
 
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_USER = "Invalid user.";
-    public static String NOT_ELIGIBLE_ACCOUNT = "This account not eligible for this action.";
-    public static String NOT_ELIGIBLE_USER = "This user not eligible for this action.";
+    public static String NOT_ELIGIBLE_ACCOUNT = "This account is not eligible for this action.";
+    public static String NOT_ELIGIBLE_USER = "This user is not eligible for this action.";
 
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
@@ -57,6 +57,8 @@ public class Constants {
 
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
+    public static String USE_WALLET = "Use Wallet";
+
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
@@ -223,8 +225,9 @@ public class Constants {
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
 
     ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
-
-    public static final String ADD_ROLE = "add role";
+    public static final String ADD_ROLE = "add_role";
+    public static  final String CHARGE_WALLET = "charge_wallet";
+    public static  final String DEDUCT_WALLET = "deduct_wallet";
 
     public Constants() {}
 }

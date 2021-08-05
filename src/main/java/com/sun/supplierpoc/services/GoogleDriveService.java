@@ -21,11 +21,15 @@ import java.util.Collections;
 import java.util.List;
 
 
+import com.google.auth.oauth2.GoogleCredentials;
 import com.sun.supplierpoc.components.GoogleDriveClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GoogleDriveService {
+    private static final String baseConfigPath = "/oracle-symphony-integrator-e10d2db033fa.json";
+
     private static final String APPLICATION_NAME = "osii-google-drive";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
     private static final String TOKENS_DIRECTORY_PATH = "tokens";
@@ -67,8 +71,7 @@ public class GoogleDriveService {
                     .build();
 
             File file = new File();
-            file.setFolderColorRgb("FF 45 00");
-            file.setName(originalFile.getPath().replace('\\', '/'));
+            file.setName(originalFile.getName());
 
             FileContent content = new FileContent("text/plain", originalFile);
 

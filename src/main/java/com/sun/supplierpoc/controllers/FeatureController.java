@@ -44,13 +44,10 @@ public class FeatureController {
                     response.setData(feature);
                     response.setStatus(true);
                     return new ResponseEntity<>(response, HttpStatus.OK);
-
                 } catch (Exception e) {
-
                     response.setStatus(false);
                     response.setMessage(e.getMessage());
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-
                 }
 
             } else {

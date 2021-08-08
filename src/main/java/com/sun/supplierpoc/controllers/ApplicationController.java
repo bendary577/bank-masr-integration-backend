@@ -37,15 +37,10 @@ public class ApplicationController {
     public List<Application> getApplications(Principal principal) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
         if (accountOptional.isPresent()) {
-
             Account account = accountOptional.get();
-
             List<Application> applications = applicationRepo.findAllByAccountIdAndDeleted(account.getId(), false);
-
             return applications;
         } else {
             return new ArrayList<>();

@@ -74,6 +74,7 @@ public class ActivityService {
                     transaction.setGroup(group);
                     transaction.setTransactionDate(new Date());
                     transaction.setTransactionTypeId(transactionType.getId());
+                    transaction.setTransactionType(transactionType);
 
                     double amount = transaction.getTotalPayment();
 
@@ -94,7 +95,7 @@ public class ActivityService {
 
                     }else{
                         transaction.setDiscountRate(0.0);
-                        transaction.setAfterDiscount(transaction.getAfterDiscount());
+                        transaction.setAfterDiscount(transaction.getTotalPayment());
                     }
 
                     if(user.getWallet() != null){

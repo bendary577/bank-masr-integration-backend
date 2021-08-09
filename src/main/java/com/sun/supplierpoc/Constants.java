@@ -73,6 +73,7 @@ public class Constants {
     public static String SUN_ERD = "Sun";
     public static String FUSION_ERD = "Fusion";
     public static String SIMPHONY_ERD = "Simphony";
+    public static String OPERA_ERD = "Opera";
 
     //////////////////////////////////////////////// SEND FILE METHODS ///////////////////////////////////////////////////////////////
     public static String GOOGLE_DRIVE_METHOD = "drive";

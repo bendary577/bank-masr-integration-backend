@@ -415,4 +415,42 @@ public class PaymentController {
         }
     }
 
+    @GetMapping(value = "/countOperaTransaction")
+    @ResponseBody
+    public int countOperaTransaction(Principal principal,
+                                     @RequestParam(name = "startDate", required = false) String startDate,
+                                     @RequestParam(name = "endDate", required = false) String endDate){
+        try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+
+                if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
+                    //                    int failedTransactionCount =  operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
+//                            false, Constants.FAILED);
+
+                    return operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
+                            false, Constants.SUCCESS);
+                } else{
+                    Date start;
+                    Date end;
+
+                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                    start = df.parse(startDate);
+                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+
+                    return operaTransactionRepo.countByAccountIdAndDeletedAndStatusAndCreationDateBetween(account.getId(),
+                            false, Constants.SUCCESS, start, end);
+                }
+
+            }else {
+                return 0;
+            }
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return 0;
+        }
+    }
 }

@@ -11,4 +11,8 @@ import java.util.List;
 public interface OperaTransactionRepo extends MongoRepository<OperaTransaction, String> {
     List<OperaTransaction> findAllByAccountIdAndDeleted(String accountId, boolean deleted);
     List<OperaTransaction> findAllByAccountIdAndDeletedAndCreationDateBetween(String accountId, boolean deleted, Date from, Date to);
+
+    int countByAccountIdAndDeletedAndStatus(String accountId, boolean deleted, String status);
+    int countByAccountIdAndDeletedAndStatusAndCreationDateBetween(String accountId, boolean deleted, String status,
+                                                                 Date from, Date to);
 }

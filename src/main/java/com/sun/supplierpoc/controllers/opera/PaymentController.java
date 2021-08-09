@@ -4,15 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.OperaTransaction;
 import com.sun.supplierpoc.models.OperationType;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.InvokerUser;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.opera.TransactionObject;
 import com.sun.supplierpoc.models.opera.TransactionObjectResponse;
 import com.sun.supplierpoc.models.opera.TransactionRequest;
 import com.sun.supplierpoc.models.opera.TransactionResponse;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
+import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import org.apache.commons.lang3.StringUtils;
@@ -25,12 +30,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.http.converter.xml.MappingJackson2XmlHttpMessageConverter;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.security.Principal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @RestController
 public class PaymentController {
@@ -44,12 +52,19 @@ public class PaymentController {
     AccountService accountService;
     @Autowired
     InvokerUserService invokerUserService;
+    @Autowired
+    private OperaTransactionRepo operaTransactionRepo;
+
+    private Conversions conversions = new Conversions();
+
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private final String PREAUTHORIZATION = "1";
     private final String PAYMENT = "2";
+    private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
     private static final Logger logger = LoggerFactory.getLogger(PaymentController.class);
+
     @Bean
     public MappingJackson2XmlHttpMessageConverter mappingJackson2XmlHttpMessageConverter(
             Jackson2ObjectMapperBuilder builder) {
@@ -58,7 +73,6 @@ public class PaymentController {
         return new MappingJackson2XmlHttpMessageConverter(mapper);
     }
 
-    //paymentTest/opera/operaPayment
     @PostMapping(value = "/paymentTest", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public TransactionResponse operaPayment(@RequestBody TransactionRequest transactionRequest) {
@@ -67,7 +81,7 @@ public class PaymentController {
         logger.info("TransactionType : " + transactionRequest.getTransType());
 
         TransactionResponse transactionResponse = new TransactionResponse();
-        if(transactionRequest.getTransType() == null || transactionRequest.getTransType().equals(""))
+        if (transactionRequest.getTransType() == null || transactionRequest.getTransType().equals(""))
             return transactionResponse;
 
 //        switch (transactionRequest.getTransType()){
@@ -81,20 +95,20 @@ public class PaymentController {
 //                break;
 //
 //        }
-        
-        transactionResponse=  paymentTransaction(transactionRequest);
+
+        transactionResponse = paymentTransaction(transactionRequest);
         return transactionResponse;
     }
 
-    private TransactionResponse getToken(TransactionRequest transactionRequest){
-        logger.info("SequenceNo : "+transactionRequest.getSequenceNo());
-        logger.info("TransactionType : "+transactionRequest.getTransType());
-        logger.info("SiteId : "+transactionRequest.getSiteId());
-        logger.info("WSNo : "+transactionRequest.getTransType());
-        logger.info("TransDateTime : "+transactionRequest.getTransDateTime());
-        logger.info("IndustryCode : "+transactionRequest.getIndustryCode());
-        logger.info("ProxyInfo : "+transactionRequest.getProxyInfo());
-        logger.info("POSInfo : "+transactionRequest.getPOSInfo());
+    private TransactionResponse getToken(TransactionRequest transactionRequest) {
+        logger.info("SequenceNo : " + transactionRequest.getSequenceNo());
+        logger.info("TransactionType : " + transactionRequest.getTransType());
+        logger.info("SiteId : " + transactionRequest.getSiteId());
+        logger.info("WSNo : " + transactionRequest.getTransType());
+        logger.info("TransDateTime : " + transactionRequest.getTransDateTime());
+        logger.info("IndustryCode : " + transactionRequest.getIndustryCode());
+        logger.info("ProxyInfo : " + transactionRequest.getProxyInfo());
+        logger.info("POSInfo : " + transactionRequest.getPOSInfo());
 
         TransactionResponse transactionResponse = new TransactionResponse();
         transactionResponse.setSequenceNo(transactionRequest.getSequenceNo());
@@ -114,10 +128,10 @@ public class PaymentController {
         return transactionResponse;
     }
 
-    private TransactionResponse auth(TransactionRequest transactionRequest){
-        logger.info("SequenceNo : "+transactionRequest.getSequenceNo());
-        logger.info("TransactionType : "+transactionRequest.getTransType());
-        logger.info("TransAmount : "+transactionRequest.getTransAmount());
+    private TransactionResponse auth(TransactionRequest transactionRequest) {
+        logger.info("SequenceNo : " + transactionRequest.getSequenceNo());
+        logger.info("TransactionType : " + transactionRequest.getTransType());
+        logger.info("TransAmount : " + transactionRequest.getTransAmount());
         TransactionResponse transactionResponse = new TransactionResponse();
 
         String username = "operaPayment";
@@ -138,11 +152,11 @@ public class PaymentController {
 
             Random random = new Random(100);
 
-            String firstTwoDigits= String.valueOf(random.nextInt(100));
-            String secondTwoDigits= String.valueOf((LocalDateTime.now().getMinute()+10));
-            String thirdTwoDigits= String.valueOf((LocalDateTime.now().getSecond()+10));
-            String uniqueEcr=firstTwoDigits.concat(secondTwoDigits).concat(thirdTwoDigits);
-            TransactionObject transactionObject = new TransactionObject() ;
+            String firstTwoDigits = String.valueOf(random.nextInt(100));
+            String secondTwoDigits = String.valueOf((LocalDateTime.now().getMinute() + 10));
+            String thirdTwoDigits = String.valueOf((LocalDateTime.now().getSecond() + 10));
+            String uniqueEcr = firstTwoDigits.concat(secondTwoDigits).concat(thirdTwoDigits);
+            TransactionObject transactionObject = new TransactionObject();
             transactionObject.setAmount(transactionRequest.getTransAmount());
             transactionObject.setEcr(uniqueEcr);
             transactionObject.setPayKind(PREAUTHORIZATION);
@@ -152,12 +166,12 @@ public class PaymentController {
             TransactionObjectResponse result = new TransactionObjectResponse();
             try {
                 result = restTemplate.postForObject(uri, transactionObject, TransactionObjectResponse.class);
-            }catch (Exception e ){
+            } catch (Exception e) {
                 logger.info("Payment Pre-authorization Error: " + e.getMessage());
             }
 
-            if(result!=null) {
-                if(result.getCardLastDigits()==null || result.getCardLastDigits().equals("")){
+            if (result != null) {
+                if (result.getCardLastDigits() == null || result.getCardLastDigits().equals("")) {
                     logger.info("Payment Pre-authorization Failed!");
                     result.cardLastDigits = "xxxxxxxxxxxxxxxx";
                 }
@@ -191,7 +205,7 @@ public class PaymentController {
         return transactionResponse;
     }
 
-    private TransactionResponse paymentTransaction(TransactionRequest transactionRequest){
+    private TransactionResponse paymentTransaction(TransactionRequest transactionRequest) {
         TransactionResponse transactionResponse = new TransactionResponse();
         transactionResponse.setSequenceNo(transactionRequest.getSequenceNo());
         transactionResponse.setTransType(transactionRequest.getTransType());
@@ -212,7 +226,7 @@ public class PaymentController {
         return transactionResponse;
     }
 
-    @GetMapping(value = "/",produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(value = "/", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public TransactionResponse getController() {
         logger.info("Allah is the greatest");
@@ -238,30 +252,30 @@ public class PaymentController {
         System.out.println("TransactionType : " + transactionRequest.getTransType());
 
         TransactionResponse transactionResponse = new TransactionResponse();
-        if(transactionRequest.getTransType() == null || transactionRequest.getTransType().equals(""))
+        if (transactionRequest.getTransType() == null || transactionRequest.getTransType().equals(""))
             return transactionResponse;
 
-        transactionResponse=  payTransactionOnMachine(transactionRequest);
+        transactionResponse = payTransactionOnMachine(transactionRequest);
         return transactionResponse;
     }
 
-    private TransactionResponse payTransactionOnMachine(TransactionRequest transactionRequest){
+    private TransactionResponse payTransactionOnMachine(TransactionRequest transactionRequest) {
         TransactionResponse transactionResponse = new TransactionResponse();
         TransactionObjectResponse result = new TransactionObjectResponse();
 
         // send payment transaction to POS Machine (HTTP)
         final String uri = "http://192.168.1.40:4040/";
-        TransactionObject transactionObject = new TransactionObject() ;
+        TransactionObject transactionObject = new TransactionObject();
         transactionObject.setAmount(transactionRequest.getTransAmount());
         transactionObject.setTransCurrency(transactionRequest.getTransCurrency());
 
         try {
             result = restTemplate.postForObject(uri, transactionObject, TransactionObjectResponse.class);
-        }catch (Exception e ){
+        } catch (Exception e) {
             logger.info("Payment Pre-authorization Error: " + e.getMessage());
         }
 
-        if(result != null){
+        if (result != null) {
             transactionResponse.setSequenceNo(transactionRequest.getSequenceNo());
             transactionResponse.setTransType(transactionRequest.getTransType());
             transactionResponse.setTransAmount(transactionRequest.getTransAmount());
@@ -281,6 +295,124 @@ public class PaymentController {
         }
 
         return transactionResponse;
+    }
+
+
+    //////////////////////////////////// Bank Misr Payment /////////////////////////////////////////////////////////
+
+    @RequestMapping(value = "/opera/createOperaTransaction")
+    @ResponseBody
+    public ResponseEntity createOperaTransaction(@RequestHeader("Authorization") String authorization,
+                                                 @RequestBody OperaTransaction operaTransaction) {
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
+
+                InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
+
+                if (invokerUser != null) {
+                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
+
+                    if (accountOptional.isPresent()) {
+                        Account account = accountOptional.get();
+
+                        OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted(Constants.OPERA_PAYMENT, account.getId(), false);
+
+                        if (!invokerUser.getTypeId().contains(operationType.getId())) {
+                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                    new HashMap<String, Object>() {
+                                        {
+                                            put("error", "You don't have role to save your transactions!");
+                                            put("Date", LocalDateTime.now());
+                                        }
+                                    });
+                        }
+
+                        // Create new transaction
+                        operaTransaction.setAccountId(account.getId());
+                        operaTransaction.setCreationDate(new Date());
+                        operaTransactionRepo.save(operaTransaction);
+
+                        // Response
+                        return ResponseEntity.status(HttpStatus.OK).body(
+                                new HashMap<String, Object>() {
+                                    {
+                                        put("success", "Transaction created successfully.");
+                                        put("Date", LocalDateTime.now());
+                                    }
+                                });
+
+                    } else {
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                                new HashMap<String, Object>() {{
+                                    put("error", "Account doesn't exists.");
+                                    put("Date", LocalDateTime.now());
+                                }});
+                    }
+                } else {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                            new HashMap<String, Object>() {{
+                                put("error", "Wrong username or password.");
+                                put("Date", LocalDateTime.now());
+                            }});
+                }
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                        new HashMap<String, Object>() {{
+                            put("error", "Wrong username or password.");
+                            put("Date", LocalDateTime.now());
+                        }});
+            }
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+                    new HashMap<String, Object>() {
+                        {
+                            put("error", ex.getMessage());
+                            put("Date", LocalDateTime.now());
+                        }
+                    });
+        }
+    }
+
+    @GetMapping(value = "/listOperaTransaction")
+    @ResponseBody
+    public List<OperaTransaction> listOperaTransaction(Principal principal,
+                                                       @RequestParam(name = "startDate", required = false) String startDate,
+                                                       @RequestParam(name = "endDate", required = false) String endDate){
+        try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+
+                if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
+                    return operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
+                } else{
+                    Date start;
+                    Date end;
+
+                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+                    start = df.parse(startDate);
+                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+
+                    return operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
+                            account.getId(), false, start, end);
+                }
+
+
+            }else {
+                return new ArrayList<>();
+            }
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
 }

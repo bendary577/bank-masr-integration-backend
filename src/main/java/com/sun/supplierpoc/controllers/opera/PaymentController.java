@@ -302,11 +302,12 @@ public class PaymentController {
 
     @RequestMapping(value = "/opera/createOperaTransaction")
     @ResponseBody
-    public ResponseEntity createOperaTransaction(@RequestHeader("Authorization") String authorization,
-                                                 @RequestBody OperaTransaction operaTransaction) {
+    public boolean createOperaTransaction(@RequestBody OperaTransaction operaTransaction) {
+//        @RequestHeader("Authorization") String authorization,
         String username, password;
         try {
-            final String[] values = conversions.convertBasicAuth(authorization);
+//            final String[] values = conversions.convertBasicAuth(authorization);
+            final String[] values = {"operaInvoker", "opera@2021"};
             if (values.length != 0) {
                 username = values[0];
                 password = values[1];
@@ -322,13 +323,14 @@ public class PaymentController {
                         OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted(Constants.OPERA_PAYMENT, account.getId(), false);
 
                         if (!invokerUser.getTypeId().contains(operationType.getId())) {
-                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                                    new HashMap<String, Object>() {
-                                        {
-                                            put("error", "You don't have role to save your transactions!");
-                                            put("Date", LocalDateTime.now());
-                                        }
-                                    });
+//                            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+//                                    new HashMap<String, Object>() {
+//                                        {
+//                                            put("error", "You don't have role to save your transactions!");
+//                                            put("Date", LocalDateTime.now());
+//                                        }
+//                                    });
+                            return false;
                         }
 
                         // Create new transaction
@@ -337,45 +339,50 @@ public class PaymentController {
                         operaTransactionRepo.save(operaTransaction);
 
                         // Response
-                        return ResponseEntity.status(HttpStatus.OK).body(
-                                new HashMap<String, Object>() {
-                                    {
-                                        put("success", "Transaction created successfully.");
-                                        put("Date", LocalDateTime.now());
-                                    }
-                                });
+//                        return ResponseEntity.status(HttpStatus.OK).body(
+//                                new HashMap<String, Object>() {
+//                                    {
+//                                        put("success", "Transaction created successfully.");
+//                                        put("Date", LocalDateTime.now());
+//                                    }
+//                                });
+                        return true;
 
                     } else {
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                                new HashMap<String, Object>() {{
-                                    put("error", "Account doesn't exists.");
-                                    put("Date", LocalDateTime.now());
-                                }});
+//                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+//                                new HashMap<String, Object>() {{
+//                                    put("error", "Account doesn't exists.");
+//                                    put("Date", LocalDateTime.now());
+//                                }});
+                        return false;
                     }
                 } else {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                            new HashMap<String, Object>() {{
-                                put("error", "Wrong username or password.");
-                                put("Date", LocalDateTime.now());
-                            }});
+//                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+//                            new HashMap<String, Object>() {{
+//                                put("error", "Wrong username or password.");
+//                                put("Date", LocalDateTime.now());
+//                            }});
+                    return false;
                 }
             } else {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                        new HashMap<String, Object>() {{
-                            put("error", "Wrong username or password.");
-                            put("Date", LocalDateTime.now());
-                        }});
+//                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+//                        new HashMap<String, Object>() {{
+//                            put("error", "Wrong username or password.");
+//                            put("Date", LocalDateTime.now());
+//                        }});
+                return false;
             }
 
         } catch (Exception ex) {
             ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
-                    new HashMap<String, Object>() {
-                        {
-                            put("error", ex.getMessage());
-                            put("Date", LocalDateTime.now());
-                        }
-                    });
+//            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
+//                    new HashMap<String, Object>() {
+//                        {
+//                            put("error", ex.getMessage());
+//                            put("Date", LocalDateTime.now());
+//                        }
+//                    });
+            return false;
         }
     }
 
@@ -417,7 +424,7 @@ public class PaymentController {
 
     @GetMapping(value = "/countOperaTransaction")
     @ResponseBody
-    public int countOperaTransaction(Principal principal,
+    public ResponseEntity getOperaTransactionStat(Principal principal,
                                      @RequestParam(name = "startDate", required = false) String startDate,
                                      @RequestParam(name = "endDate", required = false) String endDate){
         try {
@@ -427,11 +434,29 @@ public class PaymentController {
                 Account account = accountOptional.get();
 
                 if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
-                    //                    int failedTransactionCount =  operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
-//                            false, Constants.FAILED);
+                    int failedTransactionCount =  operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
+                            false, Constants.FAILED);
 
-                    return operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
+                    int succeedTransactionCount = operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
                             false, Constants.SUCCESS);
+
+                    double totalAmount = 0;
+                    List<OperaTransaction> transactions = operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
+
+                    for (OperaTransaction trans : transactions) {
+                        totalAmount += trans.getAmount();
+                    }
+
+                    double finalTotalAmount = totalAmount;
+                    return ResponseEntity.status(HttpStatus.OK).body(
+                            new HashMap<String, Object>() {
+                                {
+                                    put("succeedTransactionCount", succeedTransactionCount);
+                                    put("failedTransactionCount", failedTransactionCount);
+                                    put("totalTransactionAmount", finalTotalAmount);
+                                    put("Date", LocalDateTime.now());
+                                }
+                            });
                 } else{
                     Date start;
                     Date end;
@@ -440,17 +465,55 @@ public class PaymentController {
                     start = df.parse(startDate);
                     end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
 
-                    return operaTransactionRepo.countByAccountIdAndDeletedAndStatusAndCreationDateBetween(account.getId(),
+                    int failedTransactionCount = operaTransactionRepo.countByAccountIdAndDeletedAndStatusAndCreationDateBetween(account.getId(),
+                            false, Constants.FAILED, start, end);
+
+                    int succeedTransactionCount = operaTransactionRepo.countByAccountIdAndDeletedAndStatusAndCreationDateBetween(account.getId(),
                             false, Constants.SUCCESS, start, end);
+
+                    double totalAmount = 0;
+                    List<OperaTransaction> transactions = operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
+                            account.getId(), false, start, end);
+
+                    for (OperaTransaction trans : transactions) {
+                        totalAmount += trans.getAmount();
+                    }
+
+                    double finalTotalAmount = totalAmount;
+                    return ResponseEntity.status(HttpStatus.OK).body(
+                            new HashMap<String, Object>() {
+                                {
+                                    put("succeedTransactionCount", succeedTransactionCount);
+                                    put("failedTransactionCount", failedTransactionCount);
+                                    put("totalTransactionAmount", finalTotalAmount);
+                                    put("Date", LocalDateTime.now());
+                                }
+                            });
                 }
 
             }else {
-                return 0;
+                return ResponseEntity.status(HttpStatus.OK).body(
+                        new HashMap<String, Object>() {
+                            {
+                                put("succeedTransactionCount", 0);
+                                put("failedTransactionCount", 0);
+                                put("totalTransactionAmount", 0);
+                                put("Date", LocalDateTime.now());
+                            }
+                        });
             }
 
         }catch (Exception ex){
             ex.printStackTrace();
-            return 0;
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    new HashMap<String, Object>() {
+                        {
+                            put("succeedTransactionCount", 0);
+                            put("failedTransactionCount", 0);
+                            put("totalTransactionAmount", 0);
+                            put("Date", LocalDateTime.now());
+                        }
+                    });
         }
     }
 }

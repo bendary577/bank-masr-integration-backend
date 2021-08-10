@@ -15,6 +15,7 @@ public class OperaTransaction {
     @NotNull(message="The amount of the transaction must be declared.")
     private double amount;
     private String currency;
+    private String cardNumber;
 
     private String accountId;
 
@@ -62,6 +63,14 @@ public class OperaTransaction {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public String getCardNumber() {
+        return cardNumber;
+    }
+
+    public void setCardNumber(String cardNumber) {
+        this.cardNumber = cardNumber;
     }
 
     public String getAccountId() {

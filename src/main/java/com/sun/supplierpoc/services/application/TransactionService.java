@@ -166,76 +166,48 @@ public class TransactionService {
     }
 
     public List<Transactions> getTransactionsByTimeInRAngAndGroup(List<TransactionType> transactionTypes, String startDate, String endDate, String groupId, Account account) {
-
         List<Transactions> transactions = new ArrayList<>();
-
         Date start = new Date();
         Date end = new Date();
-
         try {
-
             if (startDate == null || startDate.equals("") || endDate == null || endDate.equals("") && groupId != null && groupId.equals("") ) {
-
                 Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
-
                 if (transGroupOptional.isPresent()) {
-
                     Group transGroup = transGroupOptional.get();
-
                     transactions = transactionRepo.findAllByGroupIdAndTransactionTypeInOrderByTransactionDateDesc(transGroup.getId(), transactionTypes);
-
                 }else {
                     return transactions;
                 }
             }else {
-
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
                 start = df.parse(startDate);
-
                 end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-
                 if (groupId != null && !groupId.equals("")) {
-
                     Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
-
                     if (transGroupOptional.isPresent()) {
-
                         Group transGroup = transGroupOptional.get();
-
                         transactions = transactionRepo.findAllByGroupIdAndTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transGroup.getId(), transactionTypes, start, end);
-
                     } else {
                         return transactions;
                     }
-
                 } else {
                     transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, start, end);
                 }
-
             }
         } catch (Exception e) {
             return transactions;
         }
-
         return transactions;
     }
 
     public String updateTransactions(){
-
         List<Transactions> transactionList = transactionRepo.findAll();
-
         TransactionType transactionType;
-
         for(Transactions transaction: transactionList){
-
             transactionType = transactionTypeRepo.findById(transaction.getTransactionTypeId())
             .orElseThrow();
-
             transaction.setTransactionType(transactionType);
-
             transactionRepo.save(transaction);
-
         }
 
         return "";

@@ -180,11 +180,4 @@ public class TransactionController {
 
     }
 
-    @GetMapping("/newRequest")
-    public String updateTransaction(){
-        transactionService.updateTransactions();
-        return "";
-    }
-
-
 }

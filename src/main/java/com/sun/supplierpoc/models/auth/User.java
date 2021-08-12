@@ -32,6 +32,8 @@ public class User implements UserDetails  {
     private Boolean accountNonExpired;
     private Boolean accountNonLocked;
     private boolean credentialsNonExpired;
+    private String logo;
+    private String email;
 
     @DBRef
     private List<Role> roles = new ArrayList<>();
@@ -216,5 +218,21 @@ public class User implements UserDetails  {
 
     public void setRoles(List<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

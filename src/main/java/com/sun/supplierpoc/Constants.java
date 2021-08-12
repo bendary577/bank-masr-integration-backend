@@ -229,5 +229,7 @@ public class Constants {
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
 
+    public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
+
     public Constants() {}
 }

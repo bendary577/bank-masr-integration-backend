@@ -77,6 +77,8 @@ public class RoleService {
     public Response getUserRoles(String userId, boolean sameUser, User authedUser) {
 
         Response response = new Response();
+        User user = new User();
+
         List<Role> roleList;
         Optional<User> userOptional;
 
@@ -87,7 +89,8 @@ public class RoleService {
         }
 
         if (userOptional.isPresent()) {
-            roleList = userOptional.get().getRoles();
+            user = userOptional.get();
+            roleList = user.getRoles();
         } else {
             response.setStatus(false);
             response.setMessage(Constants.INVALID_USER);
@@ -95,7 +98,7 @@ public class RoleService {
         }
 
         response.setStatus(true);
-        response.setData(roleList);
+        response.setData(user);
         return response;
     }
 

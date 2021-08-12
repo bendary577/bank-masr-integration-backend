@@ -183,8 +183,7 @@ public class AppUserService {
                         ObjectMapper objectMapper = new ObjectMapper();
                         List<ApplicationUser> accompaniedGuests = null;
                         try {
-                            accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {
-                            });
+                            accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {});
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }

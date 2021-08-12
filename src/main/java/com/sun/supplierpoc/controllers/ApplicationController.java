@@ -24,13 +24,10 @@ public class ApplicationController {
 
     @Autowired
     ApplicationRepo applicationRepo;
-
     @Autowired
     private AccountRepo accountRepo;
-
     @Autowired
     private AccountService accountService;
-
     private Conversions conversion = new Conversions();
 
     @GetMapping("/getApplications")

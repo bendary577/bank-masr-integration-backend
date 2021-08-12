@@ -2,9 +2,12 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,8 +15,13 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.internet.*;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Properties;
@@ -24,18 +32,17 @@ public class SendEmailService {
     @Autowired
     private AccountRepo accountRepo;
 
+    @Autowired
+    private JavaMailSender mailSender;
+
     public JavaMailSender getJavaMailSender(Account account)
     {
-
         AccountEmailConfig emailConfig = account.getEmailConfig();
-
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(emailConfig.getHost());
         mailSender.setPort(emailConfig.getPort());
-
         mailSender.setUsername(emailConfig.getUsername());
         mailSender.setPassword(emailConfig.getPassword());
-
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
@@ -43,8 +50,42 @@ public class SendEmailService {
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
-
         return mailSender;
+    }
+
+    public boolean sendExportedSyncsMailMail(FileSystemResource f, Account account, User user, Date fromDate, Date toDate, String store,
+                                          String email, SyncJobType syncJobType)  throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(email);
+            String mailSubject = "More rewards, just for YOU!";
+            String mailContent =
+                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;\n'>" +
+                            "<br>"+ "<p style='text-align:left'>" +
+                            "   Dear  " + user.getName()  + "<br> " +
+                            " <span style=' padding-left:10px'> Your request for export has been successfully done!<br>" +
+                            " For the " + syncJobType.getName() + " module,<br>" +
+                            " Located in "+store+".<br>" +
+                            " Within the date range from" + fromDate.toString() + " to " + toDate.toString() + "<br>" +
+                            " We are pleased to be associated with you. You can contact support for any further clarifications</span><br>" +
+                            " Thanks and Regards,<br>" +
+                            " Anyware Software<br>" +
+                            "</div>";
+
+            messageHelper.addAttachment(f.getFilename(), f);
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public void sendSimpleMail() throws MailException {

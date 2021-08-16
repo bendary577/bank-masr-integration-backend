@@ -5,7 +5,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.requests.ExportRequest;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.SupportService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +24,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -34,12 +38,8 @@ public class SupportController {
     private SupportService supportService;
 
     @PostMapping("/supportExportedFiles")
-    public ResponseEntity<?> supportExportedFiles(@RequestPart("dateRange") String dateRang,
-                                                  @RequestPart("store") String store,
-                                                  @RequestPart("email") String email,
-                                                  @RequestPart("moduleId") String moduleId,
+    public ResponseEntity<?> supportExportedFiles(@RequestBody ExportRequest exportRequest,
                                                   Principal principal){
-
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         if(user != null){
@@ -48,7 +48,7 @@ public class SupportController {
 
                 Account account = accountOptional.get();
 
-                response = exportedFile(user, account, dateRang, store, email, moduleId);
+                response = exportedFile(user, account, principal, exportRequest);
                 if(response.isStatus()){
                     return new ResponseEntity<>(response, HttpStatus.OK);
                 }else {
@@ -65,48 +65,47 @@ public class SupportController {
     }
 
 
-    public Response exportedFile(User user, Account account, String StringDateRange, String store, String email, String moduleId){
+    public Response exportedFile(User user, Account account, Principal principal, ExportRequest exportRequest){
 
         Response response = new Response();
 
-        if(store.equals("")){
+        if(exportRequest.getCostCenters().isEmpty()){
             response.setMessage("Wrong store.");
-        }else if( email.equals("")){
+        }else if(exportRequest.getEmail().equals("")){
             response.setMessage("Wrong email.");
-        }else if(moduleId.equals("")){
+        }else if(exportRequest.getSyncJobTypes().isEmpty()){
             response.setMessage("Wrong module");
         }else {
 
-            ObjectMapper objectMapper = new ObjectMapper();
+            List<SyncJobType> syncJobTypes = exportRequest.getSyncJobTypes();
+            List<CostCenter> costCenters = exportRequest.getCostCenters();
+            String email = exportRequest.getEmail();
 
-            HashMap dateRange;
             Date fromDate;
             Date toDate;
 
+//            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             try {
-                dateRange = objectMapper.readValue(StringDateRange,  new TypeReference<>() {});
-            } catch (JsonProcessingException e) {
-                response.setStatus(false);
-                response.setMessage(e.getMessage());
-                return response;
-            }
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-            try {
-                fromDate = df.parse(dateRange.get("startDate").toString());
+                fromDate = exportRequest.getDateRange().getStartDate();
                 fromDate = supportService.addDays(fromDate, 1);
-                toDate = df.parse(dateRange.get("endDate").toString());
-            } catch (ParseException e) {
-                response.setStatus(false);
-                response.setMessage(e.getMessage());
-                return response;
+                toDate = exportRequest.getDateRange().getEndDate();
             } catch(Exception e){
                 response.setStatus(false);
                 response.setMessage(e.getMessage());
                 return response;
             }
 
-            response = supportService.supportExportedFile(user, account, fromDate, toDate, store, email, moduleId);
+            Date finalFromDate = fromDate;
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+                    supportService.supportExportedFile(user, account, finalFromDate, toDate, costCenters,
+                            email, syncJobTypes, principal);
+//                }
+//            }).start();
 
+            response.setStatus(true);
+            response.setMessage("Your Request has been sent successfully.");
             return response;
         }
         response.setStatus(false);

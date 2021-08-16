@@ -66,12 +66,12 @@ public class SendEmailService {
             String mailContent =
                     "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;\n'>" +
                             "<br>"+ "<p style='text-align:left'>" +
-                            "   Dear  " + user.getName()  + "<br> " +
-                            " <span style=' padding-left:10px'> Your request for export has been successfully done!<br>" +
-                            " For the " + syncJobType.getName() + " module,<br>" +
-                            " Located in "+store+".<br>" +
-                            " Within the date range from" + fromDate.toString() + " to " + toDate.toString() + "<br>" +
-                            " We are pleased to be associated with you. You can contact support for any further clarifications</span><br>" +
+                            "   Dear  " + user.getName()  + "<br> <br>" +
+                            " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
+                            "<span style=' padding-left:20px'>  For the " + syncJobType.getName() + " module,</span><br>" +
+                            " <span style=' padding-left:20px'> Located in "+store+",</span><br>" +
+                            " <span style=' padding-left:20px'> Within the date range from" + fromDate.toString() + " to " + toDate.toString() + " ,</span><br>" +
+                            " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br>" +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";

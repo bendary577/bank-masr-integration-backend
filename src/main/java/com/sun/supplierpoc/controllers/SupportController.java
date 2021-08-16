@@ -37,17 +37,9 @@ public class SupportController {
     @Autowired
     private SupportService supportService;
 
-    /*
-    @RequestPart("dateRange") List<String> dateRang,
-                                                  @RequestPart("store") List<String> store,
-                                                  @RequestPart("email") String email,
-                                                  @RequestPart("moduleId") String moduleId,
-     */
-
     @PostMapping("/supportExportedFiles")
     public ResponseEntity<?> supportExportedFiles(@RequestBody ExportRequest exportRequest,
                                                   Principal principal){
-
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         if(user != null){
@@ -87,20 +79,16 @@ public class SupportController {
 
             List<SyncJobType> syncJobTypes = exportRequest.getSyncJobTypes();
             List<CostCenter> costCenters = exportRequest.getCostCenters();
-            String email = exportRequest.getEmail()
+            String email = exportRequest.getEmail();
 
             Date fromDate;
             Date toDate;
 
-            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+//            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             try {
-                fromDate = df.parse(exportRequest.getDateRange().getStartDate().toString());
+                fromDate = exportRequest.getDateRange().getStartDate();
                 fromDate = supportService.addDays(fromDate, 1);
-                toDate = df.parse(exportRequest.getDateRange().getEndDate().toString());
-            } catch (ParseException e) {
-                response.setStatus(false);
-                response.setMessage(e.getMessage());
-                return response;
+                toDate = exportRequest.getDateRange().getEndDate();
             } catch(Exception e){
                 response.setStatus(false);
                 response.setMessage(e.getMessage());
@@ -108,12 +96,13 @@ public class SupportController {
             }
 
             Date finalFromDate = fromDate;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    supportService.supportExportedFile(user, account, finalFromDate, toDate, store, email, moduleId, principal);
-                }
-            }).start();
+//            new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+                    supportService.supportExportedFile(user, account, finalFromDate, toDate, costCenters,
+                            email, syncJobTypes, principal);
+//                }
+//            }).start();
 
             response.setStatus(true);
             response.setMessage("Your Request has been sent successfully.");

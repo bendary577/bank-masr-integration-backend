@@ -4,9 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.controllers.SalesController;
-import com.sun.supplierpoc.controllers.SyncJobController;
-import com.sun.supplierpoc.controllers.SyncJobTypeController;
+import com.sun.supplierpoc.controllers.*;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
@@ -56,50 +54,94 @@ public class SupportService {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
 
-    public void supportExportedFile(User user, Account account, Date fromDate, Date toDate, String store, String email, String moduleId, Principal principal) {
+    @Autowired
+    private JournalController journalController;
+
+    @Autowired
+    private CostOfGoodsController costOfGoodsController;
+
+    @Autowired
+    private InvoiceController invoiceController;
+
+    @Autowired
+    private CreditNoteController creditNoteController;
+
+    @Autowired
+    private WastageController wastageController;
+
+    @Autowired
+    private BookedProductionController bookedProductionController;
+
+
+    public void supportExportedFile(User user, Account account, Date fromDate, Date toDate, List<CostCenter> stores, String email,
+                                    List<SyncJobType> modules, Principal principal) {
 
         Response response = new Response();
 
-        Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(moduleId);
-        if (syncJobTypeOptional.isPresent()) {
-            boolean notSuccess = true;
-            while (notSuccess) {
-                SyncJobType syncJobType = syncJobTypeOptional.get();
-                FileSystemResource file = getZip(account, fromDate, toDate, store, syncJobType.getName());
-                if (file != null) {
-                    notSuccess = false;
-                    try {
-                        emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, store, email, syncJobType);
-                        response.setMessage("Your request has been received successfully.");
-                        response.setStatus(true);
-                    } catch (Exception e) {
-                        emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, store, email, syncJobType);
-                        response.setMessage(e.getMessage());
-                        response.setStatus(false);
-                    }
-                } else {
-                    reSyncModules(account, fromDate, toDate, store, syncJobType, principal);
+        boolean notSuccess = true;
+        int count = 0 ;
+        while (notSuccess && count != 3) {
+
+            FileSystemResource file = getZip(account, fromDate, toDate, stores, modules);
+
+            if (file != null) {
+                notSuccess = false;
+                try {
+                    emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
+                    response.setMessage("Your request has been received successfully.");
+                    response.setStatus(true);
+                } catch (Exception e) {
+                    emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
+                    response.setMessage(e.getMessage());
+                    response.setStatus(false);
                 }
+            } else {
+                count++;
+                reSyncModules(account, fromDate, toDate, stores, modules, principal);
             }
-        } else {
-            response.setMessage("Wrong sync job type.");
-            response.setStatus(false);
+
         }
     }
 
-    public FileSystemResource getZip(Account account, Date fromDate, Date toDate, String store, String module) {
+    public FileSystemResource getZip(Account account, Date fromDate, Date toDate, List<CostCenter> stores,
+                                     List<SyncJobType> modules) {
 
         List<FileSystemResource> files = new ArrayList<>();
-        while (!checkIfEquivalent(fromDate, toDate)) {
-            String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-            String fileName = String.format("%02d", fromDate.getDate()) +
-                    String.format("%02d", (fromDate.getMonth() + 1)) + "20" +
-                    String.format("%03d", fromDate.getYear()).substring(1, 3) +
-                    daysOfWeek[fromDate.getDay()];
-            String path = account.getName() + "/" + module + "/" +(fromDate.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
-            fromDate = addDays(fromDate, 1);
-            FileSystemResource file = new FileSystemResource(path);
-            files.add(file);
+
+        for (SyncJobType tempSyncJobType : modules) {
+
+            Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(tempSyncJobType.getId());
+
+            if (syncJobTypeOptional.isPresent()) {
+
+            SyncJobType syncJobType = syncJobTypeOptional.get();
+
+            String module = syncJobType.getName();
+
+            for (CostCenter costCenter : stores) {
+
+                String store = costCenter.costCenterReference;
+
+                    while (!checkIfEquivalent(fromDate, toDate)) {
+
+                        String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+                        String fileName = String.format("%02d", fromDate.getDate()) +
+                                String.format("%02d", (fromDate.getMonth() + 1)) + "20" +
+                                String.format("%03d", fromDate.getYear()).substring(1, 3) +
+                                daysOfWeek[fromDate.getDay()];
+
+                        String path = account.getName() + "/" + module + "/" + (fromDate.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
+
+                        fromDate = addDays(fromDate, 1);
+
+                        FileSystemResource file = new FileSystemResource(path);
+                        files.add(file);
+                    }
+                }
+
+            } else {
+                return null;
+            }
         }
         FileSystemResource fileSystemResource = zip(files, "exported_files.zip");
         return fileSystemResource;
@@ -144,39 +186,50 @@ public class SupportService {
         }
     }
 
-    public void reSyncModules(Account account, Date fromDate, Date toDate, String store, SyncJobType syncJobType, Principal principal){
+    public void reSyncModules(Account account, Date fromDate, Date toDate, List<CostCenter> stores, List<SyncJobType> syncJobTypes, Principal principal){
 
         Response response = new Response();
 
-        if(syncJobType.getName().equals(Constants.SALES)){
+        for (SyncJobType tempSyncJobType : syncJobTypes) {
 
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(tempSyncJobType.getId());
 
-            syncJobType.getConfiguration().setFromDate( dateFormat.format(fromDate));
-            syncJobType.getConfiguration().setToDate(dateFormat.format(addDays(toDate, 1)));
+            if (syncJobTypeOptional.isPresent()) {
+                SyncJobType syncJobType = syncJobTypeOptional.get();
 
-            syncJobTypeRepo.save(syncJobType);
-            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            ArrayList<CostCenter> locations = generalSettings.getLocations();
-            for(CostCenter location : locations){
-                if(location.costCenterReference.equals(store)) {
-                    location.checked = true;
-                }else{
-                    location.checked = false;
+                if (syncJobType.getName().equals(Constants.SALES)) {
+
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                    syncJobType.getConfiguration().setFromDate(dateFormat.format(fromDate));
+                    syncJobType.getConfiguration().setToDate(dateFormat.format(addDays(toDate, 1)));
+                    syncJobTypeRepo.save(syncJobType);
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                    ArrayList<CostCenter> locations = generalSettings.getLocations();
+
+                    for(CostCenter store : stores) {
+                        for (CostCenter location : locations) {
+                            if (location.costCenterReference.equals(store.costCenterReference)) {
+                                location.checked = true;
+                            } else {
+                                location.checked = false;
+                            }
+                        }
+                    }
+
+                    generalSettings.setLocations(locations);
+                    generalSettingsRepo.save(generalSettings);
+                    try {
+                        response = salesController.getPOSSalesRequest(principal).getBody();
+
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
+            } else {
+
             }
-
-            generalSettings.setLocations(locations);
-            generalSettingsRepo.save(generalSettings);
-
-            try {
-                response = salesController.getPOSSalesRequest(principal).getBody();
-            } catch (ParseException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
         }
 
     }

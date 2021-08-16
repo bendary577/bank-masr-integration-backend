@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.AccountEmailConfig;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
@@ -24,6 +25,7 @@ import javax.mail.internet.*;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 @Service
@@ -53,8 +55,8 @@ public class SendEmailService {
         return mailSender;
     }
 
-    public boolean sendExportedSyncsMailMail(FileSystemResource f, Account account, User user, Date fromDate, Date toDate, String store,
-                                          String email, SyncJobType syncJobType)  throws MailException {
+    public boolean sendExportedSyncsMailMail(FileSystemResource f, Account account, User user, Date fromDate, Date toDate,
+                                             List<CostCenter> stores, String email, List<SyncJobType> syncJobTypes)  throws MailException {
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
         try {
@@ -68,8 +70,14 @@ public class SendEmailService {
                             "<br>"+ "<p style='text-align:left'>" +
                             "   Dear  " + user.getName()  + "<br> <br>" +
                             " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
-                            "<span style=' padding-left:20px'>  For the " + syncJobType.getName() + " module,</span><br>" +
-                            " <span style=' padding-left:20px'> Located in "+store+",</span><br>" +
+                            "<span style=' padding-left:20px'>  For the " +
+                            getModules(syncJobTypes)
+                            +
+                            " module,</span><br>" +
+                            " <span style=' padding-left:20px'> Located in " +
+                            getStores(stores)
+                            +
+                            ",</span><br>" +
                             " <span style=' padding-left:20px'> Within the date range from" + fromDate.toString() + " to " + toDate.toString() + " ,</span><br>" +
                             " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br>" +
                             " Thanks and Regards,<br>" +
@@ -87,6 +95,37 @@ public class SendEmailService {
             return false;
         }
     }
+
+    String getModules(List<SyncJobType> syncJobTypes){
+        String modules = "";
+        int i = syncJobTypes.size();
+        boolean start = true;
+        for(SyncJobType syncJobType  : syncJobTypes){
+            if(i == 1 && !start){
+                modules =  "and " + modules + syncJobType.getName() + " ";
+            }else{
+                modules = modules + syncJobType.getName() + ", ";
+            }
+            i -= 1;
+        }
+        return modules;
+    }
+
+    String getStores(List<CostCenter> costCenters){
+        String stores = "";
+        int i = costCenters.size();
+        boolean start = true;
+        for(CostCenter costCenter : costCenters){
+            if(i == 1 && !start){
+                stores =  "and " + stores + costCenter.locationName + " ";
+            }else{
+                stores = stores + costCenter.locationName + ", ";
+            }
+            i -= 1;
+        }
+        return stores;
+    }
+
 
     public void sendSimpleMail() throws MailException {
         String messageBody = "Thanks for being with us.";

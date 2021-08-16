@@ -307,7 +307,8 @@ public class SalesController {
 
             // Send file
             if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
-                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
+//                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
+                sendStatus = true;
             } else if (account.getSendMethod().equals(Constants.FTP_METHOD)) {
                 // Check if the account configured for FTP
                 AccountCredential credential = ftpService.getAccountCredential(account);

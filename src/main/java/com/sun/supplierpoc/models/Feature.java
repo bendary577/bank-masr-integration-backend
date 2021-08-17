@@ -14,6 +14,9 @@ public class Feature {
     @NotNull(message = "Feature name can't be null.")
     private String name;
 
+    @NotNull(message= "Feature reference can't be null.")
+    private String reference;
+
     public Feature() {
     }
 
@@ -31,5 +34,13 @@ public class Feature {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 }

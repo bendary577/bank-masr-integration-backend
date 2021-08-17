@@ -564,4 +564,15 @@ public class Conversions {
         }
         return false;
     }
+
+    public boolean checkIfAccountHasFeature(List<Feature> features, Feature feature) {
+
+        for (Feature tempFeature : features){
+            if(tempFeature.getId().equals(feature.getId())){
+                return true;
+            }
+        }
+
+        return false;
+    }
 }

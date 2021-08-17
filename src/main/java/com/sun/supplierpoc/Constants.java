@@ -7,6 +7,8 @@ public class Constants {
     public static String FAILED = "Failed";
     public static String RECEIVED = "Received";
     public static String RETRY_TO_SEND = "Retry to Send";
+    public static  final String INVALID_FEATURE = "Invalid feature for role ";
+    public static  final String INVALID_FEATURE_ID = "Invalid feature with ID ";
 
     public static String GENERIC = "Generic";
 
@@ -14,6 +16,7 @@ public class Constants {
     public static String INVALID_USER = "Invalid user.";
     public static String NOT_ELIGIBLE_ACCOUNT = "This account is not eligible for this action.";
     public static String NOT_ELIGIBLE_USER = "This user is not eligible for this action.";
+    public static String ACCOUNT_NOT_EXIST = "This account is not exist.";
 
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
@@ -226,9 +229,14 @@ public class Constants {
 
     ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
     public static final String ADD_ROLE = "add_role";
+    public static final String ADD_USER_ROLE = "add_user_role";
+    public static final String ADD_USER_FEATURE = "add_user_feature";
+    public static final String ADD_FEATURE = "add_feature";
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
 
+
+    //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
 
     public Constants() {}

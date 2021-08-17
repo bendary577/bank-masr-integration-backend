@@ -2,6 +2,7 @@ package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -26,7 +27,8 @@ public class Account implements Serializable {
     private boolean deleted;
     private AccountEmailConfig emailConfig;
 
-    private List<String> FeatureIds;
+    @DBRef
+    private List<Feature> Features = new ArrayList<>();
 
     public Account() {
     }
@@ -140,11 +142,11 @@ public class Account implements Serializable {
         this.emailConfig = emailConfig;
     }
 
-    public List<String> getFeatureIds() {
-        return FeatureIds;
+    public List<Feature> getFeatures() {
+        return Features;
     }
 
-    public void setFeatureIds(List<String> featureIds) {
-        FeatureIds = featureIds;
+    public void setFeatures(List<Feature> features) {
+        Features = features;
     }
 }

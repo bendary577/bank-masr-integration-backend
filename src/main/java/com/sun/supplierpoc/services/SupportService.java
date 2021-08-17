@@ -79,12 +79,13 @@ public class SupportService {
         Response response = new Response();
 
         boolean notSuccess = true;
+        boolean isFirst = true;
         int count = 0 ;
-        while (notSuccess && count != 3) {
+        while (notSuccess && count != 3 ) {
 
             FileSystemResource file = getZip(account, fromDate, toDate, stores, modules);
 
-            if (file != null) {
+            if (file != null && !isFirst) {
                 notSuccess = false;
                 try {
                     emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
@@ -96,6 +97,7 @@ public class SupportService {
                     response.setStatus(false);
                 }
             } else {
+                isFirst = false;
                 count++;
                 reSyncModules(account, fromDate, toDate, stores, modules, principal);
             }
@@ -121,8 +123,10 @@ public class SupportService {
             for (CostCenter costCenter : stores) {
 
                 String store = costCenter.costCenterReference;
+                Date toDateRequest = addDays(toDate, 1);
+                Date fromDateRequest = fromDate;
 
-                    while (!checkIfEquivalent(fromDate, toDate)) {
+                    while (!checkIfEquivalent(fromDateRequest, toDateRequest)) {
 
                         String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
                         String fileName = String.format("%02d", fromDate.getDate()) +
@@ -132,7 +136,7 @@ public class SupportService {
 
                         String path = account.getName() + "/" + module + "/" + (fromDate.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
 
-                        fromDate = addDays(fromDate, 1);
+                        fromDateRequest = addDays(fromDateRequest, 1);
 
                         FileSystemResource file = new FileSystemResource(path);
                         files.add(file);
@@ -197,7 +201,6 @@ public class SupportService {
             if (syncJobTypeOptional.isPresent()) {
                 SyncJobType syncJobType = syncJobTypeOptional.get();
 
-                if (syncJobType.getName().equals(Constants.SALES)) {
 
                     DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                     syncJobType.getConfiguration().setFromDate(dateFormat.format(fromDate));
@@ -206,27 +209,43 @@ public class SupportService {
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
                     ArrayList<CostCenter> locations = generalSettings.getLocations();
 
-                    for(CostCenter store : stores) {
+                    List<String> storesList  = new ArrayList<>();
+                    for(CostCenter store : stores){
+                        storesList.add(store.costCenterReference);
+                    }
                         for (CostCenter location : locations) {
-                            if (location.costCenterReference.equals(store.costCenterReference)) {
+                            if (storesList.contains(location.costCenterReference)) {
                                 location.checked = true;
                             } else {
                                 location.checked = false;
                             }
                         }
-                    }
 
                     generalSettings.setLocations(locations);
                     generalSettingsRepo.save(generalSettings);
                     try {
-                        response = salesController.getPOSSalesRequest(principal).getBody();
+
+                        if (syncJobType.getName().equals(Constants.SALES)) {
+                            response = salesController.getPOSSalesRequest(principal).getBody();
+                        }else if(syncJobType.getName().equals(Constants.CONSUMPTION)){
+                            journalController.getJournalsRequest(principal).getBody();
+                        }else if(syncJobType.getName().equals(Constants.APPROVED_INVOICES)){
+                            invoiceController.getApprovedInvoicesRequest(principal).getBody();
+                        }else if(syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)){
+                            bookedProductionController.getBookedProductionRequest(principal);
+                        }else if(syncJobType.getName().equals(Constants.COST_OF_GOODS)){
+                            costOfGoodsController.getCostOfGoodsRequest(principal);
+                        }else if(syncJobType.getName().equals(Constants.WASTAGE)){
+                            wastageController.getWastageRequest(principal);
+                        }else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)){
+                            creditNoteController.getCreditNotesRequest(principal);
+                        }
 
                     } catch (ParseException e) {
                         e.printStackTrace();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
             } else {
 
             }

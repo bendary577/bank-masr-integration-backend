@@ -84,10 +84,8 @@ public class SupportController {
             Date fromDate;
             Date toDate;
 
-//            DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
             try {
                 fromDate = exportRequest.getDateRange().getStartDate();
-                fromDate = supportService.addDays(fromDate, 1);
                 toDate = exportRequest.getDateRange().getEndDate();
             } catch(Exception e){
                 response.setStatus(false);
@@ -96,13 +94,13 @@ public class SupportController {
             }
 
             Date finalFromDate = fromDate;
-//            new Thread(new Runnable() {
-//                @Override
-//                public void run() {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
                     supportService.supportExportedFile(user, account, finalFromDate, toDate, costCenters,
                             email, syncJobTypes, principal);
-//                }
-//            }).start();
+                }
+            }).start();
 
             response.setStatus(true);
             response.setMessage("Your Request has been sent successfully.");

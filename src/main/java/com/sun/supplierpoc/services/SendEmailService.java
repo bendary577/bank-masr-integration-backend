@@ -73,13 +73,13 @@ public class SendEmailService {
                             "<span style=' padding-left:20px'>  For the " +
                             getModules(syncJobTypes)
                             +
-                            " module,</span><br>" +
+                            " modules,</span><br>" +
                             " <span style=' padding-left:20px'> Located in " +
                             getStores(stores)
                             +
                             ",</span><br>" +
                             " <span style=' padding-left:20px'> Within the date range from" + fromDate.toString() + " to " + toDate.toString() + " ,</span><br>" +
-                            " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br>" +
+                            " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br><br>" +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";
@@ -101,7 +101,7 @@ public class SendEmailService {
         int i = syncJobTypes.size();
         boolean start = true;
         for(SyncJobType syncJobType  : syncJobTypes){
-            if(i == 1 && !start){
+            if(i == 0 && !start){
                 modules =  "and " + modules + syncJobType.getName() + " ";
             }else{
                 modules = modules + syncJobType.getName() + ", ";
@@ -116,7 +116,7 @@ public class SendEmailService {
         int i = costCenters.size();
         boolean start = true;
         for(CostCenter costCenter : costCenters){
-            if(i == 1 && !start){
+            if(i == 0 && !start){
                 stores =  "and " + stores + costCenter.locationName + " ";
             }else{
                 stores = stores + costCenter.locationName + ", ";

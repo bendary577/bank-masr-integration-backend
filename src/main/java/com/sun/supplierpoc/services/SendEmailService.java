@@ -2,9 +2,13 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,10 +16,18 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.internet.*;
+import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 @Service
@@ -24,18 +36,17 @@ public class SendEmailService {
     @Autowired
     private AccountRepo accountRepo;
 
+    @Autowired
+    private JavaMailSender mailSender;
+
     public JavaMailSender getJavaMailSender(Account account)
     {
-
         AccountEmailConfig emailConfig = account.getEmailConfig();
-
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(emailConfig.getHost());
         mailSender.setPort(emailConfig.getPort());
-
         mailSender.setUsername(emailConfig.getUsername());
         mailSender.setPassword(emailConfig.getPassword());
-
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
@@ -43,9 +54,83 @@ public class SendEmailService {
         props.put("mail.smtp.connectiontimeout", "10000");
         props.put("mail.smtp.timeout", "10000");
         props.put("mail.smtp.writetimeout", "10000");
-
         return mailSender;
     }
+
+    public boolean sendExportedSyncsMailMail(FileSystemResource f, Account account, User user, Date fromDate, Date toDate,
+                                             List<CostCenter> stores, String email, List<SyncJobType> syncJobTypes)  throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+
+            DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(email);
+            String mailSubject = "More rewards, just for YOU!";
+            String mailContent =
+                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;\n'>" +
+                            "<br>"+ "<p style='text-align:left'>" +
+                            "   Dear  " + user.getName()  + "<br> <br>" +
+                            " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
+                            "<span style=' padding-left:20px'>  for the " +
+                            getModules(syncJobTypes)
+                            +
+                            " modules,</span>" +
+                            " <span style=' padding-left:20px'> Located in " +
+                            getStores(stores)
+                            +
+                            ",</span><br>" +
+                            " <span style=' padding-left:20px'> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
+                            " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br><br>" +
+                            " Thanks and Regards,<br>" +
+                            " Anyware Software<br>" +
+                            "</div>";
+
+            messageHelper.addAttachment(f.getFilename(), f);
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    String getModules(List<SyncJobType> syncJobTypes){
+        String modules = "";
+        int i = syncJobTypes.size();
+        boolean start = true;
+        for(SyncJobType syncJobType  : syncJobTypes){
+            if(i == 0 && !start){
+                modules =  "and " + modules + syncJobType.getName() + " ";
+            }else{
+                modules = modules + syncJobType.getName() + ", ";
+            }
+            start = false;
+            i -= 1;
+        }
+        return modules;
+    }
+
+    String getStores(List<CostCenter> costCenters){
+        String stores = "";
+        int i = costCenters.size();
+        boolean start = true;
+        for(CostCenter costCenter : costCenters){
+            if(i == 0 && !start){
+                stores =  "and " + stores + costCenter.locationName + " ";
+            }else{
+                stores = stores + costCenter.locationName + ", ";
+            }
+            start = false;
+            i -= 1;
+        }
+        return stores;
+    }
+
 
     public void sendSimpleMail() throws MailException {
         String messageBody = "Thanks for being with us.";
@@ -65,77 +150,106 @@ public class SendEmailService {
 
         MimeMessage mailMessage = getJavaMailSender(account).createMimeMessage();
         try {
-
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             try {
                 messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(user.getEmail());
-
             String mailSubject = "More rewards, just for YOU!";
-
             String mailContent =
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 7%; margin-right: 7%;padding-left: 5%;"+
                             "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
                     "<br>";
-
             mailContent +=
                     "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
                             "   src='" + logoPath + "'>" + "<br> <br> \n";
-
             mailContent +=
                     "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
                             "   src='" + mailSubj + "'>" + "<br>\n";
-
             mailContent +=
 
                     "<p style='text-align:left'>" +
                             "   Dear  " + user.getName() + ",<br><br>" +
                             "As a privileged guest, benefit from the most rewarding <br>" + "" +
                             "advantages with great discounts on laundry services or <br>" +
-                            "food and beverages at participating outlets.<br>" +
-
-                            "</p>" +
-
+                            "food and beverages at participating outlets.<br>" + "</p>" +
                             "<p style=\"text-align: center ;font-weight: bold; margin-button : 10%\"> SCAN QR CODE <br> TO REDEEM OFFER</p>" +
                             "<img src='"+qrCodePath+"' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
-                            "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" +
-
-                            "<br>" +
-
+                            "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" + "<br>" +
                             "<p style='text-align:left'>" +
-
                             "<span style='text-align:left; font-weight: bold;'> " + "PARTICIPATING OUTLETS:" + "</span> <br>" +
                             "SANKOFA RESTAURANT | ONE2ONE BAR | POOL BAR & BBQ" +
-
                             "<br> <br>" +
-
                             "CONTACT US: +233 302 611 000 / hotel.accra@movenpick.com" +
-
                             "</p>" +
-
                             "<br>" +
-
                             "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
                                 "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
                             "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
-                            "</div>"+
-                            "</div>"
-//                            + "<div style=\"display: table;margin-left: auto; margin-right: auto;\">"
-            ;
+                            "</div>"+ "</div>";
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
 
-//            FileSystemResource resource = new FileSystemResource(new File(qrCodePath)); cid:image001
-//            messageHelper.addInline("image001", resource);
-
             getJavaMailSender(account).send(mailMessage);
 
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean sendWelcomeEmail(String logoPath, String mailSubj, String accountName, ApplicationUser user, Account account) throws MailException {
+
+        MimeMessage mailMessage = getJavaMailSender(account).createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            try {
+                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(user.getEmail());
+            String mailSubject = "More rewards, just for YOU!";
+            String mailContent =
+                    "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 7%; margin-right: 7%;padding-left: 5%;"+
+                            "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
+                            "<br>";
+            mailContent +=
+                    "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
+                            "   src='" + logoPath + "'>" + "<br> <br> \n";
+            mailContent +=
+                    "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
+                            "   src='" + mailSubj + "'>" + "<br>\n";
+            mailContent +=
+
+                    "<p style='text-align:left'>" +
+                            "   Dear  " + user.getName() + ",<br><br>" +
+                            "As a privileged guest, benefit from the most rewarding <br>" + "" +
+                            "advantages with great discounts on laundry services or <br>" +
+                            "food and beverages at participating outlets.<br>" + "</p>" +
+                            "<p style=\"text-align: center ;font-weight: bold; margin-button : 10%\"> SCAN QR CODE <br> TO REDEEM OFFER</p>" +
+                            "<img src='' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
+                            "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" + "<br>" +
+                            "<p style='text-align:left'>" +
+                            "<span style='text-align:left; font-weight: bold;'> " + "PARTICIPATING OUTLETS:" + "</span> <br>" +
+                            "SANKOFA RESTAURANT | ONE2ONE BAR | POOL BAR & BBQ" +
+                            "<br> <br>" +
+                            "CONTACT US: +233 302 611 000 / hotel.accra@movenpick.com" +
+                            "</p>" +
+                            "<br>" +
+                            "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
+                            "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
+                            "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
+                            "</div>"+ "</div>";
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            getJavaMailSender(account).send(mailMessage);
             return true;
         } catch (MessagingException e) {
             e.printStackTrace();

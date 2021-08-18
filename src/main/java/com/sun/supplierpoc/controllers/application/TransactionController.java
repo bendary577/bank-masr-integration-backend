@@ -40,7 +40,6 @@ public class TransactionController {
     @Autowired
     private AccountRepo accountRepo;
 
-
     @RequestMapping("/getTransactions")
     public List<Transactions> getTransactionByType(Principal principal,@RequestParam("time") String time,
                                                    @RequestParam("transactionType") String transactionType) {
@@ -85,7 +84,7 @@ public class TransactionController {
 
     @RequestMapping("/getTransactionsInRange")
     @CrossOrigin("*")
-    public ResponseEntity getTotalSpendInTransactions(Principal principal,
+    public ResponseEntity getTransactionsInRange(Principal principal,
                                                       @RequestParam("transactionType") String transactionType,
                                                       @RequestParam("startTime") String startTime,
                                                       @RequestParam("endTime") String endTime,
@@ -180,6 +179,5 @@ public class TransactionController {
         }
 
     }
-
 
 }

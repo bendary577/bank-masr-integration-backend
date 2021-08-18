@@ -1,14 +1,22 @@
 package com.sun.supplierpoc;
 
 public class Constants {
+
     ///////////////////////////////////////// Sync Job Data Status//////////////////////////////////////////////////////
     public static String SUCCESS = "Success";
     public static String FAILED = "Failed";
     public static String RECEIVED = "Received";
     public static String RETRY_TO_SEND = "Retry to Send";
+    public static  final String INVALID_FEATURE = "Invalid feature for role ";
+    public static  final String INVALID_FEATURE_ID = "Invalid feature with ID ";
+
+    public static String GENERIC = "Generic";
 
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_USER = "Invalid user.";
+    public static String NOT_ELIGIBLE_ACCOUNT = "This account is not eligible for this action.";
+    public static String NOT_ELIGIBLE_USER = "This user is not eligible for this action.";
+    public static String ACCOUNT_NOT_EXIST = "This account is not exist.";
 
     public static String EMPTY_LOCATION = "Locations parameter is empty. Please make a selection.";
     public static String INVALID_REVENUE_CENTER = "Invalid revenue center";
@@ -52,6 +60,8 @@ public class Constants {
 
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
+    public static String USE_WALLET = "Wallet";
+
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
@@ -224,7 +234,17 @@ public class Constants {
 
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
 
+    ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
+    public static final String ADD_ROLE = "add_role";
+    public static final String ADD_USER_ROLE = "add_user_role";
+    public static final String ADD_USER_FEATURE = "add_user_feature";
+    public static final String ADD_FEATURE = "add_feature";
+    public static  final String CHARGE_WALLET = "charge_wallet";
+    public static  final String DEDUCT_WALLET = "deduct_wallet";
 
+
+    //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
+    public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
 
     public Constants() {}
 }

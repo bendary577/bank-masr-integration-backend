@@ -24,6 +24,8 @@ import javax.mail.Multipart;
 import javax.mail.internet.*;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -62,6 +64,7 @@ public class SendEmailService {
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
 
+            DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(email);
             String mailSubject = "More rewards, just for YOU!";
@@ -70,15 +73,15 @@ public class SendEmailService {
                             "<br>"+ "<p style='text-align:left'>" +
                             "   Dear  " + user.getName()  + "<br> <br>" +
                             " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
-                            "<span style=' padding-left:20px'>  For the " +
+                            "<span style=' padding-left:20px'>  for the " +
                             getModules(syncJobTypes)
                             +
-                            " modules,</span><br>" +
+                            " modules,</span>" +
                             " <span style=' padding-left:20px'> Located in " +
                             getStores(stores)
                             +
                             ",</span><br>" +
-                            " <span style=' padding-left:20px'> Within the date range from" + fromDate.toString() + " to " + toDate.toString() + " ,</span><br>" +
+                            " <span style=' padding-left:20px'> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
                             " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br><br>" +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
@@ -106,6 +109,7 @@ public class SendEmailService {
             }else{
                 modules = modules + syncJobType.getName() + ", ";
             }
+            start = false;
             i -= 1;
         }
         return modules;
@@ -121,6 +125,7 @@ public class SendEmailService {
             }else{
                 stores = stores + costCenter.locationName + ", ";
             }
+            start = false;
             i -= 1;
         }
         return stores;

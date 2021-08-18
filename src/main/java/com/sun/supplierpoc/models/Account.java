@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 public class Account implements Serializable {
+
     @Id
     private String id;
     private String name;
@@ -21,9 +22,13 @@ public class Account implements Serializable {
      * Version 2: https://mte4-ohra-idm.oracleindustry.com/oidc-ui/
      * */
     private String microsVersion;
+    private String sendMethod;
     private ArrayList<AccountCredential> accountCredentials;
     private int locationQuota;
     private Date creationDate;
+    private String apiKey;
+    private String clientId;
+
     private boolean deleted;
     private AccountEmailConfig emailConfig;
 
@@ -149,5 +154,22 @@ public class Account implements Serializable {
     public void setFeatures(List<Feature> features) {
         this.features = features;
     }
+
+    public String getSendMethod() {
+        return sendMethod;
+    }
+
+    public void setSendMethod(String sendMethod) {
+        this.sendMethod = sendMethod;
+    }
+
+    public String getApiKey() { return apiKey; }
+
+    public void setApiKey(String apiKey) { this.apiKey = apiKey; }
+
+    public String getClientId() { return clientId; }
+
+    public void setClientId(String clientId) { this.clientId = clientId; }
+
 }
 

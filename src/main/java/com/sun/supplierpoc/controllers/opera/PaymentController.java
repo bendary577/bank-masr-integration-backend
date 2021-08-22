@@ -20,6 +20,7 @@ import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
+import com.sun.supplierpoc.services.opera.OperaTransactionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,9 @@ public class PaymentController {
     InvokerUserService invokerUserService;
     @Autowired
     private OperaTransactionRepo operaTransactionRepo;
+
+    @Autowired
+    private OperaTransactionService operaTransactionService;
 
     private Conversions conversions = new Conversions();
 
@@ -388,9 +392,13 @@ public class PaymentController {
 
     @GetMapping(value = "/listOperaTransaction")
     @ResponseBody
-    public List<OperaTransaction> listOperaTransaction(Principal principal,
+    public HashMap<String, Object> listOperaTransaction(Principal principal,
                                                        @RequestParam(name = "startDate", required = false) String startDate,
-                                                       @RequestParam(name = "endDate", required = false) String endDate){
+                                                       @RequestParam(name = "endDate", required = false) String endDate,
+                                                       @RequestParam(name="cardNumber", required = false) String cardNumber){
+
+        HashMap<String, Object> response = new HashMap<>();
+
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -398,27 +406,19 @@ public class PaymentController {
                 Account account = accountOptional.get();
 
                 if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
-                    return operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
+                    response.put("transactions", operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false));
+                    return response;
                 } else{
-                    Date start;
-                    Date end;
-
-                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                    start = df.parse(startDate);
-                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-
-                    return operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
-                            account.getId(), false, start, end);
+                    response = operaTransactionService.filterTransactionsAndCalculateTotals(startDate, endDate, cardNumber, account);
+                    return response;
                 }
-
-
             }else {
-                return new ArrayList<>();
+                return response;
             }
 
         }catch (Exception ex){
             ex.printStackTrace();
-            return new ArrayList<>();
+            return response;
         }
     }
 

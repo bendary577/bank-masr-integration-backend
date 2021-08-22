@@ -84,11 +84,11 @@ public class AppUserController {
                                                    @RequestPart(name = "cardCode" , required = true) String cardCode,
                                                    @RequestPart(name = "email", required = true) String email,
                                                    @RequestPart(name = "groupId", required = true) String groupId,
-                                                   @RequestPart(name = "userId", required = true) String userId,
+                                                   @RequestPart(name = "userId", required = false) String userId,
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    @RequestParam(name = "mobile", required = true) String mobile,
                                                    @RequestParam(name = "balance", required = true) String balance,
-                                                   @RequestPart(name="accompaniedGuests", required = true) String accompaniedGuests,
+                                                   @RequestPart(name="accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
         HashMap response = new HashMap();

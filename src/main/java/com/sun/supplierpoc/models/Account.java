@@ -33,7 +33,7 @@ public class Account implements Serializable {
     private AccountEmailConfig emailConfig;
 
     @DBRef
-    private List<Feature> features;
+    private List<Feature> features = new ArrayList<>();
 
     public Account() {
     }

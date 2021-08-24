@@ -1,10 +1,14 @@
 package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 import java.util.*;
 
 
@@ -40,6 +44,10 @@ public class MenuItemMapController {
         return response;
     }
 
+    @RequestMapping(value = "/getMenuItems")
+    @ResponseBody
+    public List<MenuItemMap> getAccount(Principal principal){
 
-
+        return menuItemsMapRepo.findAll();
+    }
 }

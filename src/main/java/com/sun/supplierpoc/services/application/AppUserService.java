@@ -8,6 +8,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.applications.AccompaniedGuests;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.applications.Wallet;
@@ -53,7 +54,7 @@ public class AppUserService {
 
     public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId,
                                   String userId, MultipartFile image, Account account, GeneralSettings generalSettings,
-                                  String accompaniedGuestsJson, String balance, String cardCode) {
+                                  String accompaniedGuestsJson, String balance, String cardCode, double expire) {
 
         HashMap response = new HashMap();
 
@@ -72,7 +73,7 @@ public class AppUserService {
                 return response;
             }
 
-            if (userRepo.existsByEmailAndAccountId(email, account.getId())) {
+            if (email!= null && email.equals("") && userRepo.existsByEmailAndAccountId(email, account.getId())) {
                 response.put("message", "There is user exist with this email.");
                 response.put("success", false);
                 return response;
@@ -90,6 +91,9 @@ public class AppUserService {
                 }
             }
 
+            if(name == null || name .equals("")){
+                name = "- - - -";
+            }
             applicationUser.setName(name);
             applicationUser.setEmail(email);
             applicationUser.setLogoUrl(logoUrl);
@@ -125,8 +129,21 @@ public class AppUserService {
                 }
             } else {
 
+                ObjectMapper objectMapper = new ObjectMapper();
+                List<AccompaniedGuests> accompaniedGuests = null;
+
+                try {
+                    accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {});
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+                applicationUser.setAccompaniedGuests(accompaniedGuests);
+
+
                 applicationUser.setCode(cardCode);
                 applicationUser.setWallet(new Wallet(Double.parseDouble(balance)));
+                applicationUser.setExpire(expire);
+
                 userRepo.save(applicationUser);
 
                 response.put("message", "User added successfully.");
@@ -181,7 +198,7 @@ public class AppUserService {
                 } else {
                     if (!accompaniedGuestsJson.equals("")) {
                         ObjectMapper objectMapper = new ObjectMapper();
-                        List<ApplicationUser> accompaniedGuests = null;
+                        List<AccompaniedGuests> accompaniedGuests = null;
                         try {
                             accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {});
                         } catch (JsonProcessingException e) {

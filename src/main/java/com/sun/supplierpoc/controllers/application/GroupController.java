@@ -84,7 +84,7 @@ public class GroupController {
 
             Account account = accountOptional.get();
 
-            Optional<Group> group = groupRepo.findByAccountIdAndDeletedAndName(account.getId(),Constants.GENERIC, false);
+            Optional<Group> group = groupRepo.findByAccountIdAndDeletedAndName(account.getId(),false, Constants.GENERIC);
 
             return ResponseEntity.status(HttpStatus.OK).body(group);
         }

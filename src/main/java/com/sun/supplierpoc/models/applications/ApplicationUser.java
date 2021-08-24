@@ -2,7 +2,6 @@ package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -25,7 +24,9 @@ public class ApplicationUser implements Serializable {
     private boolean deleted;
     private Wallet wallet;
     private String mobile;
-    private List<ApplicationUser> accompaniedGuests;
+    private double expire;
+    private boolean generic;
+    private List<AccompaniedGuests> accompaniedGuests;
 
     public String getId() {
         return id;
@@ -131,11 +132,28 @@ public class ApplicationUser implements Serializable {
         this.mobile = mobile;
     }
 
-    public List<ApplicationUser> getAccompaniedGuests() {
+    public List<AccompaniedGuests> getAccompaniedGuests() {
         return accompaniedGuests;
     }
 
-    public void setAccompaniedGuests(List<ApplicationUser> accompaniedGuests) {
+    public void setAccompaniedGuests(List<AccompaniedGuests> accompaniedGuests) {
         this.accompaniedGuests = accompaniedGuests;
     }
+
+    public double getExpire() {
+        return expire;
+    }
+
+    public void setExpire(double expire) {
+        this.expire = expire;
+    }
+
+    public boolean isGeneric() {
+        return generic;
+    }
+
+    public void setGeneric(boolean generic) {
+        this.generic = generic;
+    }
+
 }

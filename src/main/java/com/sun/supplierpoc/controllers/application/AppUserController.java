@@ -80,14 +80,15 @@ public class AppUserController {
     @ResponseBody
     public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag", required = true) boolean addFlag,
                                                    @RequestParam(name = "isGeneric", required = true) boolean isGeneric,
-                                                   @RequestPart(name = "name" , required = true) String name,
+                                                   @RequestPart(name = "name" , required = false) String name,
                                                    @RequestPart(name = "cardCode" , required = true) String cardCode,
-                                                   @RequestPart(name = "email", required = true) String email,
-                                                   @RequestPart(name = "groupId", required = true) String groupId,
+                                                   @RequestPart(name = "email", required = false) String email,
+                                                   @RequestPart(name = "groupId", required = false) String groupId,
                                                    @RequestPart(name = "userId", required = false) String userId,
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
-                                                   @RequestParam(name = "mobile", required = true) String mobile,
-                                                   @RequestParam(name = "balance", required = true) String balance,
+                                                   @RequestParam(name = "mobile", required = false) String mobile,
+                                                   @RequestParam(name = "balance", required = false) String balance,
+                                                   @RequestParam(name = "expire", required = false) double expire,
                                                    @RequestPart(name="accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
@@ -104,7 +105,7 @@ public class AppUserController {
 
                response = appUserService
                        .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId,
-                               image, account, generalSettings, accompaniedGuests, balance, cardCode);
+                               image, account, generalSettings, accompaniedGuests, balance, cardCode, expire);
 
                if( (Boolean) response.get("success")){
                    return ResponseEntity.status(HttpStatus.OK).body(response);

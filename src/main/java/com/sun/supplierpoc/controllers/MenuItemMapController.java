@@ -37,7 +37,7 @@ public class MenuItemMapController {
         // create new account and user
         menuItem = mongoTemplate.save(menuItem);
 
-        response.put("message", "Account added successfully.");
+        response.put("message", "Menu item added successfully.");
         response.put("success", true);
         response.put("menuItem", menuItem);
 

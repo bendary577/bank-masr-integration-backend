@@ -17,21 +17,22 @@ public class MenuItemMap implements Serializable {
     private String availability;
     private List<CondimentResponse> requiredCondiments;
     private List<CondimentResponse> optionalCondiments;
-    private int rating;
+    private double rating;
     private double smallPrice;
     private double mediumPrice;
     private double largePrice;
     private String imageUrl;
-    private Date creationDate;
+    private Date creationDate = new Date();
     private boolean deleted;
+    private String category;
 
     public MenuItemMap() {
     }
 
     public MenuItemMap(int id, String firstName, String secondName, String availability, double smallPrice,
-                       double mediumPrice, double largePrice, int rating, List<CondimentResponse> requiredCondiments,
-                       List<CondimentResponse>optionalCondiments, String imageUrl, Date creationDate,
-                       boolean deleted) {
+                       double mediumPrice, double largePrice, double rating, List<CondimentResponse> requiredCondiments,
+                       List<CondimentResponse>optionalCondiments, String imageUrl, boolean deleted,
+                       String category) {
         this.id = id;
         this.firstName = firstName;
         this.secondName = secondName;
@@ -43,8 +44,8 @@ public class MenuItemMap implements Serializable {
         this.mediumPrice = mediumPrice;
         this.largePrice = largePrice;
         this.imageUrl = imageUrl;
-        this.creationDate = creationDate;
         this.deleted = deleted;
+        this.category = category;
     }
 
     public int getId() {
@@ -55,11 +56,11 @@ public class MenuItemMap implements Serializable {
         this.id = id;
     }
 
-    public int getRating() {
+    public double getRating() {
         return rating;
     }
 
-    public void setRating(int rating) {
+    public void setRating(double rating) {
         this.rating = rating;
     }
 
@@ -149,5 +150,13 @@ public class MenuItemMap implements Serializable {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 }

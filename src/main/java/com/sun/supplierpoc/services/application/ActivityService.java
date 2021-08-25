@@ -100,14 +100,14 @@ public class ActivityService {
 
                     if(user.getWallet() != null){
 
-                        double balance = user.getWallet().getBalance();
-                        double newBalance = balance - transaction.getAfterDiscount();
-
-                        WalletHistory walletHistory = new WalletHistory(transactionType.getName() + "in" + revenueCenter.getRevenueCenter(),
-                                amount, balance, newBalance);
-
-                        user.getWallet().setBalance(newBalance);
-                        user.getWallet().getWalletHistory().add(walletHistory);
+////                        double balance = user.getWallet().getBalance();
+//                        double newBalance = balance - transaction.getAfterDiscount();
+//
+//                        WalletHistory walletHistory = new WalletHistory(transactionType.getName() + "in" + revenueCenter.getRevenueCenter(),
+//                                amount, balance, newBalance);
+//
+//                        user.getWallet().setBalance(newBalance);
+//                        user.getWallet().getWalletHistory().add(walletHistory);
                     }
 
                     userRepo.save(user);

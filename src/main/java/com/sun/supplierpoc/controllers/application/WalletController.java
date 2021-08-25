@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers.application;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.applications.Balance;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -35,7 +36,7 @@ public class WalletController {
 
     @PostMapping("/chargeWallet")
     public ResponseEntity<?> chargeWallet(@RequestParam("userId") String userId,
-                                          @RequestParam("amount") double amount,
+                                          @RequestBody Balance balance,
                                           Principal principal){
 
         Response response = new Response();
@@ -48,7 +49,7 @@ public class WalletController {
             if(accountOptional.isPresent()) {
                 if (roleService.hasRole(authedUser, Constants.CHARGE_WALLET)) {
 
-                    response = walletService.chargeWallet(userId, amount);
+                    response = walletService.chargeWallet(userId, balance);
 
                 }else{
                     response.setStatus(false);
@@ -67,38 +68,38 @@ public class WalletController {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @PostMapping("/deductFromWallet")
-    public ResponseEntity<?> deductFromWallet(@RequestParam("userId") String userId,
-                                          @RequestParam("amount") double amount,
-                                          Principal principal){
-
-        Response response = new Response();
-        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-        if(authedUser != null){
-
-            Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
-
-            if(accountOptional.isPresent()) {
-                if (roleService.hasRole(authedUser, Constants.DEDUCT_WALLET)) {
-
-                    response = walletService.deductWallet(userId, amount);
-
-                }else{
-                    response.setStatus(false);
-                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
-                }
-            }else{
-                response.setStatus(false);
-                response.setMessage(Constants.NOT_ELIGIBLE_ACCOUNT);
-            }
-        }else{
-            response.setStatus(false);
-            response.setMessage(Constants.INVALID_USER);
-            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-        }
-
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-    }
+//    @PostMapping("/deductFromWallet")
+//    public ResponseEntity<?> deductFromWallet(@RequestParam("userId") String userId,
+//                                          @RequestParam("amount") double amount,
+//                                          Principal principal){
+//
+//        Response response = new Response();
+//        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+//
+//        if(authedUser != null){
+//
+//            Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
+//
+//            if(accountOptional.isPresent()) {
+//                if (roleService.hasRole(authedUser, Constants.DEDUCT_WALLET)) {
+//
+//                    response = walletService.deductWallet(userId, amount);
+//
+//                }else{
+//                    response.setStatus(false);
+//                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
+//                }
+//            }else{
+//                response.setStatus(false);
+//                response.setMessage(Constants.NOT_ELIGIBLE_ACCOUNT);
+//            }
+//        }else{
+//            response.setStatus(false);
+//            response.setMessage(Constants.INVALID_USER);
+//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+//        }
+//
+//        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+//    }
 
 }

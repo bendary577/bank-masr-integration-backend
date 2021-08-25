@@ -12,14 +12,13 @@ public class Wallet implements Serializable {
 
     private String Id;
     private String appUserId;
-    private double balance;
+    private List<Balance> balance;
     private List<WalletHistory> walletHistory = new ArrayList<WalletHistory>();
-    private List<RevenueCenter> revenueCenters = new ArrayList<>();
 
     public Wallet() {
     }
 
-    public Wallet(double balance) {
+    public Wallet(List<Balance> balance) {
         this.balance = balance;
     }
 
@@ -31,11 +30,23 @@ public class Wallet implements Serializable {
         this.appUserId = appUserId;
     }
 
-    public double getBalance() {
+    public static long getSerialVersionUID() {
+        return serialVersionUID;
+    }
+
+    public String getId() {
+        return Id;
+    }
+
+    public void setId(String id) {
+        Id = id;
+    }
+
+    public List<Balance> getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(List<Balance> balance) {
         this.balance = balance;
     }
 

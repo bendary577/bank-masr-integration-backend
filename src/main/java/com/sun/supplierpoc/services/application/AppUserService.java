@@ -8,10 +8,8 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.applications.AccompaniedGuests;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.applications.Group;
-import com.sun.supplierpoc.models.applications.Wallet;
+import com.sun.supplierpoc.models.applications.*;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.ImageService;
@@ -141,7 +139,8 @@ public class AppUserService {
 
 
                 applicationUser.setCode(cardCode);
-                applicationUser.setWallet(new Wallet(Double.parseDouble(balance)));
+                List<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
+                applicationUser.setWallet(new Wallet(List.of(new Balance(Double.parseDouble(balance), revenueCenters))));
                 applicationUser.setExpire(expire);
 
                 userRepo.save(applicationUser);

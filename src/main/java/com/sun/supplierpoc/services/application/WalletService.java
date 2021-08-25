@@ -2,6 +2,7 @@ package com.sun.supplierpoc.services.application;
 
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.models.applications.Balance;
 import com.sun.supplierpoc.models.applications.Wallet;
 import com.sun.supplierpoc.models.applications.WalletHistory;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -16,7 +17,7 @@ public class WalletService {
     @Autowired
     private ApplicationUserRepo applicationUserRepo;
 
-    public Response chargeWallet(String userId, double amount) {
+    public Response chargeWallet(String userId, Balance balance) {
 
         Response response = new Response();
 
@@ -27,16 +28,16 @@ public class WalletService {
 
             try{
 
-                Wallet wallet = applicationUser.getWallet();
-                double balance = wallet.getBalance();
-                double newBalance = balance + amount ;
-                wallet.setBalance(newBalance);
-                WalletHistory walletHistory = new WalletHistory("Charge Wallet" , amount , balance, newBalance);
-                wallet.getWalletHistory().add(walletHistory);
-                applicationUser.setWallet(wallet);
-                applicationUserRepo.save(applicationUser);
-                response.setStatus(true);
-                response.setData(applicationUser);
+//                Wallet wallet = applicationUser.getWallet();
+//                double balance = wallet.getBalance();
+//                double newBalance = balance + amount ;
+//                wallet.setBalance(newBalance);
+//                WalletHistory walletHistory = new WalletHistory("Charge Wallet" , amount , balance, newBalance);
+//                wallet.getWalletHistory().add(walletHistory);
+//                applicationUser.setWallet(wallet);
+//                applicationUserRepo.save(applicationUser);
+//                response.setStatus(true);
+//                response.setData(applicationUser);
                 return response;
             }catch(Exception e) {
                 response.setMessage(e.getMessage());
@@ -57,16 +58,16 @@ public class WalletService {
         if(applicationUserOptional.isPresent()){
             ApplicationUser applicationUser = applicationUserOptional.get();
             try{
-                Wallet wallet = applicationUser.getWallet();
-                double balance = wallet.getBalance();
-                double newBalance = balance - amount ;
-                wallet.setBalance(newBalance);
-                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet" , amount , balance, newBalance);
-                wallet.getWalletHistory().add(walletHistory);
-                applicationUser.setWallet(wallet);
-                applicationUserRepo.save(applicationUser);
-                response.setStatus(true);
-                response.setData(applicationUser);
+//                Wallet wallet = applicationUser.getWallet();
+//                double balance = wallet.getBalance();
+//                double newBalance = balance - amount ;
+//                wallet.setBalance(newBalance);
+//                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet" , amount , balance, newBalance);
+//                wallet.getWalletHistory().add(walletHistory);
+//                applicationUser.setWallet(wallet);
+//                applicationUserRepo.save(applicationUser);
+//                response.setStatus(true);
+//                response.setData(applicationUser);
                 return response;
             }catch(Exception e) {
                 response.setMessage(e.getMessage());

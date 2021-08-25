@@ -1,17 +1,16 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.simphony.response.CondimentResponse;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 public class MenuItemMap implements Serializable {
     @Id
-    private int id;
+    private ObjectId id = ObjectId.get();
     private String firstName;
     private String secondName;
     private String availability;
@@ -30,11 +29,10 @@ public class MenuItemMap implements Serializable {
     public MenuItemMap() {
     }
 
-    public MenuItemMap(int id, String firstName, String secondName, String availability, double smallPrice,
+    public MenuItemMap(String firstName, String secondName, String availability, double smallPrice,
                        double mediumPrice, double largePrice, double rating, List<CondimentResponse> requiredCondiments,
                        List<CondimentResponse>optionalCondiments, String imageUrl, boolean deleted,
                        String category, String ingredients) {
-        this.id = id;
         this.firstName = firstName;
         this.secondName = secondName;
         this.availability = availability;
@@ -50,12 +48,8 @@ public class MenuItemMap implements Serializable {
         this.ingredients = ingredients;
     }
 
-    public int getId() {
+    public ObjectId getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public double getRating() {

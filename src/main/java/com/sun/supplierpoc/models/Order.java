@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.simphony.response.CondimentResponse;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
@@ -9,7 +10,7 @@ import java.util.List;
 
 public class Order implements Serializable {
     @Id
-    private int id;
+    private ObjectId _id = ObjectId.get();
     private String name;
     private int quantity;
     private String size;
@@ -23,9 +24,8 @@ public class Order implements Serializable {
     public Order() {
     }
 
-    public Order(int id, String name, int quantity, String size, List<CondimentResponse> toppings,
+    public Order(String name, int quantity, String size, List<CondimentResponse> toppings,
                  double price, int spicyLevel, String imageUrl) {
-        this.id = id;
         this.name = name;
         this.quantity = quantity;
         this.size = size;
@@ -35,12 +35,8 @@ public class Order implements Serializable {
         this.imageUrl = imageUrl;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
+    public ObjectId getId() {
+        return _id;
     }
 
     public String getName() {

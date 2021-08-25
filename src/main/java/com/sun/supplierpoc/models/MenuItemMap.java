@@ -25,6 +25,7 @@ public class MenuItemMap implements Serializable {
     private Date creationDate = new Date();
     private boolean deleted;
     private String category;
+    private String ingredients;
 
     public MenuItemMap() {
     }
@@ -32,7 +33,7 @@ public class MenuItemMap implements Serializable {
     public MenuItemMap(int id, String firstName, String secondName, String availability, double smallPrice,
                        double mediumPrice, double largePrice, double rating, List<CondimentResponse> requiredCondiments,
                        List<CondimentResponse>optionalCondiments, String imageUrl, boolean deleted,
-                       String category) {
+                       String category, String ingredients) {
         this.id = id;
         this.firstName = firstName;
         this.secondName = secondName;
@@ -46,6 +47,7 @@ public class MenuItemMap implements Serializable {
         this.imageUrl = imageUrl;
         this.deleted = deleted;
         this.category = category;
+        this.ingredients = ingredients;
     }
 
     public int getId() {
@@ -158,5 +160,13 @@ public class MenuItemMap implements Serializable {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getIngredients() {
+        return ingredients;
+    }
+
+    public void setIngredients(String ingredients) {
+        this.ingredients = ingredients;
     }
 }

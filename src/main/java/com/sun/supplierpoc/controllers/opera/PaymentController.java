@@ -77,7 +77,7 @@ public class PaymentController {
         return new MappingJackson2XmlHttpMessageConverter(mapper);
     }
 
-    @PostMapping(value = "/paymentTest", produces = MediaType.APPLICATION_XML_VALUE)
+    @PostMapping(value = "/testPayment", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public TransactionResponse operaPayment(@RequestBody TransactionRequest transactionRequest) {
 
@@ -97,7 +97,6 @@ public class PaymentController {
 //                break;
 //            case "07":transactionResponse=  paymentTransaction(transactionRequest);
 //                break;
-//
 //        }
 
         transactionResponse = paymentTransaction(transactionRequest);

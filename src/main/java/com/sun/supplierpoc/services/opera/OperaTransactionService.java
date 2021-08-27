@@ -2,10 +2,6 @@ package com.sun.supplierpoc.services.opera;
 
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.OperaTransaction;
-import com.sun.supplierpoc.models.TransactionType;
-import com.sun.supplierpoc.models.Transactions;
-import com.sun.supplierpoc.models.applications.Group;
-import com.sun.supplierpoc.models.simphony.response.TransInRange;
 import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

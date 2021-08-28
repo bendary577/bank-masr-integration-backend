@@ -555,10 +555,10 @@ public class Conversions {
 
     }
 
-    public boolean checkIfUserHasRole(List<Role> roles, String chargeWallet) {
+    public boolean checkIfUserHasRole(List<Role> roles, String role) {
 
-        for(Role role : roles){
-            if(role.getReference().equals(chargeWallet)){
+        for(Role tempRole : roles){
+            if(tempRole.getReference().equals(role)){
                 return true;
             }
         }

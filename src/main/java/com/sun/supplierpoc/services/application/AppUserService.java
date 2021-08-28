@@ -52,7 +52,7 @@ public class AppUserService {
 
     public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId,
                                   String userId, MultipartFile image, Account account, GeneralSettings generalSettings,
-                                  String accompaniedGuestsJson, String balance, String cardCode, double expire) {
+                                  String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile) {
 
         HashMap response = new HashMap();
 
@@ -95,6 +95,7 @@ public class AppUserService {
             applicationUser.setName(name);
             applicationUser.setEmail(email);
             applicationUser.setLogoUrl(logoUrl);
+            applicationUser.setMobile(mobile);
             applicationUser.setAccountId(account.getId());
             applicationUser.setCreationDate(new Date());
             applicationUser.setDeleted(false);
@@ -136,7 +137,6 @@ public class AppUserService {
                     e.printStackTrace();
                 }
                 applicationUser.setAccompaniedGuests(accompaniedGuests);
-
 
                 applicationUser.setCode(cardCode);
                 List<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
@@ -221,6 +221,7 @@ public class AppUserService {
                 }
 
                 applicationUser.setName(name);
+                applicationUser.setMobile(mobile);
                 applicationUser.setAccountId(account.getId());
                 group.setLastUpdate(new Date());
                 userRepo.save(applicationUser);

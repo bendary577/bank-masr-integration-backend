@@ -19,6 +19,7 @@ public class Account implements Serializable {
      * Version 2: https://mte4-ohra-idm.oracleindustry.com/oidc-ui/
      * */
     private String microsVersion;
+    private String sendMethod;
     private ArrayList<AccountCredential> accountCredentials;
     private int locationQuota;
     private Date creationDate;
@@ -136,5 +137,13 @@ public class Account implements Serializable {
 
     public void setEmailConfig(AccountEmailConfig emailConfig) {
         this.emailConfig = emailConfig;
+    }
+
+    public String getSendMethod() {
+        return sendMethod;
+    }
+
+    public void setSendMethod(String sendMethod) {
+        this.sendMethod = sendMethod;
     }
 }

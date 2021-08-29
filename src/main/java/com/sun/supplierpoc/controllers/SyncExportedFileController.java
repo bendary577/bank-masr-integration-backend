@@ -123,12 +123,13 @@ public class SyncExportedFileController {
         DateFormat dateFormat = new SimpleDateFormat("MMyyy");
 
         Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         calendar.add(Calendar.MONTH, -1);
 
         String date = dateFormat.format(calendar.getTime());
 
-        String fileDirectory = account.getName() + "/" + syncJobType.getName();
+        String fileDirectory = account.getName() + "/" + syncJobType.getName() + "/" + year;
         String fileName = date + ".ndf";
 
         String headerKey = HttpHeaders.CONTENT_DISPOSITION;

@@ -168,7 +168,7 @@ public class BookedProductionController {
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(bookedProductionSyncJobType, addedBookedProduction);
                         File file = exporter.prepareNDFFile(addedBookedProduction, bookedProductionSyncJobType, account.getName(), "");
 
-                        if(ftpClient != null){
+                        if(file != null && ftpClient != null){
                             if(ftpClient.open()){
                                 boolean sendFileFlag = false;
                                 try {

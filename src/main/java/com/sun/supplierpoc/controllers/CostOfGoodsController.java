@@ -268,7 +268,8 @@ public class CostOfGoodsController {
                             }
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
-                            imageService.storeFile(file);
+                            if(file != null)
+                                imageService.storeFile(file);
                         }
 
                         if (ftpClient != null) {
@@ -372,7 +373,8 @@ public class CostOfGoodsController {
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
 
                 file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getLocation().costCenterReference);
-                locationFiles.add(file);
+                if(file != null)
+                    locationFiles.add(file);
             }
             return locationFiles;
         } catch (Exception e) {

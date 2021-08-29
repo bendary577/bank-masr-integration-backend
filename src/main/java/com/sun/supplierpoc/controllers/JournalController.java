@@ -54,7 +54,11 @@ public class JournalController {
     @Autowired
     private ImageService imageService;
     @Autowired
+    private GoogleDriveService googleDriveService;
+    @Autowired
     private InvoiceController invoiceController;
+    @Autowired
+    FtpService ftpService;
 
     public Conversions conversions = new Conversions();
 
@@ -216,18 +220,18 @@ public class JournalController {
         try {
             Response data;
 
-            if(account.getMicrosVersion().equals("version1")){
+            if (account.getMicrosVersion().equals("version1")) {
                 if (consumptionBasedOnType.equals("Cost Center")) {
                     data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
-                } else if (consumptionBasedOnType.equals("Location")){
+                } else if (consumptionBasedOnType.equals("Location")) {
                     data = journalService.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
-                } else{
+                } else {
                     ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
                     ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
                     data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
                             consumptionCostCenters, account);
                 }
-            }else{
+            } else {
                 ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
                 data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
             }
@@ -237,10 +241,10 @@ public class JournalController {
                 ArrayList<JournalBatch> addedJournalBatches;
 
                 if (journalBatches.size() > 0) {
-                    if (consumptionBasedOnType.equals("Cost Center") || consumptionBasedOnType.equals("Location")){
+                    if (consumptionBasedOnType.equals("Cost Center") || consumptionBasedOnType.equals("Location")) {
                         addedJournalBatches = journalService.saveJournalData(journalBatches, journalSyncJobType, syncJob,
                                 businessDate, fromDate);
-                    }else{
+                    } else {
                         addedJournalBatches = journalService.saveJournalDataByItemGroup(journalBatches, journalSyncJobType, syncJob,
                                 businessDate, fromDate);
                     }
@@ -269,69 +273,39 @@ public class JournalController {
                             response.put("message", "Failed  to connect to Sun System.");
                             response.put("success", false);
                         }
-                    } else if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
+                    } else if (addedJournalBatches.size() > 0 && !account.getSendMethod().equals("other")) {
                         List<SyncJobData> consumptionList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                         File file;
-                        FtpClient ftpClient = new FtpClient();
-                        ftpClient = ftpClient.createFTPClient(account);
                         SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(journalSyncJobType, consumptionList);
 
-                        if (journalSyncJobType.getConfiguration().exportFilePerLocation) {
-                            ArrayList<File> files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
-                            for (File f : files) {
-                                try{
-                                    imageService.storeFile(f);
-                                } catch (Exception e) {}
+                        boolean sendStatus = true;
+                        String fileStoragePath = "";
+                        ArrayList<File> files = new ArrayList<>();
 
-                            }
+                        if (journalSyncJobType.getConfiguration().exportFilePerLocation) {
+                            files = createConsumptionFilePerLocation(addedJournalBatches, journalSyncJobType, account.getName());
                         } else {
                             file = exporter.prepareNDFFile(consumptionList, journalSyncJobType, account.getName(), "");
-                            try{
-                                imageService.storeFile(file);
-                            } catch (Exception e) {}
+                            if(file != null)
+                                files.add(file);
                         }
 
-                        if (ftpClient != null) {
-                            if (ftpClient.open()) {
-//                                boolean sendFileFlag = false;
-//                                try {
-//                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
-//                                    ftpClient.close();
-//                                } catch (IOException e) {
-//                                    ftpClient.close();
-//                                }
-//
-//                                if (sendFileFlag){
-                                if (true) {
-                                    syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
-                                    syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                            "Sync consumption successfully.", Constants.SUCCESS);
+                        sendStatus = SalesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
 
-                                    response.put("success", true);
-                                    response.put("message", "Sync consumption successfully.");
-                                } else {
-                                    syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.FAILED);
-                                    syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                            "Failed to sync consumption to sun system via FTP.", Constants.FAILED);
-
-                                    response.put("success", false);
-                                    response.put("message", "Failed to sync consumption to sun system via FTP.");
-                                }
-                            } else {
-                                syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
-
-                                response.put("success", false);
-                                response.put("message", "Failed to connect to sun system via FTP.");
-                            }
-                        } else {
+                        if (sendStatus) {
                             syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
                                     "Sync consumption successfully.", Constants.SUCCESS);
 
                             response.put("success", true);
                             response.put("message", "Sync sales successfully.");
+                        } else {
+                            syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
+                                    "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
+
+                            response.put("success", false);
+                            response.put("message", "Failed to send files via " + account.getSendMethod() + ".");
                         }
                     } else {
                         syncJob.setStatus(Constants.SUCCESS);
@@ -411,7 +385,8 @@ public class JournalController {
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, consumptionList);
 
                 file = excelExporter.prepareNDFFile(consumptionList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
-                locationFiles.add(file);
+                if (file != null)
+                    locationFiles.add(file);
             }
             return locationFiles;
         } catch (Exception e) {
@@ -451,16 +426,16 @@ public class JournalController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity<Response> updateConsumptionLocations(@RequestBody ArrayList<ConsumptionLocation> locations,
-                                                  @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
-                                                  @RequestParam(name = "updateLocation") boolean updateLocation,
-                                                  Principal principal) {
+                                                               @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                               @RequestParam(name = "updateLocation") boolean updateLocation,
+                                                               Principal principal) {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
             if (syncJobType != null) {
-                if(updateLocation)
+                if (updateLocation)
                     syncJobType.getConfiguration().consumptionConfiguration.consumptionLocations = locations;
                 else
                     syncJobType.getConfiguration().consumptionConfiguration.consumptionCostCenters = locations;
@@ -477,7 +452,7 @@ public class JournalController {
 
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-        }else{
+        } else {
             response.setStatus(false);
             response.setMessage("Wrong Credentials");
 

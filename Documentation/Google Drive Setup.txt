@@ -1,0 +1,12 @@
+youtube link: https://www.youtube.com/watch?v=JedcOwTV7r0
+link: https://mainul35.medium.com/access-google-drive-data-with-spring-boot-58caeb2885e0
+
+Steps:
+1. Create OAUTH user
+    link: https://console.cloud.google.com/apis/dashboard?project=industrial-ego-319714&folder=&organizationId=
+
+2. Generate google credentials from file
+    link: https://developers.google.com/drive/api/v3/quickstart/java
+
+3. Upload file
+    link: http://www.carbonrider.com/2018/11/25/file-operation-google-drive-api/

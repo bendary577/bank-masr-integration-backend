@@ -2,20 +2,14 @@ package com.sun.supplierpoc.controllers;
 
 import com.google.common.collect.Sets;
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.configurations.*;
-import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.auth.OauthClientDetails;
-import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
-import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import com.sun.supplierpoc.repositories.UserRepo;
+import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.security.CustomClientDetailsService;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.RefreshTokenResult;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.repositories.AccountRepo;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -42,6 +36,8 @@ public class AccountController {
     private UserRepo userRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
+    @Autowired
+    private OperationTypeRepo operationTypeRepo;
     @Autowired
     GeneralSettingsRepo generalSettingsRepo;
     @Autowired
@@ -233,7 +229,7 @@ public class AccountController {
         account = accountRepo.save(account);
         Set<GrantedAuthority> roles=new LinkedHashSet<>();
         roles.add(new SimpleGrantedAuthority("ROLE_USER"));
-        User user = new User("admin", account.getId(), "","admin" + account.getName() ,"password",roles,true,
+        User user = new User("admin", account.getId(), "","admin" + account.getDomain() ,"password",roles,true,
                 true,true,true);
         userRepo.save(user);
 
@@ -243,6 +239,9 @@ public class AccountController {
 
         // add default sync jobs to account
         boolean addingStatus = addAccountSyncType(account);
+
+        // add default operation types to account
+        addAccountOperationType(account);
 
         if(addingStatus){
             response.put("message", "Account added successfully.");
@@ -393,6 +392,20 @@ public class AccountController {
 
         return true;
 
+    }
+
+    private boolean addAccountOperationType(Account account){
+        try {
+            OperationType operationType;
+
+            // Opera Payment Monitor
+            operationType = new OperationType(1, Constants.OPERA_PAYMENT, "/operaPayments", new Date(), account.getId());
+            operationTypeRepo.save(operationType);
+
+            return true;
+        }catch (Exception ex){
+            return false;
+        }
     }
 
     public ArrayList<Account> getAccounts() {

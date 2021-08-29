@@ -73,6 +73,13 @@ public class Constants {
     public static String SUN_ERD = "Sun";
     public static String FUSION_ERD = "Fusion";
     public static String SIMPHONY_ERD = "Simphony";
+    public static String OPERA_ERD = "Opera";
+
+    //////////////////////////////////////////////// SEND FILE METHODS ///////////////////////////////////////////////////////////////
+    public static String GOOGLE_DRIVE_METHOD = "drive";
+    public static String FTP_METHOD = "ftp";
+    public static String SUN_SSC_METHOD = "sun";
+    public static String OTHER_METHOD = "other";
 
     ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 

@@ -36,7 +36,9 @@ public class WalletService {
                 WalletHistory walletHistory = new WalletHistory("Charge Wallet" , balance.getAmount() , lastBalance, (lastBalance + balance.getAmount()), new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
+
                 response.setStatus(true);
+                response.setMessage("Wallet Charged Successfully.");
                 response.setData(applicationUser);
                 return response;
             }catch(Exception e) {
@@ -58,16 +60,30 @@ public class WalletService {
         if(applicationUserOptional.isPresent()){
             ApplicationUser applicationUser = applicationUserOptional.get();
             try{
-//                Wallet wallet = applicationUser.getWallet();
-//                double balance = wallet.getBalance();
-//                double newBalance = balance - amount ;
-//                wallet.setBalance(newBalance);
-//                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet" , amount , balance, newBalance);
-//                wallet.getWalletHistory().add(walletHistory);
-//                applicationUser.setWallet(wallet);
-//                applicationUserRepo.save(applicationUser);
-//                response.setStatus(true);
-//                response.setData(applicationUser);
+
+                double biggerBalance = 0;
+                double lastBalance = 0;
+                int index = 0 ;
+
+                for(int i = 0; i < applicationUser.getWallet().getBalance().size(); i++){
+                    if(applicationUser.getWallet().getBalance().get(i).getAmount() > biggerBalance) {
+                        biggerBalance = applicationUser.getWallet().getBalance().get(i).getAmount();
+                        index = i;
+                    }
+                    lastBalance = lastBalance + applicationUser.getWallet().getBalance().get(i).getAmount();
+                }
+
+                applicationUser.getWallet().getBalance().get(index).setAmount(
+                        applicationUser.getWallet().getBalance().get(index).getAmount() - amount
+                );
+
+                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet" , amount , lastBalance, (lastBalance - amount), new Date());
+                applicationUser.getWallet().getWalletHistory().add(walletHistory);
+                applicationUserRepo.save(applicationUser);
+
+                response.setMessage("Amount deducted from Wallet successfully.");
+                response.setStatus(true);
+                response.setData(applicationUser);
                 return response;
             }catch(Exception e) {
                 response.setMessage(e.getMessage());

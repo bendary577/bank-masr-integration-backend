@@ -39,13 +39,9 @@ public class AppUserController {
 
 
     @Autowired ApplicationUserRepo userRepo;
-
     @Autowired AccountRepo accountRepo;
-
     @Autowired QRCodeGenerator qrCodeGenerator;
-
     @Autowired SendEmailService emailService;
-
     @Autowired private AppUserService appUserService;
     @Autowired private ImageService imageService;
     @Autowired private GroupRepo groupRepo;
@@ -71,6 +67,24 @@ public class AppUserController {
             Account account = accountOptional.get();
             ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
+    @RequestMapping("/applicationUsers/{id}")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getApplicationUsers(@PathVariable("id") String id,Principal principal) {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            Optional<ApplicationUser> applicationUserOptional = userRepo.findById(id);
+            if(applicationUserOptional.isPresent()) {
+                return ResponseEntity.status(HttpStatus.OK).body(applicationUserOptional.get());
+            }else{
+                return ResponseEntity.status(HttpStatus.OK).body(new ApplicationUser());
+            }
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }

@@ -93,35 +93,41 @@ public class AppUserController {
                                                    Principal principal) {
 
         HashMap response = new HashMap();
-        try {
 
-            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if(user != null ) {
+            try {
 
-            if (accountOptional.isPresent()) {
-                Account account = accountOptional.get();
+                Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
-                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                if (accountOptional.isPresent()) {
+                    Account account = accountOptional.get();
 
-               response = appUserService
-                       .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId,
-                               image, account, generalSettings, accompaniedGuests, balance, cardCode, expire);
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
-               if( (Boolean) response.get("success")){
-                   return ResponseEntity.status(HttpStatus.OK).body(response);
-               }else{
-                   return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-               }
+                    response = appUserService
+                            .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId,
+                                    image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile);
+
+                    if ((Boolean) response.get("success")) {
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    }
 
 
-            } else {
-                response.put("message", "Invalid user.");
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                } else {
+                    response.put("message", "Invalid user.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.put("message", "Something went wrong.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("message", "Something went wrong.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }else{
+            response.put("message", Constants.INVALID_USER);
+            return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
         }
     }
 

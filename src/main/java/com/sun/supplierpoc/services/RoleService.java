@@ -118,16 +118,13 @@ public class RoleService {
 
         Response response = new Response();
         User user = new User();
-
         List<Role> roleList;
         Optional<User> userOptional;
-
         if (sameUser) {
             userOptional = userRepo.findById(authedUser.getId());
         } else {
             userOptional = userRepo.findById(userId);
         }
-
         if (userOptional.isPresent()) {
             user = userOptional.get();
             roleList = user.getRoles();
@@ -136,21 +133,16 @@ public class RoleService {
             response.setMessage(Constants.INVALID_USER);
             return response;
         }
-
         response.setStatus(true);
         response.setData(user);
         return response;
     }
 
     public boolean hasRole(User authedUser, String chargeWallet) {
-
         User user = userRepo.findById(authedUser.getId())
                 .orElseThrow(() -> new RuntimeException("An Unexpected Error Accord."));
-
         List<Role> roles = user.getRoles();
-
         boolean hasRole = conversions.checkIfUserHasRole(roles, chargeWallet);
-
         return hasRole;
     }
 }

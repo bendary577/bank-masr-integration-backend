@@ -142,7 +142,7 @@ public class AppUserService {
                 List<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
                 applicationUser.setWallet(new Wallet(List.of(new Balance(Double.parseDouble(balance), revenueCenters))));
                 applicationUser.setExpire(expire);
-
+                applicationUser.setGeneric(true);
                 userRepo.save(applicationUser);
 
                 response.put("message", "User added successfully.");

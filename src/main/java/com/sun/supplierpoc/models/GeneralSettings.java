@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.applications.SimphonyQuota;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
@@ -37,7 +38,7 @@ public class GeneralSettings {
     private ArrayList<BookingType> transactionTypes = new ArrayList<>();
     private ArrayList<BookingType> expenseTypes = new ArrayList<>();
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
-
+    private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
 
     private SimphonyQuota simphonyQuota;
@@ -268,6 +269,22 @@ public class GeneralSettings {
     }
 
     public void setMailSub(String mailSubj) {
+        this.mailSubj = mailSubj;
+    }
+
+    public ArrayList<PosMachineMap> getPosMachineMaps() {
+        return posMachineMaps;
+    }
+
+    public void setPosMachineMaps(ArrayList<PosMachineMap> posMachineMaps) {
+        this.posMachineMaps = posMachineMaps;
+    }
+
+    public String getMailSubj() {
+        return mailSubj;
+    }
+
+    public void setMailSubj(String mailSubj) {
         this.mailSubj = mailSubj;
     }
 }

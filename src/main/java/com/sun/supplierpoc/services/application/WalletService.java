@@ -59,25 +59,30 @@ public class WalletService {
         Optional<ApplicationUser> applicationUserOptional = applicationUserRepo.findById(userId);
         if(applicationUserOptional.isPresent()){
             ApplicationUser applicationUser = applicationUserOptional.get();
-            try{
+            try {
 
                 double biggerBalance = 0;
                 double lastBalance = 0;
-                int index = 0 ;
+                int index = 0;
 
-                for(int i = 0; i < applicationUser.getWallet().getBalance().size(); i++){
-                    if(applicationUser.getWallet().getBalance().get(i).getAmount() > biggerBalance) {
+                for (int i = 0; i < applicationUser.getWallet().getBalance().size(); i++) {
+                    if (applicationUser.getWallet().getBalance().get(i).getAmount() > biggerBalance) {
                         biggerBalance = applicationUser.getWallet().getBalance().get(i).getAmount();
                         index = i;
                     }
                     lastBalance = lastBalance + applicationUser.getWallet().getBalance().get(i).getAmount();
                 }
 
+                if (biggerBalance < amount) {
+                    response.setBadStatus(false, "There isn't enough balance. ");
+                    return response;
+                }
+
                 applicationUser.getWallet().getBalance().get(index).setAmount(
                         applicationUser.getWallet().getBalance().get(index).getAmount() - amount
                 );
 
-                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet" , amount , lastBalance, (lastBalance - amount), new Date());
+                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet", amount, lastBalance, (lastBalance - amount), new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 

@@ -46,6 +46,11 @@ public class Response<T> {
     public Response() {
     }
 
+    public void setBadStatus(boolean status, String message) {
+        this.status = status;
+        this.message = message;
+    }
+
     public boolean isStatus() {
         return status;
     }

@@ -85,7 +85,12 @@ public class WalletController {
                 if (roleService.hasRole(authedUser, Constants.DEDUCT_WALLET)) {
 
                     response = walletService.deductWallet(userId, amount);
+
+                    if(response.isStatus()){
                     return new ResponseEntity<>(response, HttpStatus.OK);
+                    }else{
+                        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                    }
 
                 }else{
                     response.setStatus(false);

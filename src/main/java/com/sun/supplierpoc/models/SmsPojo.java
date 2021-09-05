@@ -7,8 +7,15 @@ public class SmsPojo {
     public SmsPojo() {
     }
 
+
+
     public String getTo() {
         return to;
+    }
+
+    public SmsPojo(String to, String message) {
+        this.to = to;
+        this.message = message;
     }
 
     public void setTo(String to) {

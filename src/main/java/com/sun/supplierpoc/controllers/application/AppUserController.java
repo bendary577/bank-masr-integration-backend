@@ -2,10 +2,7 @@ package com.sun.supplierpoc.controllers.application;
 
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.SmsPojo;
-import com.sun.supplierpoc.models.Transactions;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.User;
@@ -46,16 +43,8 @@ public class AppUserController {
     @Autowired private ImageService imageService;
     @Autowired private GroupRepo groupRepo;
     @Autowired private GeneralSettingsRepo generalSettingsRepo;
-
-
-    @Autowired
-    SmsService service;
-
-    @Autowired
-    private SimpMessagingTemplate webSocket;
-
-    private final String  TOPIC_DESTINATION = "/lesson/sms";
-
+    @Autowired private SimpMessagingTemplate webSocket;
+    @Autowired private SmsService smsService;
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
@@ -96,13 +85,15 @@ public class AppUserController {
                                                    @RequestParam(name = "isGeneric", required = true) boolean isGeneric,
                                                    @RequestPart(name = "name" , required = false) String name,
                                                    @RequestPart(name = "cardCode" , required = true) String cardCode,
-                                                   @RequestPart(name = "email", required = false) String email,
                                                    @RequestPart(name = "groupId", required = false) String groupId,
                                                    @RequestPart(name = "userId", required = false) String userId,
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
                                                    @RequestParam(name = "mobile", required = false) String mobile,
+                                                   @RequestPart(name = "email", required = false) String email,
                                                    @RequestParam(name = "balance", required = false) String balance,
                                                    @RequestParam(name = "expire", required = false) double expire,
+                                                   @RequestParam(name="sendEmail", required = false) boolean sendEmail,
+                                                   @RequestParam(name="sendSMS", required=false) boolean sendSMS,
                                                    @RequestPart(name="accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
@@ -120,7 +111,7 @@ public class AppUserController {
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                     response = appUserService
-                            .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId,
+                            .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
                                     image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile);
 
                     if ((Boolean) response.get("success")) {
@@ -356,19 +347,22 @@ public class AppUserController {
     }
 
 
-    @RequestMapping(value = "/sms", method = RequestMethod.POST)
-    public void smsSubmit(@RequestBody SmsPojo sms) {
+    @RequestMapping(value = "/sendSmsOrEmail", method = RequestMethod.POST)
+    public ResponseEntity smsSubmit(@RequestParam("process") String process,
+                          @RequestBody ApplicationUser applicationUser) {
         LoggerFactory.getLogger("new T");
         try{
-            service.send(sms);
+            if(process.equals("Email")){
+            emailService.sendWalletMail(applicationUser.getEmail());
+            }else if(process.equals("SMS")){
+                smsService.send(new SmsPojo("+2" + applicationUser.getMobile(), "Welcome to movenopick entry system."));
+            }
+            return new ResponseEntity("", HttpStatus.OK);
         }
         catch(Exception e){
-
-//            webSocket.convertAndSend(TOPIC_DESTINATION, getTimeStamp() + ": Error sending the SMS: "+e.getMessage());
-            throw e;
+            LoggerFactory.getLogger("new T");
+            return new ResponseEntity("Can't send " + process, HttpStatus.BAD_REQUEST);
         }
-        webSocket.convertAndSend(TOPIC_DESTINATION,  ": SMS has been sent!: "+sms.getTo());
-
     }
 
 //    @GetMapping(value = "/Simphony/generateQRCode")

@@ -12,12 +12,9 @@ import com.twilio.type.PhoneNumber;
 public class SmsService {
 
 
-    private final String ACCOUNT_SID = "AC8f162a48fe7a9920346f6d81acda9f4d";
-
-    private final String AUTH_TOKEN = "c117ce022ecf096d3eba6218e47b2c01";
-
-    private final String FROM_NUMBER = "+13853991837";
-
+    private final String ACCOUNT_SID = "ACb7d89db638622c781e8508fa1c92b06f";
+    private final String AUTH_TOKEN = "ff0ce2661910dd61a70a98fad0672846";
+    private final String FROM_NUMBER = "+17205006305";
     public void send(SmsPojo sms) {
         Twilio.init(ACCOUNT_SID, AUTH_TOKEN);
 

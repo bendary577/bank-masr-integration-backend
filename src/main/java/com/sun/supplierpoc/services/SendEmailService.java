@@ -131,6 +131,17 @@ public class SendEmailService {
         return stores;
     }
 
+    public void sendWalletMail(String email) throws MailException {
+        String messageBody = "Thanks for being with us.";
+        SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(email);
+        mailMessage.setSubject("We crafted some offers JUST FOR YOU!");
+        mailMessage.setSentDate(new Date());
+        mailMessage.setText(messageBody);
+        mailSender.send(mailMessage);
+        System.out.println("Finish");
+    }
+
 
     public void sendSimpleMail() throws MailException {
         String messageBody = "Thanks for being with us.";

@@ -8,6 +8,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.SmsPojo;
 import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -15,6 +16,7 @@ import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.SendEmailService;
+import com.sun.supplierpoc.services.SmsService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,6 +45,9 @@ public class AppUserService {
     @Autowired
     SendEmailService emailService;
 
+    @Autowired
+    SmsService service;
+
     public List<ApplicationUser> getTopUsers(Account account) {
 
         List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);
@@ -50,8 +55,8 @@ public class AppUserService {
         return applicationUsers;
     }
 
-    public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId,
-                                  String userId, MultipartFile image, Account account, GeneralSettings generalSettings,
+    public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
+                                  boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
                                   String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile) {
 
         HashMap response = new HashMap();
@@ -71,7 +76,7 @@ public class AppUserService {
                 return response;
             }
 
-            if (email!= null && email.equals("") && userRepo.existsByEmailAndAccountId(email, account.getId())) {
+            if (email != null && email.equals("") && userRepo.existsByEmailAndAccountId(email, account.getId())) {
                 response.put("message", "There is user exist with this email.");
                 response.put("success", false);
                 return response;
@@ -89,7 +94,7 @@ public class AppUserService {
                 }
             }
 
-            if(name == null || name .equals("")){
+            if (name == null || name.equals("")) {
                 name = "- - - -";
             }
             applicationUser.setName(name);
@@ -132,7 +137,8 @@ public class AppUserService {
                 List<AccompaniedGuests> accompaniedGuests = null;
 
                 try {
-                    accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {});
+                    accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {
+                    });
                 } catch (JsonProcessingException e) {
                     e.printStackTrace();
                 }
@@ -143,6 +149,30 @@ public class AppUserService {
                 applicationUser.setWallet(new Wallet(List.of(new Balance(Double.parseDouble(balance), revenueCenters))));
                 applicationUser.setExpire(expire);
                 applicationUser.setGeneric(true);
+
+                if (sendEmail && email != null && !email.equals("")) {
+                    emailService.sendWalletMail(email);
+                } else if (sendEmail && (email == null || email.equals(""))) {
+                    response.put("message", "Invalid Email");
+                    response.put("success", false);
+                    return response;
+                }
+
+                if (sendSMS && mobile != null && !mobile.equals("")) {
+                    LoggerFactory.getLogger("Bassel: ").info("Success");
+                    try {
+                        service.send(new SmsPojo("+2" + mobile, "Welcome to movenopick entry system."));
+                    } catch (Exception e) {
+                        response.put("message", e.getMessage());
+                        response.put("success", false);
+                        return response;
+                    }
+                } else if (sendSMS && (mobile == null || mobile.equals(""))) {
+                    response.put("message", "Invalid Mobile");
+                    response.put("success", false);
+                    return response;
+                }
+
                 userRepo.save(applicationUser);
 
                 response.put("message", "User added successfully.");
@@ -167,47 +197,74 @@ public class AppUserService {
                     return response;
                 }
 
-                if (!applicationUser.getEmail().equals(email)) {
-
+                if (applicationUser.getEmail() != null && !applicationUser.getEmail().equals("") && !applicationUser.getEmail().equals(email)) {
                     if (userRepo.existsByEmailAndAccountId(email, account.getId())) {
                         response.put("message", "There is user exist with this email.");
                         response.put("success", false);
                         return response;
                     }
+                }else if(email != null && email.equals("null")){
+                    email = "";
+                }
 
-                    String accountLogo = account.getImageUrl();
-                    String mailSubj = generalSettings.getMailSub();
-                    String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
+                String accountLogo;
+                if(account.getImageUrl() != null && account.getImageUrl().equals("") ) {
+                    accountLogo = account.getImageUrl();
+                }else{
+                    accountLogo = Constants.ACCOUNT_IMAGE_URL;
+                }
+                String mailSubj = generalSettings.getMailSub();
+                String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
+                applicationUser.setEmail(email);
 
-                    if (!isGeneric) {
-                        try {
-                            String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
-                            if (!emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account)) {
-                                response.put("message", "Invalid user email.");
-                                response.put("success", false);
-                                return response;
-                            }
-                        } catch (WriterException | IOException e) {
-                            response.put("message", e.getMessage());
+                if (!isGeneric) {
+                    try {
+                        String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
+                        if (!emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account)) {
+                            response.put("message", "Invalid user email.");
                             response.put("success", false);
                             return response;
                         }
-                        applicationUser.setEmail(email);
+                    } catch (WriterException | IOException e) {
+                        response.put("message", e.getMessage());
+                        response.put("success", false);
+                        return response;
                     }
+
                 } else {
                     if (!accompaniedGuestsJson.equals("")) {
                         ObjectMapper objectMapper = new ObjectMapper();
                         List<AccompaniedGuests> accompaniedGuests = null;
                         try {
-                            accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {});
+                            accompaniedGuests = objectMapper.readValue(accompaniedGuestsJson, new TypeReference<>() {
+                            });
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
                         applicationUser.setAccompaniedGuests(accompaniedGuests);
                     }
-                    applicationUser.setEmail(email);
+                    if (sendEmail && email != null && !email.equals("")) {
+                        emailService.sendWalletMail(email);
+                    } else if (sendEmail && (email == null || email.equals(""))) {
+                        response.put("message", "Invalid Email");
+                        response.put("success", false);
+                        return response;
+                    }
+                    if (sendSMS && mobile != null && !mobile.equals("")) {
+                        LoggerFactory.getLogger("Bassel: ").info("Success");
+                        try {
+                            service.send(new SmsPojo("+2" + mobile, "Welcome to movenopick entry system."));
+                        } catch (Exception e) {
+                            response.put("message", e.getMessage());
+                            response.put("success", false);
+                            return response;
+                        }
+                    } else if (sendSMS && (mobile == null || mobile.equals(""))) {
+                        response.put("message", "Invalid Mobile");
+                        response.put("success", false);
+                        return response;
+                    }
                 }
-
                 if (image != null) {
                     String logoUrl;
                     try {
@@ -219,7 +276,6 @@ public class AppUserService {
                     }
                     applicationUser.setLogoUrl(logoUrl);
                 }
-
                 applicationUser.setName(name);
                 applicationUser.setMobile(mobile);
                 applicationUser.setAccountId(account.getId());

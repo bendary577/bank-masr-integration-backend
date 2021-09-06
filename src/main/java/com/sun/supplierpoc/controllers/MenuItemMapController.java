@@ -44,7 +44,7 @@ public class MenuItemMapController {
         return response;
     }
 
-    @RequestMapping(value = "/getMenuItems")
+    @RequestMapping(value = "/opera/getMenuItems")
     @ResponseBody
     public List<MenuItemMap> getAccount(Principal principal){
 

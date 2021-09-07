@@ -403,9 +403,18 @@ public class PaymentController {
                     Date start;
                     Date end;
 
-                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                    start = df.parse(startDate);
-                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+
+                    try {
+                        start = df.parse(startDate);
+                        end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+
+                    }catch(Exception e){
+                        e.printStackTrace();
+                        df = new SimpleDateFormat("yyyy-M-d");
+                        start = df.parse(startDate);
+                        end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+                    }
 
                     return operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
                             account.getId(), false, start, end);
@@ -514,6 +523,33 @@ public class PaymentController {
                             put("Date", LocalDateTime.now());
                         }
                     });
+        }
+    }
+
+    @GetMapping(value = "/checkAppConnection")
+    @ResponseBody
+    public ResponseEntity checkAppConnection(Principal principal,
+                                             @RequestParam(name = "ip", required = false) String ip,
+                                             @RequestParam(name = "port", required = false) String port){
+        try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+
+                if(port != null || !port.equals("") || ip != null || !ip.equals("")){
+                    return ResponseEntity.status(HttpStatus.OK).body("");
+                } else{
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+                }
+
+            }else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+            }
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
         }
     }
 }

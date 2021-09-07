@@ -81,15 +81,15 @@
             <groupId>com.systemsunion</groupId>
             <artifactId>clientlib</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/src/main/resources/lib/clientlib.jar</systemPath>
+<!--            <scope>system</scope>-->
+<!--            <systemPath>${basedir}/src/main/resources/lib/clientlib.jar</systemPath>-->
         </dependency>
         <dependency>
             <groupId>org.w3c</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/src/main/resources/lib/xercesImpl.jar</systemPath>
+<!--            <scope>system</scope>-->
+<!--            <systemPath>${basedir}/src/main/resources/lib/xercesImpl.jar</systemPath>-->
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-mongodb -->

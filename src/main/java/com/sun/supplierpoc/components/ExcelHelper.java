@@ -553,7 +553,7 @@ public class ExcelHelper {
                 if (transactionDescription.toLowerCase().contains("vat")) {
                     expenseObject.items.get(0).vat = String.valueOf(transactionAmount);
                     vat = transactionAmount;
-                } else if (transactionDescription.toLowerCase().contains("muncipality")) {
+                } else if (transactionDescription.toLowerCase().contains("muncipality") || transactionDescription.toLowerCase().contains("municipality")) {
                     municipalityTax = transactionAmount;
                     expenseObject.items.get(0).municipalityTax = String.valueOf(transactionAmount);
                     expenseItem.grandTotal = String.valueOf(unitPrice + vat + municipalityTax + serviceCharge);

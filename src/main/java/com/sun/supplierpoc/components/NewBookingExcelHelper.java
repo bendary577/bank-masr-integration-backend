@@ -420,6 +420,10 @@ public class NewBookingExcelHelper {
                 if (reservation == null)
                     continue;
 
+                if(reservation.bookingNo.equals("1819219")){
+                    System.out.println("o2af");
+                }
+
                 temp = reservation.lastIndex;
 
                 // New Booking
@@ -788,7 +792,7 @@ public class NewBookingExcelHelper {
 
                 if (desc.toLowerCase().contains("service charge")) {
                     amount += aPackage.serviceCharge;
-                } else if (desc.toLowerCase().contains("muncipality")) {
+                } else if (desc.toLowerCase().contains("muncipality") || desc.toLowerCase().contains("municipality")) {
                     amount += aPackage.municipalityTax;
                 } else if (desc.toLowerCase().contains("vat")) {
                     amount += aPackage.vat;
@@ -797,7 +801,8 @@ public class NewBookingExcelHelper {
 
             if (generate.description.toLowerCase().contains("service charge")) {
                 aPackage.serviceCharge = (amount * generate.percentage) / 100;
-            } else if (generate.description.toLowerCase().contains("muncipality")) {
+            } else if (generate.description.toLowerCase().contains("muncipality")
+                    || generate.description.toLowerCase().contains("municipality")) {
                 aPackage.municipalityTax = (amount * generate.percentage) / 100;
             } else if (generate.description.toLowerCase().contains("vat")) {
                 aPackage.vat = (amount * generate.percentage) / 100;

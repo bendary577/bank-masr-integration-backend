@@ -26,6 +26,7 @@ public class ApplicationUser implements Serializable {
     private String mobile;
     private double expire;
     private boolean expired;
+    private boolean suspended;
     private boolean generic;
     private List<AccompaniedGuests> accompaniedGuests;
 
@@ -163,5 +164,13 @@ public class ApplicationUser implements Serializable {
 
     public void setExpired(boolean expired) {
         this.expired = expired;
+    }
+
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
     }
 }

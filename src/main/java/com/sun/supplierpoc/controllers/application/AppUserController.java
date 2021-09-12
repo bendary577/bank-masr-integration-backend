@@ -35,16 +35,26 @@ import java.util.*;
 public class AppUserController {
 
 
-    @Autowired ApplicationUserRepo userRepo;
-    @Autowired AccountRepo accountRepo;
-    @Autowired QRCodeGenerator qrCodeGenerator;
-    @Autowired SendEmailService emailService;
-    @Autowired private AppUserService appUserService;
-    @Autowired private ImageService imageService;
-    @Autowired private GroupRepo groupRepo;
-    @Autowired private GeneralSettingsRepo generalSettingsRepo;
-    @Autowired private SimpMessagingTemplate webSocket;
-    @Autowired private SmsService smsService;
+    @Autowired
+    ApplicationUserRepo userRepo;
+    @Autowired
+    AccountRepo accountRepo;
+    @Autowired
+    QRCodeGenerator qrCodeGenerator;
+    @Autowired
+    SendEmailService emailService;
+    @Autowired
+    private AppUserService appUserService;
+    @Autowired
+    private ImageService imageService;
+    @Autowired
+    private GroupRepo groupRepo;
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+    @Autowired
+    private SimpMessagingTemplate webSocket;
+    @Autowired
+    private SmsService smsService;
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
@@ -63,15 +73,15 @@ public class AppUserController {
     @RequestMapping("/applicationUsers/{id}")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getApplicationUsers(@PathVariable("id") String id,Principal principal) {
+    public ResponseEntity getApplicationUsers(@PathVariable("id") String id, Principal principal) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             Optional<ApplicationUser> applicationUserOptional = userRepo.findById(id);
-            if(applicationUserOptional.isPresent()) {
+            if (applicationUserOptional.isPresent()) {
                 return ResponseEntity.status(HttpStatus.OK).body(applicationUserOptional.get());
-            }else{
+            } else {
                 return ResponseEntity.status(HttpStatus.OK).body(new ApplicationUser());
             }
         }
@@ -83,8 +93,8 @@ public class AppUserController {
     @ResponseBody
     public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag", required = true) boolean addFlag,
                                                    @RequestParam(name = "isGeneric", required = true) boolean isGeneric,
-                                                   @RequestPart(name = "name" , required = false) String name,
-                                                   @RequestPart(name = "cardCode" , required = true) String cardCode,
+                                                   @RequestPart(name = "name", required = false) String name,
+                                                   @RequestPart(name = "cardCode", required = true) String cardCode,
                                                    @RequestPart(name = "groupId", required = false) String groupId,
                                                    @RequestPart(name = "userId", required = false) String userId,
                                                    @RequestPart(name = "image", required = false) MultipartFile image,
@@ -92,15 +102,15 @@ public class AppUserController {
                                                    @RequestPart(name = "email", required = false) String email,
                                                    @RequestParam(name = "balance", required = false) String balance,
                                                    @RequestParam(name = "expire", required = false) double expire,
-                                                   @RequestParam(name="sendEmail", required = false) boolean sendEmail,
-                                                   @RequestParam(name="sendSMS", required=false) boolean sendSMS,
-                                                   @RequestPart(name="accompaniedGuests", required = false) String accompaniedGuests,
+                                                   @RequestParam(name = "sendEmail", required = false) boolean sendEmail,
+                                                   @RequestParam(name = "sendSMS", required = false) boolean sendSMS,
+                                                   @RequestPart(name = "accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
         HashMap response = new HashMap();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        if(user != null ) {
+        if (user != null) {
             try {
 
                 Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -130,7 +140,7 @@ public class AppUserController {
                 response.put("message", "Something went wrong.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
-        }else{
+        } else {
             response.put("message", Constants.INVALID_USER);
             return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
         }
@@ -150,12 +160,12 @@ public class AppUserController {
 
             Optional<ApplicationUser> applicationUser = userRepo.findById(userId);
 
-            if(applicationUser.isPresent()) {
+            if (applicationUser.isPresent()) {
 
                 ApplicationUser appUser = applicationUser.get();
 
                 Optional<Group> groupOptional = groupRepo.findById(appUser.getGroup().getId());
-                if(groupOptional.isPresent()) {
+                if (groupOptional.isPresent()) {
 
                     Group group = groupOptional.get();
 
@@ -183,11 +193,11 @@ public class AppUserController {
                         response.put("message", "Invalid user email.");
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                     }
-                }else{
+                } else {
                     response.put("message", "User group not found.");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
-            }else{
+            } else {
                 response.put("message", "User not found.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
@@ -199,7 +209,7 @@ public class AppUserController {
 
     @PostMapping(path = "/sendWelcomeMail")
     public ResponseEntity sendWelcomeMail(@RequestParam(name = "userId") String userId,
-                                            Principal principal) {
+                                          Principal principal) {
         HashMap response = new HashMap();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -211,12 +221,12 @@ public class AppUserController {
 
             Optional<ApplicationUser> applicationUser = userRepo.findById(userId);
 
-            if(applicationUser.isPresent()) {
+            if (applicationUser.isPresent()) {
 
                 ApplicationUser appUser = applicationUser.get();
 
                 Optional<Group> groupOptional = groupRepo.findById(appUser.getGroup().getId());
-                if(groupOptional.isPresent()) {
+                if (groupOptional.isPresent()) {
                     Group group = groupOptional.get();
                     try {
                         String accountLogo = account.getImageUrl();
@@ -233,11 +243,11 @@ public class AppUserController {
                         response.put("message", "Invalid user email.");
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                     }
-                }else{
+                } else {
                     response.put("message", "User group not found.");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
-            }else{
+            } else {
                 response.put("message", "User not found.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
@@ -246,7 +256,6 @@ public class AppUserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
     }
-
 
 
     @RequestMapping("/deleteApplicationUsers")
@@ -262,31 +271,70 @@ public class AppUserController {
         if (accountOptional.isPresent()) {
             for (ApplicationUser applicationUser : applicationUsers) {
 
-                Optional<Group> groupOptional  = groupRepo.findById(applicationUser.getGroup().getId());
+                Optional<Group> groupOptional = groupRepo.findById(applicationUser.getGroup().getId());
 
-                if(groupOptional.isPresent()) {
+                if (groupOptional.isPresent()) {
                     Group group = groupOptional.get();
 
-                    if(!group.isDeleted()) {
+                    if (!group.isDeleted()) {
                         applicationUser.setDeleted(addFlag);
                         userRepo.save(applicationUser);
-                    }else{
-                        response.put("message", "The group of the user "+applicationUser.getName() +" is already deleted,\n try to update his group.");
+                    } else {
+                        response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted,\n try to update his group.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
-                }else{
-                    response.put("message", "The group of the user "+applicationUser.getName() +" is already deleted, \n try to update his group.");
+                } else {
+                    response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted, \n try to update his group.");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
             }
-            if(addFlag) {
+            if (addFlag) {
                 response.put("message", "Deleted Successfully.");
-            }else{
+            } else {
                 response.put("message", "Restored Successfully.");
             }
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
+    @RequestMapping("/suspendApplicationUsers")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity suspendApplicationUsers(@RequestParam(name = "susFlag") boolean susFlage,
+                                                  @RequestBody ApplicationUser applicationUser, Principal principal) {
+
+        try {
+            HashMap response = new HashMap();
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+            if (accountOptional.isPresent()) {
+
+                Optional<ApplicationUser> tempApplicationUserOptional = userRepo.findById(applicationUser.getId());
+
+                if (tempApplicationUserOptional.isPresent()) {
+                    applicationUser.setSuspended(susFlage);
+                    userRepo.save(applicationUser);
+
+                    if (susFlage) {
+                        response.put("message", "Suspended Successfully.");
+                    } else {
+                        response.put("message", "Actived Successfully.");
+                    }
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+
+                } else {
+                    response.put("message", "Guest dosen't exist.");
+                    return new ResponseEntity(response, HttpStatus.BAD_REQUEST);
+                }
+            } else {
+                return new ResponseEntity(HttpStatus.FORBIDDEN);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity(e.getMessage(), HttpStatus.FORBIDDEN);
+        }
     }
 
     @RequestMapping("/getTopUser")
@@ -324,21 +372,21 @@ public class AppUserController {
                                           @RequestParam("cardNumber") String cardNumber,
                                           @RequestParam("cardStatues") String cardStatues,
                                           @RequestParam("groupId") String groupId,
-                                          Principal principal){
+                                          Principal principal) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
-        if(user != null){
+        if (user != null) {
 
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
 
-            if(accountOptional != null){
+            if (accountOptional != null) {
 
                 List<ApplicationUser> applicationUsers = appUserService.filterByParameters(name, fromDate, toDate,
                         cardNumber, cardStatues, groupId);
 
 
-            }else{
+            } else {
 
             }
 
@@ -349,17 +397,16 @@ public class AppUserController {
 
     @RequestMapping(value = "/sendSmsOrEmail", method = RequestMethod.POST)
     public ResponseEntity smsSubmit(@RequestParam("process") String process,
-                          @RequestBody ApplicationUser applicationUser) {
+                                    @RequestBody ApplicationUser applicationUser) {
         LoggerFactory.getLogger("new T");
-        try{
-            if(process.equals("Email")){
-            emailService.sendWalletMail(applicationUser.getEmail());
-            }else if(process.equals("SMS")){
+        try {
+            if (process.equals("Email")) {
+                emailService.sendWalletMail(applicationUser.getEmail());
+            } else if (process.equals("SMS")) {
                 smsService.send(new SmsPojo("+2" + applicationUser.getMobile(), "Welcome to movenopick entry system."));
             }
             return new ResponseEntity("", HttpStatus.OK);
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             LoggerFactory.getLogger("new T");
             return new ResponseEntity("Can't send " + process, HttpStatus.BAD_REQUEST);
         }

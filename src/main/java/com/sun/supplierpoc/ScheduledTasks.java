@@ -6,9 +6,11 @@ import com.sun.supplierpoc.controllers.simphony.MenuItemsController;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.services.opera.BookingService;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
@@ -17,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -28,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
+@Controller
 public class ScheduledTasks {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
@@ -57,6 +62,8 @@ public class ScheduledTasks {
     private MenuItemsController menuItemsController;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private ApplicationUserRepo applicationUserRepo;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -70,6 +77,7 @@ public class ScheduledTasks {
     // run every 60 min
     // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
     @Scheduled(cron = "0 0/60 * * * SUN-SAT")
+    @GetMapping("opera/checkUsers")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException, ParseException, IOException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
@@ -93,8 +101,17 @@ public class ScheduledTasks {
 
         for (Account account : accounts) {
             ArrayList<SyncJobType> syncJobsQueue = new ArrayList<>();
-
             ArrayList<SyncJobType> syncJobTypes = (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeleted(account.getId(), false);
+            ArrayList<ApplicationUser> applicationUsers = applicationUserRepo.findAllByAccountId(account.getId());
+
+            List<ApplicationUser> tempAppUsers = new ArrayList<>();
+            for(ApplicationUser applicationUser :  applicationUsers){
+                if(applicationUser.getExpire() > 0 ){
+                    long diff = applicationUser.getCreationDate().getTime() - new Date().getTime();
+                    long diffHours = diff / (60 * 60 * 1000);
+                    applicationUser.setExpire(applicationUser.getExpire() - 1);
+                }
+            }
 
             if (syncJobTypes.size() == 0) continue;
 
@@ -181,6 +198,7 @@ public class ScheduledTasks {
                 }
 
             }
+
         }
 
     }

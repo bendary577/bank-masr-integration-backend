@@ -18,8 +18,8 @@ public class User implements UserDetails  {
     private static final long serialVersionUID = 1L;
     @Id
     private String id;
-    public String name;
-    private String username ;
+    public String name = "";
+    private String username = "" ;
     private String password;
     private String accountId;
 //    private ArrayList<UserAccess> userAccesses;

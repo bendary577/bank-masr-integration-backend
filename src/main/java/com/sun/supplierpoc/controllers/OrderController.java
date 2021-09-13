@@ -23,7 +23,7 @@ public class OrderController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @PostMapping(value = "/addOrder")
+    @PostMapping(value = "/opera/addOrder")
     @ResponseBody
     public HashMap<String, Object> addOrder(@RequestBody Order order) {
         HashMap<String, Object> response = new HashMap<>();

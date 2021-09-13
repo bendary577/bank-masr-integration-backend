@@ -22,7 +22,7 @@ public class MenuItemMapController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @PostMapping(value = "/addMenuItem")
+    @PostMapping(value = "/opera/addMenuItem")
     @ResponseBody
     public HashMap<String, Object> addMenuItem(@RequestBody MenuItemMap menuItem) {
         HashMap<String, Object> response = new HashMap<>();

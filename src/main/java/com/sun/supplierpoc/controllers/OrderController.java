@@ -39,7 +39,7 @@ public class OrderController {
         return response;
     }
 
-    @RequestMapping(value = "/getOrders")
+    @RequestMapping(value = "/opera/getOrders")
     @ResponseBody
     public List<Order> getAccount(Principal principal){
 

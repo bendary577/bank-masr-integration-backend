@@ -117,7 +117,7 @@ public class RoleService {
     public Response getUserRoles(String userId, boolean sameUser, User authedUser) {
 
         Response response = new Response();
-        User user = new User();
+        User user;
         List<Role> roleList;
         Optional<User> userOptional;
         if (sameUser) {

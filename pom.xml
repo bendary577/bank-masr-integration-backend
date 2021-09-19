@@ -89,15 +89,11 @@
             <groupId>com.systemsunion</groupId>
             <artifactId>clientlib</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/src/main/resources/lib/clientlib.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.w3c</groupId>
             <artifactId>xercesImpl</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/src/main/resources/lib/xercesImpl.jar</systemPath>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.springframework.data/spring-data-mongodb -->
@@ -392,7 +388,6 @@
 
     </dependencies>
 
-
     <build>
         <finalName>app</finalName>
         <resources>
@@ -438,45 +433,36 @@
             </plugin>
 
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>build-info</goal>
-                            <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
+                <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.sun.supplierpoc.SupplierPocApplication</mainClass>
-                    <skip>true</skip>
+                    <archive>
+                        <manifestEntries>
+                            <Class-Path>conf/</Class-Path>
+                        </manifestEntries>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                        </manifest>
+                    </archive>
                 </configuration>
             </plugin>
 
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-<!--                <version>${spring-boot.version}</version>-->
-                <configuration>
-                    <mainClass>com.sun.supplierpoc.SupplierPocApplication</mainClass>
-                    <layout>ZIP</layout>
-                    <skip>false</skip>
-                </configuration>
                 <executions>
                     <execution>
                         <goals>
+                            <goal>build-info</goal>
                             <goal>repackage</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>build-info</id>
-                        <goals>
-                            <goal>build-info</goal>
-                        </goals>
-                    </execution>
                 </executions>
+                <configuration>
+                    <mainClass>com.sun.supplierpoc.SupplierPocApplication</mainClass>
+                </configuration>
             </plugin>
+
 
             <plugin>
                 <groupId>org.springframework.boot</groupId>

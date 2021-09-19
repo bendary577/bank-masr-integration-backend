@@ -1,6 +1,7 @@
 package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.applications.Balance;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
@@ -573,6 +574,15 @@ public class Conversions {
             }
         }
 
+        return false;
+    }
+
+    public boolean containRevenueCenter(Balance balance, RevenueCenter revenueCenter) {
+        List<RevenueCenter> revenueCenters = balance.getRevenueCenters();
+        for (RevenueCenter tempRevenueCenter: revenueCenters){
+            tempRevenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter());
+            return true;
+        }
         return false;
     }
 }

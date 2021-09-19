@@ -6,10 +6,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.Transactions;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.applications.Group;
-import com.sun.supplierpoc.models.applications.SimphonyDiscount;
-import com.sun.supplierpoc.models.applications.WalletHistory;
+import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.TransactionRepo;
@@ -45,9 +42,7 @@ public class ActivityService {
         HashMap response = new HashMap();
 
         try {
-
             ApplicationUser user = userRepo.findByCode(transaction.getCode());
-
             if(user == null){
                 response.put("message", "No user for this code.");
             }else if(user.isDeleted()){
@@ -57,14 +52,12 @@ public class ActivityService {
             } else if(transactionRepo.existsByCheckNumberAndRevenueCentreId(transaction.getCheckNumber(), transaction.getRevenueCentreId())){
                 response.put("message", "Can't use code for the same check twice.");
             }else {
-
                 Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
                 if(!groupOptional.isPresent()){
                     response.put("message", "No group for this user.");
                 }else if(groupOptional.get().isDeleted()) {
                     response.put("message", "This group is deleted.");
                 }else {
-
                     Group group = groupOptional.get();
 
                     user.setTop(user.getTop() + 1);
@@ -99,15 +92,18 @@ public class ActivityService {
                     }
 
                     if(user.getWallet() != null){
+                        Wallet wallet = user.getWallet();
+                        for(int i = 0; i <  wallet.getBalance().size(); i ++){
+                            if(conversions.containRevenueCenter(wallet.getBalance().get(i), revenueCenter)){
 
-////                        double balance = user.getWallet().getBalance();
-//                        double newBalance = balance - transaction.getAfterDiscount();
-//
-//                        WalletHistory walletHistory = new WalletHistory(transactionType.getName() + "in" + revenueCenter.getRevenueCenter(),
-//                                amount, balance, newBalance);
-//
-//                        user.getWallet().setBalance(newBalance);
-//                        user.getWallet().getWalletHistory().add(walletHistory);
+                                double newBalance = wallet.getBalance().get(i).getAmount() - transaction.getAfterDiscount();
+                                wallet.getBalance().get(i).setAmount(newBalance);
+                                WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
+                                        amount, wallet.getBalance().get(i).getAmount(), newBalance, new Date());
+                                wallet.getWalletHistory().add(walletHistory);
+                                user.setWallet(wallet);
+                            }
+                        }
                     }
 
                     userRepo.save(user);

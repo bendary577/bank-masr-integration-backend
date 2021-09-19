@@ -2,8 +2,8 @@ package com.sun.supplierpoc.models.applications;
 
 public class SimphonyQuota {
 
-    private int transactionQuota;
-    private int usedTransactionQuota;
+    private int transactionQuota = 0;
+    private int usedTransactionQuota = 0;
     private int revenueCenterQuota = 0;
 
     public int getTransactionQuota() {

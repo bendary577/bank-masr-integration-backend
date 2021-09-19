@@ -41,8 +41,19 @@ public class OrderController {
 
     @RequestMapping(value = "/opera/getOrders")
     @ResponseBody
-    public List<Order> getAccount(Principal principal){
+    public List<Order> getOrders(@RequestParam("offset") int offset,
+                                 @RequestParam("size") int size,
+                                 @RequestParam("columnIndex") int columnIndex,
+                                 @RequestParam("isAscending") boolean isAscending
+        ){
 
-        return orderRepo.findAll();
+        List<Order> allOrders = orderRepo.findAll();
+        int totalLength = allOrders.size();
+        //int endIndex = offset+size > totalLength ? totalLength : offset+size;
+        List <Order> orders = allOrders.subList(offset,totalLength);
+//        if(columnIndex==3){
+//            orders.sort()
+//        }
+        return orders;
     }
 }

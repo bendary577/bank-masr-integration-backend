@@ -108,8 +108,7 @@ public class TransactionService {
         statistic = grtTopRevenues(revenues, expenses, statistic);
         if(revenues.size() == 1 || revenues.size() == 2){
             revenues.addAll(Arrays.asList("", ""));
-            expenses.addAll(Arrays.asList(null, null));
-        }   
+        }
         return statistic;
     }
 

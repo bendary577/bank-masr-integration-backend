@@ -238,10 +238,10 @@ public class WastageController {
                         }else{
                             syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
-                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
+                                    "Sync wastage successfully.", Constants.SUCCESS);
 
                             response.put("success", true);
-                            response.put("message", "Sync sales successfully.");
+                            response.put("message", "Sync wastage successfully.");
                         }
                     }
                 }

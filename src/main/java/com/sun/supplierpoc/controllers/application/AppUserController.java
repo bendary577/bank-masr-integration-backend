@@ -278,6 +278,7 @@ public class AppUserController {
 
                     if (!group.isDeleted()) {
                         applicationUser.setDeleted(addFlag);
+                        applicationUser.setSuspended(addFlag);
                         userRepo.save(applicationUser);
                     } else {
                         response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted,\n try to update his group.");

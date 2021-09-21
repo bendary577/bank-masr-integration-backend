@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(("role"))
+@RequestMapping("/role")
 public class RoleController {
 
     @Autowired
@@ -47,7 +47,7 @@ public class RoleController {
     }
 
     //, Principal principal
-    @PostMapping("/addRole")
+    @PostMapping("/test/addRole")
     public ResponseEntity<?> addRole(@RequestBody Role roleRequest) {
 
         Response response = new Response();
@@ -80,7 +80,7 @@ public class RoleController {
 
     }
     //, Principal principal
-    @PostMapping("/addUserRole")
+    @PostMapping("/test/addUserRole")
     public ResponseEntity<?> addUserRole(@RequestParam("userId") String userId,
                                          @RequestParam("roleIds") List<String> roleIds) {
 
@@ -129,7 +129,7 @@ public class RoleController {
     }
 
     //, Principal principal
-    @GetMapping("/getUserRoles")
+    @GetMapping("/test/getUserRoles")
     @CrossOrigin("*")
     public ResponseEntity<?> getUsersRoles(@RequestParam("userId") String userId,
                                           @RequestParam("sameUser") boolean sameUser) {

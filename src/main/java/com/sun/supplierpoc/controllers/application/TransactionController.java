@@ -64,18 +64,11 @@ public class TransactionController {
                                                    @RequestParam("dateFlag") String dateFlag) {
 
         HashMap response = new HashMap();
-
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
         if (accountOptional.isPresent()) {
-
             Account account = accountOptional.get();
-
-            double totalSpend = transactionService.getTotalSpendTransactions(dateFlag, transactionType, account);
-
-            response.put("totalSpend", totalSpend);
+            response = transactionService.getTotalSpendTransactions(dateFlag, transactionType, account);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
@@ -93,9 +86,7 @@ public class TransactionController {
         HashMap response = new HashMap();
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();

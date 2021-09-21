@@ -165,7 +165,7 @@ public class CreditNoteController {
             }
 
             if(invoiceSyncPlace.equals("Invoice")) {
-                data = invoiceService.getInvoicesData(true, invoiceType, suppliers, costCenters, invoiceSyncJobType.getConfiguration(),
+                data = invoiceService.getInvoicesData(true, invoiceType, suppliers, costCenters, creditNoteSyncJobType.getConfiguration(),
                         items, itemGroups, overGroups, account, timePeriod, fromDate, toDate);
             }else {
                 data = invoiceService.getInvoicesReceiptsData(true,invoiceType, creditNoteSyncJobType.getConfiguration(),
@@ -175,8 +175,11 @@ public class CreditNoteController {
             invoices = (ArrayList<HashMap<String, Object>>) data.get("invoices");
 
             if (data.get("status").equals(Constants.SUCCESS)){
-                if (invoices.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
+                if(invoices.size() > 0){
                     addedInvoices = invoiceService.saveInvoicesData(invoices, syncJob, creditNoteSyncJobType, true);
+                }
+
+                if (account.getERD().equals(Constants.SUN_ERD)){
                     if (addedInvoices.size() > 0){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){

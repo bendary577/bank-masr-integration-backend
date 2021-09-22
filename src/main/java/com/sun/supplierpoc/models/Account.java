@@ -28,7 +28,7 @@ public class Account implements Serializable {
     private Date creationDate;
     private String apiKey;
     private String clientId;
-
+    private String currency;
     private boolean deleted;
     private AccountEmailConfig emailConfig;
 
@@ -171,5 +171,12 @@ public class Account implements Serializable {
 
     public void setClientId(String clientId) { this.clientId = clientId; }
 
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
+    }
 }
 

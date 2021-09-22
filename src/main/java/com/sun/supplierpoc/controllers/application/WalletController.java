@@ -48,10 +48,8 @@ public class WalletController {
 
             if(accountOptional.isPresent()) {
                 if (roleService.hasRole(authedUser, Constants.CHARGE_WALLET)) {
-
                     response = walletService.chargeWallet(userId, balance);
                     return new ResponseEntity<>(response, HttpStatus.OK);
-
                 }else{
                     response.setStatus(false);
                     response.setMessage(Constants.NOT_ELIGIBLE_USER);
@@ -65,7 +63,6 @@ public class WalletController {
             response.setMessage(Constants.INVALID_USER);
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
-
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 

@@ -41,7 +41,7 @@ public class RoleController {
     private RoleRepository roleRepository;
 
     //Principal principal
-    @GetMapping
+    @GetMapping("/test")
     public ResponseEntity getAllRoles(){
         return new ResponseEntity(roleRepository.findAll(), HttpStatus.OK);
     }

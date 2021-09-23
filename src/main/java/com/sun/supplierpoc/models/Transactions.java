@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
@@ -18,6 +19,8 @@ public class Transactions {
     @NotBlank(message="Code can't be empty.")
     private String code;
     private String transactionTypeId;
+    @DBRef
+    private TransactionType transactionType;
     private Date transactionDate;
     @NotNull(message="Revenue Centre Id can't be empty.")
     private int revenueCentreId;
@@ -133,6 +136,14 @@ public class Transactions {
 
     public void setCheckNumber(String checkNumber) {
         this.checkNumber = checkNumber;
+    }
+
+    public TransactionType getTransactionType() {
+        return transactionType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
     }
 }
 

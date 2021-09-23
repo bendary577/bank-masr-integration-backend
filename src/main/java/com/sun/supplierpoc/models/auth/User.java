@@ -1,15 +1,14 @@
 package com.sun.supplierpoc.models.auth;
 
+import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.models.roles.UserAccess;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Created by jeebb on 11/8/14.
@@ -19,11 +18,11 @@ public class User implements UserDetails  {
     private static final long serialVersionUID = 1L;
     @Id
     private String id;
-    public String name;
-    private String username ;
+    public String name = "";
+    private String username = "" ;
     private String password;
     private String accountId;
-    private ArrayList<UserAccess> userAccesses;
+//    private ArrayList<UserAccess> userAccesses;
     private Date creationDate;
     private Date updateDate;
 
@@ -33,6 +32,11 @@ public class User implements UserDetails  {
     private Boolean accountNonExpired;
     private Boolean accountNonLocked;
     private boolean credentialsNonExpired;
+    private String logo;
+    private String email;
+
+    @DBRef
+    private List<Role> roles = new ArrayList<>();
 
     public User() {
     }
@@ -180,13 +184,13 @@ public class User implements UserDetails  {
         return accountNonExpired;
     }
 
-    public ArrayList<UserAccess> getUserAccesses() {
-        return userAccesses;
-    }
+//    public ArrayList<UserAccess> getUserAccesses() {
+//        return userAccesses;
+//    }
 
-    public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
-        this.userAccesses = userAccesses;
-    }
+//    public void setUserAccesses(ArrayList<UserAccess> userAccesses) {
+//        this.userAccesses = userAccesses;
+//    }
 
     public static long getSerialVersionUID() {
         return serialVersionUID;
@@ -208,4 +212,27 @@ public class User implements UserDetails  {
         return accountNonLocked;
     }
 
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
+    }
+
+    public String getLogo() {
+        return logo;
+    }
+
+    public void setLogo(String logo) {
+        this.logo = logo;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }

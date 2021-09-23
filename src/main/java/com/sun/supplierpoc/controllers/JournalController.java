@@ -298,6 +298,10 @@ public class JournalController {
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
                                     "Sync consumption successfully.", Constants.SUCCESS);
 
+                            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
+                                response.put("files", files);
+                            }
+
                             response.put("success", true);
                             response.put("message", "Sync sales successfully.");
                         } else {

@@ -73,6 +73,24 @@ public class GroupController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
+    @RequestMapping("/getGenericGroup")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getGenericGroup(Principal principal) {
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            Optional<Group> group = groupRepo.findByAccountIdAndDeletedAndName(account.getId(),false, Constants.GENERIC);
+
+            return ResponseEntity.status(HttpStatus.OK).body(group);
+        }
+        return new ResponseEntity(HttpStatus.FORBIDDEN);
+    }
+
     @RequestMapping("/getApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody

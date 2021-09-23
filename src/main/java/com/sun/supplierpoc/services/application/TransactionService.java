@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionService {
@@ -42,12 +43,10 @@ public class TransactionService {
 
     public List<Transactions> getTransactionByType(String transactionTypeId, String time, Account account) {
 
-        TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
-        if (transactionType == null)
-            return new ArrayList<>();
-        else {
-            return getTransactionsByTime(transactionType, time);
-        }
+        List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
+        
+        return getTransactionsByTime(transactionTypes, time);
+        
     }
 
     public void createTransactionType(Account account, TransactionType transactionType) {
@@ -66,46 +65,91 @@ public class TransactionService {
         }
     }
 
-    public double getTotalSpendTransactions(String dateFlag, String transactionTypeName, Account account) {
+    public HashMap getTotalSpendTransactions(String dateFlag, String transactionTypeName, Account account) {
 
-        TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
-
+        HashMap statistic;
+        List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
         List<Transactions> transactions;
-
         double totalSpend = 0;
-
-        transactions = getTransactionsByTime(transactionType, dateFlag);
-
+        transactions = getTransactionsByTime(transactionTypes, dateFlag);
         for (Transactions transaction : transactions) {
             totalSpend = totalSpend + transaction.getAfterDiscount();
         }
 
-        return totalSpend;
+        statistic = calculateActivityStatistic(transactions);
+        statistic.put("totalSpend", totalSpend);
 
+        return statistic;
+    }
+
+    public HashMap calculateActivityStatistic(List<Transactions> transactions) {
+
+        HashMap<String, Object> statistic = new HashMap<>();
+
+        List<String> revenues = new ArrayList<>();
+        List<Double> expenses = new ArrayList<>();
+        String revenue;
+        for (int i = 0; i < transactions.size(); i++) {
+            revenue = transactions.get(i).getRevenueCentreName();
+
+            if (notExistInRevenues(revenue, revenues)) {
+                double expense = 0;
+                for (int j = 0; j < transactions.size(); j++) {
+                    if (transactions.get(j).getRevenueCentreName().equals(revenue) && !revenue.equals("")) {
+                        expense = expense + transactions.get(j).getAfterDiscount();
+                    }
+                }
+                revenues.add(revenue);
+                expenses.add(expense);
+            }
+        }
+        statistic.put("revenues", revenues);
+        statistic.put("expenses", expenses);
+        statistic = grtTopRevenues(revenues, expenses, statistic);
+        if(revenues.size() == 1 || revenues.size() == 2){
+            revenues.addAll(Arrays.asList("", ""));
+        }
+        return statistic;
+    }
+
+    public HashMap grtTopRevenues(List<String> revenues, List<Double> expenses, HashMap statistic){
+        double revenueLength = revenues.size();
+        if (revenueLength > 5) { revenueLength = 5; }
+        revenues = revenues.stream().limit(5).collect(Collectors.toList());
+        expenses = expenses.stream().limit(5).collect(Collectors.toList());
+//        if (revenueLength > 0) {
+//            if (revenueLength > 3) { revenueLength = 3 }
+//            var topValues = tempExpence.sort((a, b) => b - a).slice(0, length);
+//            this.topRevenueCenters = [tempRevenue[tempExpence.indexOf(topValues[0])],
+//                    tempRevenue[tempExpence.indexOf(topValues[1])], tempRevenue[tempExpence.indexOf(topValues[2])]]
+//            this.topRevenueCenters = this.topRevenueCenters.sort((a, b) => b - a).slice(0, length);
+//        }
+        statistic.put("topRevenueCenters", revenues);
+        return statistic;
+    }
+
+    public boolean notExistInRevenues(String revenue, List<String> revenues) {
+        for (int i = 0; i < revenues.size(); i++) {
+            if (revenues.get(i).equals(revenue)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public TransInRange getTotalSpendTransactionsInRang(String startDate, String endDate, String transactionTypeName, String group, Account account) {
-
-        TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
-
+        List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
         List<Transactions> transactions;
-
         double totalSpend = 0;
-
-        transactions = getTransactionsByTimeInRAngAndGroup(transactionType, startDate, endDate, group, account);
-
+        transactions = getTransactionsByTimeInRAngAndGroup(transactionTypes, startDate, endDate, group, account);
         for (Transactions transaction : transactions) {
             totalSpend = totalSpend + transaction.getAfterDiscount();
         }
-
         TransInRange transInRange = new TransInRange(transactions, totalSpend);
-
-
         return transInRange;
-
     }
 
-    public List<Transactions> getTransactionsByTime(TransactionType transactionType, String time) {
+    public List<Transactions> getTransactionsByTime(List<TransactionType> transactionTypes, String time) {
 
 
         List<Transactions> transactions;
@@ -113,19 +157,14 @@ public class TransactionService {
         if (time.equals("Today")) {
 
             double totalSpend = 0;
-
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 59);
             calendar.set(Calendar.SECOND, 59);
             Date date = calendar.getTime();
-
-            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), date, new Date());
-
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, date, new Date());
         } else if (time.equals("Last Week")) {
-
             double totalSpend = 0;
-
             Calendar c = Calendar.getInstance();
             c.add(Calendar.DATE, -7);
             c.set(Calendar.HOUR_OF_DAY, 0);
@@ -137,96 +176,78 @@ public class TransactionService {
             c.set(Calendar.MINUTE, 0);
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
-
-            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), start, end);
-
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, start, end);
         } else if (time.equals("Last Month")) {
-
             double totalSpend = 0;
-
             Calendar c = Calendar.getInstance();
             c.set(Calendar.DAY_OF_MONTH, 0);
             c.add(Calendar.DATE, -30);
-
             c.add(Calendar.DATE, 0);
             c.set(Calendar.HOUR_OF_DAY, 0);
             c.set(Calendar.MINUTE, 0);
             c.set(Calendar.SECOND, 0);
             Date start = c.getTime();
-
             c.add(Calendar.DATE, 30);
-
             Month month = Month.of(c.getTime().getMonth() + 1);
             if (month.maxLength() == 31) {
                 c.add(Calendar.DATE, 1);
             }
-
             c.set(Calendar.HOUR_OF_DAY, 0);
             c.set(Calendar.MINUTE, 0);
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
-
-            transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), start, end);
-
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, start, end);
         } else {
-            transactions = transactionRepo.findAllByTransactionTypeIdOrderByTransactionDateDesc(transactionType.getId());
+            transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(transactionTypes);
         }
         return transactions;
     }
 
-    public List<Transactions> getTransactionsByTimeInRAngAndGroup(TransactionType transactionType, String startDate, String endDate, String groupId, Account account) {
-
+    public List<Transactions> getTransactionsByTimeInRAngAndGroup(List<TransactionType> transactionTypes, String startDate, String endDate, String groupId, Account account) {
         List<Transactions> transactions = new ArrayList<>();
-
         Date start = new Date();
         Date end = new Date();
-
         try {
-
             if (startDate == null || startDate.equals("") || endDate == null || endDate.equals("") && groupId != null && groupId.equals("") ) {
-
                 Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
-
                 if (transGroupOptional.isPresent()) {
-
                     Group transGroup = transGroupOptional.get();
-
-                    transactions = transactionRepo.findAllByGroupIdAndTransactionTypeIdOrderByTransactionDateDesc(transGroup.getId(), transactionType.getId());
-
+                    transactions = transactionRepo.findAllByGroupIdAndTransactionTypeInOrderByTransactionDateDesc(transGroup.getId(), transactionTypes);
                 }else {
                     return transactions;
                 }
             }else {
-
                 DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
                 start = df.parse(startDate);
-
                 end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-
                 if (groupId != null && !groupId.equals("")) {
-
                     Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
-
                     if (transGroupOptional.isPresent()) {
-
                         Group transGroup = transGroupOptional.get();
-
-                        transactions = transactionRepo.findAllByGroupIdAndTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transGroup.getId(), transactionType.getId(), start, end);
-
+                        transactions = transactionRepo.findAllByGroupIdAndTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transGroup.getId(), transactionTypes, start, end);
                     } else {
                         return transactions;
                     }
-
                 } else {
-                    transactions = transactionRepo.findAllByTransactionTypeIdAndTransactionDateBetweenOrderByTransactionDateDesc(transactionType.getId(), start, end);
+                    transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, start, end);
                 }
-
             }
         } catch (Exception e) {
             return transactions;
         }
-
         return transactions;
+    }
+
+    public String updateTransactions(){
+        List<Transactions> transactionList = transactionRepo.findAll();
+        TransactionType transactionType;
+        for(Transactions transaction: transactionList){
+            transactionType = transactionTypeRepo.findById(transaction.getTransactionTypeId())
+            .orElseThrow();
+            transaction.setTransactionType(transactionType);
+            transactionRepo.save(transaction);
+        }
+
+        return "";
     }
 }

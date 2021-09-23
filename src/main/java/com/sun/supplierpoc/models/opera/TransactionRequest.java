@@ -2,6 +2,11 @@ package com.sun.supplierpoc.models.opera;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @JacksonXmlRootElement
@@ -242,5 +247,32 @@ public class TransactionRequest implements Serializable {
 
     public void setPOSInfo(String POSInfo) {
         this.POSInfo = POSInfo;
+    }
+
+    @Override
+    public String toString() {
+        return "TransactionRequest{" +
+                "SequenceNo='" + SequenceNo + '\'' +
+                ", TransType='" + TransType + '\'' +
+                ", TransAmount='" + TransAmount + '\'' +
+                ", TransCurrency='" + TransCurrency + '\'' +
+                ", TransToken='" + TransToken + '\'' +
+                ", IssuerId='" + IssuerId + '\'' +
+                ", PAN='" + PAN + '\'' +
+                ", ExpiryDate='" + ExpiryDate + '\'' +
+                ", TaxAmount='" + TaxAmount + '\'' +
+                ", TransDateTime='" + TransDateTime + '\'' +
+                ", CardPresent='" + CardPresent + '\'' +
+                ", PartialAuthFlag='" + PartialAuthFlag + '\'' +
+                ", SAF='" + SAF + '\'' +
+                ", SiteId='" + SiteId + '\'' +
+                ", WSNo='" + WSNo + '\'' +
+                ", Operator='" + Operator + '\'' +
+                ", GuestNo='" + GuestNo + '\'' +
+                ", ChargeInfo='" + ChargeInfo + '\'' +
+                ", IndustryCode='" + IndustryCode + '\'' +
+                ", ProxyInfo='" + ProxyInfo + '\'' +
+                ", POSInfo='" + POSInfo + '\'' +
+                '}';
     }
 }

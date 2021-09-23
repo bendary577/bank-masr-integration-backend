@@ -2,10 +2,10 @@ package com.sun.supplierpoc.models.applications;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 @Document
 public class ApplicationUser implements Serializable {
@@ -22,6 +22,13 @@ public class ApplicationUser implements Serializable {
     private String code;
     private Date lastUpdate;
     private boolean deleted;
+    private Wallet wallet;
+    private String mobile;
+    private double expire;
+    private boolean expired;
+    private boolean suspended;
+    private boolean generic;
+    private List<AccompaniedGuests> accompaniedGuests;
 
     public String getId() {
         return id;
@@ -111,4 +118,59 @@ public class ApplicationUser implements Serializable {
         this.accountId = accountId;
     }
 
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+    public void setWallet(Wallet wallet) {
+        this.wallet = wallet;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
+    }
+
+    public List<AccompaniedGuests> getAccompaniedGuests() {
+        return accompaniedGuests;
+    }
+
+    public void setAccompaniedGuests(List<AccompaniedGuests> accompaniedGuests) {
+        this.accompaniedGuests = accompaniedGuests;
+    }
+
+    public double getExpire() {
+        return expire;
+    }
+
+    public void setExpire(double expire) {
+        this.expire = expire;
+    }
+
+    public boolean isGeneric() {
+        return generic;
+    }
+
+    public void setGeneric(boolean generic) {
+        this.generic = generic;
+    }
+
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
+    }
+
+    public boolean isSuspended() {
+        return suspended;
+    }
+
+    public void setSuspended(boolean suspended) {
+        this.suspended = suspended;
+    }
 }

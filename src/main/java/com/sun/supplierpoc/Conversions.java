@@ -580,9 +580,11 @@ public class Conversions {
     public boolean containRevenueCenter(Balance balance, RevenueCenter revenueCenter) {
         List<RevenueCenter> revenueCenters = balance.getRevenueCenters();
         for (RevenueCenter tempRevenueCenter: revenueCenters){
-            tempRevenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter());
-            return true;
+            if(tempRevenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter())) {
+                return true;
+            }
         }
         return false;
     }
+
 }

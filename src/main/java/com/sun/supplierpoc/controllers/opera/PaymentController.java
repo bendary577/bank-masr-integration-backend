@@ -5,10 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.xml.ser.ToXmlGenerator;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.OperaTransaction;
-import com.sun.supplierpoc.models.OperationType;
-import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.opera.TransactionObject;
@@ -16,6 +13,7 @@ import com.sun.supplierpoc.models.opera.TransactionObjectResponse;
 import com.sun.supplierpoc.models.opera.TransactionRequest;
 import com.sun.supplierpoc.models.opera.TransactionResponse;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
@@ -56,8 +54,8 @@ public class PaymentController {
     private OperaTransactionRepo operaTransactionRepo;
 
     private Conversions conversions = new Conversions();
-
-
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private final String PREAUTHORIZATION = "1";
@@ -95,8 +93,8 @@ public class PaymentController {
 //                break;
 //
 //        }
-
-        transactionResponse = paymentTransaction(transactionRequest);
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted("61111b35f8d6182e2813efe3", false);
+        transactionResponse = paymentTransaction(transactionRequest, transactionRequest.getTransType(), generalSettings);
         return transactionResponse;
     }
 
@@ -126,6 +124,128 @@ public class PaymentController {
         transactionResponse.setMerchantId("1");
         transactionResponse.setTerminalId("1");
         return transactionResponse;
+    }
+
+    private TransactionResponse paymentTransaction(TransactionRequest transactionRequest, String TransType, GeneralSettings generalSettings) {
+        TransactionResponse transactionResponse = new TransactionResponse();
+        transactionResponse.setSequenceNo(transactionRequest.getSequenceNo());
+        transactionResponse.setTransType(transactionRequest.getTransType());
+        transactionResponse.setTransAmount(transactionRequest.getTransAmount());
+
+        ResponseEntity<String> result = null;
+
+        String currency = "";
+        float amount = Float.parseFloat(transactionRequest.getTransAmount());
+
+        if(transactionRequest.getTransCurrency().equals("818"))
+            currency = "AED";
+        else
+            currency = "EGP";
+
+        String POS_MACHINE_URL;
+        if(transactionRequest.getSiteId().equals("ACT|SDMD")) {
+            POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(0).getIp() +
+                    ":" + generalSettings.getPosMachineMaps().get(0).getPort();
+        }else{
+            POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(1).getIp() +
+                    ":" + generalSettings.getPosMachineMaps().get(1).getPort();
+        }
+        try {
+            result = restTemplate.getForEntity(POS_MACHINE_URL + "?transactionAmount=" +
+                    Math.round(amount) + "&currency=" + currency + "&transType=" + TransType, String.class);
+        }catch (Exception e ){
+            e.printStackTrace();
+            logger.error(String.join("Failed in transaction method with ",e.getMessage()));
+        }
+
+        if(result != null && result.getBody() != null) {
+            // Parse POS machine result
+            final String[] values = result.getBody().split(",");
+
+            // Save transaction in middleware
+            OperaTransaction operaTransaction = new OperaTransaction();
+
+            if(values[0].equalsIgnoreCase("Success")){
+                String cardNumber = values[0];
+
+                operaTransaction.setStatus("Success");
+                operaTransaction.setCardNumber(cardNumber.substring(0, 4) +
+                        "XXXXXXXXXX" + cardNumber.substring(cardNumber.length() - 4));
+
+                transactionResponse.setRespCode("00");
+                transactionResponse.setRespText("APPROVAL");
+                transactionResponse.setpAN("XXXXXXXXXXXXXX" + cardNumber.substring(cardNumber.length() - 4));
+                transactionResponse.setExpiryDate(values[2]); // 2509
+                transactionResponse.setTransToken(cardNumber); // 5078031089641006
+                transactionResponse.setEntryMode("01");
+                transactionResponse.setIssuerId("01");
+                transactionResponse.setrRN("000000000311");
+                transactionResponse.setOfflineFlag("N");
+                transactionResponse.setdCCIndicator("0");
+                transactionResponse.setMerchantId("1");
+                transactionResponse.setTerminalId("1");
+                transactionResponse.setPrintData("Bank Misr");
+            }
+            else{
+                operaTransaction.setStatus("Failed");
+                operaTransaction.setReason(values[4]);
+                operaTransaction.setCardNumber("XXXXXXXXXXXXXXXXXX");
+
+                transactionResponse.setRespCode("21"); // No Action Taken
+                transactionResponse.setRespText("No Action Taken");
+                transactionResponse.setpAN("XXXXXXXXXXXXXX0000");
+                transactionResponse.setExpiryDate("2509");
+                transactionResponse.setTransToken("0000000000000000");
+                transactionResponse.setEntryMode("01");
+                transactionResponse.setIssuerId("01");
+                transactionResponse.setrRN("000000000311");
+                transactionResponse.setOfflineFlag("N");
+                transactionResponse.setMerchantId("1");
+                transactionResponse.setdCCIndicator("0");
+                transactionResponse.setTerminalId("1");
+                transactionResponse.setPrintData("Bank Misr");
+            }
+
+            operaTransaction.setAmount(amount / 100);
+            operaTransaction.setCurrency("USD");
+            operaTransaction.setDeleted(false);
+            operaTransaction.setCreationDate(new Date());
+
+//            try {
+//                String url = MIDDLEWARE_URL + "/opera/createOperaTransaction";
+//                boolean saveStatus = restTemplate.postForObject(url, operaTransaction, Boolean.class);
+//                System.out.println(saveStatus);
+//            }catch (Exception e ){
+//                e.printStackTrace();
+//                logger.error(String.join("Failed to save transactions in middleware. ",e.getMessage()));
+//            }
+
+            try {
+                createOperaTransaction(operaTransaction);
+            }catch (Exception e ){
+                e.printStackTrace();
+                logger.error(String.join("Failed to save transactions in middleware. ",e.getMessage()));
+            }
+
+            return transactionResponse;
+        }
+        else{
+            transactionResponse.setRespCode("21"); // No Action Taken
+            transactionResponse.setRespText("No Action Taken");
+            transactionResponse.setpAN("XXXXXXXXXXXXXX0000");
+            transactionResponse.setExpiryDate("2509");
+            transactionResponse.setTransToken("0000000000000000");
+            transactionResponse.setEntryMode("01");
+            transactionResponse.setIssuerId("01");
+            transactionResponse.setrRN("000000000311");
+            transactionResponse.setOfflineFlag("N");
+            transactionResponse.setMerchantId("1");
+            transactionResponse.setdCCIndicator("0");
+            transactionResponse.setTerminalId("1");
+            transactionResponse.setPrintData("Bank Misr");
+
+            return transactionResponse;
+        }
     }
 
     private TransactionResponse auth(TransactionRequest transactionRequest) {
@@ -531,20 +651,27 @@ public class PaymentController {
     public ResponseEntity checkAppConnection(Principal principal,
                                              @RequestParam(name = "ip", required = false) String ip,
                                              @RequestParam(name = "port", required = false) String port){
+        Response  respons = new Response();
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-                if(port != null || !port.equals("") || ip != null || !ip.equals("")){
-                    return ResponseEntity.status(HttpStatus.OK).body("");
-                } else{
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
-                }
 
+                if(port != null || !port.equals("") || ip != null || !ip.equals("")){
+                    respons.setStatus(true);
+                    respons.setMessage("Connected");
+                    return ResponseEntity.status(HttpStatus.OK).body(respons);
+                } else{
+                    respons.setStatus(false);
+                    respons.setMessage("Not Connected");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respons);
+                }
             }else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+                respons.setStatus(false);
+                respons.setMessage("Not Connected");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respons);
             }
 
         }catch (Exception ex){

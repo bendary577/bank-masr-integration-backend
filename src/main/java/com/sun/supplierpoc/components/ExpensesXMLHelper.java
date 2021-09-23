@@ -7,11 +7,6 @@ import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.services.SyncJobDataService;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
@@ -23,10 +18,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -76,7 +68,7 @@ public class ExpensesXMLHelper {
                 serviceChargePercent = 0; vatPercent = 0; municipalityTaxPercent = 0;
 
                 // Read Expenses row
-                ExpenseRow expenseRow = readOccupancyRow(list, temp, generalSettings);
+                ExpenseRow expenseRow = readExpensesRow(list, temp, generalSettings);
 
                 ArrayList<SyncJobData> dataList = syncJobDataService.getSyncJobDataByBookingNo(expenseRow.bookingNo.strip());
 //                if (dataList.size() > 0) {
@@ -105,9 +97,9 @@ public class ExpensesXMLHelper {
                     serviceChargePercent = Integer.parseInt(generatesArray[generatesArray.length -3]);
 
                 // Round up to nearest 2 digests
-                serviceCharge = conversions.roundUpDouble(expenseRow.transactionAmount * serviceChargePercent);
-                municipalityTax = conversions.roundUpDouble(expenseRow.transactionAmount * municipalityTaxPercent);
-                vat = conversions.roundUpDouble((expenseRow.transactionAmount + municipalityTax) * vatPercent);
+                serviceCharge = conversions.roundUpDouble(expenseRow.transactionAmount * serviceChargePercent)/100;
+                municipalityTax = conversions.roundUpDouble(expenseRow.transactionAmount * municipalityTaxPercent)/100;
+                vat = conversions.roundUpDouble((expenseRow.transactionAmount + municipalityTax) * vatPercent)/100;
 
                 expenseItem.expenseDate = expenseRow.transactionDate;
                 expenseItem.cuFlag = "1";
@@ -152,7 +144,7 @@ public class ExpensesXMLHelper {
         }
     }
 
-    private ExpenseRow readOccupancyRow(NodeList list, int rowIndex , GeneralSettings generalSettings){
+    private ExpenseRow readExpensesRow(NodeList list, int rowIndex , GeneralSettings generalSettings){
         ExpenseRow row = new ExpenseRow();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -177,19 +169,20 @@ public class ExpensesXMLHelper {
 
             row.codeGroup = element.getElementsByTagName("C48").item(0).getTextContent();
 
-            typeName = element.getElementsByTagName("C51").item(0).getTextContent();
+            typeName = element.getElementsByTagName("C54").item(0).getTextContent();
             row.transactionCode = conversions.checkExpenseTypeExistence(expenseTypes, typeName).getTypeId();
 
-            row.transactionCodeDesc = element.getElementsByTagName("C54").item(0).getTextContent();
-            row.transactionAmount = conversions.roundUpDouble(Double.parseDouble(element.getElementsByTagName("C66").item(0).getTextContent()));
+            row.transactionCodeDesc = element.getElementsByTagName("C57").item(0).getTextContent();
 
-            generates = element.getElementsByTagName("C75").item(0).getTextContent();
+            row.transactionAmount = conversions.roundUpDouble(Double.parseDouble(element.getElementsByTagName("C69").item(0).getTextContent()));
+
+            generates = element.getElementsByTagName("C78").item(0).getTextContent();
             row.generates = generates.replaceAll(",", "").replaceAll("\\s", "");
 
-            typeName = element.getElementsByTagName("C93").item(0).getTextContent();
+            typeName = element.getElementsByTagName("C96").item(0).getTextContent();
             row.paymentMethod = conversions.checkBookingTypeExistence(paymentTypes, typeName).getTypeId();
 
-            String tempDate = element.getElementsByTagName("C84").item(0).getTextContent();
+            String tempDate = element.getElementsByTagName("C87").item(0).getTextContent();
             if (!tempDate.equals("")){
                 try{
                     if(tempDate.contains(".")){

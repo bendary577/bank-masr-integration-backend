@@ -261,18 +261,21 @@ public class SalesService {
 
         try {
             driver.get(Constants.TENDERS_TABLE_LINK);
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
-            if (rows.size() < 5) {
+
+            WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
+            if (rows.size() < 2) {
                 response.setStatus(true);
                 response.setMessage("There is no tender entries in this location");
                 response.setSalesTender(new ArrayList<>());
 
                 return response;
             }
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 1; i < rows.size(); i++) {
                 Tender tender;
+
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -349,8 +352,10 @@ public class SalesService {
         try {
             driver.get(taxReportLink);
 
-            rows = driver.findElements(By.tagName("tr"));
-            if (rows.size() < 5) {
+            WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            rows = table.findElements(By.tagName("tr"));
+
+            if (rows.size() < 2) {
                 response.setStatus(true);
                 response.setMessage("There is no tax entries in this location");
                 response.setSalesTax(new ArrayList<>());
@@ -358,9 +363,9 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
-            for (int i = 6; i < rows.size(); i++) {
+            for (int i = 1; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -444,9 +449,10 @@ public class SalesService {
         try {
             driver.get(overGroupGrossLink);
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+            WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-            if (rows.size() <= 5){
+            if (rows.size() <= 2){
                 response.setStatus(true);
                 response.setMessage("There is no major groups entries in this location");
                 response.setSalesTender(new ArrayList<>());
@@ -454,7 +460,7 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
             if ((!taxIncluded && columns.indexOf("group") == -1) && (taxIncluded && columns.indexOf("item_group") != -1)){
                 driver.quit();
@@ -472,7 +478,7 @@ public class SalesService {
             float majorGroupAmount;
             float discountAmount;
 
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 1; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -644,10 +650,10 @@ public class SalesService {
 
         try {
             driver.get(Constants.DISCOUNT_TABLE_LINK);
+            WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
-
-            if (rows.size() <= 5){
+            if (rows.size() <= 2){
                 response.setStatus(true);
                 response.setMessage("There is no discount entries in this location");
                 response.setSalesTender(new ArrayList<>());
@@ -655,9 +661,9 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
-            for (int i = 6; i < rows.size(); i++) {
+            for (int i = 1; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 
@@ -728,10 +734,10 @@ public class SalesService {
 
         try {
             driver.get(Constants.SERVICE_CHARGE_TABLE_LINK);
+            WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
-
-            if (rows.size() <= 5){
+            if (rows.size() <= 2){
                 response.setStatus(true);
                 response.setMessage("There is no service charge entries in this location");
                 response.setSalesTender(new ArrayList<>());
@@ -739,10 +745,10 @@ public class SalesService {
                 return response;
             }
 
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 5);
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
             ServiceCharge serviceCharge;
-            for (int i = 6; i < rows.size(); i++) {
+            for (int i = 1; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
 

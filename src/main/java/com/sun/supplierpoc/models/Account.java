@@ -10,7 +10,7 @@ import java.util.Date;
 public class Account implements Serializable {
     @Id
     private String id;
-    private String name;
+    private String name = "";
     private String imageUrl;
     private String domain;
     private String ERD;

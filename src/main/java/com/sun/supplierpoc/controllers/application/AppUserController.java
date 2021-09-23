@@ -216,7 +216,7 @@ public class AppUserController {
 
                         applicationUser.setName(name);
                         applicationUser.setAccountId(account.getId());
-                        group.setLastUpdate(new Date());
+                        applicationUser.setLastUpdate(new Date());
                         userRepo.save(applicationUser);
 
                         response.put("message", "User Updated successfully.");

@@ -10,11 +10,13 @@ import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
+import org.mortbay.servlet.MultiPartFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -297,6 +299,11 @@ public class SalesController {
         return response;
     }
 
+    @RequestMapping("/role/test/drive")
+    public boolean checkDrive(@RequestPart("file") MultipartFile file){
+        return true;
+    }
+
     public static boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
         for (File f : files) {
             try {
@@ -326,7 +333,6 @@ public class SalesController {
         }
         return sendStatus;
     }
-
 
     public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException, IOException {
         Response response = new Response();

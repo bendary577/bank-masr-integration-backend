@@ -1,12 +1,14 @@
 package com.sun.supplierpoc;
 
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.applications.Balance;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.Package;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
+import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.text.*;
@@ -14,6 +16,7 @@ import java.util.*;
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
+@Component
 public class Conversions {
     public Conversions() {
     }
@@ -93,6 +96,17 @@ public class Conversions {
             }
         }
         return false;
+    }
+
+    public RevenueCenter getRevenueCenter(ArrayList<RevenueCenter> revenueCenters, int revenueCenterId){
+        for (RevenueCenter revenueCenter : revenueCenters) {
+            if (revenueCenter.getRevenueCenterId() == revenueCenterId) {
+                if(revenueCenter.isChecked()) {
+                    return revenueCenter;
+                }
+            }
+        }
+        return new RevenueCenter();
     }
 
     public FamilyGroup checkFamilyGroupExistence(ArrayList<FamilyGroup> familyGroups, String familyGroupName){
@@ -541,4 +555,36 @@ public class Conversions {
         return false;
 
     }
+
+    public boolean checkIfUserHasRole(List<Role> roles, String role) {
+
+        for(Role tempRole : roles){
+            if(tempRole.getReference().equals(role)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean checkIfAccountHasFeature(List<Feature> features, Feature feature) {
+
+        for (Feature tempFeature : features){
+            if(tempFeature.getId().equals(feature.getId())){
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public boolean containRevenueCenter(Balance balance, RevenueCenter revenueCenter) {
+        List<RevenueCenter> revenueCenters = balance.getRevenueCenters();
+        for (RevenueCenter tempRevenueCenter: revenueCenters){
+            if(tempRevenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

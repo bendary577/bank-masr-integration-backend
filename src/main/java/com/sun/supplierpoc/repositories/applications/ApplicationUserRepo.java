@@ -22,4 +22,6 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);
 
     List<ApplicationUser> findAllByAccountIdAndGroupId(String id, String groupId);
+
+    boolean existsByEmailAndAccountId(String email, String id);
 }

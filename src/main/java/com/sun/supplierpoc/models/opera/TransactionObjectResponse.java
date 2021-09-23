@@ -1,20 +1,18 @@
 package com.sun.supplierpoc.models.opera;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 
 import java.io.Serializable;
-
 @JsonTypeName(value = "cardInfo")
 @JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
 public class TransactionObjectResponse implements Serializable {
-    public boolean status = false;
+    public boolean status;
 
-    public String message = "";
+    public String message;
 
-    public String authorizationNumber = "";
+    public String authorizationNumber;
 
-    public String cardLastDigits = "";
+    public String cardLastDigits;
 
     public TransactionObjectResponse() {
     }

@@ -47,12 +47,6 @@ public class ActivityController {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    @GetMapping("/test")
-    public ResponseEntity test(){
-        LoggerFactory.getLogger(ActivityController.class);
-        return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-
     @RequestMapping("/createTransactionActivity")
     @CrossOrigin("*")
     public ResponseEntity<?> transactionActivity(@RequestHeader("Authorization") String authorization,
@@ -79,7 +73,12 @@ public class ActivityController {
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 
-                TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
+                TransactionType transactionType;
+                if(transaction.getTransactionTypeId().equals("")) {
+                    transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
+                }else{
+                    transactionType = transactionTypeRepo.findByIdAndAccountId(transaction.getTransactionTypeId(), account.getId());
+                }
 
                 if (!invokerUser.getTypeId().contains(transactionType.getId())) {
                     response.put("isSuccess", false);
@@ -98,7 +97,11 @@ public class ActivityController {
                 ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
 
                 if (conversions.validateRevenueCenter(revenueCenters, transaction.getRevenueCentreId())) {
-                    response = activityService.createTransaction(transactionType, transaction, account, generalSettings);
+
+                    RevenueCenter revenueCenter = conversions.getRevenueCenter(revenueCenters, transaction.getRevenueCentreId());
+
+                    response = activityService.createTransaction(transactionType, transaction, account, generalSettings
+                    , revenueCenter);
 
                     if ((boolean) response.get("isSuccess")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

@@ -6,9 +6,8 @@ public class TransactionObject implements Serializable {
     private String amount;
     private String ecr;
     private String payKind;
-    private String cachierID;
+    private String cashierID;
     private String transCurrency;
-
 
     public TransactionObject() {
     }
@@ -37,12 +36,12 @@ public class TransactionObject implements Serializable {
         this.payKind = payKind;
     }
 
-    public String getCachierID() {
-        return cachierID;
+    public String getCashierID() {
+        return cashierID;
     }
 
-    public void setCachierID(String cachierID) {
-        this.cachierID = cachierID;
+    public void setCashierID(String cashierID) {
+        this.cashierID = cashierID;
     }
 
     public String getTransCurrency() {
@@ -52,5 +51,4 @@ public class TransactionObject implements Serializable {
     public void setTransCurrency(String transCurrency) {
         this.transCurrency = transCurrency;
     }
-
 }

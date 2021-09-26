@@ -205,10 +205,10 @@ public class BookedProductionController {
                         }else{
                             syncJobDataService.updateSyncJobDataStatus(addedBookedProduction, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, addedBookedProduction.size(),
-                                    "Sync approved Invoices successfully.", Constants.SUCCESS);
+                                    "Sync booked production successfully.", Constants.SUCCESS);
 
                             response.put("success", true);
-                            response.put("message", "Sync sales successfully.");
+                            response.put("message", "Sync booked production successfully.");
                         }
                     }
 

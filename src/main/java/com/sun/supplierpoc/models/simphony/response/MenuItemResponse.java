@@ -3,7 +3,6 @@ package com.sun.supplierpoc.models.simphony.response;
 import java.util.List;
 
 public class MenuItemResponse {
-
     private int id;
     private String firstName;
     private String secondName;
@@ -11,6 +10,10 @@ public class MenuItemResponse {
     private double price;
     private List<CondimentResponse> requiredCondiments;
     private List<CondimentResponse> optionalCondiments;
+    private int rating;
+    private double priceMedium;
+    private double priceLarge;
+    private String imageUrl;
 
     public int getId() {
         return id;
@@ -18,6 +21,22 @@ public class MenuItemResponse {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getRating() {
+        return rating;
+    }
+
+    public void setRating(int rating) {
+        this.rating = rating;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 
     public String getFirstName() {
@@ -50,6 +69,22 @@ public class MenuItemResponse {
 
     public void setPrice(double price) {
         this.price = price;
+    }
+
+    public double getPriceMedium() {
+        return priceMedium;
+    }
+
+    public void setPriceMedium(double priceMedium) {
+        this.priceMedium = priceMedium;
+    }
+
+    public double getPriceLarge() {
+        return priceLarge;
+    }
+
+    public void setPriceLarge(double priceLarge) {
+        this.priceLarge = priceLarge;
     }
 
     public List<CondimentResponse> getRequiredCondiments() {

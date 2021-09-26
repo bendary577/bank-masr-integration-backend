@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models.opera;
+package com.sun.supplierpoc.controllers.opera;
 
 import java.io.Serializable;
 
@@ -52,5 +52,4 @@ public class TransactionObject implements Serializable {
     public void setTransCurrency(String transCurrency) {
         this.transCurrency = transCurrency;
     }
-
 }

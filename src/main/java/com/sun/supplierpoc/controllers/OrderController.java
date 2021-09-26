@@ -39,21 +39,26 @@ public class OrderController {
         return response;
     }
 
+    @RequestMapping(value = "/opera/getTotalOrders")
+    @ResponseBody
+    public int getTotalOrders(){
+
+        List<Order> allOrders = orderRepo.findAll();
+        int totalLength = allOrders.size();
+        return totalLength;
+    }
+
     @RequestMapping(value = "/opera/getOrders")
     @ResponseBody
     public List<Order> getOrders(@RequestParam("offset") int offset,
-                                 @RequestParam("size") int size,
-                                 @RequestParam("columnIndex") int columnIndex,
-                                 @RequestParam("isAscending") boolean isAscending
+                                 @RequestParam("size") int size
         ){
 
         List<Order> allOrders = orderRepo.findAll();
         int totalLength = allOrders.size();
-        //int endIndex = offset+size > totalLength ? totalLength : offset+size;
-        List <Order> orders = allOrders.subList(offset,totalLength);
-//        if(columnIndex==3){
-//            orders.sort()
-//        }
+        int endIndex = offset+size > totalLength ? totalLength : offset+size;
+        List <Order> orders = allOrders.subList(offset,endIndex);
+
         return orders;
     }
 }

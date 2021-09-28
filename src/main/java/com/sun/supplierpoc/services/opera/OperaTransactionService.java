@@ -36,7 +36,7 @@ public class OperaTransactionService {
             }else {
                 failedTransactionCount += 1;
             }
-            totalTransactionAmount += 1;
+            totalTransactionAmount += transaction.getAmount();
         }
 
         response.put("succeedTransactionCount", succeedTransactionCount);
@@ -49,25 +49,29 @@ public class OperaTransactionService {
     }
 
     public List<OperaTransaction> filterTransactions(String startDate, String endDate, String cardNumber, Account account) {
-
         List<OperaTransaction> operaTransactions = new ArrayList<>();
-
-        Date start = new Date();
-        Date end = new Date();
-
+        Date start, end;
         try {
-            if (startDate == null || startDate.equals("") || startDate == null || endDate.equals("") && cardNumber != null && !cardNumber.equals("")){
+            if ((startDate == null || startDate.equals("") || startDate == null || endDate.equals("")) && cardNumber != null && !cardNumber.equals("")){
                 operaTransactions = operaTransactionRepo.findAllByAccountIdAndDeletedAndCardNumber(account.getId(), false, cardNumber);
-            }else{
+            }else if((startDate != null || !startDate.equals("") || startDate != null || !endDate.equals(""))){
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                start = dateFormat.parse(startDate);
-                end = new Date(dateFormat.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+                try {
+                    start = dateFormat.parse(startDate);
+                    end = new Date(dateFormat.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+                }catch(Exception e){
+                    dateFormat = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss");
+                    start= dateFormat.parse(startDate.substring(0, 24));
+                    end = dateFormat.parse(endDate.substring(0, 24));
+                }
                 if(cardNumber.equals("") || cardNumber == null){
                     operaTransactions = operaTransactionRepo.findByAccountIdAndDeletedAndCreationDateBetween(
                             account.getId(), false, start, end);
                 }else{
                     operaTransactions = operaTransactionRepo.findByAccountIdAndDeletedAndCardNumberAndCreationDateBetween(account.getId(), false, cardNumber,start, end);
                 }
+            }else if(cardNumber.equals("") || cardNumber == null){
+                    operaTransactions = operaTransactionRepo.findAllByAccountIdAndDeletedAndCardNumber(account.getId(), false, cardNumber);
             }
             return operaTransactions;
         } catch (Exception e) {

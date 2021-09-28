@@ -66,9 +66,7 @@ public class SupportController {
 
 
     public Response exportedFile(User user, Account account, Principal principal, ExportRequest exportRequest){
-
         Response response = new Response();
-
         if(exportRequest.getCostCenters().isEmpty()){
             response.setMessage("Wrong store.");
         }else if(exportRequest.getEmail().equals("")){
@@ -76,14 +74,11 @@ public class SupportController {
         }else if(exportRequest.getSyncJobTypes().isEmpty()){
             response.setMessage("Wrong module");
         }else {
-
             List<SyncJobType> syncJobTypes = exportRequest.getSyncJobTypes();
             List<CostCenter> costCenters = exportRequest.getCostCenters();
             String email = exportRequest.getEmail();
-
             Date fromDate;
             Date toDate;
-
             try {
                 fromDate = exportRequest.getDateRange().getStartDate();
                 toDate = exportRequest.getDateRange().getEndDate();

@@ -18,6 +18,7 @@ import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
+import com.sun.supplierpoc.services.opera.OperaTransactionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,11 @@ public class PaymentController {
     private Conversions conversions = new Conversions();
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
+
+
+    @Autowired
+    private OperaTransactionService operaTransactionService;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private final String PREAUTHORIZATION = "1";
@@ -71,7 +77,7 @@ public class PaymentController {
         return new MappingJackson2XmlHttpMessageConverter(mapper);
     }
 
-    @PostMapping(value = "/testPayment", produces = MediaType.APPLICATION_XML_VALUE)
+    @PostMapping(value = "/paymentTest", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public TransactionResponse operaPayment(@RequestBody TransactionRequest transactionRequest) {
 
@@ -91,6 +97,7 @@ public class PaymentController {
 //                break;
 //            case "07":transactionResponse=  paymentTransaction(transactionRequest);
 //                break;
+//
 //        }
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted("61111b35f8d6182e2813efe3", false);
         transactionResponse = paymentTransaction(transactionRequest, transactionRequest.getTransType(), generalSettings);
@@ -412,7 +419,6 @@ public class PaymentController {
             transactionResponse.setdCCIndicator("0");
             transactionResponse.setTerminalId("1");
         }
-
         return transactionResponse;
     }
 
@@ -505,56 +511,49 @@ public class PaymentController {
         }
     }
 
-    @GetMapping(value = "/listOperaTransaction")
+    @PostMapping(value = "/listOperaTransaction")
+    @CrossOrigin("*")
     @ResponseBody
-    public List<OperaTransaction> listOperaTransaction(Principal principal,
-                                                       @RequestParam(name = "startDate", required = false) String startDate,
-                                                       @RequestParam(name = "endDate", required = false) String endDate){
+    public HashMap<String, Object> listOperaTransaction(Principal principal,
+                                                        @RequestPart(name = "startDate", required = false) String startDate,
+                                                        @RequestPart(name = "endDate", required = false) String endDate,
+                                                        @RequestPart(name="cardNumber", required = false) String cardNumber){
+
+        HashMap<String, Object> response = new HashMap<>();
+
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-                if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
-                    return operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
-                } else{
-                    Date start;
-                    Date end;
-
-                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-
-                    try {
-                        start = df.parse(startDate);
-                        end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-
-                    }catch(Exception e){
-                        e.printStackTrace();
-                        df = new SimpleDateFormat("yyyy-M-d");
-                        start = df.parse(startDate);
-                        end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-                    }
-
-                    return operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
-                            account.getId(), false, start, end);
+                if(cardNumber == null){
+                    cardNumber = "";
                 }
 
-
+                if((startDate == null || startDate.equals("") || startDate == null || endDate.equals("")) && (cardNumber == null || cardNumber.equals(""))){
+                    response.put("transactions", operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false));
+                    return response;
+                } else{
+                    response = operaTransactionService.filterTransactionsAndCalculateTotals(startDate, endDate, cardNumber, account);
+                    return response;
+                }
             }else {
-                return new ArrayList<>();
+                return response;
             }
 
         }catch (Exception ex){
             ex.printStackTrace();
-            return new ArrayList<>();
+            return response;
         }
     }
+
 
     @GetMapping(value = "/countOperaTransaction")
     @ResponseBody
     public ResponseEntity getOperaTransactionStat(Principal principal,
-                                     @RequestParam(name = "startDate", required = false) String startDate,
-                                     @RequestParam(name = "endDate", required = false) String endDate){
+                                                  @RequestParam(name = "startDate", required = false) String startDate,
+                                                  @RequestParam(name = "endDate", required = false) String endDate){
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());

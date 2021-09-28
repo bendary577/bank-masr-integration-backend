@@ -9,7 +9,6 @@ public class TransactionObject implements Serializable {
     private String cashierID;
     private String transCurrency;
 
-
     public TransactionObject() {
     }
 
@@ -52,5 +51,4 @@ public class TransactionObject implements Serializable {
     public void setTransCurrency(String transCurrency) {
         this.transCurrency = transCurrency;
     }
-
 }

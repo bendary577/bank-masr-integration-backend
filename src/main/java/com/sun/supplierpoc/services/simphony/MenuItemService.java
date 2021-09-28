@@ -221,6 +221,7 @@ public class MenuItemService {
 
             soapMessage.saveChanges();
             Entity<String> payload = Entity.text(soapMessageToString(soapMessage));
+            System.out.print(location.getSimphonyServer());
             Response createCheckResponse = client.target(location.getSimphonyServer() + "/EGateway/SimphonyPosApiWeb.asmx")
                     .request(MediaType.TEXT_PLAIN_TYPE)
                     .header("SOAPAction", "http://micros-hosting.com/EGateway/PostTransactionEx")
@@ -403,6 +404,18 @@ public class MenuItemService {
                 menuItemData.put("price", "0");
                 itemResponse.setPrice(Double.parseDouble("0"));
             }
+
+            menuItemData.put("imageUrl", "https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
+            itemResponse.setImageUrl("https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
+
+            menuItemData.put("priceMedium", "90");
+            itemResponse.setPriceMedium(Double.parseDouble("90"));
+
+            menuItemData.put("priceLarge", "140");
+            itemResponse.setPriceLarge(Double.parseDouble("140"));
+
+            menuItemData.put("rating", 4);
+            itemResponse.setRating(4);
 
             SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());

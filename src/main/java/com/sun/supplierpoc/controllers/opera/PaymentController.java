@@ -419,7 +419,6 @@ public class PaymentController {
             transactionResponse.setdCCIndicator("0");
             transactionResponse.setTerminalId("1");
         }
-
         return transactionResponse;
     }
 
@@ -512,12 +511,13 @@ public class PaymentController {
         }
     }
 
-    @GetMapping(value = "/listOperaTransaction")
+    @PostMapping(value = "/listOperaTransaction")
+    @CrossOrigin("*")
     @ResponseBody
     public HashMap<String, Object> listOperaTransaction(Principal principal,
-                                                        @RequestParam(name = "startDate", required = false) String startDate,
-                                                        @RequestParam(name = "endDate", required = false) String endDate,
-                                                        @RequestParam(name="cardNumber", required = false) String cardNumber){
+                                                        @RequestPart(name = "startDate", required = false) String startDate,
+                                                        @RequestPart(name = "endDate", required = false) String endDate,
+                                                        @RequestPart(name="cardNumber", required = false) String cardNumber){
 
         HashMap<String, Object> response = new HashMap<>();
 
@@ -526,6 +526,10 @@ public class PaymentController {
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
+
+                if(cardNumber == null){
+                    cardNumber = "";
+                }
 
                 if((startDate == null || startDate.equals("") || startDate == null || endDate.equals("")) && (cardNumber == null || cardNumber.equals(""))){
                     response.put("transactions", operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false));

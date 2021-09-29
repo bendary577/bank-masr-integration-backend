@@ -19,8 +19,8 @@ public class OperaTransaction {
     private String sequenceNo;
     private String guestNumber;
 
-    private String CheckInDate;
-    private String CheckOutDate;
+    private String checkInDate;
+    private String checkOutDate;
 
     private Date creationDate;
     private boolean deleted;
@@ -101,19 +101,19 @@ public class OperaTransaction {
     }
 
     public String getCheckInDate() {
-        return CheckInDate;
+        return checkInDate;
     }
 
     public void setCheckInDate(String checkInDate) {
-        CheckInDate = checkInDate;
+        this.checkInDate = checkInDate;
     }
 
     public String getCheckOutDate() {
-        return CheckOutDate;
+        return checkOutDate;
     }
 
     public void setCheckOutDate(String checkOutDate) {
-        CheckOutDate = checkOutDate;
+        this.checkOutDate = checkOutDate;
     }
 
     public Date getCreationDate() {

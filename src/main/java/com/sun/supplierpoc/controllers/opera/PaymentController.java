@@ -183,11 +183,13 @@ public class PaymentController {
             final String[] values = result.getBody().split(",");
 
             if(values[0].equalsIgnoreCase("Success")){
-                String cardNumber = values[0];
+                String reason = values[1];
+                String cardNumber = values[2];
 
                 operaTransaction.setStatus("Success");
+                operaTransaction.setReason(reason);
                 operaTransaction.setCardNumber(cardNumber.substring(0, 4) +
-                        "XXXXXXXXXX" + cardNumber.substring(cardNumber.length() - 4));
+                        "XXXXXXXX" + cardNumber.substring(cardNumber.length() - 4));
 
                 transactionResponse.setRespCode("00");
                 transactionResponse.setRespText("APPROVAL");
@@ -205,12 +207,12 @@ public class PaymentController {
             }
             else{
                 operaTransaction.setStatus("Failed");
-                operaTransaction.setReason(values[4]);
-                operaTransaction.setCardNumber("XXXXXXXXXXXXXXXXXX");
+                operaTransaction.setReason(values[1]);
+                operaTransaction.setCardNumber("XXXXXXXXXXXXXXXX");
 
                 transactionResponse.setRespCode("21"); // No Action Taken
                 transactionResponse.setRespText("No Action Taken");
-                transactionResponse.setpAN("XXXXXXXXXXXXXX0000");
+                transactionResponse.setpAN("XXXXXXXXXXXX0000");
                 transactionResponse.setExpiryDate("2509");
                 transactionResponse.setTransToken("0000000000000000");
                 transactionResponse.setEntryMode("01");
@@ -235,7 +237,7 @@ public class PaymentController {
         else{
             operaTransaction.setStatus("Failed");
             operaTransaction.setReason("The connection to the POS machine was broken.");
-            operaTransaction.setCardNumber("XXXXXXXXXXXXXXXXXX");
+            operaTransaction.setCardNumber("XXXXXXXXXXXXXXXX");
 
             try {
                 createOperaTransaction(operaTransaction);
@@ -246,7 +248,7 @@ public class PaymentController {
 
             transactionResponse.setRespCode("21"); // No Action Taken
             transactionResponse.setRespText("No Action Taken");
-            transactionResponse.setpAN("XXXXXXXXXXXXXX0000");
+            transactionResponse.setpAN("XXXXXXXXXXXX0000");
             transactionResponse.setExpiryDate("2509");
             transactionResponse.setTransToken("0000000000000000");
             transactionResponse.setEntryMode("01");

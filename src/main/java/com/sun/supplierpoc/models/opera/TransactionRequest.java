@@ -49,6 +49,12 @@ public class TransactionRequest implements Serializable {
     private String ChargeInfo;
     @JacksonXmlProperty
     private String IndustryCode;
+
+    @JacksonXmlProperty
+    private String CheckInDate;
+    @JacksonXmlProperty
+    private String CheckOutDate;
+
     @JacksonXmlProperty
     private String ProxyInfo;
     @JacksonXmlProperty
@@ -231,6 +237,22 @@ public class TransactionRequest implements Serializable {
 
     public void setIndustryCode(String industryCode) {
         IndustryCode = industryCode;
+    }
+
+    public String getCheckInDate() {
+        return CheckInDate;
+    }
+
+    public void setCheckInDate(String checkInDate) {
+        CheckInDate = checkInDate;
+    }
+
+    public String getCheckOutDate() {
+        return CheckOutDate;
+    }
+
+    public void setCheckOutDate(String checkOutDate) {
+        CheckOutDate = checkOutDate;
     }
 
     public String getProxyInfo() {

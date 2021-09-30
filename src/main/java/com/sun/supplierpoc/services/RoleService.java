@@ -44,9 +44,9 @@ public class RoleService {
             Optional<Feature> featureOptional = featureRepository.findById(roleRequest.getFeatureId());
             if(featureOptional.isPresent()) {
                 Feature feature = featureOptional.get();
-                roleRequest.setFeature(feature);
                 Role role = roleRepository.save(roleRequest);
-
+                feature.getRoles().add(role);
+                featureRepository.save(feature);
                 response.setStatus(true);
                 response.setData(role);
                 return response;

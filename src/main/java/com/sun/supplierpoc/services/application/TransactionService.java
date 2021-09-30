@@ -217,9 +217,9 @@ public class TransactionService {
                     return transactions;
                 }
             }else {
-                DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-                start = df.parse(startDate);
-                end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+                DateFormat df = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss");
+                start = df.parse(startDate.substring(0, 23));
+                end = new Date(df.parse(endDate.substring(0, 23)).getTime() + MILLIS_IN_A_DAY);
                 if (groupId != null && !groupId.equals("")) {
                     Optional<Group> transGroupOptional = groupRepo.findByIdAndAccountId(groupId, account.getId());
                     if (transGroupOptional.isPresent()) {

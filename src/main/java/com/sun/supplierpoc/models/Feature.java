@@ -1,9 +1,12 @@
 package com.sun.supplierpoc.models;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
+import java.util.List;
 
 @Document
 public class Feature {
@@ -16,6 +19,9 @@ public class Feature {
 
     @NotNull(message= "Feature reference can't be null.")
     private String reference;
+
+    @DBRef
+    private List<Role> roles = new ArrayList<>();
 
     public Feature() {
     }
@@ -42,5 +48,13 @@ public class Feature {
 
     public void setReference(String reference) {
         this.reference = reference;
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
+        this.roles = roles;
     }
 }

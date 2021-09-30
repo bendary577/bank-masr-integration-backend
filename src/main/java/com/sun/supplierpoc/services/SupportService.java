@@ -82,9 +82,7 @@ public class SupportService {
         boolean isFirst = true;
         int count = 0 ;
         while (notSuccess && count != 3 ) {
-
             FileSystemResource file = getZip(account, fromDate, toDate, stores, modules);
-
             if (file != null && !isFirst) {
                 notSuccess = false;
                 try {
@@ -109,35 +107,24 @@ public class SupportService {
                                      List<SyncJobType> modules) {
 
         List<FileSystemResource> files = new ArrayList<>();
-
         for (SyncJobType tempSyncJobType : modules) {
-
             Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(tempSyncJobType.getId());
-
             if (syncJobTypeOptional.isPresent()) {
-
             SyncJobType syncJobType = syncJobTypeOptional.get();
-
             String module = syncJobType.getName();
-
             for (CostCenter costCenter : stores) {
-
                 String store = costCenter.costCenterReference;
                 Date toDateRequest = addDays(toDate, 1);
                 Date fromDateRequest = fromDate;
-
                     while (!checkIfEquivalent(fromDateRequest, toDateRequest)) {
-
                         String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
                         String fileName = String.format("%02d", fromDate.getDate()) +
                                 String.format("%02d", (fromDate.getMonth() + 1)) + "20" +
                                 String.format("%03d", fromDate.getYear()).substring(1, 3) +
                                 daysOfWeek[fromDate.getDay()];
-
-                        String path = account.getName() + "/" + module + "/" + (fromDate.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
-
+                        String path = account.getName() + "/" + module + "/" + "20" + String.format("%03d", fromDate.getYear()).substring(1, 3) + "/" +
+                                (fromDate.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
                         fromDateRequest = addDays(fromDateRequest, 1);
-
                         FileSystemResource file = new FileSystemResource(path);
                         files.add(file);
                     }

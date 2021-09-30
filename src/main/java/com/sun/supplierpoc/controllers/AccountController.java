@@ -306,7 +306,7 @@ public class AccountController {
 //            transfersConfig.inforConfiguration = new InforConfiguration();
 //        }
 //
-//        SyncJobType transferSyncType = new SyncJobType(5, Constants.TRANSFERS, syncDescription, "/bookedTransferSun",
+//        SyncJobType transferSyncType = new SyncJobType(5, Constants.TRANSFERS, syncDescription, "/bookedTransfersSun",
 //                new Date(), new Configuration(), account.getId());
 //        syncJobTypeRepo.save(transferSyncType);
 //

@@ -4,7 +4,10 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Feature;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.repositories.FeatureRepository;
+import com.sun.supplierpoc.repositories.RoleRepository;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.FeatureService;
 import com.sun.supplierpoc.services.UserService;
@@ -16,9 +19,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping(("/feature"))
+@RequestMapping(("/test/feature"))
 public class FeatureController {
 
     @Autowired
@@ -29,6 +33,12 @@ public class FeatureController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private FeatureRepository featureRepository;
+
+    @Autowired
+    private RoleRepository roleRepo;
 
     //, Principal principal
     @PostMapping("/addFeature")
@@ -110,5 +120,42 @@ public class FeatureController {
 //            response.setStatus(false);
 //            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
 //        }
+    }
+
+
+    @RequestMapping("/addRolesToFeature")
+    public ResponseEntity<?> addRolesToFeature(@RequestPart("featureId") String featureId
+            ,@RequestPart("rolesIds") List<String> rolesIds){
+
+        Response response = new Response();
+
+        Optional<Feature> featureOptional =  featureRepository.findById(featureId);
+
+        if (featureOptional.isPresent()){
+            Feature feature = featureOptional.get();
+
+            for(String roleId : rolesIds){
+                Optional<Role> role = roleRepo.findById(roleId);
+                if(role.isPresent()){
+                    feature.getRoles().add(role.get());
+                }else{
+                    response.setStatus(false);
+                    response.setMessage("There isn't role with id " + roleId);
+                }
+            }
+
+            featureRepository.save(feature);
+            response.setStatus(true);
+            response.setMessage("Roles have been added to the feature successfully.");
+        }else{
+            response.setStatus(false);
+            response.setMessage("There isn't feature with id " + featureId);
+        }
+
+        if(response.isStatus()){
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 }

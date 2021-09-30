@@ -63,24 +63,24 @@ public class SendEmailService {
         MimeMessage mailMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
-
+//            messageHelper.setFrom("Anyware_Software");
             DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(email);
-            String mailSubject = "More rewards, just for YOU!";
+            String mailSubject = "Support Follow Up!";
             String mailContent =
-                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;\n'>" +
+                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
                             "<br>"+ "<p style='text-align:left'>" +
                             "   Dear  " + user.getName()  + "<br> <br>" +
                             " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
                             "<span style=' padding-left:20px'>  for the " +
                             getModules(syncJobTypes)
                             +
-                            " modules,</span>" +
-                            " <span style=' padding-left:20px'> Located in " +
+                            " modules,</span> <br>" +
+                            " <span style=' padding-left:20px'>  Located in " +
                             getStores(stores)
                             +
-                            ",</span><br>" +
+                            "</span><br>" +
                             " <span style=' padding-left:20px'> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
                             " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br><br>" +
                             " Thanks and Regards,<br>" +
@@ -107,7 +107,7 @@ public class SendEmailService {
             if(i == 0 && !start){
                 modules =  "and " + modules + syncJobType.getName() + " ";
             }else{
-                modules = modules + syncJobType.getName() + ", ";
+                modules = modules + syncJobType.getName() + " ";
             }
             start = false;
             i -= 1;

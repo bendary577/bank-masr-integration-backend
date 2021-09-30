@@ -149,7 +149,7 @@ public class PaymentController {
             currency = "EGP";
 
         String POS_MACHINE_URL;
-        if(transactionRequest.getSiteId().equals("ACT|SDMD")) {
+        if(transactionRequest.getSiteId() != null && transactionRequest.getSiteId().equals("ACT|SDMD")) {
             POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(0).getIp() +
                     ":" + generalSettings.getPosMachineMaps().get(0).getPort();
         }else{
@@ -164,12 +164,23 @@ public class PaymentController {
             logger.error(String.join("Failed in transaction method with ",e.getMessage()));
         }
 
+        // Save transaction in middleware
+        OperaTransaction operaTransaction = new OperaTransaction();
+
+        operaTransaction.setAmount(amount / 100);
+        operaTransaction.setCurrency("USD");
+
+        operaTransaction.setSequenceNo(transactionRequest.getSequenceNo());
+        operaTransaction.setGuestNumber(transactionRequest.getGuestNo());
+        operaTransaction.setCheckInDate(transactionRequest.getCheckInDate());
+        operaTransaction.setCheckOutDate(transactionRequest.getCheckOutDate());
+
+        operaTransaction.setDeleted(false);
+        operaTransaction.setCreationDate(new Date());
+
         if(result != null && result.getBody() != null) {
             // Parse POS machine result
             final String[] values = result.getBody().split(",");
-
-            // Save transaction in middleware
-            OperaTransaction operaTransaction = new OperaTransaction();
 
             if(values[0].equalsIgnoreCase("Success")){
                 String cardNumber = values[0];
@@ -212,20 +223,6 @@ public class PaymentController {
                 transactionResponse.setPrintData("Bank Misr");
             }
 
-            operaTransaction.setAmount(amount / 100);
-            operaTransaction.setCurrency("USD");
-            operaTransaction.setDeleted(false);
-            operaTransaction.setCreationDate(new Date());
-
-//            try {
-//                String url = MIDDLEWARE_URL + "/opera/createOperaTransaction";
-//                boolean saveStatus = restTemplate.postForObject(url, operaTransaction, Boolean.class);
-//                System.out.println(saveStatus);
-//            }catch (Exception e ){
-//                e.printStackTrace();
-//                logger.error(String.join("Failed to save transactions in middleware. ",e.getMessage()));
-//            }
-
             try {
                 createOperaTransaction(operaTransaction);
             }catch (Exception e ){
@@ -236,6 +233,17 @@ public class PaymentController {
             return transactionResponse;
         }
         else{
+            operaTransaction.setStatus("Failed");
+            operaTransaction.setReason("The connection to the POS machine was broken.");
+            operaTransaction.setCardNumber("XXXXXXXXXXXXXXXXXX");
+
+            try {
+                createOperaTransaction(operaTransaction);
+            }catch (Exception e ){
+                e.printStackTrace();
+                logger.error(String.join("Failed to save transactions in middleware.",e.getMessage()));
+            }
+
             transactionResponse.setRespCode("21"); // No Action Taken
             transactionResponse.setRespText("No Action Taken");
             transactionResponse.setpAN("XXXXXXXXXXXXXX0000");
@@ -273,7 +281,6 @@ public class PaymentController {
             if (!invokerUser.getTypeId().equals(operationType.getId()))
                 return transactionResponse;
 
-//            http://localhost:9090
             final String uri = operationType.getConfiguration().getTpeConnectorLink() + "/paymentPreauthorization";
 
             Random random = new Random(100);

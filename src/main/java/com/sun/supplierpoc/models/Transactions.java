@@ -18,7 +18,7 @@ public class Transactions {
     @NotNull(message="Code can't be empty.")
     @NotBlank(message="Code can't be empty.")
     private String code;
-    private String transactionTypeId;
+    private String transactionTypeId = "";
     @DBRef
     private TransactionType transactionType;
     private Date transactionDate;

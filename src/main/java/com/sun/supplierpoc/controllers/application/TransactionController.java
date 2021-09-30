@@ -168,7 +168,12 @@ public class TransactionController {
         }else{
 
         }
+    }
 
+    @GetMapping("/test/updateTrans")
+    public ResponseEntity<?> createTransaction(){
+        transactionService.updateTransactions();
+        return new ResponseEntity<>("", HttpStatus.OK);
     }
 
 }

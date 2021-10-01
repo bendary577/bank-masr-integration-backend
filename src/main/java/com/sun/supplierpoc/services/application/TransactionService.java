@@ -75,10 +75,9 @@ public class TransactionService {
         for (Transactions transaction : transactions) {
             totalSpend = totalSpend + transaction.getAfterDiscount();
         }
-
         statistic = calculateActivityStatistic(transactions);
+        statistic.put("transactions", transactions);
         statistic.put("totalSpend", totalSpend);
-
         return statistic;
     }
 

@@ -306,7 +306,7 @@ public class JournalController {
                             response.put("message", "Sync sales successfully.");
                         } else {
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                    "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
+                                    "Failed to send files via " + account.getSendMethod() + ".", Constants.SUCCESS);
 
                             response.put("success", false);
                             response.put("message", "Failed to send files via " + account.getSendMethod() + ".");

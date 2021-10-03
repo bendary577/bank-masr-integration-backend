@@ -253,7 +253,7 @@ public class SalesController {
                                 response.setMessage("Get sales successfully.");
                                 return response;
                             } else {
-                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
 
@@ -298,7 +298,6 @@ public class SalesController {
         }
         return response;
     }
-
     @RequestMapping("/role/test/drive")
     public boolean checkDrive(@RequestPart("file") MultipartFile file){
         return true;

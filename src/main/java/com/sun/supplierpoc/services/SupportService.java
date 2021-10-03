@@ -80,8 +80,8 @@ public class SupportService {
 
         boolean notSuccess = true;
         boolean isFirst = true;
-        int count = 0 ;
-        while (notSuccess && count != 3 ) {
+        int count = 0;
+        while (notSuccess && count != 3) {
             FileSystemResource file = getZip(account, fromDate, toDate, stores, modules);
             if (file != null && !isFirst) {
                 notSuccess = false;
@@ -110,32 +110,37 @@ public class SupportService {
         for (SyncJobType tempSyncJobType : modules) {
             Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(tempSyncJobType.getId());
             if (syncJobTypeOptional.isPresent()) {
-            SyncJobType syncJobType = syncJobTypeOptional.get();
-            String module = syncJobType.getName();
-            for (CostCenter costCenter : stores) {
-                String store = costCenter.costCenterReference;
-                Date toDateRequest = addDays(toDate, 1);
-                Date fromDateRequest = fromDate;
+                SyncJobType syncJobType = syncJobTypeOptional.get();
+                String module = syncJobType.getName();
+                for (CostCenter costCenter : stores) {
+                    String store = costCenter.costCenterReference;
+
+                    Date toDateRequest = addDays(toDate, 1);
+                    Date fromDateRequest = fromDate;
                     while (!checkIfEquivalent(fromDateRequest, toDateRequest)) {
                         String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
                         String fileName = String.format("%02d", fromDate.getDate()) +
                                 String.format("%02d", (fromDate.getMonth() + 1)) + "20" +
                                 String.format("%03d", fromDate.getYear()).substring(1, 3) +
                                 daysOfWeek[fromDate.getDay()];
+
                         String path = account.getName() + "/" + module + "/" + "20" + String.format("%03d", fromDate.getYear()).substring(1, 3) + "/" +
                                 (fromDate.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
                         fromDateRequest = addDays(fromDateRequest, 1);
+
+
                         FileSystemResource file = new FileSystemResource(path);
                         files.add(file);
                     }
                 }
 
-            } else {
-                return null;
             }
         }
-        FileSystemResource fileSystemResource = zip(files, "exported_files.zip");
-        return fileSystemResource;
+        if(files.size() > 0){
+            return zip(files, "exported_files.zip");
+        }else{
+            return null;
+        }
     }
 
     public Date addDays(Date date, int days) {
@@ -177,7 +182,7 @@ public class SupportService {
         }
     }
 
-    public void reSyncModules(Account account, Date fromDate, Date toDate, List<CostCenter> stores, List<SyncJobType> syncJobTypes, Principal principal){
+    public void reSyncModules(Account account, Date fromDate, Date toDate, List<CostCenter> stores, List<SyncJobType> syncJobTypes, Principal principal) {
 
         Response response = new Response();
 
@@ -189,50 +194,50 @@ public class SupportService {
                 SyncJobType syncJobType = syncJobTypeOptional.get();
 
 
-                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-                    syncJobType.getConfiguration().setFromDate(dateFormat.format(fromDate));
-                    syncJobType.getConfiguration().setToDate(dateFormat.format(addDays(toDate, 1)));
-                    syncJobTypeRepo.save(syncJobType);
-                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-                    ArrayList<CostCenter> locations = generalSettings.getLocations();
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                syncJobType.getConfiguration().setFromDate(dateFormat.format(fromDate));
+                syncJobType.getConfiguration().setToDate(dateFormat.format(addDays(toDate, 1)));
+                syncJobTypeRepo.save(syncJobType);
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+                ArrayList<CostCenter> locations = generalSettings.getLocations();
 
-                    List<String> storesList  = new ArrayList<>();
-                    for(CostCenter store : stores){
-                        storesList.add(store.costCenterReference);
+                List<String> storesList = new ArrayList<>();
+                for (CostCenter store : stores) {
+                    storesList.add(store.costCenterReference);
+                }
+                for (CostCenter location : locations) {
+                    if (storesList.contains(location.costCenterReference)) {
+                        location.checked = true;
+                    } else {
+                        location.checked = false;
                     }
-                        for (CostCenter location : locations) {
-                            if (storesList.contains(location.costCenterReference)) {
-                                location.checked = true;
-                            } else {
-                                location.checked = false;
-                            }
-                        }
+                }
 
-                    generalSettings.setLocations(locations);
-                    generalSettingsRepo.save(generalSettings);
-                    try {
+                generalSettings.setLocations(locations);
+                generalSettingsRepo.save(generalSettings);
+                try {
 
-                        if (syncJobType.getName().equals(Constants.SALES)) {
-                            response = salesController.getPOSSalesRequest(principal).getBody();
-                        }else if(syncJobType.getName().equals(Constants.CONSUMPTION)){
-                            journalController.getJournalsRequest(principal).getBody();
-                        }else if(syncJobType.getName().equals(Constants.APPROVED_INVOICES)){
-                            invoiceController.getApprovedInvoicesRequest(principal).getBody();
-                        }else if(syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)){
-                            bookedProductionController.getBookedProductionRequest(principal);
-                        }else if(syncJobType.getName().equals(Constants.COST_OF_GOODS)){
-                            costOfGoodsController.getCostOfGoodsRequest(principal);
-                        }else if(syncJobType.getName().equals(Constants.WASTAGE)){
-                            wastageController.getWastageRequest(principal);
-                        }else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)){
-                            creditNoteController.getCreditNotesRequest(principal);
-                        }
-
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                    if (syncJobType.getName().equals(Constants.SALES)) {
+                        response = salesController.getPOSSalesRequest(principal).getBody();
+                    } else if (syncJobType.getName().equals(Constants.CONSUMPTION)) {
+                        journalController.getJournalsRequest(principal).getBody();
+                    } else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES)) {
+                        invoiceController.getApprovedInvoicesRequest(principal).getBody();
+                    } else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)) {
+                        bookedProductionController.getBookedProductionRequest(principal);
+                    } else if (syncJobType.getName().equals(Constants.COST_OF_GOODS)) {
+                        costOfGoodsController.getCostOfGoodsRequest(principal);
+                    } else if (syncJobType.getName().equals(Constants.WASTAGE)) {
+                        wastageController.getWastageRequest(principal);
+                    } else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)) {
+                        creditNoteController.getCreditNotesRequest(principal);
                     }
+
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             } else {
 
             }

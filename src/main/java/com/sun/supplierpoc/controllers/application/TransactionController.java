@@ -10,10 +10,14 @@ import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.simphony.response.TransInRange;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.application.TransactionService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -39,6 +43,9 @@ public class TransactionController {
 
     @Autowired
     private AccountRepo accountRepo;
+
+    @Autowired
+    private TransactionRepo transactionsRepo;
 
     @RequestMapping("/getTransactions")
     public List<Transactions> getTransactionByType(Principal principal,@RequestParam("time") String time,
@@ -168,6 +175,17 @@ public class TransactionController {
         }else{
 
         }
+    }
+
+    @GetMapping("/transactionPagination")
+    public ResponseEntity transactionPagination(@RequestParam(name="page", defaultValue = "0") int page,
+                                                @RequestParam(name="size", defaultValue = "3") int size){
+
+        Response response = new Response();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Transactions> transactionsPage = transactionsRepo.findAll(pageable);
+        response.setData(transactionsPage);
+        return new ResponseEntity(response, HttpStatus.OK);
     }
 
     @GetMapping("/test/updateTrans")

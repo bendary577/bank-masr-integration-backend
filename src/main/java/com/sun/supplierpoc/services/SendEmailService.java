@@ -70,19 +70,20 @@ public class SendEmailService {
             String mailSubject = "Support Follow Up!";
             String mailContent =
                     "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                            "<br>"+ "<p style='text-align:left'>" +
-                            "   Dear  " + user.getName()  + "<br> <br>" +
-                            " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
-                            "<span style=' padding-left:20px'>  for the " +
+                            "<p style='text-align:left'>" +
+                            "Dear " + user.getName()  + "<br> <br>" +
+                            "<span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
+                            "<span>for the " +
                             getModules(syncJobTypes)
                             +
                             " modules,</span> <br>" +
-                            " <span style=' padding-left:20px'>  Located in " +
+                            " <span>Located in " +
                             getStores(stores)
                             +
                             "</span><br>" +
-                            " <span style=' padding-left:20px'> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
-                            " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br><br>" +
+                            " <span> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
+                            " <span> We are pleased to be associated with you." +
+                            " You can contact support for any further clarifications,</span><br><br>" +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";

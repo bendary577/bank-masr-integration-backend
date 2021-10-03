@@ -136,7 +136,7 @@ public class ZealController {
                     if (location.isChecked()) {
                         response = zealService.zealVoucherProcessor(zealVoucher, user, account, location);
                         if (!response.isStatus()) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
                         }
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }

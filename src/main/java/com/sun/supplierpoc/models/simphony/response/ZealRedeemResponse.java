@@ -16,6 +16,13 @@ public class ZealRedeemResponse {
     public ZealRedeemResponse() {
     }
 
+    public ZealRedeemResponse(Message message, int code, String menuItemId, boolean status) {
+        this.message = message;
+        this.code = code;
+        this.menuItemId = menuItemId;
+        this.status = status;
+    }
+
     public int getCode() {
         return code;
     }

@@ -8,6 +8,10 @@ public class Message {
     public Message() {
     }
 
+    public Message(String en) {
+        this.en = en;
+    }
+
     public String getAr() {
         return ar;
     }

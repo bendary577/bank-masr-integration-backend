@@ -17,6 +17,14 @@ public class ZealLoyaltyResponse {
     public ZealLoyaltyResponse() {
     }
 
+    public ZealLoyaltyResponse(String message, String code, boolean loyalty, boolean payment, String status) {
+        this.message = message;
+        this.code = code;
+        this.loyalty = loyalty;
+        this.payment = payment;
+        this.status = status;
+    }
+
     public int getId() {
         return id;
     }

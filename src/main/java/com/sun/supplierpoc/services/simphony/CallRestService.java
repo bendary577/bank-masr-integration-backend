@@ -1,4 +1,5 @@
 package com.sun.supplierpoc.services.simphony;
+import com.sun.supplierpoc.models.simphony.Message;
 import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
@@ -23,23 +24,24 @@ public class CallRestService {
 
 
     public ZealLoyaltyResponse zealPayment(ZealLoyaltyRequest zealPayment) {
-        String url = "https://private-anon-09bdbe61bf-symphonypos.apiary-mock.com/api/visit/scan";
-        ZealLoyaltyResponse zealLoyaltyResponse =
-                this.restTemplate.postForObject(url, zealPayment, ZealLoyaltyResponse.class);
+//        String url = "https://private-anon-09bdbe61bf-symphonypos.apiary-mock.com/api/visit/scan";
+//        ZealLoyaltyResponse zealLoyaltyResponse =
+//                this.restTemplate.postForObject(url, zealPayment, ZealLoyaltyResponse.class);
 
+        ZealLoyaltyResponse zealLoyaltyResponse = new ZealLoyaltyResponse(
+                "Check paid successfully.", "111", true, true, "Success");
         return zealLoyaltyResponse;
 
     }
 
     public ZealRedeemResponse zealVoucher(ZealRedeemRequest zealRedeemRequest) {
 
-        String url = "https://private-anon-09bdbe61bf-symphonypos.apiary-mock.com/api/redeem/scan";
-
-        ZealRedeemResponse zealRedeemResponse =
-                this.restTemplate.postForObject(url, zealRedeemRequest, ZealRedeemResponse.class);
-
-//        logger.info(zealRedeemResponse.toString());
-
+//        String url = "https://private-anon-09bdbe61bf-symphonypos.apiary-mock.com/api/redeem/scan";
+//        ZealRedeemResponse zealRedeemResponse =
+//                this.restTemplate.postForObject(url, zealRedeemRequest, ZealRedeemResponse.class);
+////        logger.info(zealRedeemResponse.toString());
+        ZealRedeemResponse zealRedeemResponse = new ZealRedeemResponse(
+                new Message("Voucher added successfully."), 111, "Success",true);
         return zealRedeemResponse;
 
     }

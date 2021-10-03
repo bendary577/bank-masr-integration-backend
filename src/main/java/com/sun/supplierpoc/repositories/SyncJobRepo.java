@@ -9,6 +9,7 @@ import java.util.List;
 
 @Repository
 public interface SyncJobRepo extends MongoRepository<SyncJob, String>{
+    List<SyncJob> findByStatusAndSyncJobTypeId(String status, String id);
     List<SyncJob> findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc(String syncJobTypeId, boolean deleted);
     List<SyncJob> findBySyncJobTypeIdAndStatusAndDeletedOrderByCreationDateDesc(String syncJobTypeId,String status,
                                                                                 boolean deleted);
@@ -17,5 +18,6 @@ public interface SyncJobRepo extends MongoRepository<SyncJob, String>{
 
 
     List<SyncJob> deleteAllBySyncJobTypeId(String syncJobTypeId);
+    List<SyncJob> deleteAllBySyncJobTypeIdAndStatus(String syncJobTypeId,String status);
 
 }

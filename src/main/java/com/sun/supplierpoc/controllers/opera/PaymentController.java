@@ -18,6 +18,7 @@ import com.sun.supplierpoc.repositories.OperationTypeRepo;
 import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
+import com.sun.supplierpoc.services.opera.OperaTransactionService;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,11 @@ public class PaymentController {
     private Conversions conversions = new Conversions();
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
+
+
+    @Autowired
+    private OperaTransactionService operaTransactionService;
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     private final String PREAUTHORIZATION = "1";
@@ -143,7 +149,7 @@ public class PaymentController {
             currency = "EGP";
 
         String POS_MACHINE_URL;
-        if(transactionRequest.getSiteId().equals("ACT|SDMD")) {
+        if(transactionRequest.getSiteId() != null && transactionRequest.getSiteId().equals("ACT|SDMD")) {
             POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(0).getIp() +
                     ":" + generalSettings.getPosMachineMaps().get(0).getPort();
         }else{
@@ -158,12 +164,23 @@ public class PaymentController {
             logger.error(String.join("Failed in transaction method with ",e.getMessage()));
         }
 
+        // Save transaction in middleware
+        OperaTransaction operaTransaction = new OperaTransaction();
+
+        operaTransaction.setAmount(amount / 100);
+        operaTransaction.setCurrency("USD");
+
+        operaTransaction.setSequenceNo(transactionRequest.getSequenceNo());
+        operaTransaction.setGuestNumber(transactionRequest.getGuestNo());
+        operaTransaction.setCheckInDate(transactionRequest.getCheckInDate());
+        operaTransaction.setCheckOutDate(transactionRequest.getCheckOutDate());
+
+        operaTransaction.setDeleted(false);
+        operaTransaction.setCreationDate(new Date());
+
         if(result != null && result.getBody() != null) {
             // Parse POS machine result
             final String[] values = result.getBody().split(",");
-
-            // Save transaction in middleware
-            OperaTransaction operaTransaction = new OperaTransaction();
 
             if(values[0].equalsIgnoreCase("Success")){
                 String cardNumber = values[0];
@@ -188,7 +205,7 @@ public class PaymentController {
             }
             else{
                 operaTransaction.setStatus("Failed");
-                operaTransaction.setReason(values[1]);
+                operaTransaction.setReason(values[4]);
                 operaTransaction.setCardNumber("XXXXXXXXXXXXXXXXXX");
 
                 transactionResponse.setRespCode("21"); // No Action Taken
@@ -206,20 +223,6 @@ public class PaymentController {
                 transactionResponse.setPrintData("Bank Misr");
             }
 
-            operaTransaction.setAmount(amount / 100);
-            operaTransaction.setCurrency("USD");
-            operaTransaction.setDeleted(false);
-            operaTransaction.setCreationDate(new Date());
-
-//            try {
-//                String url = MIDDLEWARE_URL + "/opera/createOperaTransaction";
-//                boolean saveStatus = restTemplate.postForObject(url, operaTransaction, Boolean.class);
-//                System.out.println(saveStatus);
-//            }catch (Exception e ){
-//                e.printStackTrace();
-//                logger.error(String.join("Failed to save transactions in middleware. ",e.getMessage()));
-//            }
-
             try {
                 createOperaTransaction(operaTransaction);
             }catch (Exception e ){
@@ -230,6 +233,17 @@ public class PaymentController {
             return transactionResponse;
         }
         else{
+            operaTransaction.setStatus("Failed");
+            operaTransaction.setReason("The connection to the POS machine was broken.");
+            operaTransaction.setCardNumber("XXXXXXXXXXXXXXXXXX");
+
+            try {
+                createOperaTransaction(operaTransaction);
+            }catch (Exception e ){
+                e.printStackTrace();
+                logger.error(String.join("Failed to save transactions in middleware.",e.getMessage()));
+            }
+
             transactionResponse.setRespCode("21"); // No Action Taken
             transactionResponse.setRespText("No Action Taken");
             transactionResponse.setpAN("XXXXXXXXXXXXXX0000");
@@ -267,7 +281,6 @@ public class PaymentController {
             if (!invokerUser.getTypeId().equals(operationType.getId()))
                 return transactionResponse;
 
-//            http://localhost:9090
             final String uri = operationType.getConfiguration().getTpeConnectorLink() + "/paymentPreauthorization";
 
             Random random = new Random(100);
@@ -413,7 +426,6 @@ public class PaymentController {
             transactionResponse.setdCCIndicator("0");
             transactionResponse.setTerminalId("1");
         }
-
         return transactionResponse;
     }
 
@@ -423,7 +435,7 @@ public class PaymentController {
     @RequestMapping(value = "/opera/createOperaTransaction")
     @ResponseBody
     public boolean createOperaTransaction(@RequestBody OperaTransaction operaTransaction) {
-//      @RequestHeader("Authorization") String authorization,
+//        @RequestHeader("Authorization") String authorization,
         String username, password;
         try {
 //            final String[] values = conversions.convertBasicAuth(authorization);
@@ -506,162 +518,49 @@ public class PaymentController {
         }
     }
 
-    @GetMapping(value = "/listOperaTransaction")
+    @PostMapping(value = "/listOperaTransaction")
+    @CrossOrigin("*")
     @ResponseBody
-    public List<OperaTransaction> listOperaTransaction(Principal principal,
-                                                       @RequestParam(name = "startDate", required = false) String startDate,
-                                                       @RequestParam(name = "endDate", required = false) String endDate){
+    public HashMap<String, Object> listOperaTransaction(Principal principal,
+                                                        @RequestPart(name = "startDate", required = false) String startDate,
+                                                        @RequestPart(name = "endDate", required = false) String endDate,
+                                                        @RequestPart(name="cardNumber", required = false) String cardNumber){
+
+        HashMap<String, Object> response = new HashMap<>();
+
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-                if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
-                    return operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
+                if(cardNumber == null){
+                    cardNumber = "";
+                }
+
+                if((startDate == null || startDate.equals("") || startDate == null || endDate.equals("")) && (cardNumber == null || cardNumber.equals(""))){
+                    response.put("transactions", operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false));
+                    return response;
                 } else{
-                    Date start;
-                    Date end;
-
-                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-
-                    try {
-                        start = df.parse(startDate);
-                        end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-
-                    }catch(Exception e){
-                        e.printStackTrace();
-                        df = new SimpleDateFormat("yyyy-M-d");
-                        start = df.parse(startDate);
-                        end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-                    }
-
-                    return operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
-                            account.getId(), false, start, end);
+                    response = operaTransactionService.filterTransactionsAndCalculateTotals(startDate, endDate, cardNumber, account);
+                    return response;
                 }
-
-
             }else {
-                return new ArrayList<>();
+                return response;
             }
 
         }catch (Exception ex){
             ex.printStackTrace();
-            return new ArrayList<>();
+            return response;
         }
     }
 
-    @GetMapping(value = "/opera/listOperaTransaction")
-    @ResponseBody
-    public List<OperaTransaction> listOperaTransactionmobile(@RequestParam(name = "startDate", required = false) String startDate,
-                                                             @RequestParam(name = "endDate", required = false) String endDate,
-                                                             @RequestHeader("Authorization") String authorization){
-        try {
-            String username, password;
-            final String[] values = conversions.convertBasicAuth(authorization);
-                if (values.length != 0) {
-                    username = values[0];
-                    password = values[1];
-                    InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
-
-                    if (invokerUser != null) {
-                        Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
-                        if (accountOptional.isPresent()) {
-                            Account account = accountOptional.get();
-
-                            if (startDate == null || startDate.equals("") || endDate == null || endDate.equals("")) {
-                                return operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
-                            } else {
-                                Date start;
-                                Date end;
-
-                                DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
-
-                                try {
-                                    start = df.parse(startDate);
-                                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    df = new SimpleDateFormat("yyyy-M-d");
-                                    start = df.parse(startDate);
-                                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-                                }
-                                return operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
-                                        account.getId(), false, start, end);
-                            }
-                        } else {
-                            return new ArrayList<>();
-                        }
-                    } else {
-                        return new ArrayList<>();
-                    }
-                }else{
-                    return new ArrayList<>();
-                }
-
-        }catch (Exception ex){
-            ex.printStackTrace();
-            return new ArrayList<>();
-        }
-    }
-
-    @GetMapping(value = "opera/checkAppConnection")
-    @ResponseBody
-    public ResponseEntity checkAppConnection(@RequestHeader("Authorization") String authorization,
-                                             @RequestParam(name = "ip", required = false) String ip,
-                                             @RequestParam(name = "port", required = false) String port){
-
-        Response response = new Response();
-        try {
-            String username, password;
-            final String[] values = conversions.convertBasicAuth(authorization);
-            if (values.length != 0) {
-                username = values[0];
-                password = values[1];
-                InvokerUser invokerUser = invokerUserService.getInvokerUser(username, password);
-
-                if (invokerUser != null) {
-                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
-                    if (accountOptional.isPresent()) {
-                        Account account = accountOptional.get();
-                        if (port != null || !port.equals("") || ip != null || !ip.equals("")) {
-                            response.setStatus(true);
-                            response.setMessage("Connected");
-                            return ResponseEntity.status(HttpStatus.OK).body(response);
-                        } else {
-                            response.setStatus(false);
-                            response.setMessage("Not Connected");
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                        }
-                    } else {
-                        response.setStatus(false);
-                        response.setMessage("Not Connected");
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-                } else {
-                    response.setStatus(false);
-                    response.setMessage("Not Connected");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
-            }else{
-                response.setStatus(false);
-                response.setMessage("Not Connected");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
-        }catch (Exception ex){
-            response.setStatus(false);
-            response.setMessage("Not Connected");
-            ex.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
 
     @GetMapping(value = "/countOperaTransaction")
     @ResponseBody
     public ResponseEntity getOperaTransactionStat(Principal principal,
-                                     @RequestParam(name = "startDate", required = false) String startDate,
-                                     @RequestParam(name = "endDate", required = false) String endDate){
+                                                  @RequestParam(name = "startDate", required = false) String startDate,
+                                                  @RequestParam(name = "endDate", required = false) String endDate){
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -752,5 +651,37 @@ public class PaymentController {
         }
     }
 
+    @GetMapping(value = "/checkAppConnection")
+    @ResponseBody
+    public ResponseEntity checkAppConnection(Principal principal,
+                                             @RequestParam(name = "ip", required = false) String ip,
+                                             @RequestParam(name = "port", required = false) String port){
+        Response  respons = new Response();
+        try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
 
+
+                if(port != null || !port.equals("") || ip != null || !ip.equals("")){
+                    respons.setStatus(true);
+                    respons.setMessage("Connected");
+                    return ResponseEntity.status(HttpStatus.OK).body(respons);
+                } else{
+                    respons.setStatus(false);
+                    respons.setMessage("Not Connected");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respons);
+                }
+            }else {
+                respons.setStatus(false);
+                respons.setMessage("Not Connected");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respons);
+            }
+
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("");
+        }
+    }
 }

@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.seleniumMethods;
 
+import ch.qos.logback.core.util.TimeUtil;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
@@ -26,6 +27,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class SetupEnvironment {
 
@@ -47,7 +49,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+                firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -464,7 +466,11 @@ public class SetupEnvironment {
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
+//            int counter = 10;
+//            do {                counter--;
+//            }while (!checkIfDayClicked(fromDateElements.get(0)) && counter != 0);
             fromDateElements.get(0).click();
+
 
             response.setStatus(true);
             return response;
@@ -473,6 +479,19 @@ public class SetupEnvironment {
             response.setStatus(false);
             return response;
         }
+    }
+
+    public boolean checkIfDayClicked(WebElement webElement) {
+        String weekEnd = "datepick-weekend ";
+        String selected = "datepick-selected";
+        String attributeId = webElement.getAttribute("id") + " ";
+        String attributeClass = webElement.getAttribute("id") + " ";
+        if (attributeClass.equals(attributeId + weekEnd + selected)) {
+            return true;
+        }else if(attributeClass.equals(attributeId + selected)){
+            return true;
+        }
+        return false;
     }
 
     private Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {

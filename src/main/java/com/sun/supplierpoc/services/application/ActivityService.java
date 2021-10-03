@@ -6,9 +6,8 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.Transactions;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.applications.Group;
-import com.sun.supplierpoc.models.applications.SimphonyDiscount;
+import com.sun.supplierpoc.models.applications.*;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -38,14 +37,12 @@ public class ActivityService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap createTransaction(TransactionType transactionType, Transactions transaction,
-                                     Account account, GeneralSettings generalSettings) {
+                                     Account account, GeneralSettings generalSettings, RevenueCenter revenueCenter) {
 
         HashMap response = new HashMap();
 
         try {
-
             ApplicationUser user = userRepo.findByCode(transaction.getCode());
-
             if(user == null){
                 response.put("message", "No user for this code.");
             }else if(user.isDeleted()){
@@ -55,41 +52,75 @@ public class ActivityService {
             } else if(transactionRepo.existsByCheckNumberAndRevenueCentreId(transaction.getCheckNumber(), transaction.getRevenueCentreId())){
                 response.put("message", "Can't use code for the same check twice.");
             }else {
-
-                ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
-
                 Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
                 if(!groupOptional.isPresent()){
                     response.put("message", "No group for this user.");
                 }else if(groupOptional.get().isDeleted()) {
                     response.put("message", "This group is deleted.");
                 }else {
-
                     Group group = groupOptional.get();
 
                     user.setTop(user.getTop() + 1);
                     group.setTop(group.getTop() + 1);
 
-                    // get discount rate using discount id
-
-                    SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
-                    if(simphonyDiscount.getDiscountId() == 0){
-                        response.put("message", "No discount found for this user.");
-                        response.put("isSuccess", false);
-                        return response;
-                    }
-
-                    double discount = simphonyDiscount.getDiscountRate();
-
-                    double amount = transaction.getTotalPayment();
-                    double amountAfterDiscount = amount - (amount * (discount / 100));
-
                     transaction.setUser(user);
                     transaction.setGroup(group);
-                    transaction.setDiscountRate(discount);
-                    transaction.setAfterDiscount(amountAfterDiscount);
                     transaction.setTransactionDate(new Date());
                     transaction.setTransactionTypeId(transactionType.getId());
+                    transaction.setTransactionType(transactionType);
+
+                    double amount = transaction.getTotalPayment();
+
+                    if(!transactionType.getName().equals(Constants.USE_WALLET)) {
+
+                        // get discount rate using discount id
+                        ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
+                        SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
+                        if(simphonyDiscount.getDiscountId() == 0){
+                            response.put("message", "No discount found for this user.");
+                            response.put("isSuccess", false);
+                            return response;
+                        }
+                        double discount = simphonyDiscount.getDiscountRate();
+                        double amountAfterDiscount = amount - (amount * (discount / 100));
+                        transaction.setDiscountRate(discount);
+                        transaction.setAfterDiscount(amountAfterDiscount);
+
+                    }else{
+                        transaction.setDiscountRate(0.0);
+                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                    }
+
+                    if(user.isGeneric() && user.getWallet() != null){
+                        Wallet wallet = user.getWallet();
+                        double previousBalance = calculateBalance(wallet);
+                        double rest = transaction.getAfterDiscount();
+                        for(int i = 0; i <  wallet.getBalance().size(); i ++){
+                            if(conversions.containRevenueCenter(wallet.getBalance().get(i), revenueCenter)){
+                                if(wallet.getBalance().get(i).getAmount() >= transaction.getAfterDiscount()) {
+                                    double newBalance = wallet.getBalance().get(i).getAmount() - transaction.getAfterDiscount();
+                                    wallet.getBalance().get(i).setAmount(newBalance);
+                                    rest = 0;
+                                }else{
+                                    rest -= wallet.getBalance().get(i).getAmount();
+                                    wallet.getBalance().get(i).setAmount(0);
+                                    if((i+1) < wallet.getBalance().size()) {
+                                        continue;
+                                    }
+                                }
+                                WalletHistory walletHistory = new WalletHistory("Use wallet in" + revenueCenter.getRevenueCenter(),
+                                        amount, previousBalance, calculateBalance(wallet), new Date());
+                                wallet.getWalletHistory().add(walletHistory);
+                                user.setWallet(wallet);
+                                break;
+                            }
+                        }
+                        if(rest == transaction.getAfterDiscount()){
+                            response.put("rest", "All");
+                        }else{
+                            response.put("rest", rest);
+                        }
+                    }
 
                     userRepo.save(user);
                     groupRepo.save(group);
@@ -100,7 +131,7 @@ public class ActivityService {
                     generalSettingsRepo.save(generalSettings);
 
                     response.put("isSuccess", true);
-                    response.put("message", "Discount applied successfully.");
+                    response.put("message", "Transaction Done successfully.");
                     response.put("discountId", group.getSimphonyDiscount().getDiscountId());
                     response.put("group", group.getName());
                     response.put("user", user.getName());
@@ -119,5 +150,14 @@ public class ActivityService {
             response.put("message", "Can't apply discount.");
             return response;
         }
+    }
+
+    public double calculateBalance(Wallet wallet){
+        double balance = 0;
+        List<Balance> balances = wallet.getBalance();
+        for(Balance tempBalance : balances){
+            balance += tempBalance.getAmount();
+        }
+        return balance;
     }
 }

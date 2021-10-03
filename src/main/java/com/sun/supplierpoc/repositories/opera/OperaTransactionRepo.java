@@ -15,4 +15,10 @@ public interface OperaTransactionRepo extends MongoRepository<OperaTransaction, 
     int countByAccountIdAndDeletedAndStatus(String accountId, boolean deleted, String status);
     int countByAccountIdAndDeletedAndStatusAndCreationDateBetween(String accountId, boolean deleted, String status,
                                                                  Date from, Date to);
+
+    List<OperaTransaction> findAllByAccountIdAndDeletedAndCardNumber(String id, boolean b, String cardNumber);
+
+    List<OperaTransaction> findByAccountIdAndDeletedAndCreationDateBetween(String id, boolean b, Date start, Date end);
+
+    List<OperaTransaction> findByAccountIdAndDeletedAndCardNumberAndCreationDateBetween(String id, boolean b, String cardNumber, Date start, Date end);
 }

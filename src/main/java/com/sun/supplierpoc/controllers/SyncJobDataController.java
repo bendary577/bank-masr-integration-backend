@@ -78,6 +78,29 @@ public class SyncJobDataController {
         return syncJobData;
     }
 
+    @RequestMapping("/opera/deleteFailedSync")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public boolean deleteFailedSync(@RequestParam(name = "syncJobTypeId") String syncJobTypeId) {
+        try {
+            Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(syncJobTypeId);
+            SyncJobType syncJobType = syncJobTypeOptional.get();
+            List<SyncJob>  syncJobs =
+                    syncJobRepo.findByStatusAndSyncJobTypeId(Constants.FAILED, syncJobTypeId);
+            syncJobs.addAll(syncJobRepo.findByStatusAndSyncJobTypeId(Constants.RUNNING, syncJobTypeId));
+
+            for (SyncJob syncJob : syncJobs) {
+                syncJobDataRepo.deleteAllBySyncJobId(syncJob.getId());
+            }
+            syncJobRepo.deleteAllBySyncJobTypeIdAndStatus(syncJobType.getId(),Constants.FAILED);
+            syncJobRepo.deleteAllBySyncJobTypeIdAndStatus(syncJobType.getId(),Constants.RUNNING);
+
+            return true;
+        }catch (Exception e){
+            return false;
+        }
+    }
+
     /*
     *
     * Delete all sync jobs and its data, except suppliers

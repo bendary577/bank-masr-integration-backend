@@ -3,16 +3,19 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
+import org.apache.poi.ss.formula.functions.T;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class Response {
+public class Response<T> {
     private boolean status;
     private String message;
     private ArrayList<HashMap<String, Object>> entries;
+
+    private T data;
 
     // Sales Variables
     private ArrayList<Tax> salesTax = new ArrayList<>();
@@ -41,6 +44,11 @@ public class Response {
     private List<WebElement> rows = new ArrayList<>();
 
     public Response() {
+    }
+
+    public void setBadStatus(boolean status, String message) {
+        this.status = status;
+        this.message = message;
     }
 
     public boolean isStatus() {
@@ -193,5 +201,13 @@ public class Response {
 
     public void setRows(List<WebElement> rows) {
         this.rows = rows;
+    }
+
+    public T getData() {
+        return data;
+    }
+
+    public void setData(T data) {
+        this.data = data;
     }
 }

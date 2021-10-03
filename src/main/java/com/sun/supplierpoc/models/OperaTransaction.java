@@ -8,16 +8,19 @@ import java.util.Date;
 public class OperaTransaction {
     @Id
     private String id;
-
     private String status;
     private String reason;
-
-    @NotNull(message="The amount of the transaction must be declared.")
+    @NotNull(message = "The amount of the transaction must be declared.")
     private double amount;
     private String currency;
     private String cardNumber;
-
     private String accountId;
+
+    private String sequenceNo;
+    private String guestNumber;
+
+    private String CheckInDate;
+    private String CheckOutDate;
 
     private Date creationDate;
     private boolean deleted;
@@ -79,6 +82,38 @@ public class OperaTransaction {
 
     public void setAccountId(String accountId) {
         this.accountId = accountId;
+    }
+
+    public String getSequenceNo() {
+        return sequenceNo;
+    }
+
+    public void setSequenceNo(String sequenceNo) {
+        this.sequenceNo = sequenceNo;
+    }
+
+    public String getGuestNumber() {
+        return guestNumber;
+    }
+
+    public void setGuestNumber(String guestNumber) {
+        this.guestNumber = guestNumber;
+    }
+
+    public String getCheckInDate() {
+        return CheckInDate;
+    }
+
+    public void setCheckInDate(String checkInDate) {
+        CheckInDate = checkInDate;
+    }
+
+    public String getCheckOutDate() {
+        return CheckOutDate;
+    }
+
+    public void setCheckOutDate(String checkOutDate) {
+        CheckOutDate = checkOutDate;
     }
 
     public Date getCreationDate() {

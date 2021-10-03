@@ -10,10 +10,14 @@ import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.simphony.response.TransInRange;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.application.TransactionService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -40,6 +44,8 @@ public class TransactionController {
     @Autowired
     private AccountRepo accountRepo;
 
+    @Autowired
+    private TransactionRepo transactionsRepo;
 
     @RequestMapping("/getTransactions")
     public List<Transactions> getTransactionByType(Principal principal,@RequestParam("time") String time,
@@ -65,18 +71,11 @@ public class TransactionController {
                                                    @RequestParam("dateFlag") String dateFlag) {
 
         HashMap response = new HashMap();
-
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
         if (accountOptional.isPresent()) {
-
             Account account = accountOptional.get();
-
-            double totalSpend = transactionService.getTotalSpendTransactions(dateFlag, transactionType, account);
-
-            response.put("totalSpend", totalSpend);
+            response = transactionService.getTotalSpendTransactions(dateFlag, transactionType, account);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
@@ -85,7 +84,7 @@ public class TransactionController {
 
     @RequestMapping("/getTransactionsInRange")
     @CrossOrigin("*")
-    public ResponseEntity getTotalSpendInTransactions(Principal principal,
+    public ResponseEntity getTransactionsInRange(Principal principal,
                                                       @RequestParam("transactionType") String transactionType,
                                                       @RequestParam("startTime") String startTime,
                                                       @RequestParam("endTime") String endTime,
@@ -94,9 +93,7 @@ public class TransactionController {
         HashMap response = new HashMap();
 
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-
-            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
@@ -178,8 +175,23 @@ public class TransactionController {
         }else{
 
         }
-
     }
 
+    @GetMapping("/transactionPagination")
+    public ResponseEntity transactionPagination(@RequestParam(name="page", defaultValue = "0") int page,
+                                                @RequestParam(name="size", defaultValue = "3") int size){
+
+        Response response = new Response();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Transactions> transactionsPage = transactionsRepo.findAll(pageable);
+        response.setData(transactionsPage);
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/test/updateTrans")
+    public ResponseEntity<?> createTransaction(){
+        transactionService.updateTransactions();
+        return new ResponseEntity<>("", HttpStatus.OK);
+    }
 
 }

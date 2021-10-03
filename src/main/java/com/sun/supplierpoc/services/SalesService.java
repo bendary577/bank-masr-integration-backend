@@ -1110,13 +1110,13 @@ public class SalesService {
                 // {Debit} - ShortagePOS
                 if (totalCr > totalDr ) {
                     String cashShortagePOS = configuration.salesConfiguration.cashShortagePOS;
-                    differentData.put("totalDr", String.valueOf(totalCr - totalDr));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(totalCr - totalDr)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = configuration.salesConfiguration.cashSurplusPOS;
-                    differentData.put("totalCr", String.valueOf(totalDr - totalCr));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat1Digest(totalDr - totalCr)));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 

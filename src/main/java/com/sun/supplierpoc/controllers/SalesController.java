@@ -312,10 +312,10 @@ public class SalesController {
             }
 
             // Send file
-            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
+            if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
 //                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
                 sendStatus = true;
-            } else if (account.getSendMethod().equals(Constants.FTP_METHOD)) {
+            } else if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.FTP_METHOD)) {
                 // Check if the account configured for FTP
                 AccountCredential credential = ftpService.getAccountCredential(account);
 
@@ -327,6 +327,8 @@ public class SalesController {
                 if (f != null && !fileStoragePath.equals("")){
                     sendStatus = ftpService.sendFile(credential, fileStoragePath, f.getName());
                 }
+            }else{
+                sendStatus = true;
             }
 
         }

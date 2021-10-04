@@ -901,7 +901,7 @@ public class SalesService {
 
                 saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
-                float majorGroupGrossTotal = conversions.roundUpFloat1Digest(majorGroupJournal.getTotalCost());
+                float majorGroupGrossTotal = conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost());
                 totalMajorGroupNet += Math.abs(majorGroupGrossTotal);
             }
 
@@ -913,7 +913,7 @@ public class SalesService {
 
                 saveTax(journalBatch, transactionDate, configuration, syncJob, tax);
 
-                float taxTotal = conversions.roundUpFloat1Digest(tax.getTotal());
+                float taxTotal = conversions.roundUpFloat2Digest(tax.getTotal());
                 totalTax += taxTotal;
             }
 
@@ -942,10 +942,10 @@ public class SalesService {
                 if (configuration.salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)
                         && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                     discountData.put("expensesAccount", discount.getAccount());
-                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(discount.getTotal())));
+                    discountData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(discount.getTotal())));
                 }else{
                     discountData.put("inventoryAccount", discount.getAccount());
-                    discountData.put("totalCr", String.valueOf(conversions.roundUpFloat1Digest(discount.getTotal())));
+                    discountData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(discount.getTotal())));
                 }
 
                 discountData.put("fromCostCenter", discount.getCostCenter().costCenter);
@@ -1088,7 +1088,7 @@ public class SalesService {
 
                 saveTender(journalBatch, transactionDate, configuration, syncJob, tender);
 
-                float tenderTotal = Math.abs(conversions.roundUpFloat1Digest(tender.getTotal()));
+                float tenderTotal = Math.abs(tender.getTotal());
                 totalTender += tenderTotal;
             }
 
@@ -1110,13 +1110,13 @@ public class SalesService {
                 // {Debit} - ShortagePOS
                 if (totalCr > totalDr ) {
                     String cashShortagePOS = configuration.salesConfiguration.cashShortagePOS;
-                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(totalCr - totalDr)));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(totalCr - totalDr)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = configuration.salesConfiguration.cashSurplusPOS;
-                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat1Digest(totalDr - totalCr)));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(totalDr - totalCr)));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 
@@ -1280,9 +1280,9 @@ public class SalesService {
             tenderData.put("transactionDate", transactionDate);
 
             if (tender.getTotal() < 0){
-                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(tenderCommunicationTotal)));
+                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(tenderCommunicationTotal)));
             }else {
-                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(tenderCommunicationTotal) * -1));
+                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(tenderCommunicationTotal) * -1));
             }
 
             tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
@@ -1330,9 +1330,9 @@ public class SalesService {
         tenderData.put("transactionDate", transactionDate);
 
         if (tender.getTotal() < 0){
-            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(subTenderTotal)));
+            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(subTenderTotal)));
         }else {
-            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat1Digest(subTenderTotal) * -1));
+            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(subTenderTotal) * -1));
         }
 
         tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
@@ -1378,7 +1378,7 @@ public class SalesService {
         taxData.put("accountingPeriod", transactionDate.substring(2,6));
         taxData.put("transactionDate", transactionDate);
 
-        taxData.put("totalCr", String.valueOf(conversions.roundUpFloat1Digest(tax.getTotal())));
+        taxData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(tax.getTotal())));
         taxData.put("inventoryAccount", tax.getAccount());
 
         taxData.put("fromCostCenter", tax.getCostCenter().costCenter);
@@ -1421,7 +1421,7 @@ public class SalesService {
         majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
         majorGroupData.put("transactionDate", transactionDate);
 
-        majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat1Digest(majorGroupJournal.getTotalCost())));
+        majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
         // Major Group account
         if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0
                 && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
@@ -1476,7 +1476,7 @@ public class SalesService {
         serviceChargeData.put("accountingPeriod", transactionDate.substring(2,6));
         serviceChargeData.put("transactionDate", transactionDate);
 
-        serviceChargeData.put("totalCr", String.valueOf(conversions.roundUpFloat1Digest(serviceCharge.getTotal())));
+        serviceChargeData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(serviceCharge.getTotal())));
 
         serviceChargeData.put("fromCostCenter", serviceCharge.getCostCenter().costCenter);
         serviceChargeData.put("fromAccountCode", serviceCharge.getCostCenter().accountCode);

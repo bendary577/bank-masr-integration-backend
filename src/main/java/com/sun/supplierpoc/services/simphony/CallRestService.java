@@ -41,7 +41,7 @@ public class CallRestService {
 //                this.restTemplate.postForObject(url, zealRedeemRequest, ZealRedeemResponse.class);
 ////        logger.info(zealRedeemResponse.toString());
         ZealRedeemResponse zealRedeemResponse = new ZealRedeemResponse(
-                new Message("Voucher added successfully."), 111, "Success",true);
+                new Message("Voucher added successfully."), 111, "4",true);
         return zealRedeemResponse;
 
     }

@@ -49,7 +49,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-                firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);

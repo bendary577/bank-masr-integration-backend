@@ -67,7 +67,8 @@ public class SendEmailService {
             DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(email);
-            String mailSubject = "Support Follow Up!";
+//            String mailSubject = "Support Follow Up!";
+            String mailSubject = getModules(syncJobTypes) + "Export is ready!";
             String mailContent =
                     "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
                             "<p style='text-align:left'>" +

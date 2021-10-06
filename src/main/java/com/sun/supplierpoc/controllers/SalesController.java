@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.util.GoogleDriveUtils;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.mortbay.servlet.MultiPartFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,9 @@ public class SalesController {
     FtpService ftpService;
     @Autowired
     private GoogleDriveService googleDriveService;
+
+    @Autowired
+    private GoogleDriveUtils googleDriveUtils;
 
     public Conversions conversions = new Conversions();
 
@@ -632,6 +636,13 @@ public class SalesController {
             e.printStackTrace();
             return locationFiles;
         }
+    }
+
+    @GetMapping("/test/testDriver")
+    public ResponseEntity testDriver(@RequestPart("testDriver") MultipartFile file) throws IOException {
+        File fileImage = imageService.multipartToFile(file);
+        boolean sendStatus = googleDriveUtils.uploadGoogleDriveFile(fileImage);
+        return new ResponseEntity(sendStatus, HttpStatus.OK);
     }
 
 }

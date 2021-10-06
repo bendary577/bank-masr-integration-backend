@@ -178,6 +178,9 @@ public class PaymentController {
         operaTransaction.setDeleted(false);
         operaTransaction.setCreationDate(new Date());
 
+        /*
+        * Success,Transaction Completed,526439******0435,3,,ACT Test Merchant,1010000907,82063669,000015000000,null
+        * */
         if(result != null && result.getBody() != null) {
             // Parse POS machine result
             final String[] values = result.getBody().split(",");
@@ -185,11 +188,26 @@ public class PaymentController {
             if(values[0].equalsIgnoreCase("Success")){
                 String reason = values[1];
                 String cardNumber = values[2];
+                String cardType = values[3];
 
                 operaTransaction.setStatus("Success");
                 operaTransaction.setReason(reason);
                 operaTransaction.setCardNumber(cardNumber.substring(0, 4) +
                         "XXXXXXXX" + cardNumber.substring(cardNumber.length() - 4));
+
+                if(values.length > 5)
+                    operaTransaction.setMerchantName(values[5]);
+                if(values.length > 6)
+                    operaTransaction.setMerchantId(values[6]);
+                if(values.length > 7)
+                    operaTransaction.setTerminalId(values[7]);
+                if(values.length > 8)
+                    operaTransaction.setRefNo(values[8]);
+
+                if(cardType.equals("3"))
+                    transactionResponse.setIssuerId("24");
+                else
+                    transactionResponse.setIssuerId("01");
 
                 transactionResponse.setRespCode("00");
                 transactionResponse.setRespText("APPROVAL");
@@ -197,7 +215,6 @@ public class PaymentController {
                 transactionResponse.setExpiryDate(values[2]); // 2509
                 transactionResponse.setTransToken(cardNumber); // 5078031089641006
                 transactionResponse.setEntryMode("01");
-                transactionResponse.setIssuerId("01");
                 transactionResponse.setrRN("000000000311");
                 transactionResponse.setOfflineFlag("N");
                 transactionResponse.setdCCIndicator("0");
@@ -580,7 +597,8 @@ public class PaymentController {
                     List<OperaTransaction> transactions = operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
 
                     for (OperaTransaction trans : transactions) {
-                        totalAmount += trans.getAmount();
+                        if(trans.getStatus().equals(Constants.SUCCESS))
+                            totalAmount += trans.getAmount();
                     }
 
                     double finalTotalAmount = totalAmount;

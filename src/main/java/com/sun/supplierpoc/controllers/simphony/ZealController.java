@@ -74,20 +74,24 @@ public class ZealController {
                     OperationType operationType = operationTypeRepo.findAllByNameAndAccountIdAndDeleted("Zeal Payment", account.getId(), false);
 
 
-                    if (!user.getTypeId().contains(operationType.getId())){
+                    if (!user.getTypeId().contains(operationType.getId())) {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to add loyalty!.");
                     }
 
-
-                    if (location.isChecked()) {
-                        response = zealService.zealPaymentProcessor(zealPayment, user, account, location);
-                        if (!response.isLoyalty()) {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                    if (location != null) {
+                        if (location.isChecked()) {
+                            response = zealService.zealPaymentProcessor(zealPayment, user, account, location);
+                            if (!response.isLoyalty()) {
+                                return ResponseEntity.status(HttpStatus.OK).body(response);
+                            }
+                        } else {
+                            return ResponseEntity.status(HttpStatus.OK).body("Location is not checked.");
                         }
-                    }else{
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid Location");
-                    }
 
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+                }else{
+                    response.setMessage("Please configure this RVC.");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 
@@ -133,13 +137,19 @@ public class ZealController {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to redeem reward!.");
                     }
 
-                    if (location.isChecked()) {
-                        response = zealService.zealVoucherProcessor(zealVoucher, user, account, location);
-                        if (!response.isStatus()) {
+                    if(location!= null) {
+                        if (location.isChecked()) {
+                            response = zealService.zealVoucherProcessor(zealVoucher, user, account, location);
+                            if (!response.isStatus()) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                            }
                             return ResponseEntity.status(HttpStatus.OK).body(response);
                         }
+                    }else{
+                        response.setMessage(new Message("Please configure this RVC."));
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
+
                     Message message = new Message();
                     message.setEn("error message wrong revenue center, please configure this RC");
                     response.setMessage(message);

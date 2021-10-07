@@ -3,17 +3,25 @@ package com.sun.supplierpoc.models.simphony.request;
 public class ZealLoyaltyRequest {
 
     private int id;
-    private String visitedId;
+    private String visitId;
     private double receipt;
     private double receiptNumber;
 
     public ZealLoyaltyRequest() {
     }
 
-    public ZealLoyaltyRequest(String visitedId, double receipt, double receiptNumber) {
-        this.visitedId = visitedId;
+    public ZealLoyaltyRequest(String visitId, double receipt, double receiptNumber) {
+        this.visitId = visitId;
         this.receipt = receipt;
         this.receiptNumber = receiptNumber;
+    }
+
+    public String getVisitId() {
+        return visitId;
+    }
+
+    public void setVisitId(String visitId) {
+        this.visitId = visitId;
     }
 
     public int getId() {
@@ -24,13 +32,7 @@ public class ZealLoyaltyRequest {
         this.id = id;
     }
 
-    public String getVisitedId() {
-        return visitedId;
-    }
 
-    public void setVisitedId(String visitedId) {
-        this.visitedId = visitedId;
-    }
 
     public double getReceipt() {
         return receipt;

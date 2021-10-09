@@ -302,10 +302,6 @@ public class SalesController {
         }
         return response;
     }
-    @RequestMapping("/role/test/drive")
-    public boolean checkDrive(@RequestPart("file") MultipartFile file){
-        return true;
-    }
 
     public static boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
         for (File f : files) {
@@ -337,6 +333,14 @@ public class SalesController {
 
         }
         return sendStatus;
+    }
+
+
+    @PostMapping("/test/testDriver")
+    public ResponseEntity testDriver(@RequestPart("testDriver") MultipartFile file) throws IOException {
+        File fileImage = imageService.multipartToFile(file);
+        boolean sendStatus = googleDriveUtils.uploadFileTODrive(accountRepo.findById("60e468c7944f003ad4f7ae75").get(),  Constants.SALES, fileImage);
+        return new ResponseEntity(sendStatus, HttpStatus.OK);
     }
 
     public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException, IOException {
@@ -636,13 +640,6 @@ public class SalesController {
             e.printStackTrace();
             return locationFiles;
         }
-    }
-
-    @GetMapping("/test/testDriver")
-    public ResponseEntity testDriver(@RequestPart("testDriver") MultipartFile file) throws IOException {
-        File fileImage = imageService.multipartToFile(file);
-        boolean sendStatus = googleDriveUtils.uploadGoogleDriveFile(fileImage);
-        return new ResponseEntity(sendStatus, HttpStatus.OK);
     }
 
 }

@@ -12,6 +12,7 @@ import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.util.GoogleDriveUtils;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.mortbay.servlet.MultiPartFilter;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -313,7 +314,11 @@ public class SalesController {
             if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
 //                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
                 for(File file : files) {
-                    googleDriveUtils.uploadFileTODrive(account, Constants.SALES, file);
+                    try {
+                        googleDriveUtils.uploadFileTODrive(account, Constants.SALES, file);
+                    }catch(Exception e){
+                        LoggerFactory.getLogger(SalesController.class).info("Couldn't save file " + file.getName() + " to the drive.");
+                    }
                 }
                 sendStatus = true;
             } else if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.FTP_METHOD)) {

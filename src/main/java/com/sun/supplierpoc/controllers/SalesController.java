@@ -9,8 +9,10 @@ import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.util.GoogleDriveUtils;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.mortbay.servlet.MultiPartFilter;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +56,8 @@ public class SalesController {
     FtpService ftpService;
     @Autowired
     private GoogleDriveService googleDriveService;
+
+    private GoogleDriveUtils googleDriveUtils = new GoogleDriveUtils();
 
     public Conversions conversions = new Conversions();
 
@@ -298,22 +302,24 @@ public class SalesController {
         }
         return response;
     }
-    @RequestMapping("/role/test/drive")
-    public boolean checkDrive(@RequestPart("file") MultipartFile file){
-        return true;
-    }
 
-    public static boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
+    public boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
         for (File f : files) {
             try {
                 fileStoragePath = imageService.storeFile(f);
             } catch (Exception e) {
                 System.out.println("Failed to upload file to bucket.");
             }
-
             // Send file
             if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
 //                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
+                for(File file : files) {
+                    try {
+                        googleDriveUtils.uploadFileTODrive(account, Constants.SALES, file);
+                    }catch(Exception e){
+                        LoggerFactory.getLogger(SalesController.class).info("Couldn't save file " + file.getName() + " to the drive.");
+                    }
+                }
                 sendStatus = true;
             } else if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.FTP_METHOD)) {
                 // Check if the account configured for FTP
@@ -333,6 +339,14 @@ public class SalesController {
 
         }
         return sendStatus;
+    }
+
+
+    @PostMapping("/test/testDriver")
+    public ResponseEntity testDriver(@RequestPart("testDriver") MultipartFile file) throws IOException {
+        File fileImage = imageService.multipartToFile(file);
+        boolean sendStatus = googleDriveUtils.uploadFileTODrive(accountRepo.findById("60e468c7944f003ad4f7ae75").get(),  Constants.SALES, fileImage);
+        return new ResponseEntity(sendStatus, HttpStatus.OK);
     }
 
     public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException, IOException {

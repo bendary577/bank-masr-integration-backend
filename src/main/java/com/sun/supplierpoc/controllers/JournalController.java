@@ -59,6 +59,8 @@ public class JournalController {
     private InvoiceController invoiceController;
     @Autowired
     FtpService ftpService;
+    @Autowired
+    private SalesController salesController;
 
     public Conversions conversions = new Conversions();
 
@@ -291,7 +293,7 @@ public class JournalController {
                                 files.add(file);
                         }
 
-                        sendStatus = SalesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                        sendStatus = salesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
 
                         if (sendStatus) {
                             syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);

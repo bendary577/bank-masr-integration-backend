@@ -56,8 +56,7 @@ public class SalesController {
     @Autowired
     private GoogleDriveService googleDriveService;
 
-    @Autowired
-    private GoogleDriveUtils googleDriveUtils;
+    private GoogleDriveUtils googleDriveUtils = new GoogleDriveUtils();
 
     public Conversions conversions = new Conversions();
 
@@ -303,17 +302,19 @@ public class SalesController {
         return response;
     }
 
-    public static boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
+    public boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
         for (File f : files) {
             try {
                 fileStoragePath = imageService.storeFile(f);
             } catch (Exception e) {
                 System.out.println("Failed to upload file to bucket.");
             }
-
             // Send file
             if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
 //                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
+                for(File file : files) {
+                    googleDriveUtils.uploadFileTODrive(account, Constants.SALES, file);
+                }
                 sendStatus = true;
             } else if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.FTP_METHOD)) {
                 // Check if the account configured for FTP

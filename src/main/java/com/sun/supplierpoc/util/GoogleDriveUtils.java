@@ -29,11 +29,9 @@ import org.slf4j.LoggerFactory;
 
 public class GoogleDriveUtils {
 
-    private static final String baseConfigPath = "/oracle-symphony-integrator-e10d2db033fa.json";
-
     private static final String APPLICATION_NAME = "osii-google-drive";
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
-    private static final String TOKENS_DIRECTORY_PATH = "tokens";
+    private static final String TOKENS_DIRECTORY_PATH = "/tokens";
 
     private static final List<String> SCOPES = Collections.singletonList(DriveScopes.DRIVE);
     private static final String CREDENTIALS_FILE_PATH = "/client_secret.json";
@@ -84,8 +82,10 @@ public class GoogleDriveUtils {
 
     // PRIVATE!
     public Boolean uploadFileTODrive(Account account, String module, java.io.File uploadFile) {
+        LoggerFactory.getLogger("Bassel").info("start on get drive");
 
         this.drive = getDriveService();
+        LoggerFactory.getLogger("Bassel").info("end on get drive");
 
         File fileMetadata = new File();
         fileMetadata.setName(uploadFile.getName());
@@ -94,6 +94,8 @@ public class GoogleDriveUtils {
         List<String> parents = Arrays.asList(parentFolder);
 
         fileMetadata.setParents(parents);
+
+        LoggerFactory.getLogger("Bassel").info("parent"  + parents.get(0));
 
         List<File> files = getGoogleFilesByNameAndParent(uploadFile.getName(), parentFolder);
         if (files.size() != 0) {

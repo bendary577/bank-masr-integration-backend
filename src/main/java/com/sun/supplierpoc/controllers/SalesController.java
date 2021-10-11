@@ -315,6 +315,7 @@ public class SalesController {
 //                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
                 for(File file : files) {
                     try {
+                        LoggerFactory.getLogger("Bassel").info("start on save file " + file.getName());
                         googleDriveUtils.uploadFileTODrive(account, Constants.SALES, file);
                     }catch(Exception e){
                         LoggerFactory.getLogger(SalesController.class).info("Couldn't save file " + file.getName() + " to the drive.");

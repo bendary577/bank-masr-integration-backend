@@ -43,7 +43,6 @@ public class GoogleDriveUtils {
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public GoogleDriveUtils() {
-        this.drive = getDriveService();
     }
 
     private static Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
@@ -85,6 +84,8 @@ public class GoogleDriveUtils {
 
     // PRIVATE!
     public Boolean uploadFileTODrive(Account account, String module, java.io.File uploadFile) {
+
+        this.drive = getDriveService();
 
         File fileMetadata = new File();
         fileMetadata.setName(uploadFile.getName());

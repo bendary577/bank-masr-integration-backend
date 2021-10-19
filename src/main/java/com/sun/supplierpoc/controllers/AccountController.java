@@ -53,8 +53,13 @@ public class AccountController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public Optional<Account> getAccount(Principal principal){
-        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        return accountRepo.findByIdAndDeleted(user.getAccountId(), false);
+        try{
+            User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            return accountRepo.findByIdAndDeleted(user.getAccountId(), false);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Optional.of(new Account());
+        }
     }
 
     @RequestMapping("/updateAccount")

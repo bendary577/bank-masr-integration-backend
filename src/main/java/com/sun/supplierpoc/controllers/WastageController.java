@@ -390,6 +390,30 @@ public class WastageController {
         excelExporter.export(response);
     }
 
+    @GetMapping("/generateWastageMonthlyReport")
+    public void generateWastageMonthlyReport(Principal principal, HttpServletResponse response) throws IOException {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            ArrayList<CostCenter> locations = generalSettings.getLocations();
+
+            response.setContentType("application/octet-stream");
+            DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+            String currentDateTime = dateFormatter.format(new Date());
+
+            String headerKey = "Content-Disposition";
+            String headerValue = "attachment; filename=Wastage" + currentDateTime + ".xlsx";
+            response.setHeader(headerKey, headerValue);
+
+            WastageExcelExporter excelExporter = new WastageExcelExporter();
+            excelExporter.exportMonthlyReport(response, locations);
+        }
+    }
+
+
     private ArrayList<File> createWastesFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
                                                        String AccountName) {
         ArrayList<File> locationFiles = new ArrayList<>();

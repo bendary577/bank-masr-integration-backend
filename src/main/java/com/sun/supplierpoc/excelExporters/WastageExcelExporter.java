@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.excelExporters;
 
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.configurations.CostCenter;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
@@ -11,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class WastageExcelExporter {
@@ -19,6 +21,11 @@ public class WastageExcelExporter {
     private List<SyncJobData> listSyncJobData;
 
     private CommonFunctions commonFunctions;
+
+    public WastageExcelExporter() {
+        workbook = new XSSFWorkbook();
+        this.commonFunctions = new CommonFunctions();
+    }
 
     public WastageExcelExporter(List<SyncJobData> listUsers) {
         this.listSyncJobData = listUsers;
@@ -81,6 +88,52 @@ public class WastageExcelExporter {
     public void export(HttpServletResponse response) throws IOException {
         writeHeaderLine();
         writeDataLines();
+
+        ServletOutputStream outputStream = response.getOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+
+        outputStream.close();
+    }
+
+    /////////////////////////////////////////// Custom Report //////////////////////////////////////////////////////////
+
+    private void monthlyHeaderLine(ArrayList<CostCenter> locations) {
+        Row row;
+        sheet = workbook.createSheet("WastageMonthlyReport");
+        commonFunctions.setSheet(sheet);
+
+        /* Title Header Style */
+        XSSFFont font = workbook.createFont();
+        font.setBold(true);
+        font.setFontHeight(16);
+
+        CellStyle titleStyle = workbook.createCellStyle();
+        titleStyle.setFont(font);
+
+        /* Header Style */
+        CellStyle style = workbook.createCellStyle();
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.CORAL.getIndex());
+
+        row = sheet.createRow(0);
+        commonFunctions.createCell(row, 0, "Raw Materials Wastage Cost Centers", titleStyle);
+        row = sheet.createRow(1);
+        commonFunctions.createCell(row, 0, "All Issues", titleStyle);
+        row = sheet.createRow(2);
+        commonFunctions.createCell(row, 0, "01/07/2021 - 31/07/2021", titleStyle);
+
+        row = sheet.createRow(3);
+        commonFunctions.createCell(row, 0, "Item Name", style);
+        commonFunctions.createCell(row, 1, "Unit", style);
+        commonFunctions.createCell(row, 2, "Total Qty", style);
+        for (int i = 0; i < locations.size(); i++) {
+            commonFunctions.createCell(row, i+3, locations.get(i).costCenterReference, style);
+        }
+    }
+
+    public void exportMonthlyReport(HttpServletResponse response, ArrayList<CostCenter> locations) throws IOException {
+        monthlyHeaderLine(locations);
 
         ServletOutputStream outputStream = response.getOutputStream();
         workbook.write(outputStream);

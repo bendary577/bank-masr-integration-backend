@@ -3,14 +3,17 @@ package com.sun.supplierpoc.excelExporters;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -114,7 +117,9 @@ public class WastageExcelExporter {
         /* Header Style */
         CellStyle style = workbook.createCellStyle();
         style.setFont(font);
-        style.setFillForegroundColor(IndexedColors.CORAL.getIndex());
+        style.setFillForegroundColor(IndexedColors.GREY_40_PERCENT.getIndex());
+
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         row = sheet.createRow(0);
         commonFunctions.createCell(row, 0, "Raw Materials Wastage Cost Centers", titleStyle);

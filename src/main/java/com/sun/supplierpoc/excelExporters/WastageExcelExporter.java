@@ -1,7 +1,14 @@
 package com.sun.supplierpoc.excelExporters;
 
+import com.sun.supplierpoc.Conversions;
+import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.JournalBatch;
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.Item;
+import com.sun.supplierpoc.models.configurations.ItemGroup;
+import com.sun.supplierpoc.models.configurations.OverGroup;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -14,6 +21,9 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +34,8 @@ public class WastageExcelExporter {
     private List<SyncJobData> listSyncJobData;
 
     private CommonFunctions commonFunctions;
+    private Conversions conversions = new Conversions();
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public WastageExcelExporter() {
         workbook = new XSSFWorkbook();
@@ -101,7 +113,7 @@ public class WastageExcelExporter {
 
     /////////////////////////////////////////// Custom Report //////////////////////////////////////////////////////////
 
-    private void monthlyHeaderLine(ArrayList<CostCenter> locations) {
+    private void monthlyHeaderLine(List<JournalBatch> wasteBatches) {
         Row row;
         sheet = workbook.createSheet("WastageMonthlyReport");
         commonFunctions.setSheet(sheet);
@@ -117,8 +129,7 @@ public class WastageExcelExporter {
         /* Header Style */
         CellStyle style = workbook.createCellStyle();
         style.setFont(font);
-        style.setFillForegroundColor(IndexedColors.GREY_40_PERCENT.getIndex());
-
+        style.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         row = sheet.createRow(0);
@@ -132,18 +143,109 @@ public class WastageExcelExporter {
         commonFunctions.createCell(row, 0, "Item Name", style);
         commonFunctions.createCell(row, 1, "Unit", style);
         commonFunctions.createCell(row, 2, "Total Qty", style);
-        for (int i = 0; i < locations.size(); i++) {
-            commonFunctions.createCell(row, i+3, locations.get(i).costCenterReference, style);
+        for (int i = 0; i < wasteBatches.size(); i++) {
+            commonFunctions.createCell(row, i+3, wasteBatches.get(i).getLocation().locationName, style);
         }
     }
 
-    public void exportMonthlyReport(HttpServletResponse response, ArrayList<CostCenter> locations) throws IOException {
-        monthlyHeaderLine(locations);
+    private void monthlyDataLines(GeneralSettings generalSettings, SyncJobType syncJobType,
+                                  List<JournalBatch> wasteBatches) {
+        /* Row Style */
+        Row row;
+        int columnCount = 0;
+        int rowCount = 4;
+        List<SyncJobData> wasteList;
 
-        ServletOutputStream outputStream = response.getOutputStream();
-        workbook.write(outputStream);
-        workbook.close();
+        CellStyle style = workbook.createCellStyle();
+        CellStyle itemStyle = workbook.createCellStyle();
 
-        outputStream.close();
+        XSSFFont font = workbook.createFont();
+        font.setFontHeight(14);
+
+        itemStyle.setFont(font);
+        style.setFont(font);
+        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex()); // #E7E6E6
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
+        /* Get sub headers */
+        ArrayList<CostCenter> locations = generalSettings.getLocations();
+        ArrayList<OverGroup> overGroups = syncJobType.getConfiguration().overGroups;
+        ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
+        ArrayList<Item> items = generalSettings.getItems();
+
+        for (ItemGroup itemGroup : itemGroups) {
+            /* Check if this item group included in this account */
+            OverGroup overGroup = conversions.checkOverGroupExistence(overGroups, itemGroup.getOverGroup());
+            if (!overGroup.getChecked())
+                continue;
+
+            row = sheet.createRow(rowCount++);
+            commonFunctions.createCell(row, columnCount, itemGroup.getItemGroup(), style);
+            for (int i = 1; i < wasteBatches.size() + 3; i++) {
+                    commonFunctions.createCell(row, i, "", style);
+            }
+
+            String amount;
+            String unit;
+            float quantity = 0;
+            float totalQuantity = 0;
+
+            for (Item item : items) {
+                /* Pick items under this item group */
+                if(item.getItemGroup().equals(itemGroup.getItemGroup())){
+                    unit = "";
+                    totalQuantity = 0;
+
+                    row = sheet.createRow(rowCount++);
+                    commonFunctions.createCell(row, columnCount, item.getItem(), itemStyle); // Item Name
+
+                    /* List items synced */
+                    for (int i = 0; i < wasteBatches.size(); i++) {
+                        amount = "0";
+
+                        JournalBatch locationBatch = wasteBatches.get(i);
+                        wasteList = new ArrayList<>(locationBatch.getWasteData());
+                        /* Get location data */
+                        for (int j = 0; j < wasteList.size(); j++) {
+                            SyncJobData data = wasteList.get(j);
+                            if(data.getData().get("overGroup").equals(item.getItem())){
+                                amount = data.getData().get("totalCr").toString();
+                                unit = data.getData().get("unit").toString();
+                                totalQuantity += (float)data.getData().get("quantity");
+                                wasteBatches.get(i).getWasteData().remove(j);
+                                break;
+                            }
+                        }
+
+                        if(amount.equals("0"))
+                            commonFunctions.createCell(row, i+3, ".", itemStyle);
+                        else
+                            commonFunctions.createCell(row, i+3, amount, itemStyle);
+                    }
+
+                    commonFunctions.createCell(row, 1, unit, itemStyle); // Item Unit
+                    commonFunctions.createCell(row, 2, Float.toString(totalQuantity), itemStyle); // Total Qty
+                }
+            }
+        }
+    }
+
+    public void exportMonthlyReport(String accountName, GeneralSettings generalSettings,
+                                    SyncJobType syncJobType, List<JournalBatch> wasteBatches) throws IOException {
+        String fileDirectory = accountName + "/CustomReports/" + syncJobType.getName() + "/";
+        String fileName = fileDirectory + "WastageMonthlyReport.xlsx";
+        File directory = new File(fileDirectory);
+        if (!directory.exists()){
+            directory.getParentFile().mkdirs();
+            directory.mkdir();
+        }
+        FileOutputStream out = new FileOutputStream(new File(fileName));
+
+        monthlyHeaderLine(wasteBatches);
+        monthlyDataLines(generalSettings, syncJobType, wasteBatches);
+
+        // write operation workbook using file out object
+        workbook.write(out);
+        out.close();
     }
 }

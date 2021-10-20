@@ -173,6 +173,11 @@ public class WastageController {
                 if (wasteBatches.size() > 0) {
                     wastageService.saveWastageSunData(wasteBatches, syncJob);
 
+                    if(wasteBatches.size() > 0){
+                        WastageExcelExporter excelExporter = new WastageExcelExporter();
+                        excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);
+                    }
+
                     if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
@@ -397,8 +402,9 @@ public class WastageController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
+
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, user.getAccountId(), false);
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            ArrayList<CostCenter> locations = generalSettings.getLocations();
 
             response.setContentType("application/octet-stream");
             DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
@@ -408,11 +414,8 @@ public class WastageController {
             String headerValue = "attachment; filename=Wastage" + currentDateTime + ".xlsx";
             response.setHeader(headerKey, headerValue);
 
-            WastageExcelExporter excelExporter = new WastageExcelExporter();
-            excelExporter.exportMonthlyReport(response, locations);
         }
     }
-
 
     private ArrayList<File> createWastesFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,
                                                        String AccountName) {

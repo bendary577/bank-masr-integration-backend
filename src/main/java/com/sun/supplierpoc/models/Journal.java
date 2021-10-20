@@ -11,6 +11,9 @@ public class Journal {
     private OrderType orderType;
     private String overGroup;
 
+    private String unit;
+    private float quantity;
+
     private float totalWaste;
     private float totalCost;
     private float totalTransfer;
@@ -38,6 +41,15 @@ public class Journal {
         this.totalWaste = totalWaste;
         this.totalCost = totalCost;
         this.totalTransfer = totalTransfer;
+    }
+
+    private Journal(String overGroup, float totalWaste, float totalCost, float totalTransfer, String unit, float quantity) {
+        this.overGroup = overGroup;
+        this.totalWaste = totalWaste;
+        this.totalCost = totalCost;
+        this.totalTransfer = totalTransfer;
+        this.unit = unit;
+        this.quantity = quantity;
     }
 
     private Journal(MajorGroup majorGroup, FamilyGroup familyGroup,
@@ -147,11 +159,26 @@ public class Journal {
                 journal.totalCost += cost;
                 journal.totalTransfer += transfer;
                 journal.totalWaste += waste;
-
                 return journals;
             }
         }
         journals.add(new Journal(overGroup, waste, cost, transfer));
+        return journals;
+    }
+
+    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, String overGroup, float waste, float cost,
+                                             float transfer, String unit, float quantity) {
+
+        for (Journal journal : journals) {
+            if (journal.overGroup.equals(overGroup)) {
+                journal.totalCost += cost;
+                journal.totalTransfer += transfer;
+                journal.totalWaste += waste;
+                journal.quantity += quantity;
+                return journals;
+            }
+        }
+        journals.add(new Journal(overGroup, waste, cost, transfer, unit, quantity));
         return journals;
     }
 
@@ -265,5 +292,21 @@ public class Journal {
 
     public void setOrderType(OrderType orderType) {
         this.orderType = orderType;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
+    }
+
+    public float getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(float quantity) {
+        this.quantity = quantity;
     }
 }

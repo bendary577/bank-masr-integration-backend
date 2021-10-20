@@ -252,7 +252,7 @@ public class WastageService {
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) transferDetails.get("value")),
-                        0, 0);
+                        0, 0, (String) transferDetails.get("unit"), conversions.convertStringToFloat((String)transferDetails.get("quantity")));
 
             }
 
@@ -494,11 +494,12 @@ public class WastageService {
         try {
             driver.get(Constants.OHRA_LINK + waste.get("waste_details_link"));
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
+            WebElement tableContainer = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            List<WebElement> rows = tableContainer.findElements(By.tagName("tr"));
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
             String group;
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 3; i < rows.size(); i++) {
                 HashMap<String, Object> wasteDetails = new HashMap<>();
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -517,8 +518,10 @@ public class WastageService {
 
                 if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
                     group = item.getOverGroup();
-                else
+                else if(syncJobType.getConfiguration().syncPerGroup.equals("ItemGroups"))
                     group = item.getItemGroup();
+                else
+                    group = item.getItem();
 
                 wasteDetails.put("Item", td.getText().strip());
 
@@ -527,7 +530,7 @@ public class WastageService {
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, group, conversions.convertStringToFloat((String) wasteDetails.get("value")),
-                        0, 0);
+                        0, 0, (String) wasteDetails.get("unit"), conversions.convertStringToFloat((String)wasteDetails.get("quantity")));
 
             }
 
@@ -546,7 +549,7 @@ public class WastageService {
                     journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                     journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
                 }
-                else{
+                else if(syncJobType.getConfiguration().syncPerGroup.equals("ItemGroups")){
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
 
                     if (!itemGroup.getChecked())
@@ -554,6 +557,16 @@ public class WastageService {
 
                     journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
+                }else{
+                    Item item = conversions.checkItemExistence(items, journal.getOverGroup());
+
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, item.getOverGroup());
+
+                    if (!oldOverGroupData.getChecked())
+                        continue;
+
+                    journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
                 }
 
                 if(location.location != null && !location.location.locationName.equals("")){
@@ -586,7 +599,7 @@ public class WastageService {
 
                 journalEntry.put("fromLocation", costCenter.accountCode);
                 journalEntry.put("toLocation", "4110006");
-                // waste.get("waste_type") + " - " +
+
                 String description =  journal.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
@@ -598,6 +611,8 @@ public class WastageService {
                 journalEntry.put("transactionDate", String.valueOf(waste.get("waste_date")));
 
                 journalEntry.put("overGroup", journal.getOverGroup());
+                journalEntry.put("unit", journal.getUnit());
+                journalEntry.put("quantity", journal.getQuantity());
 
                 journalEntries.add(journalEntry);
             }

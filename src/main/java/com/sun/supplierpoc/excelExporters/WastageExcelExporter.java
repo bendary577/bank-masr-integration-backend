@@ -9,18 +9,13 @@ import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
+import java.awt.Color;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -164,6 +159,7 @@ public class WastageExcelExporter {
 
         itemStyle.setFont(font);
         style.setFont(font);
+
         style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex()); // #E7E6E6
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
@@ -232,7 +228,7 @@ public class WastageExcelExporter {
 
     public void exportMonthlyReport(String accountName, GeneralSettings generalSettings,
                                     SyncJobType syncJobType, List<JournalBatch> wasteBatches) throws IOException {
-        String fileDirectory = accountName + "/CustomReports/" + syncJobType.getName() + "/";
+        String fileDirectory = accountName + "/" + syncJobType.getName() + "/CustomReports/";
         String fileName = fileDirectory + "WastageMonthlyReport.xlsx";
         File directory = new File(fileDirectory);
         if (!directory.exists()){

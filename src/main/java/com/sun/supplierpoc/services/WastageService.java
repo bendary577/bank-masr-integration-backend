@@ -528,6 +528,12 @@ public class WastageService {
                 td = cols.get(columns.indexOf("value"));
                 wasteDetails.put("value", td.getText().strip());
 
+                td = cols.get(columns.indexOf("unit"));
+                wasteDetails.put("unit", td.getText().strip());
+
+                td = cols.get(columns.indexOf("quantity"));
+                wasteDetails.put("quantity", td.getText().strip());
+
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, group, conversions.convertStringToFloat((String) wasteDetails.get("value")),
                         0, 0, (String) wasteDetails.get("unit"), conversions.convertStringToFloat((String)wasteDetails.get("quantity")));

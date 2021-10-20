@@ -130,10 +130,17 @@ public class SupportService {
 
 
                         FileSystemResource file = new FileSystemResource(path);
-                        files.add(file);
+                        if (file.exists()){
+                            files.add(file);
+                        }
                     }
                 }
 
+                String customReportPath = account.getName() + "/" + syncJobType.getName() + "/CustomReports/WastageMonthlyReport.xlsx";
+                FileSystemResource file = new FileSystemResource(customReportPath);
+                if (file.exists()){
+                    files.add(file);
+                }
             }
         }
         if(files.size() > 0){

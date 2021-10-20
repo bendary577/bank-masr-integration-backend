@@ -192,6 +192,14 @@ public class WastageController {
 
                             response.put("message", "Sync Wastage Successfully.");
                             response.put("success", true);
+                        }else{
+                            syncJob.setReason("");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(wasteBatches.size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", "Failed to open connection with SUN.");
+                            response.put("success", true);
                         }
                     }
 

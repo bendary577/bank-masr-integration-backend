@@ -83,4 +83,15 @@ public class FeatureService {
         }
 
     }
+
+    public boolean hasFeature(Account account, String featureRef) {
+        List<Feature> features = account.getFeatures();
+        boolean hasRole = false;
+        for (Feature f : features) {
+            if(f.getReference().toLowerCase().equals(featureRef.toLowerCase())){
+                hasRole = true; break;
+            }
+        }
+        return hasRole;
+    }
 }

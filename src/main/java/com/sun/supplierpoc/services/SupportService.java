@@ -71,7 +71,8 @@ public class SupportService {
 
     @Autowired
     private BookedProductionController bookedProductionController;
-
+    @Autowired
+    private FeatureService featureService;
 
     public void supportExportedFile(User user, Account account, Date fromDate, Date toDate, List<CostCenter> stores, String email,
                                     List<SyncJobType> modules, Principal principal) {
@@ -82,7 +83,17 @@ public class SupportService {
         boolean isFirst = true;
         int count = 0;
         while (notSuccess && count != 3) {
-            FileSystemResource file = getZip(account, fromDate, toDate, stores, modules);
+            FileSystemResource file = null;
+            /* Check if user has custom report feature */
+            if (account != null && featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+//                String customReportPath = account.getName() + "/" + syncJobType.getName() + "/CustomReports/WastageMonthlyReport.xlsx";
+                String customReportPath = account.getName() + "/Wastage" + "/CustomReports/WastageMonthlyReport.xlsx";
+
+                file = new FileSystemResource(customReportPath);
+            }else{
+                file = getZip(account, fromDate, toDate, stores, modules);
+            }
+
             if (file != null && !isFirst) {
                 notSuccess = false;
                 try {
@@ -112,35 +123,30 @@ public class SupportService {
             if (syncJobTypeOptional.isPresent()) {
                 SyncJobType syncJobType = syncJobTypeOptional.get();
                 String module = syncJobType.getName();
+
                 for (CostCenter costCenter : stores) {
-                    String store = costCenter.costCenterReference;
+                        String store = costCenter.costCenterReference;
 
-                    Date toDateRequest = addDays(toDate, 1);
-                    Date fromDateRequest = fromDate;
-                    while (!checkIfEquivalent(fromDateRequest, toDateRequest)) {
-                        String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-                        String fileName = String.format("%02d", fromDateRequest.getDate()) +
-                                String.format("%02d", (fromDateRequest.getMonth() + 1)) + "20" +
-                                String.format("%03d", fromDateRequest.getYear()).substring(1, 3) +
-                                daysOfWeek[fromDateRequest.getDay()];
+                        Date toDateRequest = addDays(toDate, 1);
+                        Date fromDateRequest = fromDate;
+                        while (!checkIfEquivalent(fromDateRequest, toDateRequest)) {
+                            String[] daysOfWeek = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+                            String fileName = String.format("%02d", fromDateRequest.getDate()) +
+                                    String.format("%02d", (fromDateRequest.getMonth() + 1)) + "20" +
+                                    String.format("%03d", fromDateRequest.getYear()).substring(1, 3) +
+                                    daysOfWeek[fromDateRequest.getDay()];
 
-                        String path = account.getName() + "/" + module + "/" + "20" + String.format("%03d", fromDateRequest.getYear()).substring(1, 3) + "/" +
-                                (fromDateRequest.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
-                        fromDateRequest = addDays(fromDateRequest, 1);
+                            String path = account.getName() + "/" + module + "/" + "20" + String.format("%03d", fromDateRequest.getYear()).substring(1, 3) + "/" +
+                                    (fromDateRequest.getMonth() + 1) + "/" + store + "/" + fileName + " - " + store + ".ndf";
+                            fromDateRequest = addDays(fromDateRequest, 1);
 
 
-                        FileSystemResource file = new FileSystemResource(path);
-                        if (file.exists()){
-                            files.add(file);
+                            FileSystemResource file = new FileSystemResource(path);
+                            if (file.exists()){
+                                files.add(file);
+                            }
                         }
                     }
-                }
-
-                String customReportPath = account.getName() + "/" + syncJobType.getName() + "/CustomReports/WastageMonthlyReport.xlsx";
-                FileSystemResource file = new FileSystemResource(customReportPath);
-                if (file.exists()){
-                    files.add(file);
-                }
             }
         }
         if(files.size() > 0){

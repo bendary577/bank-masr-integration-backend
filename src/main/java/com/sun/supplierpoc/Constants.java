@@ -243,6 +243,9 @@ public class Constants {
     public static  final String DEDUCT_WALLET = "deduct_wallet";
     public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
 
+    ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
+    public static final String CUSTOM_REPORT = "generate_custom_report";
+
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";

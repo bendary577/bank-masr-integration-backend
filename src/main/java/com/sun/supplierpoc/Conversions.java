@@ -573,10 +573,10 @@ public class Conversions {
         return false;
     }
 
-    public boolean checkIfAccountHasFeature(List<Feature> features, Feature feature) {
+    public boolean checkIfAccountHasFeature(List<Feature> features, String feature) {
 
         for (Feature tempFeature : features){
-            if(tempFeature.getId().equals(feature.getId())){
+            if(tempFeature.getId().equals(feature)){
                 return true;
             }
         }

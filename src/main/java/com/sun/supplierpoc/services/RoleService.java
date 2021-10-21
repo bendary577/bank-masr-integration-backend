@@ -85,7 +85,11 @@ public class RoleService {
                 if(accountOptional.isPresent()) {
                     Account account = accountOptional.get();
                     for(Role role : roles){
-                        if(!conversions.checkIfAccountHasFeature(account.getFeatures(), role.getFeature())){
+                        String featureId = role.getFeatureId();
+                        if(role.getFeature() != null){
+                            featureId = role.getFeature().getId();
+                        }
+                        if(!conversions.checkIfAccountHasFeature(account.getFeatures(), featureId)){
                             response.setMessage("Account " + account.getName() + " doesn't have the feature of "
                                     + role.getFeature().getName());
                             response.setStatus(false);

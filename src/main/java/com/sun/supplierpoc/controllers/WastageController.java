@@ -36,6 +36,8 @@ import java.util.*;
 
 public class WastageController {
     @Autowired
+    private UserRepo userRepo;
+    @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
@@ -74,7 +76,7 @@ public class WastageController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getWastage(user.getId(), account, user);
+            response = getWastage(user.getId(), account);
             if(response.get("success").equals(false)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -88,10 +90,8 @@ public class WastageController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    public HashMap<String, Object> getWastage(String userId, Account account, User user) {
-        if (user != null && roleService.hasRole(user, Constants.GENERATE_WASTAGE_REPORT)){
-            System.out.println("This account has generate wastage report");
-        }
+    public HashMap<String, Object> getWastage(String userId, Account account) {
+        Optional<User> user = userRepo.findById(userId);
         HashMap<String, Object> response = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -178,7 +178,7 @@ public class WastageController {
                     wastageService.saveWastageSunData(wasteBatches, syncJob);
 
                     /* Check generate waste report feature */
-                    if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user, Constants.GENERATE_WASTAGE_REPORT)){
+                    if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.GENERATE_WASTAGE_REPORT)){
                         System.out.println("This account has generate wastage report");
                         WastageExcelExporter excelExporter = new WastageExcelExporter();
                         excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);

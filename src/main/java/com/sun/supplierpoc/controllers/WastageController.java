@@ -183,6 +183,9 @@ public class WastageController {
                         WastageExcelExporter excelExporter = new WastageExcelExporter();
                         excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);
 
+                        syncJob.setStatus(Constants.SUCCESS);
+                        syncJobRepo.save(syncJob);
+
                         syncJob.setReason("");
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(wasteBatches.size());

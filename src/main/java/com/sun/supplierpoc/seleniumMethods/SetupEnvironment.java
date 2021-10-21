@@ -41,7 +41,7 @@ public class SetupEnvironment {
             System.setProperty("webdriver.chrome.driver", chromePath);
             ChromeOptions options = new ChromeOptions();
             options.addArguments(
-//                    "--headless",
+                    "--headless",
                     "--disable-gpu",
                     "--window-size=1920,1200",
                     "--ignore-certificate-errors");
@@ -49,7 +49,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-//            firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -262,12 +262,14 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                    response = chooseDayDateOHRA(syncFromDate,driver);
+//                    response = chooseDayDateOHRA(syncFromDate,driver);
 
-//                    if (syncFromDate.equals(syncToDate)){
-//                        response = chooseDayDateOHRA(syncFromDate,driver);
-//                    }
-//                    // check if they are in same month or not
+                    if (syncFromDate.equals(syncToDate)){
+                        response = chooseDayDateOHRA(syncFromDate,driver);
+                    }else{
+                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
+                    }
+                    // check if they are in same month or not
 //                    else if(syncFromDate.substring(5,7).equals(syncToDate.substring(5,7))){
 //                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
 //                    }
@@ -514,6 +516,11 @@ public class SetupEnvironment {
             String toDateFormatted = Date.format(cals.getTime());
             String toDayName = format.format(toDate);
 
+            cals.setTime(fromDate);
+            cals.add(Calendar.DATE, 1);
+            String midDateFormatted = Date.format(cals.getTime());
+            String midDayName = format.format(cals.getTime());
+
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
@@ -523,14 +530,23 @@ public class SetupEnvironment {
                     .build()
                     .perform();
 
+            if(!midDateFormatted.equals(fromDateFormatted)){
+                List<WebElement> midDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                        + midDayName + ", " + midDateFormatted + "']"));
+                actions.click(midDateElements.get(0))
+                        .build()
+                        .perform();
+            }
+
             if (!toDateFormatted.equals(fromDateFormatted)) {
                 List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + toDayName + ", " + toDateFormatted + "']"));
                 actions.click(toDateElements.get(0))
-                        .keyUp(Keys.LEFT_SHIFT)
+//                        .keyUp(Keys.LEFT_SHIFT)
                         .build()
                         .perform();
             }
+
             Select dateSelected = new Select(driver.findElement(By.id("altOutput0")));
             String value =  dateSelected.getOptions().get(0).getAttribute("value");
             if(value.equals(syncFromDate + "*" + syncToDate))
@@ -788,9 +804,10 @@ public class SetupEnvironment {
                     String businessDate = parameterColumns.get(1);
                     String firstForm = BusinessDateFormat.format(fromDate);
                     String secondForm = BusinessDateFormat.format(fromDate) + " - " + BusinessDateFormat.format(toDate);
+                    String secondFormV2 = BusinessDateFormat.format(fromDate) + "_-_" + BusinessDateFormat.format(toDate);
                     String thirdForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormat.format(toDate);
                     String fourthForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormatV2.format(toDate);
-                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(thirdForm)
+                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(secondFormV2) || businessDate.equals(thirdForm)
                             || businessDate.equals(fourthForm);
                 } catch (ParseException e) {
                     e.printStackTrace();

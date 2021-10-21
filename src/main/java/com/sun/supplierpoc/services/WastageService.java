@@ -516,6 +516,7 @@ public class WastageService {
                     continue;
                 }
 
+
                 if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
                     group = item.getOverGroup();
                 else if(syncJobType.getConfiguration().syncPerGroup.equals("ItemGroups"))
@@ -620,7 +621,19 @@ public class WastageService {
                 journalEntry.put("unit", journal.getUnit());
                 journalEntry.put("quantity", journal.getQuantity());
 
-                journalEntries.add(journalEntry);
+                /* Check if this iteam already exists */
+                boolean addCheck = true;
+                for (HashMap<String, Object> entry : journalEntries) {
+                    if(entry.get("overGroup").equals(journalEntry.get("overGroup"))){
+                        entry.put("quantity", (Float)entry.get("quantity") + journal.getQuantity());
+                        entry.put("totalCr", Float.toString(Float.valueOf((String) entry.get("totalCr")) + journal.getTotalWaste()));
+                        entry.put("totalDr", Float.toString(Float.valueOf((String) entry.get("totalCr")) * -1));
+                        addCheck = false;
+                        break;
+                    }
+                }
+                if(addCheck)
+                    journalEntries.add(journalEntry);
             }
 
         } catch (Exception e) {

@@ -241,6 +241,7 @@ public class Constants {
     public static final String ADD_FEATURE = "add_feature";
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
+    public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
 
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////

@@ -174,7 +174,7 @@ public class ScheduledTasks {
                 } else if (syncJobType.getName().equals(Constants.SALES)) {
                     salesController.syncPOSSalesInDayRange("Automated User", account);
                 } else if (syncJobType.getName().equals(Constants.WASTAGE)) {
-                    wastageController.getWastage("Automated User", account);
+                    wastageController.getWastage("Automated User", account, null);
                 } else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)) {
                     bookedProductionController.getBookedProduction("Automated User", account);
                 } else if (syncJobType.getName().equals(Constants.MENU_ITEMS)) {

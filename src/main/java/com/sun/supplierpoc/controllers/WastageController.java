@@ -55,7 +55,8 @@ public class WastageController {
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
-
+    @Autowired
+    private RoleService roleService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -73,7 +74,7 @@ public class WastageController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getWastage(user.getId(), account);
+            response = getWastage(user.getId(), account, user);
             if(response.get("success").equals(false)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
@@ -87,7 +88,10 @@ public class WastageController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
-    public HashMap<String, Object> getWastage(String userId, Account account) {
+    public HashMap<String, Object> getWastage(String userId, Account account, User user) {
+        if (user != null && roleService.hasRole(user, Constants.GENERATE_WASTAGE_REPORT)){
+            System.out.println("This account has generate wastage report");
+        }
         HashMap<String, Object> response = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -173,12 +177,21 @@ public class WastageController {
                 if (wasteBatches.size() > 0) {
                     wastageService.saveWastageSunData(wasteBatches, syncJob);
 
-                    if(wasteBatches.size() > 0){
+                    /* Check generate waste report feature */
+                    if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user, Constants.GENERATE_WASTAGE_REPORT)){
+                        System.out.println("This account has generate wastage report");
                         WastageExcelExporter excelExporter = new WastageExcelExporter();
                         excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);
-                    }
 
-                    if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
+                        syncJob.setReason("");
+                        syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(wasteBatches.size());
+                        syncJobRepo.save(syncJob);
+
+                        response.put("message", "Sync and generate Wastage Successfully.");
+                        response.put("success", true);
+                    }
+                    else if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             for (JournalBatch batch : wasteBatches) {

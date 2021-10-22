@@ -20,7 +20,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class WastageExcelExporter {
@@ -108,7 +112,7 @@ public class WastageExcelExporter {
 
     /////////////////////////////////////////// Custom Report //////////////////////////////////////////////////////////
 
-    private void monthlyHeaderLine(List<JournalBatch> wasteBatches) {
+    private void monthlyHeaderLine(List<JournalBatch> wasteBatches, SyncJobType syncJobType) {
         Row row;
         sheet = workbook.createSheet("WastageMonthlyReport");
         commonFunctions.setSheet(sheet);
@@ -131,8 +135,26 @@ public class WastageExcelExporter {
         commonFunctions.createCell(row, 0, "Raw Materials Wastage Cost Centers", titleStyle);
         row = sheet.createRow(1);
         commonFunctions.createCell(row, 0, "All Issues", titleStyle);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat BusinessDateFormat = new SimpleDateFormat("d/M/yyyy");
+
+        Date fromDate = null;
+        try {
+            fromDate = dateFormat.parse(syncJobType.getConfiguration().fromDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        Date toDate = null;
+        try {
+            toDate = dateFormat.parse(syncJobType.getConfiguration().toDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        String dateFormatted = BusinessDateFormat.format(fromDate) + " - " + BusinessDateFormat.format(toDate);
         row = sheet.createRow(2);
-        commonFunctions.createCell(row, 0, "01/07/2021 - 31/07/2021", titleStyle);
+        commonFunctions.createCell(row, 0, dateFormatted, titleStyle);
 
         row = sheet.createRow(3);
         commonFunctions.createCell(row, 0, "Item Name", style);
@@ -164,7 +186,6 @@ public class WastageExcelExporter {
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         /* Get sub headers */
-        ArrayList<CostCenter> locations = generalSettings.getLocations();
         ArrayList<OverGroup> overGroups = syncJobType.getConfiguration().overGroups;
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
         ArrayList<Item> items = generalSettings.getItems();
@@ -183,7 +204,6 @@ public class WastageExcelExporter {
 
             String amount;
             String unit;
-            float quantity = 0;
             float totalQuantity = 0;
 
             for (Item item : items) {
@@ -237,7 +257,7 @@ public class WastageExcelExporter {
         }
         FileOutputStream out = new FileOutputStream(new File(fileName));
 
-        monthlyHeaderLine(wasteBatches);
+        monthlyHeaderLine(wasteBatches, syncJobType);
         monthlyDataLines(generalSettings, syncJobType, wasteBatches);
 
         // write operation workbook using file out object

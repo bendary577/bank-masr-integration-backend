@@ -128,8 +128,11 @@ public class WastageExcelExporter {
         /* Header Style */
         CellStyle style = workbook.createCellStyle();
         style.setFont(font);
-        style.setFillForegroundColor(IndexedColors.LIGHT_BLUE.getIndex());
+
+        XSSFColor myColor = new XSSFColor(new Color(211,219,227));
+        ((XSSFCellStyle) style).setFillForegroundColor(myColor);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+
 
         row = sheet.createRow(0);
         commonFunctions.createCell(row, 0, "Raw Materials Wastage Cost Centers", titleStyle);
@@ -182,7 +185,8 @@ public class WastageExcelExporter {
         itemStyle.setFont(font);
         style.setFont(font);
 
-        style.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex()); // #E7E6E6
+        XSSFColor myColor = new XSSFColor(new Color(231,230,230));
+        ((XSSFCellStyle) style).setFillForegroundColor(myColor);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
         /* Get sub headers */

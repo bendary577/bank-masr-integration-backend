@@ -12,6 +12,7 @@ public class Item implements Serializable {
     private String itemGroup="";
     private String overGroup="";
     private String majorGroup="";
+    private String unit="";
 
     public Item() {
         this.checked = false;
@@ -63,5 +64,13 @@ public class Item implements Serializable {
 
     public void setMajorGroup(String majorGroup) {
         this.majorGroup = majorGroup;
+    }
+
+    public String getUnit() {
+        return unit;
+    }
+
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 }

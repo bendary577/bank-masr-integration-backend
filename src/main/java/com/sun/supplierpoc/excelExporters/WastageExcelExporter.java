@@ -189,7 +189,7 @@ public class WastageExcelExporter {
             for (Item item : items) {
                 /* Pick items under this item group */
                 if(item.getItemGroup().equals(itemGroup.getItemGroup())){
-                    unit = "";
+                    unit = item.getUnit();
                     totalQuantity = 0;
 
                     row = sheet.createRow(rowCount++);

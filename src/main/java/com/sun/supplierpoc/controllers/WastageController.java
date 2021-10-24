@@ -179,20 +179,26 @@ public class WastageController {
 
                     /* Check generate waste report feature */
                     if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.GENERATE_WASTAGE_REPORT)){
-                        System.out.println("This account has generate wastage report");
                         WastageExcelExporter excelExporter = new WastageExcelExporter();
-                        excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);
+                        try{
+                            excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("");
 
-                        syncJob.setStatus(Constants.SUCCESS);
-                        syncJobRepo.save(syncJob);
+                            response.put("message", "Sync and generate Wastage Successfully.");
+                            response.put("success", true);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            syncJob.setStatus(Constants.FAILED);
+                            syncJob.setReason("Failed to generate wastage report.");
 
-                        syncJob.setReason("");
+                            response.put("message", "Failed to sync and generate Wastage.");
+                            response.put("success", false);
+                        }
+
                         syncJob.setEndDate(new Date());
                         syncJob.setRowsFetched(wasteBatches.size());
                         syncJobRepo.save(syncJob);
-
-                        response.put("message", "Sync and generate Wastage Successfully.");
-                        response.put("success", true);
                     }
                     else if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);

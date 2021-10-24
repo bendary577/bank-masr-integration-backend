@@ -790,7 +790,7 @@ public class SetupEnvironment {
              * 3 forms of Business Date
              * 1/1/2021 --> Sales
              * 1/1/2021 - 1/3/2021 --> Sales
-             * From 1/1/2021 To 1/3/2021 --> Consumption
+             * From 1/1/2021 To 1/3/2021 --> Consumption ffb560
              * */
             if(parameterColumns.get(0).equals("business_dates")){
                 try {

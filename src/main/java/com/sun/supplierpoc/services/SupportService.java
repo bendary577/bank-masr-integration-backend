@@ -1,30 +1,17 @@
 package com.sun.supplierpoc.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.controllers.*;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
-import com.sun.supplierpoc.models.configurations.Location;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
-import org.apache.commons.httpclient.util.DateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Paths;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -35,12 +22,8 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 public class SupportService {
-
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
-
-    @Autowired
-    private SyncJobRepo syncJobRepo;
 
     @Autowired
     private SendEmailService emailService;
@@ -78,44 +61,51 @@ public class SupportService {
                                     List<SyncJobType> modules, Principal principal) {
 
         Response response = new Response();
-
-        boolean notSuccess = true;
-        boolean isFirst = true;
+        boolean status;
         int count = 0;
-        while (notSuccess && count != 3) {
-            FileSystemResource file = null;
-            /* Check if user has custom report feature */
-            if (account != null && featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
-//                String customReportPath = account.getName() + "/" + syncJobType.getName() + "/CustomReports/WastageMonthlyReport.xlsx";
-                String customReportPath = account.getName() + "/Wastage" + "/CustomReports/WastageMonthlyReport.xlsx";
 
-                file = new FileSystemResource(customReportPath);
+        do {
+            status = reSyncModules(account, fromDate, toDate, stores, modules, principal);
+            count++;
+        }while (!status && count < 3);
+
+        FileSystemResource file = null;
+        if(status){
+            /* Check if user has custom report feature */
+            if (featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+                file = getReportsZip(account,modules);
             }else{
                 file = getZip(account, fromDate, toDate, stores, modules);
             }
+        }
 
-            if (file != null && !isFirst) {
-                notSuccess = false;
-                try {
+        if (file != null) {
+            try {
+                emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
+                response.setMessage("Your request has been received successfully.");
+                response.setStatus(true);
+            } catch (Exception e) {
+                if(featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+                    emailService.sendFailureMail(user, email, modules);
+                }else{
                     emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
-                    response.setMessage("Your request has been received successfully.");
-                    response.setStatus(true);
-                } catch (Exception e) {
-                    emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
-                    response.setMessage(e.getMessage());
-                    response.setStatus(false);
                 }
-            } else {
-                isFirst = false;
-                count++;
-                reSyncModules(account, fromDate, toDate, stores, modules, principal);
+                response.setMessage(e.getMessage());
+                response.setStatus(false);
             }
-
+        } else {
+            if(featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+                emailService.sendFailureMail(user, email, modules);
+            }else{
+                emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
+            }
+            response.setMessage("Failed to send mail.");
+            response.setStatus(false);
         }
     }
 
-    public FileSystemResource getZip(Account account, Date fromDate, Date toDate, List<CostCenter> stores,
-                                     List<SyncJobType> modules) {
+    private FileSystemResource getZip(Account account, Date fromDate, Date toDate, List<CostCenter> stores,
+                                      List<SyncJobType> modules) {
 
         List<FileSystemResource> files = new ArrayList<>();
         for (SyncJobType tempSyncJobType : modules) {
@@ -151,6 +141,33 @@ public class SupportService {
         }
         if(files.size() > 0){
             return zip(files, "exported_files.zip");
+        }else{
+            return null;
+        }
+    }
+
+    public FileSystemResource getReportsZip(Account account, List<SyncJobType> modules) {
+
+        List<FileSystemResource> files = new ArrayList<>();
+        for (SyncJobType tempSyncJobType : modules) {
+            Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(tempSyncJobType.getId());
+            if (syncJobTypeOptional.isPresent()) {
+                SyncJobType syncJobType = syncJobTypeOptional.get();
+                String module = syncJobType.getName();
+
+                Date date = new Date();
+                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+                String fileDirectory = account.getName() + "/" + syncJobType.getName() + "/CustomReports/";
+                String fileName = fileDirectory + module + dateFormat.format(date) + ".xlsx";
+
+                FileSystemResource file = new FileSystemResource(fileName);
+                if (file.exists()){
+                    files.add(file);
+                }
+            }
+        }
+        if(files.size() > 0){
+            return zip(files, "exported_reports.zip");
         }else{
             return null;
         }
@@ -195,70 +212,69 @@ public class SupportService {
         }
     }
 
-    public void reSyncModules(Account account, Date fromDate, Date toDate, List<CostCenter> stores, List<SyncJobType> syncJobTypes, Principal principal) {
+    private boolean reSyncModules(Account account, Date fromDate, Date toDate, List<CostCenter> stores, List<SyncJobType> syncJobTypes, Principal principal) {
+        boolean status = true;
+        HashMap<String, Object> responseHash = new HashMap<>();
 
-        Response response = new Response();
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        ArrayList<CostCenter> locations = generalSettings.getLocations();
+
+        List<String> storesList = new ArrayList<>();
+        for (CostCenter store : stores) {
+            storesList.add(store.costCenterReference);
+        }
+        for (CostCenter location : locations) {
+            location.checked = storesList.contains(location.costCenterReference);
+        }
+
+        generalSettings.setLocations(locations);
+        generalSettingsRepo.save(generalSettings);
 
         for (SyncJobType tempSyncJobType : syncJobTypes) {
-
             Optional<SyncJobType> syncJobTypeOptional = syncJobTypeRepo.findById(tempSyncJobType.getId());
 
             if (syncJobTypeOptional.isPresent()) {
                 SyncJobType syncJobType = syncJobTypeOptional.get();
 
-
                 DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
                 syncJobType.getConfiguration().setFromDate(dateFormat.format(fromDate));
-                syncJobType.getConfiguration().setToDate(dateFormat.format(addDays(toDate, 1)));
+                syncJobType.getConfiguration().setToDate(dateFormat.format(toDate));
                 syncJobTypeRepo.save(syncJobType);
-                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-                ArrayList<CostCenter> locations = generalSettings.getLocations();
 
-                List<String> storesList = new ArrayList<>();
-                for (CostCenter store : stores) {
-                    storesList.add(store.costCenterReference);
-                }
-                for (CostCenter location : locations) {
-                    if (storesList.contains(location.costCenterReference)) {
-                        location.checked = true;
-                    } else {
-                        location.checked = false;
-                    }
-                }
-
-                generalSettings.setLocations(locations);
-                generalSettingsRepo.save(generalSettings);
                 try {
-
                     if (syncJobType.getName().equals(Constants.SALES)) {
-                        response = salesController.getPOSSalesRequest(principal).getBody();
+                         salesController.getPOSSalesRequest(principal).getBody();
                     } else if (syncJobType.getName().equals(Constants.CONSUMPTION)) {
-                        journalController.getJournalsRequest(principal).getBody();
+                        responseHash = journalController.getJournalsRequest(principal).getBody();
                     } else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES)) {
-                        invoiceController.getApprovedInvoicesRequest(principal).getBody();
+                        responseHash = invoiceController.getApprovedInvoicesRequest(principal).getBody();
                     } else if (syncJobType.getName().equals(Constants.BOOKED_PRODUCTION)) {
-                        bookedProductionController.getBookedProductionRequest(principal);
+                        responseHash = bookedProductionController.getBookedProductionRequest(principal);
                     } else if (syncJobType.getName().equals(Constants.COST_OF_GOODS)) {
                         costOfGoodsController.getCostOfGoodsRequest(principal);
                     } else if (syncJobType.getName().equals(Constants.WASTAGE)) {
-                        wastageController.getWastageRequest(principal);
+                        responseHash = wastageController.getWastageRequest(principal).getBody();
                     } else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)) {
-                        creditNoteController.getCreditNotesRequest(principal);
+                        responseHash = creditNoteController.getCreditNotesRequest(principal).getBody();
                     }
 
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            } else {
+                    if(responseHash != null && responseHash.containsKey("success")
+                            && responseHash.get("success").equals(false)){
+                        status = false;
+                        break;
+                    }
 
+                } catch (ParseException | IOException e) {
+                    e.printStackTrace();
+                    status = false;
+                    break;
+                }
             }
         }
-
+        return status;
     }
 
-    public boolean checkIfEquivalent(Date fromDate, Date toDate) {
+    private boolean checkIfEquivalent(Date fromDate, Date toDate) {
 
         Calendar cal1 = Calendar.getInstance();
         Calendar cal2 = Calendar.getInstance();

@@ -252,10 +252,14 @@ public class WastageExcelExporter {
 
     public void exportMonthlyReport(String accountName, GeneralSettings generalSettings,
                                     SyncJobType syncJobType, List<JournalBatch> wasteBatches) throws IOException {
+        String dateFormatted = syncJobType.getConfiguration().fromDate.replaceAll("-", "")
+                + syncJobType.getConfiguration().toDate.replaceAll("-", "");
+
         Date date = new Date();
         DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         String fileDirectory = accountName + "/" + syncJobType.getName() + "/CustomReports/";
-        String fileName = fileDirectory + "Wastage" + dateFormat.format(date) + ".xlsx";
+//        String fileName = fileDirectory + "Wastage" + dateFormat.format(date) + ".xlsx";
+        String fileName = fileDirectory + "Wastage" + dateFormatted + ".xlsx";
         File directory = new File(fileDirectory);
         if (!directory.exists()){
             directory.getParentFile().mkdirs();

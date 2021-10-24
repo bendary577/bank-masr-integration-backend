@@ -73,7 +73,7 @@ public class SupportService {
         if(status){
             /* Check if user has custom report feature */
             if (featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
-                file = getReportsZip(account,modules);
+                file = getReportsZip(account, fromDate, toDate,modules);
             }else{
                 file = getZip(account, fromDate, toDate, stores, modules);
             }
@@ -146,7 +146,7 @@ public class SupportService {
         }
     }
 
-    public FileSystemResource getReportsZip(Account account, List<SyncJobType> modules) {
+    public FileSystemResource getReportsZip(Account account, Date fromDate, Date toDate, List<SyncJobType> modules) {
 
         List<FileSystemResource> files = new ArrayList<>();
         for (SyncJobType tempSyncJobType : modules) {
@@ -155,10 +155,11 @@ public class SupportService {
                 SyncJobType syncJobType = syncJobTypeOptional.get();
                 String module = syncJobType.getName();
 
-                Date date = new Date();
-                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+                DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+                String dateFormatted = dateFormat.format(fromDate) + dateFormat.format(toDate);
+
                 String fileDirectory = account.getName() + "/" + syncJobType.getName() + "/CustomReports/";
-                String fileName = fileDirectory + module + dateFormat.format(date) + ".xlsx";
+                String fileName = fileDirectory + module + dateFormatted + ".xlsx";
 
                 FileSystemResource file = new FileSystemResource(fileName);
                 if (file.exists()){
@@ -182,7 +183,7 @@ public class SupportService {
 
     public FileSystemResource zip(List<FileSystemResource> files, String filename) {
         try {
-            String zipFile = Constants.ZIP_PATH;
+            String zipFile = Constants.BASE_ZIP_PATH + filename;
 
             byte[] buffer = new byte[1024];
 
@@ -203,8 +204,7 @@ public class SupportService {
             zipOut.close();
             System.out.println("Zip file has been created!");
 
-            FileSystemResource fileSystemResource = new FileSystemResource(Constants.ZIP_PATH);
-            return fileSystemResource;
+            return new FileSystemResource(zipFile);
 
         } catch (IOException ioe) {
             System.out.println("IOException :" + ioe);

@@ -249,6 +249,7 @@ public class Constants {
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
+    public static final String BASE_ZIP_PATH = "src/main/resources/";
 
     public Constants() {}
 }

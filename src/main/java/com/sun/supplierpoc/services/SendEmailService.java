@@ -115,10 +115,8 @@ public class SendEmailService {
                             "<p style='text-align:left'>" +
                             "Dear " + user.getName()  + "<br> <br>" +
 
-                            " <span> Your report had failed to be exported. Please login and try again or contact support for further assistance.</span><br>" +
+                            " <span> Your report had failed to be exported. Please login and try again or contact support for further assistance.</span><br><br>" +
 
-                            " <span> We are pleased to be associated with you." +
-                            " You can contact support for any further clarifications,</span><br><br>" +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";

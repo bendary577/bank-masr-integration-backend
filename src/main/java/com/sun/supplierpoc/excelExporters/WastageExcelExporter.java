@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 public class WastageExcelExporter {
     private XSSFWorkbook workbook;
@@ -255,15 +256,21 @@ public class WastageExcelExporter {
         String dateFormatted = syncJobType.getConfiguration().fromDate.replaceAll("-", "")
                 + syncJobType.getConfiguration().toDate.replaceAll("-", "");
 
-        Date date = new Date();
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         String fileDirectory = accountName + "/" + syncJobType.getName() + "/CustomReports/";
-//        String fileName = fileDirectory + "Wastage" + dateFormat.format(date) + ".xlsx";
         String fileName = fileDirectory + "Wastage" + dateFormatted + ".xlsx";
         File directory = new File(fileDirectory);
         if (!directory.exists()){
             directory.getParentFile().mkdirs();
             directory.mkdir();
+        }
+
+        // Rename old file with same range
+        directory = new File(fileName);
+        Random random = new Random();
+        int rand = random.nextInt(100);
+        File cpFile = new File(fileDirectory + "Wastage" + dateFormatted + rand + ".xlsx");
+        if (directory.exists()){
+            directory.renameTo(cpFile);
         }
         FileOutputStream out = new FileOutputStream(new File(fileName));
 

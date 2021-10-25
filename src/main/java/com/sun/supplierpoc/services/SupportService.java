@@ -183,7 +183,7 @@ public class SupportService {
 
     public FileSystemResource zip(List<FileSystemResource> files, String filename) {
         try {
-            String zipFile = Constants.BASE_ZIP_PATH + filename;
+            String zipFile = Constants.ZIP_PATH ;
 
             byte[] buffer = new byte[1024];
 
@@ -204,7 +204,7 @@ public class SupportService {
             zipOut.close();
             System.out.println("Zip file has been created!");
 
-            return new FileSystemResource(zipFile);
+            return new FileSystemResource(Constants.ZIP_PATH);
 
         } catch (IOException ioe) {
             System.out.println("IOException :" + ioe);

@@ -60,7 +60,7 @@ public class WastageExcelExporter {
         font.setFontHeight(16);
         style.setFont(font);
         style.setFillForegroundColor(IndexedColors.CORAL.getIndex());
-        
+
         commonFunctions.createCell(row, 0, "Status", style);
         commonFunctions.createCell(row, 1, "Reason", style);
         commonFunctions.createCell(row, 2, "Description", style);
@@ -116,6 +116,8 @@ public class WastageExcelExporter {
     private void monthlyHeaderLine(List<JournalBatch> wasteBatches, SyncJobType syncJobType) {
         Row row;
         sheet = workbook.createSheet("WastageMonthlyReport");
+//        sheet.setColumnWidth(2, 17);
+        sheet.setDefaultColumnWidth(20);
         commonFunctions.setSheet(sheet);
 
         /* Title Header Style */
@@ -164,8 +166,12 @@ public class WastageExcelExporter {
         commonFunctions.createCell(row, 0, "Item Name", style);
         commonFunctions.createCell(row, 1, "Unit", style);
         commonFunctions.createCell(row, 2, "Total Qty", style);
+
+        int colCounter = 3;
         for (int i = 0; i < wasteBatches.size(); i++) {
-            commonFunctions.createCell(row, i+3, wasteBatches.get(i).getLocation().locationName, style);
+            commonFunctions.createCell(row, i+colCounter, wasteBatches.get(i).getLocation().locationName + " Qty", style);
+            commonFunctions.createCell(row, i+colCounter+1, wasteBatches.get(i).getLocation().locationName + " Amount", style);
+            colCounter ++;
         }
     }
 
@@ -203,26 +209,28 @@ public class WastageExcelExporter {
 
             row = sheet.createRow(rowCount++);
             commonFunctions.createCell(row, columnCount, itemGroup.getItemGroup(), style);
-            for (int i = 1; i < wasteBatches.size() + 3; i++) {
-                    commonFunctions.createCell(row, i, "", style);
+            for (int i = 1; i < (wasteBatches.size() * 2) + 3; i++) {
+                commonFunctions.createCell(row, i, "", style);
             }
 
             String amount;
             String unit;
-            float totalQuantity = 0;
+            String locationQuantity;
+            float totalQuantity ;
 
             for (Item item : items) {
                 /* Pick items under this item group */
                 if(item.getItemGroup().equals(itemGroup.getItemGroup())){
                     unit = item.getUnit();
                     totalQuantity = 0;
-
+                    int colCounter = 3;
                     row = sheet.createRow(rowCount++);
                     commonFunctions.createCell(row, columnCount, item.getItem(), itemStyle); // Item Name
 
                     /* List items synced */
                     for (int i = 0; i < wasteBatches.size(); i++) {
                         amount = "0";
+                        locationQuantity = "0";
 
                         JournalBatch locationBatch = wasteBatches.get(i);
                         wasteList = new ArrayList<>(locationBatch.getWasteData());
@@ -230,7 +238,8 @@ public class WastageExcelExporter {
                         for (int j = 0; j < wasteList.size(); j++) {
                             SyncJobData data = wasteList.get(j);
                             if(data.getData().get("overGroup").equals(item.getItem())){
-                                amount = data.getData().get("quantity").toString();
+                                amount = data.getData().get("totalCr").toString();
+                                locationQuantity = data.getData().get("quantity").toString();
                                 unit = data.getData().get("unit").toString();
                                 totalQuantity += (float)data.getData().get("quantity");
                                 wasteBatches.get(i).getWasteData().remove(j);
@@ -238,10 +247,13 @@ public class WastageExcelExporter {
                             }
                         }
 
+                        commonFunctions.createCell(row, i+colCounter, locationQuantity, itemStyle);
                         if(amount.equals("0"))
-                            commonFunctions.createCell(row, i+3, ".", itemStyle);
+                            commonFunctions.createCell(row, i+colCounter+1, ".", itemStyle);
                         else
-                            commonFunctions.createCell(row, i+3, amount, itemStyle);
+                            commonFunctions.createCell(row, i+colCounter+1, amount, itemStyle);
+
+                        colCounter++;
                     }
 
                     commonFunctions.createCell(row, 1, unit, itemStyle); // Item Unit

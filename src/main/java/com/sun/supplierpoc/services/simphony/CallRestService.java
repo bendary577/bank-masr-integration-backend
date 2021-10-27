@@ -7,7 +7,7 @@ import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.devtools.remote.client.HttpHeaderInterceptor;
+//import org.springframework.boot.devtools.remote.client.HttpHeaderInterceptor;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class CallRestService {
         String url = "https://macros-pos-production.zeal-members.com/api/visit/scan";
 
         List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
-        interceptors.add(new HttpHeaderInterceptor("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1"));
+//        interceptors.add(new HttpHeaderInterceptor("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1"));
         this.restTemplate.setInterceptors(interceptors);
         ZealLoyaltyResponse zealLoyaltyResponse = new ZealLoyaltyResponse();
         try{
@@ -64,7 +64,7 @@ public class CallRestService {
         String url = "https://macros-pos-production.zeal-members.com/api/redeem/scan";
         List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
 
-        interceptors.add(new HttpHeaderInterceptor("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1"));
+//        interceptors.add(new HttpHeaderInterceptor("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1"));
         this.restTemplate.setInterceptors(interceptors);
 
         ZealRedeemResponse zealRedeemResponse = new ZealRedeemResponse();

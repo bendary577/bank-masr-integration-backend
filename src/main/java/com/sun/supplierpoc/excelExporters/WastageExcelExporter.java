@@ -230,7 +230,7 @@ public class WastageExcelExporter {
                         for (int j = 0; j < wasteList.size(); j++) {
                             SyncJobData data = wasteList.get(j);
                             if(data.getData().get("overGroup").equals(item.getItem())){
-                                amount = data.getData().get("totalCr").toString();
+                                amount = data.getData().get("quantity").toString();
                                 unit = data.getData().get("unit").toString();
                                 totalQuantity += (float)data.getData().get("quantity");
                                 wasteBatches.get(i).getWasteData().remove(j);

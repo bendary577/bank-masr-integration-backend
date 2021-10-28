@@ -262,7 +262,6 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-//                    response = chooseDayDateOHRA(syncFromDate,driver);
 
                     if (syncFromDate.equals(syncToDate)){
                         response = chooseDayDateOHRA(syncFromDate,driver);

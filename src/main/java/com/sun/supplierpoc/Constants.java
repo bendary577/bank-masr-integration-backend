@@ -242,6 +242,7 @@ public class Constants {
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
     public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
+    public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
 
     ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
     public static final String CUSTOM_REPORT = "generate_custom_report";

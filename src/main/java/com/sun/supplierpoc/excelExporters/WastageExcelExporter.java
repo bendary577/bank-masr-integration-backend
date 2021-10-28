@@ -272,7 +272,7 @@ public class WastageExcelExporter {
                 + syncJobType.getConfiguration().toDate.replaceAll("-", "");
 
         String fileDirectory = accountName + "/" + syncJobType.getName() + "/CustomReports/";
-        String fileName = fileDirectory + "Wastage" + dateFormatted + ".xlsx";
+        String fileName = fileDirectory + syncJobType.getName() + dateFormatted + ".xlsx";
         File directory = new File(fileDirectory);
         if (!directory.exists()){
             directory.getParentFile().mkdirs();
@@ -283,7 +283,7 @@ public class WastageExcelExporter {
         directory = new File(fileName);
         Random random = new Random();
         int rand = random.nextInt(100);
-        File cpFile = new File(fileDirectory + "Wastage" + dateFormatted + rand + ".xlsx");
+        File cpFile = new File(fileDirectory + syncJobType.getName() + dateFormatted + rand + ".xlsx");
         if (directory.exists()){
             directory.renameTo(cpFile);
         }

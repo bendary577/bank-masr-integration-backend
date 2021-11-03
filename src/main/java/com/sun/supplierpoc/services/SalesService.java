@@ -1130,12 +1130,12 @@ public class SalesService {
                 differentData.put("toLocation", journalBatch.getCostCenter().accountCode);
 
                 String description = "";
-                String reference = "Different";
+                String reference = "O.Stand.CHQ";
 
                 if (journalBatch.getCostCenter().costCenterReference.equals("")){
-                    description = "Different";
+                    description = "O.Stand.CHQ";
                 }else{
-                    description = journalBatch.getCostCenter().costCenterReference + " - different";
+                    description = journalBatch.getCostCenter().costCenterReference + "_O.Stand.CHQ";
                     reference = journalBatch.getCostCenter().costCenterReference;
                 }
 

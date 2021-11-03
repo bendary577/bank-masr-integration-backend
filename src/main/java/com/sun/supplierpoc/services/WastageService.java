@@ -397,16 +397,18 @@ public class WastageService {
 
                 Response dateResponse = new Response();
                 if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, dateResponse)){
-                    driver.quit();
-
-                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
-                        response.setStatus(false);
-                        response.setMessage(dateResponse.getMessage());
-                        return response;
-                    } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                    if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
                         response.setStatus(true);
                         response.setMessage(Constants.NO_INFO);
                         continue;
+                    }
+
+                    else if(!dateResponse.getMessage().equals("")){
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(dateResponse.getMessage());
+                        return response;
                     }
                 }
 

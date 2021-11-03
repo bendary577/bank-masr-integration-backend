@@ -663,17 +663,18 @@ public class SetupEnvironment {
 
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
-        message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
+        if(message.equals(""))
+            message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
 
-        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+        if(!message.equals("")){
             response.setStatus(false);
             response.setMessage(message);
-            return true;
-        }else if(message.equals(Constants.NO_INFO)){
-            response.setStatus(true);
-            response.setMessage(message);
+
+            if(message.equals(Constants.NO_INFO))
+                response.setStatus(true);
             return true;
         }
+
         return false;
     }
 
@@ -767,6 +768,7 @@ public class SetupEnvironment {
                     }
                 }
             } catch (Exception Ex) {
+                Ex.printStackTrace();
                 System.out.println("Can not fetch parameter data.");
                 driver.switchTo().defaultContent();
                 message = Constants.WRONG_BUSINESS_DATE;

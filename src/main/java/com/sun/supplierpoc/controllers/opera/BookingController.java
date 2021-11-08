@@ -63,14 +63,14 @@ public class BookingController {
                     fileName += (dateFormat.format(date) + ".xml");
 
                     if((bucketPath.equals("") || fileName.equals(""))){
-                        return "Failed to upload file, please try agian.";
+                        return "Failed to upload file, please try again.";
                     } else{
                         String fileURL = imageService.storeFile(file, bucketPath, fileName);
                         System.out.println(fileURL);
                     }
                     return "File uploaded successfully.";
                 } catch (Exception e) {
-                    return "Failed to upload file, please try agian.";
+                    return "Failed to upload file, please try again.";
                 }
             }
         }

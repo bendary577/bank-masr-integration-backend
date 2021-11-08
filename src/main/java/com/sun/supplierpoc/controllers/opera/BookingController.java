@@ -17,6 +17,7 @@ import java.security.Principal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -32,40 +33,45 @@ public class BookingController {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @PostMapping("/opera/uploadFile")
-    public String uploadFile(@RequestParam(value = "file", required = false ) MultipartFile file) {
+    public String uploadFile(@RequestParam(value = "accountName") String accountName,
+                             @RequestParam(value = "file", required = false) MultipartFile file) {
         if (file != null) {
-            try {
-                String bucketPath = "";
-                String fileName = "";
+            if(accountName == null || accountName.equals("")){
+                return "Account name can not be empty, Please try again";
+            }else {
+                try {
+                    String bucketPath = accountName;
+                    String fileName = "";
 
-                DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-                Date date = new Date();
+                    DateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+                    Date date = new Date();
 
-                if(file.getOriginalFilename().contains("cancel_booking")){
-                    bucketPath = "operaReports/CancelBooking/";
-                    fileName = "CancelBooking";
-                } else if(file.getOriginalFilename().contains("booking")){
-                    bucketPath = "operaReports/Booking/";
-                    fileName = "Booking";
-                } else if(file.getOriginalFilename().contains("Occupancy")){
-                    bucketPath = "operaReports/Occupancy/";
-                    fileName = "Occupancy";
-                } else if(file.getOriginalFilename().contains("Expenses")){
-                    bucketPath = "operaReports/Expenses/";
-                    fileName = "Expenses";
-                }
+                    if(Objects.requireNonNull(file.getOriginalFilename()).contains("cancel_booking")){
+                        bucketPath += "/CancelBooking/";
+                        fileName = "CancelBooking";
+                    } else if(file.getOriginalFilename().contains("booking")){
+                        bucketPath += "/Booking/";
+                        fileName = "Booking";
+                    } else if(file.getOriginalFilename().contains("occupancy")){
+                        bucketPath += "/Occupancy/";
+                        fileName = "Occupancy";
+                    } else if(file.getOriginalFilename().contains("expenses")){
+                        bucketPath += "/Expenses/";
+                        fileName = "Expenses";
+                    }
 
-                fileName += (dateFormat.format(date) + ".xml");
+                    fileName += (dateFormat.format(date) + ".xml");
 
-                if((bucketPath.equals("") || fileName.equals(""))){
+                    if((bucketPath.equals("") || fileName.equals(""))){
+                        return "Failed to upload file, please try agian.";
+                    } else{
+                        String fileURL = imageService.storeFile(file, bucketPath, fileName);
+                        System.out.println(fileURL);
+                    }
+                    return "File uploaded successfully.";
+                } catch (Exception e) {
                     return "Failed to upload file, please try agian.";
-                } else{
-                    String fileURL = imageService.storeFile(file, bucketPath, fileName);
-                    System.out.println(fileURL);
                 }
-                return "File uploaded successfully.";
-            } catch (Exception e) {
-                return "Failed to upload file, please try agian.";
             }
         }
         else{

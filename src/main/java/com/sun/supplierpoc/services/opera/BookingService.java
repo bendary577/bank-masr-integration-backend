@@ -81,7 +81,7 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + "/Booking/" + fileName;
+            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Booking/" + fileName;
             String localFilePath = account.getName() + "/Booking/";
 
             FileInputStream input = downloadFile(fileName, filePath, localFilePath);
@@ -150,7 +150,7 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + "/CancelBooking/" + fileName;
+            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/CancelBooking/" + fileName;
             String localFilePath = account.getName() + "/CancelBooking/";
 
             FileInputStream input = downloadFile(fileName, filePath, localFilePath);
@@ -215,7 +215,7 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + "/Occupancy/" + fileName;
+            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Occupancy/" + fileName;
             String localFilePath = account.getName() + "/Occupancy/";
 
             FileInputStream input = downloadFile(fileName, filePath, localFilePath);
@@ -283,7 +283,7 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
             // fileName = "Expenses20210617.xls"
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + "/Expenses/" + fileName;
+            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
             FileInputStream input = downloadFile(fileName, filePath, localFilePath);

@@ -66,7 +66,7 @@ public class Constants {
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
-    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/operaReports";
+    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/";
 
     public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
     public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";

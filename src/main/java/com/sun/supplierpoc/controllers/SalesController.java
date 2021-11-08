@@ -229,7 +229,8 @@ public class SalesController {
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        } else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
+                        }
+                        else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                             boolean sendStatus = true;
@@ -246,7 +247,9 @@ public class SalesController {
                                     files.add(file);
                             }
 
-                            sendStatus = isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                            if(files.size() > 0){
+                                sendStatus = isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                            }
 
                             if (sendStatus) {
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);

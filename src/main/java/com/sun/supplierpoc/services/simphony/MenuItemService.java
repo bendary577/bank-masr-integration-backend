@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.operationConfiguration.OperationConfiguration;
 import com.sun.supplierpoc.models.simphony.*;
 
 import com.sun.supplierpoc.models.simphony.discount.SimphonyPosApi_DiscountEx;
+import com.sun.supplierpoc.models.simphony.masters.DbMenuItemMaster;
 import com.sun.supplierpoc.models.simphony.request.CreateCheckRequest;
 import com.sun.supplierpoc.models.simphony.request.SimphonyMenuItems;
 import com.sun.supplierpoc.models.simphony.response.CondimentResponse;
@@ -97,6 +98,13 @@ public class MenuItemService {
             simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
             simphonyPosApi_configInfos.add(simphonyPosApi_configInfo);
 
+            simphonyPosApi_configInfo = new SimphonyPosApi_ConfigInfo();
+
+            simphonyPosApi_configInfo.setConfigurationInfoTypeID("MENUITEMMASTERS");
+            simphonyPosApi_configInfo.setStartIndex(startIndex);
+            simphonyPosApi_configInfo.setMaxRecordCount(maxCount);
+            simphonyPosApi_configInfos.add(simphonyPosApi_configInfo);
+
             configInfoRequest.setConfigurationInfo(simphonyPosApi_configInfos);
             configInfoRequest.setEmployeeObjectNumber(empNum);
             configInfoRequest.setRVCObjectNumber(revenueCenter);
@@ -148,6 +156,7 @@ public class MenuItemService {
                     String xmlMenuItemPrice = responseDoc.getElementsByTagName("Menu" +
                             "ItemPrice").item(0).getFirstChild().getNodeValue();
                     String xmlMenuItem = responseDoc.getElementsByTagName("MenuItemDefinitions").item(0).getFirstChild().getNodeValue();
+                    String xmlMasterObject = responseDoc.getElementsByTagName("MenuItemMasters").item(0).getFirstChild().getNodeValue();
                     String xmlMenuItemClass = responseDoc.getElementsByTagName("MenuItemClass").item(0).getFirstChild().getNodeValue();
 
                     jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemDefinition.class);
@@ -158,11 +167,15 @@ public class MenuItemService {
                     jaxbUnmarshaller = jaxbContext.createUnmarshaller();
                     ArrayOfDbMenuItemPrice MenuItemPrice = (ArrayOfDbMenuItemPrice) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItemPrice));
 
+                    jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemMaster.class);
+                    jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+                    ArrayOfDbMenuItemMaster MasterObject = (ArrayOfDbMenuItemMaster) jaxbUnmarshaller.unmarshal(new StringReader(xmlMasterObject));
+
                     jaxbContext = JAXBContext.newInstance(ArrayOfDbMenuItemClass.class);
                     jaxbUnmarshaller = jaxbContext.createUnmarshaller();
                     ArrayOfDbMenuItemClass DbMenuItemClasses = (ArrayOfDbMenuItemClass) jaxbUnmarshaller.unmarshal(new StringReader(xmlMenuItemClass));
 
-                    mergeMenuItemWithPrice(MenuItem, MenuItemPrice);
+                    mergeMenuItemWithPrice(MenuItem, MenuItemPrice, MasterObject);
 
                     response.setMessage("Sync menu item successfully.");
                     response.setStatus(true);
@@ -347,16 +360,34 @@ public class MenuItemService {
         return null;
     }
 
-    private static void mergeMenuItemWithPrice(ArrayOfDbMenuItemDefinition arrayOfDbMenuItemDefinition, ArrayOfDbMenuItemPrice arrayOfDbMenuItemPrice) {
+    private static void mergeMenuItemWithPrice(ArrayOfDbMenuItemDefinition arrayOfDbMenuItemDefinition, ArrayOfDbMenuItemPrice arrayOfDbMenuItemPrice, ArrayOfDbMenuItemMaster masterObject) {
         List<DbMenuItemDefinition> DbMenuItemDefinition = arrayOfDbMenuItemDefinition.getDbMenuItemDefinition();
         List<DbMenuItemPrice> DbMenuItemPrice = arrayOfDbMenuItemPrice.getDbMenuItemPrice();
 
         for (DbMenuItemDefinition dbMenuItemDefinition : DbMenuItemDefinition) {
             DbMenuItemPrice dbMenuItemPrice = getMenuItemPrice(DbMenuItemPrice, dbMenuItemDefinition.getMenuItemDefID());
+            int miMasterObjectNum = getMiMasterObject(dbMenuItemDefinition, masterObject);
+            if(miMasterObjectNum != 0){
+                dbMenuItemDefinition.setMiMasterObjNum(String.valueOf(miMasterObjectNum));
+            }
             if (dbMenuItemPrice != null) {
                 dbMenuItemDefinition.setMenuItemPrice(dbMenuItemPrice);
             }
         }
+    }
+
+    private static int getMiMasterObject(DbMenuItemDefinition dbMenuItemDefinition, ArrayOfDbMenuItemMaster masterObject) {
+
+        List<DbMenuItemMaster> dbMenuItemMasters = masterObject.getDbMenuItemMaster();
+
+        for (DbMenuItemMaster dbMenuItemMaster : dbMenuItemMasters){
+            if(dbMenuItemDefinition.getMenuItemMasterID().equals(dbMenuItemMaster.getMenuItemMasterID())){
+                return dbMenuItemMaster.getObjectNumber();
+            }
+        }
+
+        return 0;
+
     }
 
     private static DbMenuItemPrice getMenuItemPrice(List<DbMenuItemPrice> DbMenuItemPrice, String menuItemDefID) {

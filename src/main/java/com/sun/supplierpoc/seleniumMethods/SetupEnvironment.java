@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.seleniumMethods;
 
-import ch.qos.logback.core.util.TimeUtil;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
@@ -49,7 +48,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-                firefoxBinary.addCommandLineOptions("--headless");
+            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -262,12 +261,13 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-                    response = chooseDayDateOHRA(syncFromDate,driver);
 
-//                    if (syncFromDate.equals(syncToDate)){
-//                        response = chooseDayDateOHRA(syncFromDate,driver);
-//                    }
-//                    // check if they are in same month or not
+                    if (syncFromDate.equals(syncToDate)){
+                        response = chooseDayDateOHRA(syncFromDate,driver);
+                    }else{
+                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
+                    }
+                    // check if they are in same month or not
 //                    else if(syncFromDate.substring(5,7).equals(syncToDate.substring(5,7))){
 //                        response = chooseRangeDaysDateOHRA(syncFromDate, syncToDate,driver);
 //                    }
@@ -514,6 +514,11 @@ public class SetupEnvironment {
             String toDateFormatted = Date.format(cals.getTime());
             String toDayName = format.format(toDate);
 
+            cals.setTime(fromDate);
+            cals.add(Calendar.DATE, 1);
+            String midDateFormatted = Date.format(cals.getTime());
+            String midDayName = format.format(cals.getTime());
+
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
@@ -523,14 +528,23 @@ public class SetupEnvironment {
                     .build()
                     .perform();
 
+            if(!midDateFormatted.equals(fromDateFormatted)){
+                List<WebElement> midDateElements = driver.findElements(By.cssSelector("*[title='Select "
+                        + midDayName + ", " + midDateFormatted + "']"));
+                actions.click(midDateElements.get(0))
+                        .build()
+                        .perform();
+            }
+
             if (!toDateFormatted.equals(fromDateFormatted)) {
                 List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + toDayName + ", " + toDateFormatted + "']"));
                 actions.click(toDateElements.get(0))
-                        .keyUp(Keys.LEFT_SHIFT)
+//                        .keyUp(Keys.LEFT_SHIFT)
                         .build()
                         .perform();
             }
+
             Select dateSelected = new Select(driver.findElement(By.id("altOutput0")));
             String value =  dateSelected.getOptions().get(0).getAttribute("value");
             if(value.equals(syncFromDate + "*" + syncToDate))
@@ -648,17 +662,18 @@ public class SetupEnvironment {
 
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
-        message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
+        if(message.equals(""))
+            message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
 
-        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+        if(!message.equals("")){
             response.setStatus(false);
             response.setMessage(message);
-            return true;
-        }else if(message.equals(Constants.NO_INFO)){
-            response.setStatus(true);
-            response.setMessage(message);
+
+            if(message.equals(Constants.NO_INFO))
+                response.setStatus(true);
             return true;
         }
+
         return false;
     }
 
@@ -752,6 +767,7 @@ public class SetupEnvironment {
                     }
                 }
             } catch (Exception Ex) {
+                Ex.printStackTrace();
                 System.out.println("Can not fetch parameter data.");
                 driver.switchTo().defaultContent();
                 message = Constants.WRONG_BUSINESS_DATE;
@@ -788,9 +804,10 @@ public class SetupEnvironment {
                     String businessDate = parameterColumns.get(1);
                     String firstForm = BusinessDateFormat.format(fromDate);
                     String secondForm = BusinessDateFormat.format(fromDate) + " - " + BusinessDateFormat.format(toDate);
+                    String secondFormV2 = BusinessDateFormat.format(fromDate) + "_-_" + BusinessDateFormat.format(toDate);
                     String thirdForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormat.format(toDate);
                     String fourthForm = "from_" + BusinessDateFormat.format(fromDate) + "_to_" + BusinessDateFormatV2.format(toDate);
-                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(thirdForm)
+                    return businessDate.equals(firstForm) || businessDate.equals(secondForm) || businessDate.equals(secondFormV2) || businessDate.equals(thirdForm)
                             || businessDate.equals(fourthForm);
                 } catch (ParseException e) {
                     e.printStackTrace();

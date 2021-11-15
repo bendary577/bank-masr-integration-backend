@@ -30,6 +30,8 @@ import java.util.*;
 
 public class JournalController {
     @Autowired
+    private UserRepo userRepo;
+    @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
@@ -56,9 +58,13 @@ public class JournalController {
     @Autowired
     private GoogleDriveService googleDriveService;
     @Autowired
+    private RoleService roleService;
+    @Autowired
     private InvoiceController invoiceController;
     @Autowired
     FtpService ftpService;
+    @Autowired
+    private SalesController salesController;
 
     public Conversions conversions = new Conversions();
 
@@ -96,7 +102,15 @@ public class JournalController {
 
         int tryCount = 2;
 
-        if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+        /* Generate single file per range */
+        if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)
+                && !syncJobType.getConfiguration().singleFilePerDay){
+            response = getJournals(userId, account);
+        }
+
+        /* Generate single file per day*/
+        else if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)
+                && syncJobType.getConfiguration().singleFilePerDay) {
             String startDate = syncJobType.getConfiguration().fromDate;
             String endDate = syncJobType.getConfiguration().toDate;
 
@@ -127,7 +141,9 @@ public class JournalController {
             String message = "Sync consumption successfully.";
             response.put("message", message);
             response.put("success", true);
-        } else {
+        }
+
+        else {
             if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
@@ -146,6 +162,7 @@ public class JournalController {
 
 
     public HashMap<String, Object> getJournals(String userId, Account account) {
+        Optional<User> user = userRepo.findById(userId);
         HashMap<String, Object> response = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -220,7 +237,7 @@ public class JournalController {
         try {
             Response data;
 
-            if (account.getMicrosVersion().equals("version1")) {
+            if (account.getMicrosVersion() != null && account.getMicrosVersion().equals("version1")) {
                 if (consumptionBasedOnType.equals("Cost Center")) {
                     data = journalService.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
                 } else if (consumptionBasedOnType.equals("Location")) {
@@ -231,9 +248,14 @@ public class JournalController {
                     data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
                             consumptionCostCenters, account);
                 }
-            } else {
+            } else if(account.getMicrosVersion().equals("version2")){
                 ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
                 data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+            } else {
+                response.put("message", "Please configure account version before starting the process.");
+                response.put("success", false);
+
+                return response;
             }
 
             if (data.isStatus()) {
@@ -249,7 +271,30 @@ public class JournalController {
                                 businessDate, fromDate);
                     }
 
-                    if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
+                    /* Check generate journals report feature */
+                    if (addedJournalBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.CONSUMPTION_CUSTOM_REPORT)){
+                        ConsumptionExcelExporter excelExporter = new ConsumptionExcelExporter();
+                        try{
+                            excelExporter.exportMonthlyReport(account.getName(),generalSettings, journalSyncJobType, addedJournalBatches);
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("");
+
+                            response.put("message", "Sync and generate journals Successfully.");
+                            response.put("success", true);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            syncJob.setStatus(Constants.FAILED);
+                            syncJob.setReason("Failed to generate journals report.");
+
+                            response.put("message", "Failed to sync and generate journals.");
+                            response.put("success", false);
+                        }
+
+                        syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(addedJournalBatches.size());
+                        syncJobRepo.save(syncJob);
+                    }
+                    else if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.SUN_ERD)) {
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null) {
                             for (JournalBatch batch : journalBatches) {
@@ -273,7 +318,8 @@ public class JournalController {
                             response.put("message", "Failed  to connect to Sun System.");
                             response.put("success", false);
                         }
-                    } else if (addedJournalBatches.size() > 0 && !account.getSendMethod().equals("other")) {
+                    }
+                    else if (addedJournalBatches.size() > 0 && !account.getSendMethod().equals("other")) {
                         List<SyncJobData> consumptionList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                         File file;
@@ -291,7 +337,7 @@ public class JournalController {
                                 files.add(file);
                         }
 
-                        sendStatus = SalesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                        sendStatus = salesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
 
                         if (sendStatus) {
                             syncJobDataService.updateSyncJobDataStatus(consumptionList, Constants.SUCCESS);
@@ -306,12 +352,13 @@ public class JournalController {
                             response.put("message", "Sync sales successfully.");
                         } else {
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
-                                    "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
+                                    "Failed to send files via " + account.getSendMethod() + ".", Constants.SUCCESS);
 
                             response.put("success", false);
                             response.put("message", "Failed to send files via " + account.getSendMethod() + ".");
                         }
-                    } else {
+                    }
+                    else {
                         syncJob.setStatus(Constants.SUCCESS);
                         syncJob.setReason("No consumption to add in middleware.");
                         syncJob.setEndDate(new Date());
@@ -333,7 +380,8 @@ public class JournalController {
                     response.put("success", true);
 
                 }
-            } else {
+            }
+            else {
                 syncJob.setStatus(Constants.FAILED);
                 syncJob.setReason(data.getMessage());
                 syncJob.setEndDate(new Date());
@@ -345,13 +393,17 @@ public class JournalController {
             }
             return response;
         } catch (Exception e) {
+            String message = "Failed to sync journals.";
+            if(e.getMessage() != null)
+                message = e.getMessage();
+
             syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason(e.getMessage());
+            syncJob.setReason(message);
             syncJob.setEndDate(new Date());
             syncJob.setRowsFetched(0);
             syncJobRepo.save(syncJob);
 
-            response.put("message", e.getMessage());
+            response.put("message", message);
             response.put("success", false);
             return response;
         }

@@ -36,6 +36,8 @@ import java.util.*;
 
 public class WastageController {
     @Autowired
+    private UserRepo userRepo;
+    @Autowired
     private SyncJobRepo syncJobRepo;
     @Autowired
     private SyncJobTypeRepo syncJobTypeRepo;
@@ -55,7 +57,8 @@ public class WastageController {
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
-
+    @Autowired
+    private RoleService roleService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -88,6 +91,7 @@ public class WastageController {
     }
 
     public HashMap<String, Object> getWastage(String userId, Account account) {
+        Optional<User> user = userRepo.findById(userId);
         HashMap<String, Object> response = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -173,7 +177,30 @@ public class WastageController {
                 if (wasteBatches.size() > 0) {
                     wastageService.saveWastageSunData(wasteBatches, syncJob);
 
-                    if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
+                    /* Check generate waste report feature */
+                    if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.GENERATE_WASTAGE_REPORT)){
+                        WastageExcelExporter excelExporter = new WastageExcelExporter();
+                        try{
+                            excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);
+                            syncJob.setStatus(Constants.SUCCESS);
+                            syncJob.setReason("");
+
+                            response.put("message", "Sync and generate Wastage Successfully.");
+                            response.put("success", true);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            syncJob.setStatus(Constants.FAILED);
+                            syncJob.setReason("Failed to generate wastage report.");
+
+                            response.put("message", "Failed to sync and generate Wastage.");
+                            response.put("success", false);
+                        }
+
+                        syncJob.setEndDate(new Date());
+                        syncJob.setRowsFetched(wasteBatches.size());
+                        syncJobRepo.save(syncJob);
+                    }
+                    else if(wasteBatches.size() > 0  && account.getERD().equals(Constants.SUN_ERD)){
                         IAuthenticationVoucher voucher = sunService.connectToSunSystem(account);
                         if (voucher != null){
                             for (JournalBatch batch : wasteBatches) {
@@ -186,6 +213,14 @@ public class WastageController {
                             syncJobRepo.save(syncJob);
 
                             response.put("message", "Sync Wastage Successfully.");
+                            response.put("success", true);
+                        }else{
+                            syncJob.setReason("");
+                            syncJob.setEndDate(new Date());
+                            syncJob.setRowsFetched(wasteBatches.size());
+                            syncJobRepo.save(syncJob);
+
+                            response.put("message", "Failed to open connection with SUN.");
                             response.put("success", true);
                         }
                     }
@@ -388,6 +423,28 @@ public class WastageController {
         WastageExcelExporter excelExporter = new WastageExcelExporter(wastageList);
 
         excelExporter.export(response);
+    }
+
+    @GetMapping("/generateWastageMonthlyReport")
+    public void generateWastageMonthlyReport(Principal principal, HttpServletResponse response) throws IOException {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, user.getAccountId(), false);
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            response.setContentType("application/octet-stream");
+            DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+            String currentDateTime = dateFormatter.format(new Date());
+
+            String headerKey = "Content-Disposition";
+            String headerValue = "attachment; filename=Wastage" + currentDateTime + ".xlsx";
+            response.setHeader(headerKey, headerValue);
+
+        }
     }
 
     private ArrayList<File> createWastesFilePerLocation(List<JournalBatch> wasteBatches, SyncJobType syncJobType,

@@ -13,8 +13,8 @@ public class ZealPayment implements Serializable {
     @Id
     private int id;
     private String code = "-";
-    private String totalDue = "-";
-    private String checkNumber = "-";
+    private String totalDue = "0";
+    private String checkNumber = "0";
     private int employeeId;
     private String revenueCentreName;
     private int revenueCentreId;

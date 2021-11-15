@@ -66,7 +66,7 @@ public class Constants {
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
-    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/operaReports";
+    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/";
 
     public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
     public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";
@@ -241,10 +241,16 @@ public class Constants {
     public static final String ADD_FEATURE = "add_feature";
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
+    public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
+    public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
+
+    ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
+    public static final String CUSTOM_REPORT = "generate_custom_report";
 
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
+    public static final String BASE_ZIP_PATH = "src/main/resources/";
 
     public Constants() {}
 }

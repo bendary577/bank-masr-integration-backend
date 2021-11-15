@@ -80,8 +80,8 @@ public class SupportController {
             Date fromDate;
             Date toDate;
             try {
-                fromDate = exportRequest.getDateRange().getStartDate();
-                toDate = exportRequest.getDateRange().getEndDate();
+                fromDate = exportRequest.getStartDate();
+                toDate = exportRequest.getEndDate();
             } catch(Exception e){
                 response.setStatus(false);
                 response.setMessage(e.getMessage());

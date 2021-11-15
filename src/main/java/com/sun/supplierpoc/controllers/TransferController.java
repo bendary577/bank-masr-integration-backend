@@ -330,7 +330,8 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            driver.findElement(By.name("_ctl31")).click();
+            driver.findElement(By.name("_ctl27")).click();
+
             driver.findElement(By.id("link-27-10-4-ItemGroups")).click();
 
 //            driver.get(Constants.MAIN_MENU_URL);
@@ -376,7 +377,7 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            driver.findElement(By.name("_ctl31")).click();
+            driver.findElement(By.name("_ctl27")).click();
             driver.findElement(By.id("link-27-10-2-Items")).click();
 //            driver.get(Constants.MAIN_MENU_URL);
 //            driver.get(Constants.ITEMS_LINK);
@@ -398,6 +399,7 @@ public class TransferController {
 
                     item.setItem(cols.get(columns.indexOf("item")).getText().strip());
                     String itemGroupText = cols.get(columns.indexOf("item_group")).getText().strip();
+                    String itemUnit = cols.get(columns.indexOf("base_unit")).getText().strip();
 
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, itemGroupText);
                     if (itemGroup.getChecked()){
@@ -405,7 +407,7 @@ public class TransferController {
                         item.setMajorGroup(itemGroup.getMajorGroup());
                         item.setOverGroup(itemGroup.getOverGroup());
                         item.setChecked(true);
-
+                        item.setUnit(itemUnit);
                         items.add(item);
                     }
                 }

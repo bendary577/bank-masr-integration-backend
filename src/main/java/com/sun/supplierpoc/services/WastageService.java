@@ -39,8 +39,8 @@ public class WastageService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response getWastageData(SyncJobType syncJobType, ArrayList<Item> items, ArrayList<ItemGroup> itemGroups,
-                                                  ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
-                                                  ArrayList<WasteGroup> wasteGroups, Account account) {
+                                   ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
+                                   ArrayList<WasteGroup> wasteGroups, Account account) {
 
         Response response = new Response();
 
@@ -210,8 +210,8 @@ public class WastageService {
     }
 
     private void getWasteDetails(SyncJobType syncJobType,
-            ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
-            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
+                                 ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
+                                 HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
@@ -252,14 +252,14 @@ public class WastageService {
 
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, overGroup, conversions.convertStringToFloat((String) transferDetails.get("value")),
-                        0, 0);
+                        0, 0, (String) transferDetails.get("unit"), conversions.convertStringToFloat((String)transferDetails.get("quantity")));
 
             }
 
             CostCenter costCenter = (CostCenter) waste.get("cost_center");
             for (Journal journal : journals) {
-                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-                    continue;
+//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
+//                    continue;
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
@@ -397,16 +397,18 @@ public class WastageService {
 
                 Response dateResponse = new Response();
                 if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, dateResponse)){
-                    driver.quit();
-
-                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
-                        response.setStatus(false);
-                        response.setMessage(dateResponse.getMessage());
-                        return response;
-                    } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                    if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
                         response.setStatus(true);
                         response.setMessage(Constants.NO_INFO);
                         continue;
+                    }
+
+                    else if(!dateResponse.getMessage().equals("")){
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(dateResponse.getMessage());
+                        return response;
                     }
                 }
 
@@ -494,11 +496,12 @@ public class WastageService {
         try {
             driver.get(Constants.OHRA_LINK + waste.get("waste_details_link"));
 
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
+            WebElement tableContainer = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            List<WebElement> rows = tableContainer.findElements(By.tagName("tr"));
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
             String group;
-            for (int i = 7; i < rows.size(); i++) {
+            for (int i = 3; i < rows.size(); i++) {
                 HashMap<String, Object> wasteDetails = new HashMap<>();
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -515,25 +518,34 @@ public class WastageService {
                     continue;
                 }
 
+
                 if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups"))
                     group = item.getOverGroup();
-                else
+                else if(syncJobType.getConfiguration().syncPerGroup.equals("ItemGroups"))
                     group = item.getItemGroup();
+                else
+                    group = item.getItem();
 
                 wasteDetails.put("Item", td.getText().strip());
 
                 td = cols.get(columns.indexOf("value"));
                 wasteDetails.put("value", td.getText().strip());
 
+                td = cols.get(columns.indexOf("unit"));
+                wasteDetails.put("unit", td.getText().strip());
+
+                td = cols.get(columns.indexOf("quantity"));
+                wasteDetails.put("quantity", td.getText().strip());
+
                 Journal journal = new Journal();
                 journals = journal.checkExistence(journals, group, conversions.convertStringToFloat((String) wasteDetails.get("value")),
-                        0, 0);
+                        0, 0, (String) wasteDetails.get("unit"), conversions.convertStringToFloat((String)wasteDetails.get("quantity")));
 
             }
 
             for (Journal journal : journals) {
-                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-                    continue;
+//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
+//                    continue;
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
@@ -546,7 +558,7 @@ public class WastageService {
                     journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                     journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
                 }
-                else{
+                else if(syncJobType.getConfiguration().syncPerGroup.equals("ItemGroups")){
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
 
                     if (!itemGroup.getChecked())
@@ -554,6 +566,16 @@ public class WastageService {
 
                     journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
+                }else{
+                    Item item = conversions.checkItemExistence(items, journal.getOverGroup());
+
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, item.getOverGroup());
+
+                    if (!oldOverGroupData.getChecked())
+                        continue;
+
+                    journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
                 }
 
                 if(location.location != null && !location.location.locationName.equals("")){
@@ -586,7 +608,7 @@ public class WastageService {
 
                 journalEntry.put("fromLocation", costCenter.accountCode);
                 journalEntry.put("toLocation", "4110006");
-                // waste.get("waste_type") + " - " +
+
                 String description =  journal.getOverGroup();
                 if (description.length() > 50){
                     description = description.substring(0, 50);
@@ -598,8 +620,22 @@ public class WastageService {
                 journalEntry.put("transactionDate", String.valueOf(waste.get("waste_date")));
 
                 journalEntry.put("overGroup", journal.getOverGroup());
+                journalEntry.put("unit", journal.getUnit());
+                journalEntry.put("quantity", journal.getQuantity());
 
-                journalEntries.add(journalEntry);
+                /* Check if this item already exists */
+                boolean addCheck = true;
+                for (HashMap<String, Object> entry : journalEntries) {
+                    if(entry.get("overGroup").equals(journalEntry.get("overGroup"))){
+                        entry.put("quantity", (Float)entry.get("quantity") + journal.getQuantity());
+                        entry.put("totalCr", Float.toString(Float.valueOf((String) entry.get("totalCr")) + journal.getTotalWaste()));
+                        entry.put("totalDr", Float.toString(Float.valueOf((String) entry.get("totalCr")) * -1));
+                        addCheck = false;
+                        break;
+                    }
+                }
+                if(addCheck)
+                    journalEntries.add(journalEntry);
             }
 
         } catch (Exception e) {

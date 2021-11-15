@@ -9,8 +9,10 @@ import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.util.GoogleDriveUtils;
 import com.systemsunion.security.IAuthenticationVoucher;
 import org.mortbay.servlet.MultiPartFilter;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +56,8 @@ public class SalesController {
     FtpService ftpService;
     @Autowired
     private GoogleDriveService googleDriveService;
+
+    private GoogleDriveUtils googleDriveUtils = new GoogleDriveUtils();
 
     public Conversions conversions = new Conversions();
 
@@ -225,7 +229,8 @@ public class SalesController {
                                 response.setMessage("Failed to connect to Sun System.");
                             }
 
-                        } else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
+                        }
+                        else if (addedSalesBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                             List<SyncJobData> salesList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                             boolean sendStatus = true;
@@ -242,7 +247,9 @@ public class SalesController {
                                     files.add(file);
                             }
 
-                            sendStatus = isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                            if(files.size() > 0){
+                                sendStatus = isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                            }
 
                             if (sendStatus) {
                                 syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
@@ -253,7 +260,7 @@ public class SalesController {
                                 response.setMessage("Get sales successfully.");
                                 return response;
                             } else {
-                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.FAILED);
+                                syncJobDataService.updateSyncJobDataStatus(salesList, Constants.SUCCESS);
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
                                         "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
 
@@ -299,24 +306,26 @@ public class SalesController {
         return response;
     }
 
-    @RequestMapping("/role/test/drive")
-    public boolean checkDrive(@RequestPart("file") MultipartFile file){
-        return true;
-    }
-
-    public static boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
+    public boolean isSendStatus(Account account, boolean sendStatus, String fileStoragePath, ArrayList<File> files, ImageService imageService, GoogleDriveService googleDriveService, FtpService ftpService) {
         for (File f : files) {
             try {
                 fileStoragePath = imageService.storeFile(f);
             } catch (Exception e) {
                 System.out.println("Failed to upload file to bucket.");
             }
-
             // Send file
-            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
+            if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
 //                sendStatus = googleDriveService.uploadGoogleDriveFile(f);
+                for(File file : files) {
+                    try {
+                        LoggerFactory.getLogger("Bassel").info("start on save file " + file.getName());
+//                        googleDriveUtils.uploadFileTODrive(account, Constants.SALES, file);
+                    }catch(Exception e){
+                        LoggerFactory.getLogger(SalesController.class).info("Couldn't save file " + file.getName() + " to the drive.");
+                    }
+                }
                 sendStatus = true;
-            } else if (account.getSendMethod().equals(Constants.FTP_METHOD)) {
+            } else if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.FTP_METHOD)) {
                 // Check if the account configured for FTP
                 AccountCredential credential = ftpService.getAccountCredential(account);
 
@@ -328,10 +337,20 @@ public class SalesController {
                 if (f != null && !fileStoragePath.equals("")){
                     sendStatus = ftpService.sendFile(credential, fileStoragePath, f.getName());
                 }
+            }else{
+                sendStatus = true;
             }
 
         }
         return sendStatus;
+    }
+
+
+    @PostMapping("/test/testDriver")
+    public ResponseEntity testDriver(@RequestPart("testDriver") MultipartFile file) throws IOException {
+        File fileImage = imageService.multipartToFile(file);
+        boolean sendStatus = googleDriveUtils.uploadFileTODrive(accountRepo.findById("60e468c7944f003ad4f7ae75").get(),  Constants.SALES, fileImage);
+        return new ResponseEntity(sendStatus, HttpStatus.OK);
     }
 
     public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException, IOException {
@@ -344,10 +363,53 @@ public class SalesController {
 
         int tryCount = 2;
 
+        /* Generate single file per range */
+        if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)
+                && !syncJobType.getConfiguration().singleFilePerDay){
+            response = getPOSSales(userId, account);
+        }
+
+        /*
+         * Sync days in range
+         * */
+
+        else if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)
+                && syncJobType.getConfiguration().singleFilePerDay) {
+            String startDate = syncJobType.getConfiguration().fromDate;
+            String endDate = syncJobType.getConfiguration().toDate;
+
+            Date date = dateFormat.parse(startDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            while (!startDate.equals(endDate)) {
+                startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobType.getConfiguration().toDate = startDate;
+                syncJobTypeRepo.save(syncJobType);
+
+                response = getPOSSales(userId, account);
+
+                if (response.isStatus() || tryCount == 0) {
+                    tryCount = 2;
+                    calendar.add(Calendar.DATE, +1);
+                    startDate = dateFormat.format(calendar.getTime());
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobTypeRepo.save(syncJobType);
+                }
+                tryCount--;
+            }
+
+            String message = "Sync sales successfully.";
+            response.setStatus(true);
+            response.setMessage(message);
+        }
+
         /*
          * Sync days of last month
          * */
-        if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
+        else if (syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
             syncJobType.getConfiguration().timePeriod = Constants.USER_DEFINED;
 
             Calendar calendar = Calendar.getInstance();
@@ -387,35 +449,8 @@ public class SalesController {
             response.setStatus(true);
             response.setMessage(message);
         }
-        /*
-         * Sync days in range
-         * */
-        else if (syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
-            String startDate = syncJobType.getConfiguration().fromDate;
-            String endDate = syncJobType.getConfiguration().toDate;
 
-            Date date = dateFormat.parse(startDate);
-
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(date);
-
-            while (!startDate.equals(endDate)) {
-                response = getPOSSales(userId, account);
-
-                if (response.isStatus() || tryCount == 0) {
-                    tryCount = 2;
-                    calendar.add(Calendar.DATE, +1);
-                    startDate = dateFormat.format(calendar.getTime());
-                    syncJobType.getConfiguration().fromDate = startDate;
-                    syncJobTypeRepo.save(syncJobType);
-                }
-                tryCount--;
-            }
-
-            String message = "Sync sales successfully.";
-            response.setStatus(true);
-            response.setMessage(message);
-        } else {
+        else {
             if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());

@@ -92,7 +92,7 @@ public class SalesFileDelimiterExporter {
 
             return file;
         } catch (Exception e) {
-            return new File(this.fileName);
+            return null;
         }
     }
 

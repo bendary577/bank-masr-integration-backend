@@ -10,7 +10,6 @@ import java.util.Date;
 
 //@Document(collation = "transactionType")
 public class TransactionType {
-
     @Id
     private String id;
     private int index;

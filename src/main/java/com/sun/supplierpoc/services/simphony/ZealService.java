@@ -139,9 +139,9 @@ public class ZealService {
 
             ZealRedeemRequest zealRedeemRequest = new ZealRedeemRequest(zealVoucher.getCode());
             response = callRestService.zealVoucher(zealRedeemRequest);
-            HashMap<String, String> map = getItem(response.getMenuItemId());
+            HashMap<String, String> responseMap = getItem(response.getMenuItemId());
 
-            ArrayList<OperationData> savedMenuItems = saveZealVoucher(map, zealVoucher, operation);
+            ArrayList<OperationData> savedMenuItems = saveZealVoucher(responseMap, zealVoucher, operation);
             operation.setStatus(Constants.SUCCESS);
             operation.setEndDate(new Date());
             operationRepo.save(operation);
@@ -151,7 +151,6 @@ public class ZealService {
 
             return response;
         } catch (Exception e) {
-
             if (operation != null) {
                 operation.setStatus(Constants.FAILED);
                 operation.setReason(e.getMessage());

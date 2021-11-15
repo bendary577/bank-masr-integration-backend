@@ -67,27 +67,59 @@ public class SendEmailService {
             DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(email);
-            String mailSubject = "Support Follow Up!";
+//            String mailSubject = "Support Follow Up!";
+            String mailSubject = getModules(syncJobTypes) + "Export is ready!";
             String mailContent =
                     "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                            "<br>"+ "<p style='text-align:left'>" +
-                            "   Dear  " + user.getName()  + "<br> <br>" +
-                            " <span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
-                            "<span style=' padding-left:20px'>  for the " +
+                            "<p style='text-align:left'>" +
+                            "Dear " + user.getName()  + "<br> <br>" +
+                            "<span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
+                            "<span>for the " +
                             getModules(syncJobTypes)
                             +
                             " modules,</span> <br>" +
-                            " <span style=' padding-left:20px'>  Located in " +
+                            " <span>Located in " +
                             getStores(stores)
                             +
                             "</span><br>" +
-                            " <span style=' padding-left:20px'> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
-                            " <span style=' padding-left:20px'> We are pleased to be associated with you. You can contact support for any further clarifications,</span><br><br>" +
+                            " <span> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
+                            " <span> We are pleased to be associated with you." +
+                            " You can contact support for any further clarifications,</span><br><br>" +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";
 
             messageHelper.addAttachment(f.getFilename(), f);
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean sendFailureMail(User user, String email, List<SyncJobType> syncJobTypes)  throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(email);
+            String mailSubject = getModules(syncJobTypes) + "Export is ready!";
+
+            String mailContent =
+                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
+                            "<p style='text-align:left'>" +
+                            "Dear " + user.getName()  + "<br> <br>" +
+
+                            " <span> Your report had failed to be exported. Please login and try again or contact support for further assistance.</span><br><br>" +
+
+                            " Thanks and Regards,<br>" +
+                            " Anyware Software<br>" +
+                            "</div>";
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);

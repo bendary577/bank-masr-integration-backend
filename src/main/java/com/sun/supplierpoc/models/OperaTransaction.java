@@ -17,10 +17,15 @@ public class OperaTransaction {
     private String accountId;
 
     private String sequenceNo;
+    private String refNo;
     private String guestNumber;
 
-    private String CheckInDate;
-    private String CheckOutDate;
+    private String checkInDate;
+    private String checkOutDate;
+
+    public String merchantName = "";
+    public String merchantId = "";
+    public String terminalId = "";
 
     private Date creationDate;
     private boolean deleted;
@@ -84,6 +89,15 @@ public class OperaTransaction {
         this.accountId = accountId;
     }
 
+
+    public String getRefNo() {
+        return refNo;
+    }
+
+    public void setRefNo(String refNo) {
+        this.refNo = refNo;
+    }
+
     public String getSequenceNo() {
         return sequenceNo;
     }
@@ -101,19 +115,19 @@ public class OperaTransaction {
     }
 
     public String getCheckInDate() {
-        return CheckInDate;
+        return checkInDate;
     }
 
     public void setCheckInDate(String checkInDate) {
-        CheckInDate = checkInDate;
+        this.checkInDate = checkInDate;
     }
 
     public String getCheckOutDate() {
-        return CheckOutDate;
+        return checkOutDate;
     }
 
     public void setCheckOutDate(String checkOutDate) {
-        CheckOutDate = checkOutDate;
+        this.checkOutDate = checkOutDate;
     }
 
     public Date getCreationDate() {
@@ -130,5 +144,29 @@ public class OperaTransaction {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getMerchantName() {
+        return merchantName;
+    }
+
+    public void setMerchantName(String merchantName) {
+        this.merchantName = merchantName;
+    }
+
+    public String getMerchantId() {
+        return merchantId;
+    }
+
+    public void setMerchantId(String merchantId) {
+        this.merchantId = merchantId;
+    }
+
+    public String getTerminalId() {
+        return terminalId;
+    }
+
+    public void setTerminalId(String terminalId) {
+        this.terminalId = terminalId;
     }
 }

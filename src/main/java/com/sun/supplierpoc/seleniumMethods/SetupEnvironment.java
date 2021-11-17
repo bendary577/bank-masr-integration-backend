@@ -466,11 +466,7 @@ public class SetupEnvironment {
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
-//            int counter = 10;
-//            do {                counter--;
-//            }while (!checkIfDayClicked(fromDateElements.get(0)) && counter != 0);
             fromDateElements.get(0).click();
-
 
             response.setStatus(true);
             return response;
@@ -494,9 +490,12 @@ public class SetupEnvironment {
         return false;
     }
 
-    private Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {
+    public Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {
         Response response = new Response();
         try {
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+
             driver.findElement(By.id("clear0")).click();
 
             DateFormat Date = DateFormat.getDateInstance();
@@ -540,7 +539,6 @@ public class SetupEnvironment {
                 List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + toDayName + ", " + toDateFormatted + "']"));
                 actions.click(toDateElements.get(0))
-//                        .keyUp(Keys.LEFT_SHIFT)
                         .build()
                         .perform();
             }
@@ -552,7 +550,6 @@ public class SetupEnvironment {
             else
                 response.setStatus(false);
 
-            response.setStatus(true);
             return response;
         } catch (ParseException e) {
             response.setMessage(Constants.INVALID_BUSINESS_DATE);

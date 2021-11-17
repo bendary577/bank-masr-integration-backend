@@ -250,7 +250,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -343,7 +343,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -453,7 +453,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -569,7 +569,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -694,7 +694,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     revenueCenter.getRevenueCenter(),"", driver);
 
             if (!dateResponse.isStatus()){

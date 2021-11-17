@@ -270,7 +270,13 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table")));
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
             WebElement statTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));
 
@@ -358,8 +364,19 @@ public class SalesV2Services {
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table")));
-            WebElement tendersTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table"));
+//            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table")));
+//            WebElement tendersTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table"));
+
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_6316_0']/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_6316_0']/table"));
+
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -457,7 +474,13 @@ public class SalesV2Services {
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_5450_0\"]/table")));
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_5450_0\"]/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
             WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_5450_0\"]/table"));
             List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
 
@@ -567,7 +590,13 @@ public class SalesV2Services {
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table")));
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
             WebElement discountsTable = driver.findElement(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table"));
             List<WebElement> rows = discountsTable.findElements(By.tagName("tr"));
 

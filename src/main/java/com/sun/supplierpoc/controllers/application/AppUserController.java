@@ -104,6 +104,7 @@ public class AppUserController {
                                                    @RequestParam(name = "expire", required = false) double expire,
                                                    @RequestParam(name = "sendEmail", required = false) boolean sendEmail,
                                                    @RequestParam(name = "sendSMS", required = false) boolean sendSMS,
+                                                   @RequestParam(name = "points", required = false) int points,
                                                    @RequestPart(name = "accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
@@ -122,7 +123,7 @@ public class AppUserController {
 
                     response = appUserService
                             .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
-                                    image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile);
+                                    image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile, points);
 
                     if ((Boolean) response.get("success")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

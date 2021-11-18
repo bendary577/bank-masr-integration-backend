@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.SmsPojo;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -57,7 +54,7 @@ public class AppUserService {
 
     public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
                                   boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
-                                  String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile) {
+                                  String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile, int points) {
 
         HashMap response = new HashMap();
 
@@ -104,8 +101,18 @@ public class AppUserService {
             applicationUser.setAccountId(account.getId());
             applicationUser.setCreationDate(new Date());
             applicationUser.setDeleted(false);
-
+            applicationUser.setPoints(points);
             if (!isGeneric) {
+                /* Check mail settings validity */
+                AccountEmailConfig emailConfig = account.getEmailConfig();
+                if(emailConfig == null || (emailConfig.getHost().equals("")
+                                || emailConfig.getUsername().equals("")
+                                || emailConfig.getPassword().equals(""))){
+                    response.put("message", "Please check email settings and try again");
+                    response.put("success", false);
+                    return response;
+                }
+
                 Random random = new Random();
                 String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
                 String accountLogo = account.getImageUrl();
@@ -159,9 +166,8 @@ public class AppUserService {
                 }
 
                 if (sendSMS && mobile != null && !mobile.equals("")) {
-                    LoggerFactory.getLogger("Bassel: ").info("Success");
                     try {
-                        service.send(new SmsPojo("+2" + mobile, "Welcome to movenopick entry system."));
+                        service.send(new SmsPojo("+2" + mobile, "Welcome to movenpick entry system."));
                     } catch (Exception e) {
                         response.put("message", e.getMessage());
                         response.put("success", false);

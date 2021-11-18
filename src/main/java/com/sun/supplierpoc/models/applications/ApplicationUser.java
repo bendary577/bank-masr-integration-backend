@@ -28,6 +28,7 @@ public class ApplicationUser implements Serializable {
     private boolean expired;
     private boolean suspended;
     private boolean generic;
+    private int points = 0;
     private List<AccompaniedGuests> accompaniedGuests;
 
     public String getId() {
@@ -172,5 +173,13 @@ public class ApplicationUser implements Serializable {
 
     public void setSuspended(boolean suspended) {
         this.suspended = suspended;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
     }
 }

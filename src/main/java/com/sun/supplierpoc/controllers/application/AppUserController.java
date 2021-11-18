@@ -2,21 +2,20 @@ package com.sun.supplierpoc.controllers.application;
 
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SmsPojo;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
+import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
-import com.sun.supplierpoc.services.ImageService;
-import com.sun.supplierpoc.services.QRCodeGenerator;
-import com.sun.supplierpoc.services.SendEmailService;
-import com.sun.supplierpoc.services.SmsService;
+import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.services.application.AppUserService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +54,76 @@ public class AppUserController {
     private SimpMessagingTemplate webSocket;
     @Autowired
     private SmsService smsService;
+    @Autowired
+    InvokerUserService invokerUserService;
+
+    private Conversions conversions = new Conversions();
+    ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
+
+    @RequestMapping("/rewardPoints/getGuestPoints")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity getGuestPoints(@RequestHeader("Authorization") String authorization,
+                                         @RequestParam String guestCode) {
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
+                InvokerUser user = invokerUserService.getInvokerUser(username, password);
+                if(user == null)
+                    return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+
+                if(guestCode.equals("")){
+                    return new ResponseEntity("Please provide guest code." ,HttpStatus.BAD_REQUEST);
+                }
+
+                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+
+                return new ResponseEntity(applicationUser.getPoints(), HttpStatus.OK);
+            }else{
+                return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+            }
+
+        }catch (Exception e){
+            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @RequestMapping("/rewardPoints/addGuestPoints")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity addGuestPoints(@RequestHeader("Authorization") String authorization,
+                                         @RequestParam String guestCode, @RequestParam int points) {
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
+                InvokerUser user = invokerUserService.getInvokerUser(username, password);
+                if(user == null)
+                    return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+
+                if(guestCode.equals("")){
+                    return new ResponseEntity("Please provide guest code." ,HttpStatus.BAD_REQUEST);
+                }
+
+                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                applicationUser.setPoints(applicationUser.getPoints() + points);
+                userRepo.save(applicationUser);
+
+                return new ResponseEntity(applicationUser.getPoints(), HttpStatus.OK);
+            }else{
+                return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+            }
+
+        }catch (Exception e){
+            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
+
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")

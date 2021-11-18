@@ -44,6 +44,10 @@ public class GeneralSettings {
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
 
+    /* Reword Points */
+    private float exchangeRate = 0;
+    private float pointsPerPurchases = 0;
+
     private Date creationDate;
     private boolean deleted;
 
@@ -287,6 +291,22 @@ public class GeneralSettings {
 
     public void setMailSubj(String mailSubj) {
         this.mailSubj = mailSubj;
+    }
+
+    public float getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public void setExchangeRate(float exchangeRate) {
+        this.exchangeRate = exchangeRate;
+    }
+
+    public float getPointsPerPurchases() {
+        return pointsPerPurchases;
+    }
+
+    public void setPointsPerPurchases(float pointsPerPurchases) {
+        this.pointsPerPurchases = pointsPerPurchases;
     }
 }
 

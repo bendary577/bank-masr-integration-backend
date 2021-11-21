@@ -65,6 +65,7 @@ public class BookingService {
     public Response fetchNewBookingFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
+        Response createBookingResponse;
 
         SyncJob syncJob;
         SyncJobType syncJobType;
@@ -103,31 +104,181 @@ public class BookingService {
             else if(bookingConfiguration.fileExtension.toLowerCase().equals("xml"))
                 syncJobData = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
 
-            syncJob.setStatus(Constants.SUCCESS);
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJob.setRowsFetched(syncJobData.size());
-            syncJobRepo.save(syncJob);
 
-            syncJobDataRepo.saveAll(syncJobData);
+            for (SyncJobData syncData : syncJobData) {
+                createBookingResponse = sendNewBooking(syncData, bookingConfiguration);
+                if(createBookingResponse.isStatus()){
+                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
+                }else {
+                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, createBookingResponse.getMessage());
+                }
+            }
+            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), "Sync new booking successfully.", Constants.SUCCESS);
 
-            message = "Sync new booking successfully.";
             response.setStatus(true);
             response.setMessage(message);
 
-
         } catch (Exception e) {
             e.printStackTrace();
-
-            syncJob.setStatus(Constants.FAILED);
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJobRepo.save(syncJob);
-
-            message = "Failed to sync new booking.";
+            syncJobService.saveSyncJobStatus(syncJob, 0, "Failed to sync new booking.", Constants.FAILED);
             response.setMessage(message);
             response.setStatus(false);
         }
 
         return response;
+    }
+
+    private Response sendNewBooking(SyncJobData syncJobData, BookingConfiguration bookingConfiguration){
+        String message = "";
+        Response response = new Response();
+        try {
+            OkHttpClient client = new OkHttpClient();
+            String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
+
+            HashMap<String, Object> data = syncJobData.getData();
+
+            JSONObject json = new JSONObject();
+            json.put("bookingNo", String.valueOf(data.get("bookingNo")));
+            json.put("nationalityCode", String.valueOf(data.get("nationalityCode")));
+            json.put("checkInDate", String.valueOf(data.get("checkInDate")));
+            json.put("checkOutDate", String.valueOf(data.get("checkOutDate")));
+            json.put("totalDurationDays", String.valueOf(data.get("totalDurationDays")));
+            json.put("allotedRoomNo", String.valueOf(data.get("allotedRoomNo")));
+            json.put("roomRentType", String.valueOf(data.get("roomRentType")));
+            json.put("dailyRoomRate", String.valueOf(data.get("dailyRoomRate")));
+            json.put("totalRoomRate", String.valueOf(data.get("totalRoomRate")));
+            json.put("vat", String.valueOf(data.get("vat")));
+            json.put("municipalityTax", String.valueOf(data.get("municipalityTax")));
+            json.put("discount", String.valueOf(data.get("discount")));
+            json.put("grandTotal", String.valueOf(data.get("grandTotal")));
+            json.put("transactionTypeId", String.valueOf(data.get("transactionTypeId")));
+            json.put("gender", String.valueOf(data.get("gender")));
+            json.put("checkInTime", String.valueOf(data.get("checkInTime")));
+            json.put("checkOutTime", String.valueOf(data.get("checkOutTime")));
+            json.put("customerType", String.valueOf(data.get("customerType")));
+            json.put("noOfGuest", String.valueOf(data.get("noOfGuest")));
+            json.put("roomType", String.valueOf(data.get("roomType")));
+            json.put("purposeOfVisit", String.valueOf(data.get("purposeOfVisit")));
+            json.put("dateOfBirth", String.valueOf(data.get("dateOfBirth")));
+            json.put("paymentType", String.valueOf(data.get("paymentType")));
+            json.put("noOfRooms", String.valueOf(data.get("noOfRooms")));
+            json.put("cuFlag", String.valueOf(data.get("cuFlag")));
+            json.put("channel", bookingConfiguration.getChannel());
+
+            String body = json.toString();
+
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody requestBody = RequestBody.create(mediaType, body);
+
+            Request request = new Request.Builder()
+                    .url(bookingConfiguration.getUrl())
+                    .post(requestBody)
+                    .addHeader("X-Gateway-APIKey", bookingConfiguration.getGatewayKey())
+                    .addHeader("content-type", "application/json")
+                    .addHeader("Authorization", credential)
+                    .build();
+
+            okhttp3.Response bookingResponse = client.newCall(request).execute();
+            if (bookingResponse.code() == 200){
+                Gson gson = new Gson();
+                MinistryOfTourismResponse entity = gson.fromJson(bookingResponse.body().string(), MinistryOfTourismResponse.class);
+
+                if(entity.getErrorCode().contains("0")){
+                    message = "Create new booking successfully.";
+                    response.setStatus(true);
+                    response.setMessage(message);
+                }else{
+                    /* Parse Error */
+                    message = parseBookingErrorMessage(entity.getErrorCode());
+                    response.setStatus(false);
+                    response.setMessage(message);
+                }
+            }else {
+                message = bookingResponse.message();
+                response.setStatus(false);
+                response.setMessage(message);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = e.getMessage();
+            response.setStatus(false);
+            response.setMessage(message);
+        }
+
+        return response;
+    }
+
+    private String parseBookingErrorMessage(List<String> errorCodes){
+        String message = "";
+        String code = errorCodes.get(0);
+        switch (code) {
+            case "1":
+                message = "Booking No is required and can contains Arabic, English," +
+                        " and Numeric & Alphanumeric.Booking No is required and can contains Arabic, English, and Numeric & Alphanumeric.";
+                break;
+            case "2":
+                message = "Invalid Nationality Code. It must be numeric and available in lookup list.";
+                break;
+            case "3":
+                message = "Invalid Check In Date.";
+                break;
+            case "4":
+                message = "Invalid Check Out Date.";
+                break;
+            case "5":
+                message = "Invalid Total Duration Days.";
+                break;
+            case "6":
+                message = "Invalid Allotted Room No.";
+                break;
+            case "7":
+                message = "Invalid Room Rent Type.";
+                break;
+            case "8":
+                message = "Invalid Daily Room Rate.";
+                break;
+            case "9":
+                message = "Invalid Total Room Rate.";
+                break;
+            case "10":
+                message = "Invalid VAT Value.";
+                break;
+            case "11":
+                message = "Invalid Municipality Tax.";
+                break;
+            case "12":
+                message = "Invalid Discount. It must be numeric & Amount only.";
+                break;
+            case "13":
+            case "14":
+                message = "Invalid Grand Total.";
+                break;
+            case "15":
+                message = "Invalid Transaction Type Id.";
+                break;
+            case "16":
+                message = "Invalid Gender.";
+                break;
+            case "17":
+                message = "Invalid User Id or UserId not found.";
+                break;
+            case "18":
+                message = "Invalid Transaction No or this Transaction No not found in MT database.";
+                break;
+            case "19":
+                message = "Invalid Check In Time.";
+                break;
+
+            case "100":
+                message = "Invalid Credentials. Authentication failed.";
+                break;
+            case "101":
+                message = "Internal Server Error. Please try again later.";
+                break;
+        }
+
+        return message;
     }
 
     public Response fetchCancelBookingFromReport(String userId, Account account) {
@@ -300,7 +451,7 @@ public class BookingService {
                     response.setMessage(message);
                 }else{
                     /* Parse Error */
-                    message = parseErrorMessage(entity.getErrorCode());
+                    message = parseOccupancyErrorMessage(entity.getErrorCode());
                     response.setStatus(false);
                     response.setMessage(message);
                 }
@@ -320,7 +471,7 @@ public class BookingService {
         return response;
     }
 
-    private String parseErrorMessage(List<String> errorCodes){
+    private String parseOccupancyErrorMessage(List<String> errorCodes){
         String message = "";
         String code = errorCodes.get(0);
         switch (code) {

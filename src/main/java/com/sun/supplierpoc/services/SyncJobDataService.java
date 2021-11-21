@@ -23,6 +23,12 @@ public class SyncJobDataService {
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
 
+    public void updateSyncJobDataStatus(SyncJobData syncJobData, String status, String reason) {
+        syncJobData.setStatus(status);
+        syncJobData.setStatus(reason);
+        syncJobDataRepo.save(syncJobData);
+    }
+
     public void updateSyncJobDataStatus(List<SyncJobData> syncJobDataArrayList, String status) {
         for (SyncJobData syncJobData : syncJobDataArrayList) {
             syncJobData.setStatus(status);

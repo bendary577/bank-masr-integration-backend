@@ -80,9 +80,8 @@ public class OccupancyXMLHelper {
                     occupancyDetails.roomsOccupied = Integer.parseInt(element.getElementsByTagName("ROOMS_OCCUPIED").item(0).getTextContent());
                     occupancyDetails.roomsOnMaintenance = Integer.parseInt(element.getElementsByTagName("ROOMS_ON_MAINTENANCE").item(0).getTextContent());
                     occupancyDetails.roomsBooked = Integer.parseInt(element.getElementsByTagName("ROOMS_BOOKEED").item(0).getTextContent());
-
-//                    occupancyDetails.roomsBooked = totalRooms -
-//                            (occupancyDetails.roomsOccupied + occupancyDetails.roomsAvailable + occupancyDetails.roomsOnMaintenance);
+                    occupancyDetails.totalRooms = occupancyDetails.roomsAvailable + occupancyDetails.roomsOccupied +
+                            occupancyDetails.roomsOnMaintenance + occupancyDetails.roomsBooked;
                 }
 
             }

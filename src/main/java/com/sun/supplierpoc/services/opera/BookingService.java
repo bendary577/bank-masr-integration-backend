@@ -1,23 +1,28 @@
 package com.sun.supplierpoc.services.opera;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.components.*;
+import com.sun.supplierpoc.controllers.opera.MinistryOfTourismResponse;
 import com.sun.supplierpoc.models.*;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -227,16 +232,22 @@ public class BookingService {
                 syncJobData = occupancyXMLHelper.getOccupancyFromXML(syncJob, localFilePath + fileName);
             }
 
-            syncJob.setStatus(Constants.SUCCESS);
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJob.setRowsFetched(syncJobData.size());
-            syncJobRepo.save(syncJob);
+            /* Send occupancy update */
+            response = sendOccupancyUpdates(syncJobData, bookingConfiguration);
 
-            syncJobDataRepo.saveAll(syncJobData);
-
-            message = "Sync occupancy Updates successfully.";
-            response.setStatus(true);
-            response.setMessage(message);
+            if(response.isStatus()){
+                syncJob.setStatus(Constants.SUCCESS);
+                syncJob.setEndDate(new Date(System.currentTimeMillis()));
+                syncJob.setRowsFetched(syncJobData.size());
+                syncJobRepo.save(syncJob);
+                syncJobDataRepo.saveAll(syncJobData);
+            }else {
+                syncJob.setStatus(Constants.FAILED);
+                syncJob.setEndDate(new Date(System.currentTimeMillis()));
+                syncJob.setRowsFetched(syncJobData.size());
+                syncJobRepo.save(syncJob);
+                syncJobDataRepo.saveAll(syncJobData);
+            }
         } catch (Exception e) {
             e.printStackTrace();
 
@@ -248,6 +259,58 @@ public class BookingService {
             message = "Failed to sync occupancy Updates.";
             response.setMessage(message);
             response.setStatus(false);
+        }
+
+        return response;
+    }
+
+    private Response sendOccupancyUpdates(List<SyncJobData> syncJobData, BookingConfiguration bookingConfiguration){
+        String message = "";
+        Response response = new Response();
+        try {
+            OkHttpClient client = new OkHttpClient();
+            String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
+
+            HashMap<String, Object> data = syncJobData.get(0).getData();
+
+            RequestBody body = new FormBody.Builder()
+                    .add("updateDate", String.valueOf(data.get("updateDate")))
+                    .add("roomsOccupied", String.valueOf(data.get("roomsOccupied")))
+                    .add("roomsAvailable", String.valueOf(data.get("roomsAvailable")))
+                    .add("roomsBooked", String.valueOf(data.get("roomsBooked")))
+                    .add("roomsOnMaintenance", String.valueOf(data.get("roomsOnMaintenance")))
+                    .add("totalRooms", String.valueOf(data.get("totalRooms")))
+                    .add("channel", bookingConfiguration.getChannel())
+                    .build();
+
+            Request request = new Request.Builder()
+                    .url(bookingConfiguration.getUrl())
+                    .post(body)
+                    .addHeader("x-gateway-apikey", bookingConfiguration.getGatewayKey())
+                    .addHeader("content-type", "application/json")
+                    .addHeader("authorization", credential)
+                    .addHeader("cache-control", "no-cache")
+                    .build();
+
+            okhttp3.Response occupancyUpdateResponse = client.newCall(request).execute();
+
+            Gson gson = new Gson();
+            MinistryOfTourismResponse entity = gson.fromJson(occupancyUpdateResponse.body().string(), MinistryOfTourismResponse.class);
+
+            if(entity.getErrorCode().contains("0")){
+                message = "Occupancy update send successfully.";
+                response.setStatus(true);
+                response.setMessage(message);
+            }else{
+                message = occupancyUpdateResponse.message();
+                response.setStatus(false);
+                response.setMessage(message);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = e.getMessage();
+            response.setStatus(false);
+            response.setMessage(message);
         }
 
         return response;

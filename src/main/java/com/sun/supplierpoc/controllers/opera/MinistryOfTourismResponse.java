@@ -6,13 +6,15 @@ import java.util.List;
 public class MinistryOfTourismResponse {
     protected List<String> errorCode;
     protected String correlationId;
+    protected String transactionId;
 
     public MinistryOfTourismResponse() {
     }
 
-    public MinistryOfTourismResponse(ArrayList<String> errorCode, String correlationId) {
+    public MinistryOfTourismResponse(List<String> errorCode, String correlationId, String transactionId) {
         this.errorCode = errorCode;
         this.correlationId = correlationId;
+        this.transactionId = transactionId;
     }
 
     public List<String> getErrorCode() {
@@ -33,5 +35,13 @@ public class MinistryOfTourismResponse {
 
     public void setCorrelationId(String correlationId) {
         this.correlationId = correlationId;
+    }
+
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 }

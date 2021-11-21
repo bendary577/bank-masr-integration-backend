@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.services.opera;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.components.*;
@@ -12,7 +11,10 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.services.SyncJobDataService;
+import com.sun.supplierpoc.services.SyncJobService;
 import okhttp3.*;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +55,10 @@ public class BookingService {
 
     @Autowired
     OccupancyXMLHelper occupancyXMLHelper;
+    @Autowired
+    private SyncJobService syncJobService;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -236,26 +242,15 @@ public class BookingService {
             response = sendOccupancyUpdates(syncJobData, bookingConfiguration);
 
             if(response.isStatus()){
-                syncJob.setStatus(Constants.SUCCESS);
-                syncJob.setEndDate(new Date(System.currentTimeMillis()));
-                syncJob.setRowsFetched(syncJobData.size());
-                syncJobRepo.save(syncJob);
-                syncJobDataRepo.saveAll(syncJobData);
+                syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
+                syncJobDataService.updateSyncJobDataStatus(syncJobData, Constants.SUCCESS);
             }else {
-                syncJob.setStatus(Constants.FAILED);
-                syncJob.setEndDate(new Date(System.currentTimeMillis()));
-                syncJob.setRowsFetched(syncJobData.size());
-                syncJobRepo.save(syncJob);
-                syncJobDataRepo.saveAll(syncJobData);
+                syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.FAILED);
+                syncJobDataService.updateSyncJobDataStatus(syncJobData, Constants.FAILED);
             }
         } catch (Exception e) {
             e.printStackTrace();
-
-            syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason(e.getMessage());
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJobRepo.save(syncJob);
-
+            syncJobService.saveSyncJobStatus(syncJob, 0, e.getMessage(), Constants.FAILED);
             message = "Failed to sync occupancy Updates.";
             response.setMessage(message);
             response.setStatus(false);
@@ -273,39 +268,48 @@ public class BookingService {
 
             HashMap<String, Object> data = syncJobData.get(0).getData();
 
-            RequestBody body = new FormBody.Builder()
-                    .add("updateDate", String.valueOf(data.get("updateDate")))
-                    .add("roomsOccupied", String.valueOf(data.get("roomsOccupied")))
-                    .add("roomsAvailable", String.valueOf(data.get("roomsAvailable")))
-                    .add("roomsBooked", String.valueOf(data.get("roomsBooked")))
-                    .add("roomsOnMaintenance", String.valueOf(data.get("roomsOnMaintenance")))
-                    .add("totalRooms", String.valueOf(data.get("totalRooms")))
-                    .add("channel", bookingConfiguration.getChannel())
-                    .build();
+            JSONObject json = new JSONObject();
+            json.put("updateDate", String.valueOf(data.get("updateDate")));
+            json.put("roomsOccupied", String.valueOf(data.get("roomsOccupied")));
+            json.put("roomsAvailable", String.valueOf(data.get("roomsAvailable")));
+            json.put("roomsBooked", String.valueOf(data.get("roomsBooked")));
+            json.put("roomsOnMaintenance", String.valueOf(data.get("roomsOnMaintenance")));
+            json.put("totalRooms", String.valueOf(data.get("totalRooms")));
+            json.put("channel", bookingConfiguration.getChannel());
+            String body = json.toString();
+
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody requestBody = RequestBody.create(mediaType, body);
 
             Request request = new Request.Builder()
                     .url(bookingConfiguration.getUrl())
-                    .post(body)
-                    .addHeader("x-gateway-apikey", bookingConfiguration.getGatewayKey())
+                    .post(requestBody)
+                    .addHeader("X-Gateway-APIKey", bookingConfiguration.getGatewayKey())
                     .addHeader("content-type", "application/json")
-                    .addHeader("authorization", credential)
-                    .addHeader("cache-control", "no-cache")
+                    .addHeader("Authorization", credential)
                     .build();
 
             okhttp3.Response occupancyUpdateResponse = client.newCall(request).execute();
+            if (occupancyUpdateResponse.code() == 200){
+                Gson gson = new Gson();
+                MinistryOfTourismResponse entity = gson.fromJson(occupancyUpdateResponse.body().string(), MinistryOfTourismResponse.class);
 
-            Gson gson = new Gson();
-            MinistryOfTourismResponse entity = gson.fromJson(occupancyUpdateResponse.body().string(), MinistryOfTourismResponse.class);
-
-            if(entity.getErrorCode().contains("0")){
-                message = "Occupancy update send successfully.";
-                response.setStatus(true);
-                response.setMessage(message);
-            }else{
+                if(entity.getErrorCode().contains("0")){
+                    message = "Occupancy update send successfully.";
+                    response.setStatus(true);
+                    response.setMessage(message);
+                }else{
+                    /* Parse Error */
+                    message = parseErrorMessage(entity.getErrorCode());
+                    response.setStatus(false);
+                    response.setMessage(message);
+                }
+            }else {
                 message = occupancyUpdateResponse.message();
                 response.setStatus(false);
                 response.setMessage(message);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             message = e.getMessage();
@@ -314,6 +318,72 @@ public class BookingService {
         }
 
         return response;
+    }
+
+    private String parseErrorMessage(List<String> errorCodes){
+        String message = "";
+        String code = errorCodes.get(0);
+        switch (code) {
+            case "1":
+                message = "Invalid Update Date, It should be numeric in following format YYYYMMDD.";
+                break;
+            case "2":
+                message = "Invalid Rooms Occupied. It must be numeric only. It can contain 0.";
+                break;
+            case "3":
+                message = "Invalid Rooms Available. It must be numeric only. It can contain 0.";
+                break;
+            case "4":
+                message = "Invalid Rooms Booked. It must be numeric only. It can contain 0.";
+                break;
+            case "5":
+                message = "Invalid Rooms on Maintenance. It must be numeric only. It can contain 0.";
+                break;
+            case "6":
+                message = "Invalid UserId or User Id not found.";
+                break;
+            case "7":
+                message = "Invalid Transaction Id or TransactionId not found.";
+                break;
+            case "8":
+                message = "Invalid Day Closing value. It should be true or false.";
+                break;
+            case "9":
+                message = "Invalid Total Rooms value. It must be numeric only. It can contain 0.";
+                break;
+            case "10":
+                message = "Incorrect Total Rooms Value.";
+                break;
+            case "11":
+                message = "Invalid Total Adults value.";
+                break;
+            case "12":
+                message = "Invalid Total Children value.";
+                break;
+            case "13":
+                message = "Invalid Total Guests value.";
+                break;
+            case "14":
+                message = "Incorrect Total Guests value.";
+                break;
+            case "15":
+                message = "Total Guests is mandatory if day closing is true.";
+                break;
+            case "16":
+                message = "Invalid Total Revenue value.";
+                break;
+            case "17":
+                message = "Total Revenue is mandatory if day closing is true.";
+                break;
+            case "100":
+                message = "Invalid Credentials. Authentication failed.";
+                break;
+            case "101":
+                message = "Internal Server Error. Please try again later.";
+                break;
+        }
+
+        return message;
     }
 
     public Response fetchExpensesDetailsFromReport(String userId, Account account) {

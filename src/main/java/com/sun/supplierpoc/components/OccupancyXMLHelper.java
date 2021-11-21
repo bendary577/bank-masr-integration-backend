@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.components;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.opera.booking.OccupancyDetails;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ public class OccupancyXMLHelper {
                 }
             }
 
-            SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+            SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), syncJob.getId());
             syncJobDataList.add(syncJobData);
         } catch (Exception e) {
             e.printStackTrace();

@@ -33,9 +33,9 @@ public class Constants {
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
     public static String wLsIntegration = "2wLsIntegration";
     public static String NEW_BOOKING_REPORT = "New/Update Booking"; // New Booking Report
-    public static String CANCEL_BOOKING_REPORT = "Cancel Booking Report";
-    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update Report";
-    public static String EXPENSES_DETAILS_REPORT = "Expenses Details Report";
+    public static String CANCEL_BOOKING_REPORT = "Cancel Booking";
+    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update";
+    public static String EXPENSES_DETAILS_REPORT = "Expenses Details";
 
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";

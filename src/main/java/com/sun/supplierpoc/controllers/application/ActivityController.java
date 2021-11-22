@@ -110,9 +110,11 @@ public class ActivityController {
                     }
 
                 } else {
+
                     response.put("isSuccess", false);
                     response.put("message", Constants.WRONG_REVENUE_CENTER);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
+
                 }
 
             } else {

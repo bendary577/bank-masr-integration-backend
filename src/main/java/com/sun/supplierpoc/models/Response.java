@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
+import com.sun.supplierpoc.models.simphony.SplittableCheck.TransactionResponse;
 import org.apache.poi.ss.formula.functions.T;
 import org.openqa.selenium.WebElement;
 
@@ -14,7 +15,6 @@ public class Response<T> {
     private boolean status;
     private String message;
     private ArrayList<HashMap<String, Object>> entries;
-
     private T data;
 
     // Sales Variables
@@ -43,6 +43,7 @@ public class Response<T> {
 
     private List<WebElement> rows = new ArrayList<>();
 
+    private TransactionResponse transactionResponse;
     public Response() {
     }
 
@@ -210,4 +211,5 @@ public class Response<T> {
     public void setData(T data) {
         this.data = data;
     }
+
 }

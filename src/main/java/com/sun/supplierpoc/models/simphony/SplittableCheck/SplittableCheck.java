@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models.simphony.SplittableCheck;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.List;
 
 public class SplittableCheck implements Serializable {
 
@@ -10,45 +11,64 @@ public class SplittableCheck implements Serializable {
 
     @Id
     private String id;
+
     private String checkValue;
+
     private String checkNumber;
+
     private String employeeId;
+
     private String revenueCentreName;
+
     private String revenueCentreId ;
-    private int splitNumber;
+
+    private String tips;
+
+    private List<TransactionResponse> transactionResponses;
 
     public SplittableCheck() {
     }
+
     public static long getSerialVersionUID() {
         return serialVersionUID;
     }
+
     public String getId() {
         return id;
     }
+
     public void setId(String id) {
         this.id = id;
     }
+
     public String getCheckValue() {
         return checkValue;
     }
+
     public void setCheckValue(String checkValue) {
         this.checkValue = checkValue;
     }
+
     public String getCheckNumber() {
         return checkNumber;
     }
+
     public void setCheckNumber(String checkNumber) {
         this.checkNumber = checkNumber;
     }
+
     public String getEmployeeId() {
         return employeeId;
     }
+
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
     }
+
     public String getRevenueCentreName() {
         return revenueCentreName;
     }
+
     public void setRevenueCentreName(String revenueCentreName) {
         this.revenueCentreName = revenueCentreName;
     }
@@ -58,10 +78,20 @@ public class SplittableCheck implements Serializable {
     public void setRevenueCentreId(String revenueCentreId) {
         this.revenueCentreId = revenueCentreId;
     }
-    public int getSplitNumber() {
-        return splitNumber;
+
+    public String getTips() {
+        return tips;
     }
-    public void setSplitNumber(int splitNumber) {
-        this.splitNumber = splitNumber;
+
+    public void setTips(String tips) {
+        this.tips = tips;
+    }
+
+    public List<TransactionResponse> getTransactionResponses() {
+        return transactionResponses;
+    }
+
+    public void setTransactionResponses(List<TransactionResponse> transactionResponses) {
+        this.transactionResponses = transactionResponses;
     }
 }

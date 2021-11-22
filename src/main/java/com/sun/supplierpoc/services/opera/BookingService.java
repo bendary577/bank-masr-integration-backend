@@ -108,6 +108,9 @@ public class BookingService {
             for (SyncJobData syncData : syncJobData) {
                 createBookingResponse = sendNewBooking(syncData, bookingConfiguration);
                 if(createBookingResponse.isStatus()){
+                    HashMap<String, Object> data = syncData.getData();
+                    data.put("transactionId", createBookingResponse.getMessage());
+                    syncData.setData(data);
                     syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
                 }else {
                     syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, createBookingResponse.getMessage());
@@ -159,7 +162,8 @@ public class BookingService {
             json.put("noOfGuest", String.valueOf(data.get("noOfGuest")));
             json.put("roomType", String.valueOf(data.get("roomType")));
             json.put("purposeOfVisit", String.valueOf(data.get("purposeOfVisit")));
-            json.put("dateOfBirth", String.valueOf(data.get("dateOfBirth")));
+            if(!String.valueOf(data.get("dateOfBirth")).equals(""))
+                json.put("dateOfBirth", String.valueOf(data.get("dateOfBirth")));
             json.put("paymentType", String.valueOf(data.get("paymentType")));
             json.put("noOfRooms", String.valueOf(data.get("noOfRooms")));
             json.put("cuFlag", String.valueOf(data.get("cuFlag")));
@@ -184,9 +188,8 @@ public class BookingService {
                 MinistryOfTourismResponse entity = gson.fromJson(bookingResponse.body().string(), MinistryOfTourismResponse.class);
 
                 if(entity.getErrorCode().contains("0")){
-                    message = "Create new booking successfully.";
                     response.setStatus(true);
-                    response.setMessage(message);
+                    response.setMessage(entity.getTransactionId());
                 }else{
                     /* Parse Error */
                     message = parseBookingErrorMessage(entity.getErrorCode());
@@ -268,6 +271,51 @@ public class BookingService {
                 break;
             case "19":
                 message = "Invalid Check In Time.";
+                break;
+            case "20":
+                message = "Invalid Check Out Time.";
+                break;
+            case "21":
+                message = "Invalid Customer Type.";
+                break;
+            case "22":
+                message = "Invalid No Of Guest. It must be numeric.";
+                break;
+            case "23":
+                message = "Invalid Room Type.";
+                break;
+            case "24":
+                message = "Invalid Purpose of Visit.";
+                break;
+            case "25":
+                message = "Invalid Payment Type value.";
+                break;
+            case "26":
+                message = "Invalid number of rooms";
+                break;
+            case "27":
+                message = "Invalid Create or Update Flag. The value must be 1 or 2.";
+                break;
+            case "28":
+                message = "Invalid Date Of Birth.";
+                break;
+            case "29":
+                message = "This TransactionID & TransactionTypeID already exist.";
+                break;
+            case "30":
+                message = "Updates on Booking & Check In are not allowed because Check out is created.";
+                break;
+            case "31":
+                message = "Updates on Booking are not allowed because Check-In is created for same booking.";
+                break;
+            case "32":
+                message = "No updates allowed on this TransactionID because it is already cancelled.";
+                break;
+            case "33":
+                message = "You are trying to update a record, which does not exist.";
+                break;
+            case "34":
+                message = "Booking number and User ID combination should be unique.";
                 break;
 
             case "100":

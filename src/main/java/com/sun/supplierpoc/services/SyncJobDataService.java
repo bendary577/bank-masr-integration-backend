@@ -25,7 +25,7 @@ public class SyncJobDataService {
 
     public void updateSyncJobDataStatus(SyncJobData syncJobData, String status, String reason) {
         syncJobData.setStatus(status);
-        syncJobData.setStatus(reason);
+        syncJobData.setReason(reason);
         syncJobDataRepo.save(syncJobData);
     }
 

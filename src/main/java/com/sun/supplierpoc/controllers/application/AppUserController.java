@@ -64,6 +64,7 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     public ResponseEntity getGuestPoints(@RequestHeader("Authorization") String authorization,
                                          @RequestParam String guestCode) {
+        HashMap response = new HashMap();
         String username, password;
         try {
             final String[] values = conversions.convertBasicAuth(authorization);
@@ -71,29 +72,54 @@ public class AppUserController {
                 username = values[0];
                 password = values[1];
                 InvokerUser user = invokerUserService.getInvokerUser(username, password);
-                if(user == null)
-                    return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+                if(user == null){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user not allowed to access this method.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
 
                 if(guestCode.equals("")){
-                    return new ResponseEntity("Please provide guest code." ,HttpStatus.BAD_REQUEST);
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "Kindly provide the customer code.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
                 ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                if(applicationUser != null){
+                    response.put("isSuccess", true);
+                    response.put("points", applicationUser.getPoints());
+                    response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }else {
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user is not a member of the reward points system.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
 
-                return new ResponseEntity(applicationUser.getPoints(), HttpStatus.OK);
             }else{
-                return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+                response.put("isSuccess", false);
+                response.put("points", 0);
+                response.put("message", "This user not allowed to access this method.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
         }catch (Exception e){
-            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("isSuccess", false);
+            response.put("points", 0);
+            response.put("message", "There was a problem, please try again.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 
     @RequestMapping("/rewardPoints/addGuestPoints")
     @CrossOrigin(origins = "*")
     public ResponseEntity addGuestPoints(@RequestHeader("Authorization") String authorization,
-                                         @RequestParam String guestCode, @RequestParam int points) {
+                                         @RequestParam(name = "guestCode") String guestCode,
+                                         @RequestParam(name = "points") int points) {
+        HashMap response = new HashMap();
         String username, password;
         try {
             final String[] values = conversions.convertBasicAuth(authorization);
@@ -101,24 +127,48 @@ public class AppUserController {
                 username = values[0];
                 password = values[1];
                 InvokerUser user = invokerUserService.getInvokerUser(username, password);
-                if(user == null)
-                    return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+                if(user == null){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user not allowed to access this method.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
 
                 if(guestCode.equals("")){
-                    return new ResponseEntity("Please provide guest code." ,HttpStatus.BAD_REQUEST);
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "Kindly provide the customer code.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
                 ApplicationUser applicationUser = userRepo.findByCode(guestCode);
-                applicationUser.setPoints(applicationUser.getPoints() + points);
-                userRepo.save(applicationUser);
+                if(applicationUser != null){
+                    applicationUser.setPoints(applicationUser.getPoints() + points);
+                    userRepo.save(applicationUser);
 
-                return new ResponseEntity(applicationUser.getPoints(), HttpStatus.OK);
+                    response.put("isSuccess", true);
+                    response.put("points", applicationUser.getPoints());
+                    response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }else {
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user is not a member of the reward points system.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
             }else{
-                return new ResponseEntity("This user not allowed to access this method.", HttpStatus.FORBIDDEN);
+                response.put("isSuccess", false);
+                response.put("points", 0);
+                response.put("message", "This user not allowed to access this method.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
         }catch (Exception e){
-            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("isSuccess", false);
+            response.put("points", 0);
+            response.put("message", "There was a problem, please try again.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
 

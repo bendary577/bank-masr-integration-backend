@@ -51,7 +51,8 @@ public class ActivityService {
                 response.put("message", "This user does not belong to this account loyalty program.");
             } else if(transactionRepo.existsByCheckNumberAndRevenueCentreId(transaction.getCheckNumber(), transaction.getRevenueCentreId())){
                 response.put("message", "Can't use code for the same check twice.");
-            }else {
+            }
+            else {
                 Optional<Group> groupOptional = groupRepo.findById(user.getGroup().getId());
                 if(!groupOptional.isPresent()){
                     response.put("message", "No group for this user.");
@@ -71,7 +72,22 @@ public class ActivityService {
 
                     double amount = transaction.getTotalPayment();
 
-                    if(!transactionType.getName().equals(Constants.USE_WALLET)) {
+                    if(transactionType.getName().equals(Constants.REWARD_POINTS)){
+                        int points = (int) Math.round(transaction.getTotalPayment()/generalSettings.getPointsPerPurchases());
+
+                        if(points > user.getPoints()){
+                            response.put("message", "There are insufficient points to redeem.");
+                            response.put("isSuccess", false);
+                            return response;
+                        }
+
+                        transaction.setDiscountRate(0.0);
+                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setPointsRedeemed(points);
+
+                        user.setPoints(user.getPoints() - points);
+                    }
+                    else if(!transactionType.getName().equals(Constants.USE_WALLET)) {
 
                         // get discount rate using discount id
                         ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
@@ -86,7 +102,8 @@ public class ActivityService {
                         transaction.setDiscountRate(discount);
                         transaction.setAfterDiscount(amountAfterDiscount);
 
-                    }else{
+                    }
+                    else{
                         transaction.setDiscountRate(0.0);
                         transaction.setAfterDiscount(transaction.getTotalPayment());
                     }

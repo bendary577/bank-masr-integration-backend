@@ -94,12 +94,16 @@ public class SimphonyPaymentService {
             TerminalResponse terminalResponse = new Gson().fromJson(result.getBody(), TerminalResponse.class);
 
             if (terminalResponse.equals("Success")) {
-
                 transactionResponse.setStatus("Success");
-
+                transactionResponse.setResponseMessage(terminalResponse.getMessage());
 
             } else {
-                  transactionResponse.setStatus("Failed");
+                transactionResponse.setStatus("Failed");
+                if(terminalResponse.getMessage().equals("")) {
+                    transactionResponse.setResponseMessage(terminalResponse.getMessage());
+                }else{
+                    transactionResponse.setResponseMessage("Undefined Reason");
+                }
             }
 
             transactionResponse.setCardNumber(terminalResponse.getCardNo());
@@ -110,7 +114,6 @@ public class SimphonyPaymentService {
             transactionResponse.setTerminalId(terminalResponse.getTerminalId());
             transactionResponse.setReferenceNumber(terminalResponse.getRefNo());
             transactionResponse.setResponseCode(terminalResponse.getRefNo());
-            transactionResponse.setResponseMessage(terminalResponse.getMessage());
 
             return transactionResponse;
         } else {

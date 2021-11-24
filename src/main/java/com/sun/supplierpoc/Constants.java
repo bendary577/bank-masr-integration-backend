@@ -62,6 +62,7 @@ public class Constants {
     public static String REDEEM_VOUCHER = "Redeem Voucher";
     public static String USE_WALLET = "Wallet";
     public static String REWARD_POINTS = "Reward Points";
+    public static String POINTS_REDEMPTION = "Points Redemption";
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";

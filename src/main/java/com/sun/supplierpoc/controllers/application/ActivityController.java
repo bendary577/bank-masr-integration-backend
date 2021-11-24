@@ -52,7 +52,7 @@ public class ActivityController {
     @CrossOrigin("*")
     public ResponseEntity<?> transactionActivity(@RequestHeader("Authorization") String authorization,
                                                  @Valid @RequestBody Transactions transaction, BindingResult result,
-                                                 @RequestParam(name = "payWithPoints", required = false) boolean payWithPoints) {
+                                                 @RequestParam(name = "payWithPoints", required = false) int payWithPoints) {
 
         HashMap response = new HashMap();
 
@@ -76,7 +76,10 @@ public class ActivityController {
                 }
 
                 TransactionType transactionType;
-                if(payWithPoints){
+                if(payWithPoints == 1){
+                    transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.POINTS_REDEMPTION, account.getId());
+                }
+                else if(payWithPoints == 2){
                     transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REWARD_POINTS, account.getId());
                 }
                 else if(transaction.getTransactionTypeId().equals("")) {

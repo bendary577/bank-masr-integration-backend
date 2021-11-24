@@ -45,8 +45,8 @@ public class GeneralSettings {
     private String mailSubj;
 
     /* Reword Points */
-    private float exchangeRate = 0;
-    private float pointsPerPurchases = 0;
+    private float pointReward = 0; // percentage
+    private float pointsRedemption = 0; // 1$ = ? points
 
     private Date creationDate;
     private boolean deleted;
@@ -293,20 +293,20 @@ public class GeneralSettings {
         this.mailSubj = mailSubj;
     }
 
-    public float getExchangeRate() {
-        return exchangeRate;
+    public float getPointReward() {
+        return pointReward;
     }
 
-    public void setExchangeRate(float exchangeRate) {
-        this.exchangeRate = exchangeRate;
+    public void setPointReward(float pointReward) {
+        this.pointReward = pointReward;
     }
 
-    public float getPointsPerPurchases() {
-        return pointsPerPurchases;
+    public float getPointsRedemption() {
+        return pointsRedemption;
     }
 
-    public void setPointsPerPurchases(float pointsPerPurchases) {
-        this.pointsPerPurchases = pointsPerPurchases;
+    public void setPointsRedemption(float pointsRedemption) {
+        this.pointsRedemption = pointsRedemption;
     }
 }
 

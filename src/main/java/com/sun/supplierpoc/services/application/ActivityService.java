@@ -72,8 +72,11 @@ public class ActivityService {
 
                     double amount = transaction.getTotalPayment();
 
-                    if(transactionType.getName().equals(Constants.REWARD_POINTS)){
-                        int points = (int) Math.round(transaction.getTotalPayment()/generalSettings.getPointsPerPurchases());
+//                    private float pointReward = 0; // percentage
+//                    private float pointsRedemption = 0; // 1$ = ? points
+
+                    if(transactionType.getName().equals(Constants.POINTS_REDEMPTION)){
+                        int points = (int) Math.round(transaction.getTotalPayment() * generalSettings.getPointsRedemption());
 
                         if(points > user.getPoints()){
                             response.put("message", "There are insufficient points to redeem.");
@@ -86,6 +89,15 @@ public class ActivityService {
                         transaction.setPointsRedeemed(points);
 
                         user.setPoints(user.getPoints() - points);
+                    }
+                    else if(transactionType.getName().equals(Constants.REWARD_POINTS)){
+                        int points = (int) Math.round((transaction.getTotalPayment()/generalSettings.getPointReward())/100);
+
+                        transaction.setDiscountRate(0.0);
+                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setPointsRedeemed(0);
+                        transaction.setPointsReward(points);
+                        user.setPoints(user.getPoints() + points);
                     }
                     else if(!transactionType.getName().equals(Constants.USE_WALLET)) {
 

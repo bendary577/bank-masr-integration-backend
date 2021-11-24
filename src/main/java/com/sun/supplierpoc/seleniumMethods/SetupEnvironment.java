@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.seleniumMethods;
 
-import ch.qos.logback.core.util.TimeUtil;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
@@ -262,7 +261,6 @@ public class SetupEnvironment {
                     wait.until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(By.id("calendarFrame")));
                     wait.until(ExpectedConditions.presenceOfElementLocated(By.id("selectQuick")));
 
-//                    response = chooseDayDateOHRA(syncFromDate,driver);
 
                     if (syncFromDate.equals(syncToDate)){
                         response = chooseDayDateOHRA(syncFromDate,driver);
@@ -468,11 +466,7 @@ public class SetupEnvironment {
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
-//            int counter = 10;
-//            do {                counter--;
-//            }while (!checkIfDayClicked(fromDateElements.get(0)) && counter != 0);
             fromDateElements.get(0).click();
-
 
             response.setStatus(true);
             return response;
@@ -496,9 +490,12 @@ public class SetupEnvironment {
         return false;
     }
 
-    private Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {
+    public Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {
         Response response = new Response();
         try {
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+
             driver.findElement(By.id("clear0")).click();
 
             DateFormat Date = DateFormat.getDateInstance();
@@ -542,7 +539,6 @@ public class SetupEnvironment {
                 List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + toDayName + ", " + toDateFormatted + "']"));
                 actions.click(toDateElements.get(0))
-//                        .keyUp(Keys.LEFT_SHIFT)
                         .build()
                         .perform();
             }
@@ -554,7 +550,6 @@ public class SetupEnvironment {
             else
                 response.setStatus(false);
 
-            response.setStatus(true);
             return response;
         } catch (ParseException e) {
             response.setMessage(Constants.INVALID_BUSINESS_DATE);
@@ -664,17 +659,18 @@ public class SetupEnvironment {
 
         }while (message.equals(Constants.EMPTY_BUSINESS_DATE) && tryMaxCount != 0);
 
-        message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
+        if(message.equals(""))
+            message = fetchReportParameters(driver, location.locationName, revenueCenter.getRevenueCenter(), fromDate, toDate);
 
-        if(message.equals(Constants.WRONG_BUSINESS_DATE)){
+        if(!message.equals("")){
             response.setStatus(false);
             response.setMessage(message);
-            return true;
-        }else if(message.equals(Constants.NO_INFO)){
-            response.setStatus(true);
-            response.setMessage(message);
+
+            if(message.equals(Constants.NO_INFO))
+                response.setStatus(true);
             return true;
         }
+
         return false;
     }
 
@@ -768,6 +764,7 @@ public class SetupEnvironment {
                     }
                 }
             } catch (Exception Ex) {
+                Ex.printStackTrace();
                 System.out.println("Can not fetch parameter data.");
                 driver.switchTo().defaultContent();
                 message = Constants.WRONG_BUSINESS_DATE;

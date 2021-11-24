@@ -39,8 +39,8 @@ public class WastageService {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response getWastageData(SyncJobType syncJobType, ArrayList<Item> items, ArrayList<ItemGroup> itemGroups,
-                                                  ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
-                                                  ArrayList<WasteGroup> wasteGroups, Account account) {
+                                   ArrayList<CostCenter> costCenters, ArrayList<OverGroup> overGroups,
+                                   ArrayList<WasteGroup> wasteGroups, Account account) {
 
         Response response = new Response();
 
@@ -210,8 +210,8 @@ public class WastageService {
     }
 
     private void getWasteDetails(SyncJobType syncJobType,
-            ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
-            HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
+                                 ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
+                                 HashMap<String, Object> waste, WebDriver driver, ArrayList<HashMap<String, Object>> journalEntries){
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
@@ -258,8 +258,8 @@ public class WastageService {
 
             CostCenter costCenter = (CostCenter) waste.get("cost_center");
             for (Journal journal : journals) {
-                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-                    continue;
+//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
+//                    continue;
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
@@ -397,16 +397,18 @@ public class WastageService {
 
                 Response dateResponse = new Response();
                 if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, dateResponse)){
-                    driver.quit();
-
-                    if(dateResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
-                        response.setStatus(false);
-                        response.setMessage(dateResponse.getMessage());
-                        return response;
-                    } else if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
+                    if (dateResponse.getMessage().equals(Constants.NO_INFO)) {
                         response.setStatus(true);
                         response.setMessage(Constants.NO_INFO);
                         continue;
+                    }
+
+                    else if(!dateResponse.getMessage().equals("")){
+                        driver.quit();
+
+                        response.setStatus(false);
+                        response.setMessage(dateResponse.getMessage());
+                        return response;
                     }
                 }
 
@@ -542,8 +544,8 @@ public class WastageService {
             }
 
             for (Journal journal : journals) {
-                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-                    continue;
+//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
+//                    continue;
 
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
@@ -621,7 +623,7 @@ public class WastageService {
                 journalEntry.put("unit", journal.getUnit());
                 journalEntry.put("quantity", journal.getQuantity());
 
-                /* Check if this iteam already exists */
+                /* Check if this item already exists */
                 boolean addCheck = true;
                 for (HashMap<String, Object> entry : journalEntries) {
                     if(entry.get("overGroup").equals(journalEntry.get("overGroup"))){

@@ -185,7 +185,10 @@ public class JournalService {
 
                     Journal journal = new Journal();
                     float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
-                    journals = journal.checkExistence(journals, group, 0, cost, 0);
+                    float transfer = conversions.convertStringToFloat((String) transferDetails.get("net_transfers"));
+                    float netReceipts = conversions.convertStringToFloat((String) transferDetails.get("net_receipts"));
+
+                    journals = journal.checkExistence(journals, group, netReceipts, cost, transfer);
                 }
 
                 journalBatch.setCostCenter((CostCenter) costCenter.get("cost_center"));
@@ -282,16 +285,17 @@ public class JournalService {
 
                 driver.get(Constants.CONSUMPTION_TABLE_LINK);
 
-                List<WebElement> rows = driver.findElements(By.tagName("tr"));
+                WebElement table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+                List<WebElement> rows = table.findElements(By.tagName("tr"));
 
-                if (rows.size() < 4)
+                if (rows.size() < 1)
                     continue;
 
-                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 4);
+                ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
                 ArrayList<HashMap<String, String>> costExtensions = new ArrayList<>();
 
-                for (int i = 6; i < rows.size(); i++) {
+                for (int i = 3; i < rows.size(); i++) {
 
                     WebElement row = rows.get(i);
                     List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -314,14 +318,15 @@ public class JournalService {
                     try {
                         driver.get(Constants.OHRA_LINK + extension.get("extension"));
 
-                        rows = driver.findElements(By.tagName("tr"));
+                        table = driver.findElement(By.xpath("/html/body/div[3]/table"));
+                        rows = table.findElements(By.tagName("tr"));
 
-                        if (rows.size() <= 3)
+                        if (rows.size() < 1)
                             continue;
 
-                        columns = setupEnvironment.getTableColumns(rows, false, 3);
+                        columns = setupEnvironment.getTableColumns(rows, false, 0);
 
-                        for (int i = 6; i < rows.size(); i++) {
+                        for (int i = 3; i < rows.size(); i++) {
                             HashMap<String, Object> transferDetails = new HashMap<>();
                             WebElement row = rows.get(i);
                             List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -357,8 +362,10 @@ public class JournalService {
                                 }
                             }
                             float cost = conversions.convertStringToFloat((String) transferDetails.get("actual_usage"));
+                            float transfer = conversions.convertStringToFloat((String) transferDetails.get("net_transfers"));
+                            float netReceipts = conversions.convertStringToFloat((String) transferDetails.get("net_receipts"));
 
-                            journals = journal.checkExistence(journals, group, 0, cost, 0);
+                            journals = journal.checkExistence(journals, group, netReceipts, cost, transfer);
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -537,8 +544,11 @@ public class JournalService {
 
                             journal.costCenter = consumptionCostCenter.costCenter;
                             float cost = conversions.convertStringToFloat(cols.get(columns.indexOf("actual_usage")).getText());
-                            if(cost == 0)
-                                continue;
+                            float transfer = conversions.convertStringToFloat(cols.get(columns.indexOf("net_transfers")).getText());
+                            float netReceipts = conversions.convertStringToFloat(cols.get(columns.indexOf("net_receipts")).getText());
+
+//                            if(cost == 0)
+//                                continue;
 
                             if(costCenterExist){
                                 costCenterTotalCost += cost;
@@ -706,6 +716,9 @@ public class JournalService {
                     costData.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
                     costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost() * -1)));
 
+                    costData.put("netTransfers", String.valueOf(conversions.roundUpFloat(journal.getTotalTransfer())));
+                    costData.put("netReceipts", String.valueOf(conversions.roundUpFloat(journal.getTotalWaste())));
+
                     costData.put("fromCostCenter", batch.getCostCenter().costCenter);
                     costData.put("fromAccountCode", batch.getCostCenter().accountCode);
 
@@ -717,9 +730,10 @@ public class JournalService {
 
                     String description = "";
 
-
-                    description = batch.getLocation().costCenterReference;
-
+                    if(journal.getOverGroup().equals(""))
+                        description = costCenter.costCenterReference;
+                    else
+                        description = journal.getOverGroup();
 
                     if (description.length() > 50) {
                         description = description.substring(0, 50);
@@ -732,6 +746,8 @@ public class JournalService {
                     else {
                         costData.put("transactionReference", batch.getLocation().costCenterReference);
                     }
+
+                    costData.put("overGroup", journal.getOverGroup());
 
                     SyncJobData syncJobData = new SyncJobData(costData, Constants.RECEIVED, "", new Date(),
                             syncJob.getId());

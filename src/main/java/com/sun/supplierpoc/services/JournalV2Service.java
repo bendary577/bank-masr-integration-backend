@@ -90,7 +90,7 @@ public class JournalV2Service {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, null,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, null,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -283,7 +283,7 @@ public class JournalV2Service {
                 System.out.println("Waiting");
             }
 
-            response = getRows(driver, businessDate, fromDate);
+            response = getRows(driver, businessDate, fromDate, toDate);
             List<WebElement> rows;
 
             if(response.isStatus()){
@@ -386,7 +386,7 @@ public class JournalV2Service {
                 journalBatches.add(journalBatch);
 
 
-                response = getRows(driver, businessDate, fromDate);
+                response = getRows(driver, businessDate, fromDate, toDate);
 
                 if(response.isStatus()){
                     rows = response.getRows();
@@ -421,7 +421,7 @@ public class JournalV2Service {
         }
     }
 
-    private Response getRows(WebDriver driver, String businessDate, String fromDate) {
+    private Response getRows(WebDriver driver, String businessDate, String fromDate, String toDate) {
 
             Response response = new Response();
 
@@ -438,7 +438,7 @@ public class JournalV2Service {
         }
 
         // Filter Report
-        Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, null,
+        Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, null,
                 null,"", driver);
 
         if (!dateResponse.isStatus()){
@@ -512,7 +512,7 @@ public class JournalV2Service {
                 System.out.println("Waiting");
             }
 
-            response = getRows(driver, businessDate, fromDate);
+            response = getRows(driver, businessDate, fromDate, toDate);
             List<WebElement> rows;
 
             if(response.isStatus()){
@@ -619,7 +619,7 @@ public class JournalV2Service {
                 journalBatch.setConsumptionJournals(costCenterJournals);
                 journalBatches.add(journalBatch);
 
-                response = getRows(driver, businessDate, fromDate);
+                response = getRows(driver, businessDate, fromDate, toDate);
 
                 if(response.isStatus()){
                     rows = response.getRows();

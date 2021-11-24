@@ -60,7 +60,7 @@ public class WastageExcelExporter {
         font.setFontHeight(16);
         style.setFont(font);
         style.setFillForegroundColor(IndexedColors.CORAL.getIndex());
-        
+
         commonFunctions.createCell(row, 0, "Status", style);
         commonFunctions.createCell(row, 1, "Reason", style);
         commonFunctions.createCell(row, 2, "Description", style);
@@ -116,6 +116,8 @@ public class WastageExcelExporter {
     private void monthlyHeaderLine(List<JournalBatch> wasteBatches, SyncJobType syncJobType) {
         Row row;
         sheet = workbook.createSheet("WastageMonthlyReport");
+//        sheet.setColumnWidth(2, 17);
+        sheet.setDefaultColumnWidth(20);
         commonFunctions.setSheet(sheet);
 
         /* Title Header Style */
@@ -164,8 +166,13 @@ public class WastageExcelExporter {
         commonFunctions.createCell(row, 0, "Item Name", style);
         commonFunctions.createCell(row, 1, "Unit", style);
         commonFunctions.createCell(row, 2, "Total Qty", style);
+        commonFunctions.createCell(row, 3, "Total Amount", style);
+
+        int colCounter = 4;
         for (int i = 0; i < wasteBatches.size(); i++) {
-            commonFunctions.createCell(row, i+3, wasteBatches.get(i).getLocation().locationName, style);
+            commonFunctions.createCell(row, i+colCounter, wasteBatches.get(i).getLocation().locationName + " Qty", style);
+            commonFunctions.createCell(row, i+colCounter+1, wasteBatches.get(i).getLocation().locationName + " Amount", style);
+            colCounter ++;
         }
     }
 
@@ -173,7 +180,6 @@ public class WastageExcelExporter {
                                   List<JournalBatch> wasteBatches) {
         /* Row Style */
         Row row;
-        int columnCount = 0;
         int rowCount = 4;
         List<SyncJobData> wasteList;
 
@@ -202,28 +208,31 @@ public class WastageExcelExporter {
                 continue;
 
             row = sheet.createRow(rowCount++);
-            commonFunctions.createCell(row, columnCount, itemGroup.getItemGroup(), style);
-            for (int i = 1; i < wasteBatches.size() + 3; i++) {
-                    commonFunctions.createCell(row, i, "", style);
+            commonFunctions.createCell(row, 0, itemGroup.getItemGroup(), style);
+            for (int i = 1; i < (wasteBatches.size() * 2) + 4; i++) {
+                commonFunctions.createCell(row, i, "", style);
             }
 
             String amount;
+            float totalAmount ;
             String unit;
-            float totalQuantity = 0;
+            String locationQuantity;
+            float totalQuantity ;
 
             for (Item item : items) {
                 /* Pick items under this item group */
                 if(item.getItemGroup().equals(itemGroup.getItemGroup())){
                     unit = item.getUnit();
                     totalQuantity = 0;
-
+                    totalAmount = 0;
+                    int colCounter = 4;
                     row = sheet.createRow(rowCount++);
-                    commonFunctions.createCell(row, columnCount, item.getItem(), itemStyle); // Item Name
+                    commonFunctions.createCell(row, 0, item.getItem(), itemStyle); // Item Name
 
                     /* List items synced */
                     for (int i = 0; i < wasteBatches.size(); i++) {
                         amount = "0";
-
+                        locationQuantity = "0";
                         JournalBatch locationBatch = wasteBatches.get(i);
                         wasteList = new ArrayList<>(locationBatch.getWasteData());
                         /* Get location data */
@@ -231,21 +240,27 @@ public class WastageExcelExporter {
                             SyncJobData data = wasteList.get(j);
                             if(data.getData().get("overGroup").equals(item.getItem())){
                                 amount = data.getData().get("totalCr").toString();
+                                locationQuantity = data.getData().get("quantity").toString();
                                 unit = data.getData().get("unit").toString();
                                 totalQuantity += (float)data.getData().get("quantity");
+                                totalAmount += Float.parseFloat(data.getData().get("totalCr").toString());
                                 wasteBatches.get(i).getWasteData().remove(j);
                                 break;
                             }
                         }
 
+                        commonFunctions.createCell(row, i+colCounter, locationQuantity, itemStyle);
                         if(amount.equals("0"))
-                            commonFunctions.createCell(row, i+3, ".", itemStyle);
+                            commonFunctions.createCell(row, i+colCounter+1, ".", itemStyle);
                         else
-                            commonFunctions.createCell(row, i+3, amount, itemStyle);
+                            commonFunctions.createCell(row, i+colCounter+1, amount, itemStyle);
+
+                        colCounter++;
                     }
 
                     commonFunctions.createCell(row, 1, unit, itemStyle); // Item Unit
                     commonFunctions.createCell(row, 2, Float.toString(totalQuantity), itemStyle); // Total Qty
+                    commonFunctions.createCell(row, 3, Float.toString(totalAmount), itemStyle); // Total Amount
                 }
             }
         }
@@ -257,7 +272,7 @@ public class WastageExcelExporter {
                 + syncJobType.getConfiguration().toDate.replaceAll("-", "");
 
         String fileDirectory = accountName + "/" + syncJobType.getName() + "/CustomReports/";
-        String fileName = fileDirectory + "Wastage" + dateFormatted + ".xlsx";
+        String fileName = fileDirectory + syncJobType.getName() + dateFormatted + ".xlsx";
         File directory = new File(fileDirectory);
         if (!directory.exists()){
             directory.getParentFile().mkdirs();
@@ -268,7 +283,7 @@ public class WastageExcelExporter {
         directory = new File(fileName);
         Random random = new Random();
         int rand = random.nextInt(100);
-        File cpFile = new File(fileDirectory + "Wastage" + dateFormatted + rand + ".xlsx");
+        File cpFile = new File(fileDirectory + syncJobType.getName() + dateFormatted + rand + ".xlsx");
         if (directory.exists()){
             directory.renameTo(cpFile);
         }

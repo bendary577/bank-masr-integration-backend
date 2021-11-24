@@ -420,10 +420,6 @@ public class NewBookingExcelHelper {
                 if (reservation == null)
                     continue;
 
-                if(reservation.bookingNo.equals("1819219")){
-                    System.out.println("o2af");
-                }
-
                 temp = reservation.lastIndex;
 
                 // New Booking
@@ -431,10 +427,10 @@ public class NewBookingExcelHelper {
                     // Save old one
                     if (!bookingDetails.bookingNo.equals("")) {
                         if (bookingDetails.checkInTime.equals(""))
-                            bookingDetails.checkInTime = "14:00";
+                            bookingDetails.checkInTime = "140000";
 
                         if (bookingDetails.checkOutTime.equals(""))
-                            bookingDetails.checkOutTime = "12:00";
+                            bookingDetails.checkOutTime = "120000";
 
                         bookingDetails.grandTotal = conversions.roundUpDouble(
                                 bookingDetails.grandTotal * bookingDetails.noOfRooms);
@@ -524,10 +520,10 @@ public class NewBookingExcelHelper {
             }
 
             if (bookingDetails.checkInTime.equals(""))
-                bookingDetails.checkInTime = "14:00";
+                bookingDetails.checkInTime = "140000";
 
             if (bookingDetails.checkOutTime.equals(""))
-                bookingDetails.checkOutTime = "12:00";
+                bookingDetails.checkOutTime = "120000";
 
             bookingDetails.grandTotal = conversions.roundUpDouble(
                     bookingDetails.grandTotal * bookingDetails.noOfRooms);
@@ -572,10 +568,13 @@ public class NewBookingExcelHelper {
             reservation.nationalityCode = bookingType.getTypeId();
 
             typeName = element.getElementsByTagName("CT").item(0).getTextContent();
+            if(typeName.equals(""))
+                typeName = "CT";
             bookingType = conversions.checkBookingTypeExistence(customerTypes, typeName);
             reservation.customerType = bookingType.getTypeId();
 
             typeName = element.getElementsByTagName("POS").item(0).getTextContent();
+
             bookingType = conversions.checkBookingTypeExistence(purposeOfVisit, typeName);
             reservation.purposeOfVisit = bookingType.getTypeId();
 
@@ -818,9 +817,8 @@ public class NewBookingExcelHelper {
 
         boolean createUpdateFlag;
 
-        if (list.size() > 0) {
-            // Update
-            // Check if there is any changes
+        if (list.size() > 0 && !list.get(0).getStatus().equals(Constants.FAILED)) {
+            // Update, Check if there is any change
             bookingDetails.cuFlag = "2";
             bookingDetails.transactionId = (String) list.get(0).getData().get("transactionId");
             createUpdateFlag = checkChanges(bookingDetails, list.get(0));

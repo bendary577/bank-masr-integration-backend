@@ -33,9 +33,9 @@ public class Constants {
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
     public static String wLsIntegration = "2wLsIntegration";
     public static String NEW_BOOKING_REPORT = "New/Update Booking"; // New Booking Report
-    public static String CANCEL_BOOKING_REPORT = "Cancel Booking Report";
-    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update Report";
-    public static String EXPENSES_DETAILS_REPORT = "Expenses Details Report";
+    public static String CANCEL_BOOKING_REPORT = "Cancel Booking";
+    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update";
+    public static String EXPENSES_DETAILS_REPORT = "Expenses Details";
 
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
@@ -61,12 +61,12 @@ public class Constants {
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
     public static String USE_WALLET = "Wallet";
-
+    public static String REWARD_POINTS = "Reward Points";
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
-    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/operaReports";
+    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/";
 
     public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
     public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";
@@ -242,6 +242,7 @@ public class Constants {
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
     public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
+    public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
 
     ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
     public static final String CUSTOM_REPORT = "generate_custom_report";

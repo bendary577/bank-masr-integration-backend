@@ -5,6 +5,7 @@ import java.util.ArrayList;
 
 
 public class Configuration implements Serializable {
+    public boolean singleFilePerDay = false;
     public String timePeriod = "";
     public String fromDate = "";
     public String toDate = "";
@@ -52,6 +53,14 @@ public class Configuration implements Serializable {
     public TransferConfiguration transferConfiguration;
     public MenuItemConfiguration menuItemConfiguration = new MenuItemConfiguration();
     public BookingConfiguration bookingConfiguration = new BookingConfiguration();
+
+    public boolean isSingleFilePerDay() {
+        return singleFilePerDay;
+    }
+
+    public void setSingleFilePerDay(boolean singleFilePerDay) {
+        this.singleFilePerDay = singleFilePerDay;
+    }
 
     public String getTimePeriod() {
         return timePeriod;

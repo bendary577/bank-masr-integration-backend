@@ -36,6 +36,8 @@ public class SalesConfiguration implements Serializable{
     * */
     public boolean syncMG = true;
 
+    public boolean syncPerRV = false;
+
     public ArrayList<MajorGroup> majorGroups = new ArrayList<>();
 
     public ArrayList<SalesStatistics> statistics = new ArrayList<>();

@@ -415,7 +415,7 @@ public class CostOfGoodsService {
                                 }
                             }
 
-                            dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
+                            dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
 
                             if (!dateResponse.isStatus()){
                                 response.setStatus(false);
@@ -436,7 +436,7 @@ public class CostOfGoodsService {
                         }
                     }else {
 
-                        dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  "", driver);
+                        dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName, revenueCenter.getRevenueCenter(),  "", driver);
 
                         if (!dateResponse.isStatus()){
                             response.setStatus(false);

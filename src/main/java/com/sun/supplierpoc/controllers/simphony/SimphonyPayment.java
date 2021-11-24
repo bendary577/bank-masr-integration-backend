@@ -4,7 +4,9 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.InvokerUser;
-import com.sun.supplierpoc.models.simphony.SplittableCheck.SimphonyPaymentReq;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyCheck;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentReq;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.simphony.SimphonyPaymentService;
@@ -15,6 +17,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -74,5 +77,15 @@ public class SimphonyPayment{
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @GetMapping("/simphonyCheck")
+    public ResponseEntity<?> getSimphonyPayment(){
+
+       List<SimphonyCheck> simphonyChecks= simphonyPaymentService.getCheckPayment();
+
+        return new ResponseEntity<>(simphonyChecks, HttpStatus.OK);
+
+    }
+
 
 }

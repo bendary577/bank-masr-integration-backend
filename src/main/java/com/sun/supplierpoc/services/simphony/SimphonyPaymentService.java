@@ -4,9 +4,12 @@ import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.simphony.SplittableCheck.TransactionResponse;
-import com.sun.supplierpoc.models.simphony.SplittableCheck.SimphonyPaymentReq;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyCheck;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.TransactionResponse;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentReq;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
+import com.sun.supplierpoc.repositories.simphony.SplittableCheckRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,13 +20,17 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class SimphonyPaymentService {
 
-
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
+
+    @Autowired
+    private SplittableCheckRepo simphonyCheckRepo;
 
     Logger logger = LoggerFactory.getLogger("SimphonyPaymentService");
 
@@ -45,14 +52,71 @@ public class SimphonyPaymentService {
     public Response createSimphonyPaymentTransaction (SimphonyPaymentReq simphonyPayment, Account account) {
 
         Response response = new Response();
+        SimphonyPaymentRes simphonyPaymentRes = new SimphonyPaymentRes();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
         TransactionResponse paymentTransaction = paymentTransaction(simphonyPayment, "12", generalSettings);
 
+        Optional<SimphonyCheck> simphonyCheckOptional = simphonyCheckRepo.
+                findByAccountIdAndRevenueCenterIdAndCheckNumber(account.getId(), simphonyPayment.getRevenueCentreId(), simphonyPayment.getCheckNumber());
+
+        SimphonyCheck simphonyCheck;
+
+        if(!simphonyCheckOptional.isPresent()){
+
+            simphonyCheck = new SimphonyCheck();
+
+            simphonyCheck.setCheckNumber(simphonyPayment.getCheckNumber());
+            simphonyCheck.setCheckValue(simphonyPayment.getTotalDue());
+            simphonyCheck.setEmployeeId(simphonyPayment.getEmployeeId());
+            simphonyCheck.setRevenueCenterId(simphonyPayment.getRevenueCentreId());
+            simphonyCheck.setRevenueCenterName(simphonyPayment.getCheckNumber());
+            simphonyCheck.setCashierNumber(simphonyPayment.getCashierNumber());
+            simphonyCheck.setEmployeeName(simphonyPayment.getEmployeeName());
+            simphonyCheck.setAccountId(account.getId());
+
+        }else{
+            simphonyCheck = simphonyCheckOptional.get();
+        }
+
+        if(paymentTransaction != null) {
+
+            simphonyCheck.getTransactionResponses().add(paymentTransaction);
+
+            if(Integer.parseInt(paymentTransaction.getResponseCode()) == 0) {
+
+                Float checkValue = Float.parseFloat(simphonyPayment.getTotalDue());
+                Float payedValue = Float.parseFloat(paymentTransaction.getTransactionAmount());
+
+                simphonyPaymentRes.setPayment(true);
+                simphonyPaymentRes.setMessage("Successful Payment");
+
+                if( checkValue < payedValue){
+                    Float tips = payedValue - checkValue;
+                    simphonyCheck.setTips(String.valueOf(tips));
+
+                    simphonyPaymentRes.setAmount(String.valueOf(payedValue));
+                    simphonyPaymentRes.setTips(String.valueOf(tips));
+                    simphonyCheck.setPayed(true);
+                }else{
+                    simphonyPaymentRes.setAmount(String.valueOf(payedValue));
+                }
+
+            }else{
+                simphonyPaymentRes.setPayment(false);
+                simphonyPaymentRes.setMessage(paymentTransaction.getResponseMessage());
+            }
+
+            response.setSimphonyPaymentRes(simphonyPaymentRes);
+        }else{
+            simphonyPaymentRes.setPayment(false);
+            simphonyPaymentRes.setMessage("The connection to the POS machine was broken.");
+        }
+
+        simphonyCheckRepo.save(simphonyCheck);
         return response;
     }
-
 
     private TransactionResponse paymentTransaction(SimphonyPaymentReq simphonyPaymentReq, String transType, GeneralSettings generalSettings) {
 
@@ -62,7 +126,7 @@ public class SimphonyPaymentService {
         String currency = "EGP";
         transactionResponse.setCurrency(currency);
 
-        float amount = Float.parseFloat(simphonyPaymentReq.getTotalDue());
+        float amount = Float.parseFloat(simphonyPaymentReq.getTotalDue()) * 100;
 
         String POS_MACHINE_URL = "http://192.168.1.4:7070";
 
@@ -79,7 +143,7 @@ public class SimphonyPaymentService {
         try {
 
             result = restTemplate.getForEntity(POS_MACHINE_URL + "?transactionAmount=" +
-                    Math.round(amount) + "&currency=" + currency + "&transType=" + transType, String.class);
+                    Math.round(1f) + "&currency=" + currency + "&transType=" + transType, String.class);
 
         } catch (Exception e) {
 
@@ -93,31 +157,43 @@ public class SimphonyPaymentService {
 
             TerminalResponse terminalResponse = new Gson().fromJson(result.getBody(), TerminalResponse.class);
 
-            if (terminalResponse.equals("Success")) {
+            if (terminalResponse.getRespCode().equals("0")) {
                 transactionResponse.setStatus("Success");
+//                transactionResponse.setTransactionAmount(Float.parseFloat(terminalResponse.getAmount())/100 );
+                transactionResponse.setTransactionAmount("40");
                 transactionResponse.setResponseMessage(terminalResponse.getMessage());
 
             } else {
                 transactionResponse.setStatus("Failed");
                 if(terminalResponse.getMessage().equals("")) {
-                    transactionResponse.setResponseMessage(terminalResponse.getMessage());
-                }else{
                     transactionResponse.setResponseMessage("Undefined Reason");
+                }else{
+                    transactionResponse.setResponseMessage(terminalResponse.getMessage());
                 }
             }
 
             transactionResponse.setCardNumber(terminalResponse.getCardNo());
-            transactionResponse.setAuthedCardNumber(terminalResponse.getCardNo());
-            transactionResponse.setExpiryDate(terminalResponse.getCardExp());
+            if(terminalResponse.getCardNo() == null || terminalResponse.getCardNo().equals("")){
+                transactionResponse.setAuthedCardNumber("xxxxxxxxxxxxxxxx");
+            }else{
+                transactionResponse.setAuthedCardNumber(terminalResponse.getCardNo());
+            }
+            if(terminalResponse.getCardExp() == null || terminalResponse.getCardExp().equals("")){
+                transactionResponse.setExpiryDate("xxxx");
+            }else{
+                transactionResponse.setExpiryDate(terminalResponse.getCardExp());
+            }
             transactionResponse.setMerchantName(terminalResponse.getMerchantName());
             transactionResponse.setMerchantId(terminalResponse.getMerchantId());
             transactionResponse.setTerminalId(terminalResponse.getTerminalId());
             transactionResponse.setReferenceNumber(terminalResponse.getRefNo());
-            transactionResponse.setResponseCode(terminalResponse.getRefNo());
+            transactionResponse.setResponseCode(terminalResponse.getRespCode());
 
             return transactionResponse;
         } else {
             transactionResponse.setStatus("Failed");
+            transactionResponse.setAuthedCardNumber("xxxxxxxxxxxxxxxx");
+            transactionResponse.setExpiryDate("xxxx");
             transactionResponse.setReason("The connection to the POS machine was broken.");
             return transactionResponse;
         }
@@ -238,5 +314,10 @@ public class SimphonyPaymentService {
 
             return transactionResponse;
         }
+    }
+
+    public List<SimphonyCheck> getCheckPayment() {
+
+        return simphonyCheckRepo.findAll();
     }
 }

@@ -3,8 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
-import com.sun.supplierpoc.models.simphony.SplittableCheck.TransactionResponse;
-import org.apache.poi.ss.formula.functions.T;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
@@ -43,7 +42,7 @@ public class Response<T> {
 
     private List<WebElement> rows = new ArrayList<>();
 
-    private TransactionResponse transactionResponse;
+    private SimphonyPaymentRes simphonyPaymentRes;
     public Response() {
     }
 
@@ -212,4 +211,11 @@ public class Response<T> {
         this.data = data;
     }
 
+    public SimphonyPaymentRes getSimphonyPaymentRes() {
+        return simphonyPaymentRes;
+    }
+
+    public void setSimphonyPaymentRes(SimphonyPaymentRes simphonyPaymentRes) {
+        this.simphonyPaymentRes = simphonyPaymentRes;
+    }
 }

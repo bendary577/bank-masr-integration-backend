@@ -13,6 +13,7 @@ public class TerminalResponse {
     private String refNo;
     private String respCode;
     private String status;
+    private String amount;
     private String terminalId;
 
     public String getAuthCode() {
@@ -109,5 +110,13 @@ public class TerminalResponse {
 
     public void setTerminalId(String terminalId) {
         this.terminalId = terminalId;
+    }
+
+    public String getAmount() {
+        return amount;
+    }
+
+    public void setAmount(String amount) {
+        this.amount = amount;
     }
 }

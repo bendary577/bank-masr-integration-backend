@@ -1,8 +1,4 @@
-package com.sun.supplierpoc.models.simphony.SplittableCheck;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
-import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+package com.sun.supplierpoc.models.simphony.simphonyCheck;
 
 import java.io.Serializable;
 import java.util.Date;

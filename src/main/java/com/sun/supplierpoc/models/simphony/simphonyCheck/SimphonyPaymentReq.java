@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.models.simphony.SplittableCheck;
+package com.sun.supplierpoc.models.simphony.simphonyCheck;
 
 import org.springframework.data.annotation.Id;
 
@@ -28,6 +28,8 @@ public class SimphonyPaymentReq implements Serializable {
 
 //    @NotNull(message = "Employee ID can't be empty.")
     private int cashierNumber;
+
+    private String employeeName;
 
     public SimphonyPaymentReq() {
     }
@@ -86,6 +88,15 @@ public class SimphonyPaymentReq implements Serializable {
 
     public int getCashierNumber() {
         return cashierNumber;
+    }
+
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
 
     public void setCashierNumber(int cashierNumber) {

@@ -90,35 +90,27 @@ public class SimphonyPaymentService {
 
         if (result != null && result.getBody() != null) {
             // Parse POS machine result
-            final String[] values = result.getBody().split(",");
 
             TerminalResponse terminalResponse = new Gson().fromJson(result.getBody(), TerminalResponse.class);
 
             if (terminalResponse.equals("Success")) {
 
                 transactionResponse.setStatus("Success");
-                transactionResponse.setCardNumber(terminalResponse.getCardNo());
-                transactionResponse.setAuthedCardNumber(terminalResponse.getCardNo());
-                transactionResponse.setExpiryDate(terminalResponse.getCardExp());
-                transactionResponse.setMerchantName(terminalResponse.getMerchantName());
-                transactionResponse.setMerchantId(terminalResponse.getMerchantId());
-                transactionResponse.setTerminalId(terminalResponse.getTerminalId());
-                transactionResponse.setReferenceNumber(terminalResponse.getRefNo());
-                transactionResponse.setResponseCode(terminalResponse.getRefNo());
-                transactionResponse.setResponseMessage(terminalResponse.getMessage());
+
 
             } else {
                   transactionResponse.setStatus("Failed");
-                  transactionResponse.setReason(values[1]);
-                    transactionResponse.setCardNumber("XXXXXXXXXXXXXXXX");
-
-                    transactionResponse.setExpiryDate("2509");
-                    transactionResponse.setEntryMode("01");
-                    transactionResponse.setIssuerId("01");
-                    transactionResponse.setMerchantId("1");
-                    transactionResponse.setTerminalId("1");
-                    transactionResponse.setPrintData("Bank Misr");
             }
+
+            transactionResponse.setCardNumber(terminalResponse.getCardNo());
+            transactionResponse.setAuthedCardNumber(terminalResponse.getCardNo());
+            transactionResponse.setExpiryDate(terminalResponse.getCardExp());
+            transactionResponse.setMerchantName(terminalResponse.getMerchantName());
+            transactionResponse.setMerchantId(terminalResponse.getMerchantId());
+            transactionResponse.setTerminalId(terminalResponse.getTerminalId());
+            transactionResponse.setReferenceNumber(terminalResponse.getRefNo());
+            transactionResponse.setResponseCode(terminalResponse.getRefNo());
+            transactionResponse.setResponseMessage(terminalResponse.getMessage());
 
             return transactionResponse;
         } else {

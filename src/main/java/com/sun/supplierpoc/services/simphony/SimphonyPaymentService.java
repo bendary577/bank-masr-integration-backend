@@ -71,13 +71,15 @@ public class SimphonyPaymentService {
             simphonyCheck.setCheckValue(simphonyPayment.getTotalDue());
             simphonyCheck.setEmployeeId(simphonyPayment.getEmployeeId());
             simphonyCheck.setRevenueCenterId(simphonyPayment.getRevenueCentreId());
-            simphonyCheck.setRevenueCenterName(simphonyPayment.getCheckNumber());
+            simphonyCheck.setRevenueCenterName(simphonyPayment.getRevenueCentreName());
             simphonyCheck.setCashierNumber(simphonyPayment.getCashierNumber());
             simphonyCheck.setEmployeeName(simphonyPayment.getEmployeeName());
             simphonyCheck.setAccountId(account.getId());
+            simphonyCheck.setCreationDate(new Date());
 
         }else{
             simphonyCheck = simphonyCheckOptional.get();
+            simphonyCheck.setLastUpdate(new Date());
         }
 
         if(paymentTransaction != null) {

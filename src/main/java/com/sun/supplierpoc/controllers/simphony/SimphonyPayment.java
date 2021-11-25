@@ -17,6 +17,8 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,12 +80,16 @@ public class SimphonyPayment{
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping("/simphonyCheck")
-    public ResponseEntity<?> getSimphonyPayment(){
+    @PostMapping("/simphonyCheck")
+    public ResponseEntity<?> getSimphonyPayment(Principal principal,
+                                                @RequestPart(name = "startDate", required = false) String startDate,
+                                                @RequestPart(name = "endDate", required = false) String endDate,
+                                                @RequestPart(name="cardNumber", required = false) String cardNumber){
 
+        HashMap hashMap = new HashMap();
        List<SimphonyCheck> simphonyChecks= simphonyPaymentService.getCheckPayment();
-
-        return new ResponseEntity<>(simphonyChecks, HttpStatus.OK);
+        hashMap.put("transactions", simphonyChecks);
+        return new ResponseEntity<>(hashMap, HttpStatus.OK);
 
     }
 

@@ -5,6 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Document
@@ -34,6 +35,10 @@ public class SimphonyCheck implements Serializable {
     private String accountId;
 
     private boolean payed;
+
+    private Date creationDate;
+
+    private Date lastUpdate;
 
     private List<TransactionResponse> transactionResponses = new ArrayList<>();
 
@@ -138,5 +143,21 @@ public class SimphonyCheck implements Serializable {
 
     public void setPayed(boolean payed) {
         this.payed = payed;
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public Date getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(Date lastUpdate) {
+        this.lastUpdate = lastUpdate;
     }
 }

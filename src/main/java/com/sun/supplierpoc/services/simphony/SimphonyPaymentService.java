@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services.simphony;
 import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.OperaTransaction;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyCheck;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
@@ -18,13 +19,14 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class SimphonyPaymentService {
+
+    private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
 
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
@@ -76,6 +78,7 @@ public class SimphonyPaymentService {
             simphonyCheck.setEmployeeName(simphonyPayment.getEmployeeName());
             simphonyCheck.setAccountId(account.getId());
             simphonyCheck.setCreationDate(new Date());
+            simphonyCheck.setDeleted(false);
 
         }else{
             simphonyCheck = simphonyCheckOptional.get();
@@ -318,8 +321,66 @@ public class SimphonyPaymentService {
         }
     }
 
-    public List<SimphonyCheck> getCheckPayment() {
+    public HashMap<String, Object> getCheckPayment(String startDate, String endDate, Account account) {
 
-        return simphonyCheckRepo.findAll();
+        HashMap<String, Object> response = new HashMap();
+
+        double succeedTransactionCount = 0;
+        double failedTransactionCount = 0;
+        int totalTransactionAmount = 0;
+
+        List<SimphonyCheck> simphonyChecks = filterSimphonyChecks(startDate, endDate, account);
+
+//        for (OperaTransaction transaction : transactions) {
+//            if(transaction.getStatus().equals("Success")) {
+//                succeedTransactionCount += 1;
+//            }else {
+//                failedTransactionCount += 1;
+//            }
+//            totalTransactionAmount += transaction.getAmount();
+//        }
+//
+//        response.put("succeedTransactionCount", succeedTransactionCount);
+//        response.put("failedTransactionCount", failedTransactionCount);
+//        response.put("totalTransactionAmount", totalTransactionAmount);
+        response.put("transactions", simphonyChecks);
+
+        return response;
+
+    }
+
+    public List<SimphonyCheck> filterSimphonyChecks(String startDate, String endDate, Account account) {
+
+        List<SimphonyCheck> operaTransactions = new ArrayList<>();
+        Date start, end;
+        try {
+
+            if((startDate != null || !startDate.equals("") || startDate != null || !endDate.equals(""))) {
+                DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+                try {
+                    start = dateFormat.parse(startDate);
+                    end = new Date(dateFormat.parse(endDate).getTime() + MILLIS_IN_A_DAY);
+                } catch (Exception e) {
+                    dateFormat = new SimpleDateFormat("EEE MMM dd yyyy HH:mm:ss");
+                    start = dateFormat.parse(startDate.substring(0, 24));
+                    end = dateFormat.parse(endDate.substring(0, 24));
+                }
+                operaTransactions = simphonyCheckRepo.findByAccountIdAndDeletedAndCreationDateBetween(
+                        account.getId(), false, start, end);
+
+            }
+            return operaTransactions;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public HashMap<String, Object> findAllByAccountIdAndDeleted(String id, boolean deleted) {
+
+        HashMap<String, Object> response = new HashMap<>();
+
+        response.put("transactions", simphonyCheckRepo.findAllByAccountIdAndDeleted( id,  deleted));
+
+        return response;
     }
 }

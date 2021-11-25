@@ -42,6 +42,8 @@ public class SimphonyCheck implements Serializable {
 
     private List<TransactionResponse> transactionResponses = new ArrayList<>();
 
+    private boolean deleted = false;
+
     public SimphonyCheck() {
     }
 
@@ -159,5 +161,13 @@ public class SimphonyCheck implements Serializable {
 
     public void setLastUpdate(Date lastUpdate) {
         this.lastUpdate = lastUpdate;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }

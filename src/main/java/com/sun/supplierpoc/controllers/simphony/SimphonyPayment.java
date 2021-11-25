@@ -41,27 +41,21 @@ public class SimphonyPayment{
 
     @Autowired
     private SimphonyPaymentService simphonyPaymentService;
-
     @Autowired
     private InvokerUserService invokerUserService;
-
     @Autowired
     private AccountService accountService;
-
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
     private AccountRepo accountRepo;
     @Autowired
     private OperationTypeRepo operationTypeRepo;
-
     @Autowired
     private OperaTransactionRepo operaTransactionRepo;
-
     private Conversions conversions = new Conversions();
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
 
     @PostMapping("/paySplitCheck")
     public ResponseEntity<?> paymentTransaction(@RequestHeader("Authorization") String authorization,
@@ -108,19 +102,6 @@ public class SimphonyPayment{
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-//    @PostMapping("/simphonyCheck1")
-//    public ResponseEntity<?> getSimphonyPayment(Principal principal,
-//                                                @RequestPart(name = "startDate", required = false) String startDate,
-//                                                @RequestPart(name = "endDate", required = false) String endDate,
-//                                                @RequestPart(name="cardNumber", required = false) String cardNumber){
-//
-//        HashMap hashMap = new HashMap();
-//       List<SimphonyCheck> simphonyChecks= simphonyPaymentService.getCheckPayment();
-//        hashMap.put("transactions", simphonyChecks);
-//        return new ResponseEntity<>(hashMap, HttpStatus.OK);
-//
-//    }
-
     @PostMapping(value = "/simphonyCheck")
     @CrossOrigin("*")
     @ResponseBody
@@ -158,100 +139,4 @@ public class SimphonyPayment{
         }
     }
 
-
-//    @GetMapping(value = "/countOperaTransaction")
-//    @ResponseBody
-//    public ResponseEntity getOperaTransactionStat(Principal principal,
-//                                                  @RequestParam(name = "startDate", required = false) String startDate,
-//                                                  @RequestParam(name = "endDate", required = false) String endDate){
-//        try {
-//            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-//            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-//            if (accountOptional.isPresent()) {
-//                Account account = accountOptional.get();
-//
-//                if(startDate == null || startDate.equals("") || endDate == null || endDate.equals("")){
-//                    int failedTransactionCount =  operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
-//                            false, Constants.FAILED);
-//
-//                    int succeedTransactionCount = operaTransactionRepo.countByAccountIdAndDeletedAndStatus(account.getId(),
-//                            false, Constants.SUCCESS);
-//
-//                    double totalAmount = 0;
-//                    List<OperaTransaction> transactions = operaTransactionRepo.findAllByAccountIdAndDeleted(account.getId(), false);
-//
-//                    for (OperaTransaction trans : transactions) {
-//                        if(trans.getStatus().equals(Constants.SUCCESS))
-//                            totalAmount += trans.getAmount();
-//                    }
-//
-//                    double finalTotalAmount = totalAmount;
-//                    return ResponseEntity.status(HttpStatus.OK).body(
-//                            new HashMap<String, Object>() {
-//                                {
-//                                    put("succeedTransactionCount", succeedTransactionCount);
-//                                    put("failedTransactionCount", failedTransactionCount);
-//                                    put("totalTransactionAmount", finalTotalAmount);
-//                                    put("Date", LocalDateTime.now());
-//                                }
-//                            });
-//                } else{
-//                    Date start;
-//                    Date end;
-//
-//                    DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-//                    start = df.parse(startDate);
-//                    end = new Date(df.parse(endDate).getTime() + MILLIS_IN_A_DAY);
-//
-//                    int failedTransactionCount = operaTransactionRepo.countByAccountIdAndDeletedAndStatusAndCreationDateBetween(account.getId(),
-//                            false, Constants.FAILED, start, end);
-//
-//                    int succeedTransactionCount = operaTransactionRepo.countByAccountIdAndDeletedAndStatusAndCreationDateBetween(account.getId(),
-//                            false, Constants.SUCCESS, start, end);
-//
-//                    double totalAmount = 0;
-//                    List<OperaTransaction> transactions = operaTransactionRepo.findAllByAccountIdAndDeletedAndCreationDateBetween(
-//                            account.getId(), false, start, end);
-//
-//                    for (OperaTransaction trans : transactions) {
-//                        totalAmount += trans.getAmount();
-//                    }
-//
-//                    double finalTotalAmount = totalAmount;
-//                    return ResponseEntity.status(HttpStatus.OK).body(
-//                            new HashMap<String, Object>() {
-//                                {
-//                                    put("succeedTransactionCount", succeedTransactionCount);
-//                                    put("failedTransactionCount", failedTransactionCount);
-//                                    put("totalTransactionAmount", finalTotalAmount);
-//                                    put("Date", LocalDateTime.now());
-//                                }
-//                            });
-//                }
-//
-//            }else {
-//                return ResponseEntity.status(HttpStatus.OK).body(
-//                        new HashMap<String, Object>() {
-//                            {
-//                                put("succeedTransactionCount", 0);
-//                                put("failedTransactionCount", 0);
-//                                put("totalTransactionAmount", 0);
-//                                put("Date", LocalDateTime.now());
-//                            }
-//                        });
-//            }
-//
-//        }catch (Exception ex){
-//            ex.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-//                    new HashMap<String, Object>() {
-//                        {
-//                            put("succeedTransactionCount", 0);
-//                            put("failedTransactionCount", 0);
-//                            put("totalTransactionAmount", 0);
-//                            put("Date", LocalDateTime.now());
-//                        }
-//                    });
-//        }
-//    }
 }

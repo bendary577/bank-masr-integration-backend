@@ -12,7 +12,9 @@ public interface SplittableCheckRepo extends MongoRepository<SimphonyCheck, Stri
 
     Optional<SimphonyCheck> findByAccountIdAndRevenueCenterIdAndCheckNumber(String id, int revenueCentreId, String checkNumber);
 
-    Object findAllByAccountIdAndDeleted(String id, boolean deleted);
+    List<SimphonyCheck> findAllByAccountIdAndDeleted(String id, boolean deleted);
 
     List<SimphonyCheck> findByAccountIdAndDeletedAndCreationDateBetween(String id, boolean b, Date start, Date end);
+
+    void findByAccountIdAndDeleted(String id, boolean deleted);
 }

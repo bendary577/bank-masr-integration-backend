@@ -91,7 +91,7 @@ public class ActivityService {
                         user.setPoints(user.getPoints() - points);
                     }
                     else if(transactionType.getName().equals(Constants.REWARD_POINTS)){
-                        int points = (int) Math.round((transaction.getTotalPayment()/generalSettings.getPointReward())/100);
+                        int points = (int) Math.round((transaction.getTotalPayment() * generalSettings.getPointReward())/100);
 
                         transaction.setDiscountRate(0.0);
                         transaction.setAfterDiscount(transaction.getTotalPayment());
@@ -160,7 +160,13 @@ public class ActivityService {
                     generalSettingsRepo.save(generalSettings);
 
                     response.put("isSuccess", true);
-                    response.put("message", "Transaction Done successfully.");
+                    if(transactionType.getName().equals(Constants.REWARD_POINTS)
+                            || transactionType.getName().equals(Constants.POINTS_REDEMPTION)){
+                        response.put("message", "New balance = " + user.getPoints());
+                    }else{
+                        response.put("message", "Check paid successfully.");
+                    }
+
                     response.put("discountId", group.getSimphonyDiscount().getDiscountId());
                     response.put("group", group.getName());
                     response.put("user", user.getName());

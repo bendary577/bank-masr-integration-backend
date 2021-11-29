@@ -33,9 +33,9 @@ public class Constants {
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
     public static String wLsIntegration = "2wLsIntegration";
     public static String NEW_BOOKING_REPORT = "New/Update Booking"; // New Booking Report
-    public static String CANCEL_BOOKING_REPORT = "Cancel Booking Report";
-    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update Report";
-    public static String EXPENSES_DETAILS_REPORT = "Expenses Details Report";
+    public static String CANCEL_BOOKING_REPORT = "Cancel Booking";
+    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update";
+    public static String EXPENSES_DETAILS_REPORT = "Expenses Details";
 
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
@@ -64,7 +64,8 @@ public class Constants {
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
     public static String USE_WALLET = "Wallet";
-
+    public static String REWARD_POINTS = "Reward Points";
+    public static String POINTS_REDEMPTION = "Points Redemption";
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
@@ -217,6 +218,9 @@ public class Constants {
     // CONSUMPTION LINKS
     // My Reports >> Inventory Cost of Sales
     public static String MICROS_COS_REPORTS_COST_CENTER = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100238";
+
+    // WASTAGE LINKS
+    public static String MICROS_WASTE_GROUPS_LINK =  MICROS_REPORT_BASE_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";

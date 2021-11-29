@@ -323,86 +323,18 @@ public class WastageController {
     public HashMap<String, Object> getWasteGroups(Principal principal) {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        Account account = accountOptional.get();
+        if(accountOptional.isPresent()){
+            Account account = accountOptional.get();
 
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, user.getAccountId(), false);
-        ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
-        HashMap<String, Object> response = new HashMap<>();
+            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.WASTAGE, user.getAccountId(), false);
+            ArrayList<WasteGroup> oldWasteTypes = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
+            return wastageService.getWastageGroups(account, syncJobType, oldWasteTypes);
+        }else{
+            HashMap<String, Object> response = new HashMap<>();
 
-        WebDriver driver;
-        try{
-            driver = setupEnvironment.setupSeleniumEnv(false);
-        }
-        catch (Exception ex){
-            response.put("status", Constants.FAILED);
-            response.put("message", "Failed to establish connection with firefox driver.");
-            response.put("invoices", new ArrayList<>());
-            return response;
-        }
-        ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
-
-        try {
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
-                driver.quit();
-
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                response.put("data", wasteTypes);
-                return response;
-            }
-
-            driver.get(Constants.WASTE_GROUPS_LINK);
-
-            driver.findElement(By.name("filterPanel_btnRefresh")).click();
-
-            List<WebElement> rows = driver.findElements(By.tagName("tr"));
-
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
-
-            for (int i = 14; i < rows.size(); i++) {
-                WasteGroup wasteType = new WasteGroup();
-
-                WebElement row = rows.get(i);
-                List<WebElement> cols = row.findElements(By.tagName("td"));
-
-                if (cols.size() != columns.size()) {
-                    continue;
-                }
-
-                // check existence of over group
-                WebElement td = cols.get(columns.indexOf("waste_group"));
-                WasteGroup oldWasteTypesData = conversions.checkWasteTypeExistence(oldWasteTypes, td.getText().strip());
-
-                if (oldWasteTypesData.getChecked()){
-                    wasteType= oldWasteTypesData;
-                }
-
-                else{
-                    wasteType.setChecked(false);
-                    wasteType.setWasteGroup(td.getText().strip());
-                }
-
-                wasteTypes.add(wasteType);
-            }
-
-            driver.quit();
-
-            syncJobType.getConfiguration().wastageConfiguration.wasteGroups = wasteTypes;
-            syncJobTypeRepo.save(syncJobType);
-            response.put("cols", columns);
-            response.put("data", wasteTypes);
-            response.put("message", "Get wastes successfully.");
-            response.put("success", true);
-
-            return response;
-        } catch (Exception e) {
-            e.printStackTrace();
-            driver.quit();
-
-            response.put("data", wasteTypes);
-            response.put("message", "Failed to get wastes.");
+            response.put("data", new ArrayList<>());
+            response.put("message", "Account id provided does not exists!");
             response.put("success", false);
-
             return response;
         }
     }

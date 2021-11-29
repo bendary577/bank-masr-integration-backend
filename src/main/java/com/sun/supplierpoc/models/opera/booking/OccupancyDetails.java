@@ -6,4 +6,6 @@ public class OccupancyDetails {
     public int roomsAvailable = 0;
     public int roomsBooked = 0;
     public int roomsOnMaintenance = 0;
+    public int totalRooms = 0;
+
 }

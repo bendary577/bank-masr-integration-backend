@@ -2,21 +2,20 @@ package com.sun.supplierpoc.controllers.application;
 
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SmsPojo;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
+import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
-import com.sun.supplierpoc.services.ImageService;
-import com.sun.supplierpoc.services.QRCodeGenerator;
-import com.sun.supplierpoc.services.SendEmailService;
-import com.sun.supplierpoc.services.SmsService;
+import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.services.application.AppUserService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +54,126 @@ public class AppUserController {
     private SimpMessagingTemplate webSocket;
     @Autowired
     private SmsService smsService;
+    @Autowired
+    InvokerUserService invokerUserService;
+
+    private Conversions conversions = new Conversions();
+    ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
+
+    @RequestMapping("/rewardPoints/getGuestPoints")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity getGuestPoints(@RequestHeader("Authorization") String authorization,
+                                         @RequestParam String guestCode) {
+        HashMap response = new HashMap();
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
+                InvokerUser user = invokerUserService.getInvokerUser(username, password);
+                if(user == null){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user not allowed to access this method.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
+
+                if(guestCode.equals("")){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "Kindly provide the customer code.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
+                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                if(applicationUser != null){
+                    response.put("isSuccess", true);
+                    response.put("points", applicationUser.getPoints());
+                    response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }else {
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user is not a member of the reward points system.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+            }else{
+                response.put("isSuccess", false);
+                response.put("points", 0);
+                response.put("message", "This user not allowed to access this method.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+        }catch (Exception e){
+            response.put("isSuccess", false);
+            response.put("points", 0);
+            response.put("message", "There was a problem, please try again.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @RequestMapping("/rewardPoints/addGuestPoints")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity addGuestPoints(@RequestHeader("Authorization") String authorization,
+                                         @RequestParam(name = "guestCode") String guestCode,
+                                         @RequestParam(name = "points") int points) {
+        HashMap response = new HashMap();
+        String username, password;
+        try {
+            final String[] values = conversions.convertBasicAuth(authorization);
+            if (values.length != 0) {
+                username = values[0];
+                password = values[1];
+                InvokerUser user = invokerUserService.getInvokerUser(username, password);
+                if(user == null){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user not allowed to access this method.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
+
+                if(guestCode.equals("")){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "Kindly provide the customer code.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
+                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                if(applicationUser != null){
+                    applicationUser.setPoints(applicationUser.getPoints() + points);
+                    userRepo.save(applicationUser);
+
+                    response.put("isSuccess", true);
+                    response.put("points", applicationUser.getPoints());
+                    response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }else {
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "This user is not a member of the reward points system.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+            }else{
+                response.put("isSuccess", false);
+                response.put("points", 0);
+                response.put("message", "This user not allowed to access this method.");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+        }catch (Exception e){
+            response.put("isSuccess", false);
+            response.put("points", 0);
+            response.put("message", "There was a problem, please try again.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
+
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
@@ -104,6 +223,7 @@ public class AppUserController {
                                                    @RequestParam(name = "expire", required = false) double expire,
                                                    @RequestParam(name = "sendEmail", required = false) boolean sendEmail,
                                                    @RequestParam(name = "sendSMS", required = false) boolean sendSMS,
+                                                   @RequestParam(name = "points", required = false) int points,
                                                    @RequestPart(name = "accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
@@ -122,7 +242,7 @@ public class AppUserController {
 
                     response = appUserService
                             .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
-                                    image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile);
+                                    image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile, points);
 
                     if ((Boolean) response.get("success")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

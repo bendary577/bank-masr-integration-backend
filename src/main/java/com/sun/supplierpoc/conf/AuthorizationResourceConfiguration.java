@@ -26,6 +26,7 @@ public class AuthorizationResourceConfiguration  extends
         http.
                 anonymous().disable()
                 .authorizeRequests()
+                .antMatchers("/rewardPoints/**").permitAll()
                 .antMatchers("/zeal/**").permitAll()
                 .antMatchers("/addAccount").authenticated()
                 .antMatchers("/opera/**").authenticated()

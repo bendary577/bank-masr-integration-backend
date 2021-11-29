@@ -44,6 +44,10 @@ public class GeneralSettings {
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
 
+    /* Reword Points */
+    private float pointReward = 0; // percentage
+    private float pointsRedemption = 0; // 1$ = ? points
+
     private Date creationDate;
     private boolean deleted;
 
@@ -287,6 +291,22 @@ public class GeneralSettings {
 
     public void setMailSubj(String mailSubj) {
         this.mailSubj = mailSubj;
+    }
+
+    public float getPointReward() {
+        return pointReward;
+    }
+
+    public void setPointReward(float pointReward) {
+        this.pointReward = pointReward;
+    }
+
+    public float getPointsRedemption() {
+        return pointsRedemption;
+    }
+
+    public void setPointsRedemption(float pointsRedemption) {
+        this.pointsRedemption = pointsRedemption;
     }
 }
 

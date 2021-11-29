@@ -55,7 +55,7 @@ public class MicrosFeatures {
         }
     }
 
-    public Response selectDateRangeMicros(String timePeriod, String dayDate,
+    public Response selectDateRangeMicros(String timePeriod, String fromDate, String toDate,
                                          String location, String revenueCenter, String orderType, WebDriver driver){
         Response response = new Response();
         try {
@@ -84,8 +84,12 @@ public class MicrosFeatures {
                         return response;
                     }
 
-                    // Choose Date
-                    response = setupEnvironment.chooseDayDateOHRA(dayDate,driver);
+                    // Choose Date Range
+                    if (fromDate.equals(toDate)){
+                        response = setupEnvironment.chooseDayDateOHRA(fromDate,driver);
+                    }else{
+                        response = setupEnvironment.chooseRangeDaysDateOHRA(fromDate, toDate, driver);
+                    }
 
                     if (!response.isStatus()){
                         return response;
@@ -176,7 +180,7 @@ public class MicrosFeatures {
 //                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
 //                    }
 
-                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
+                    WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){
                         input.sendKeys("all");

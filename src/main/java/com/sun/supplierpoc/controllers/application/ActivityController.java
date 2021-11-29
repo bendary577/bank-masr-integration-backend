@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
+import com.sun.supplierpoc.models.applications.SimphonyQuota;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
@@ -50,7 +51,8 @@ public class ActivityController {
     @RequestMapping("/createTransactionActivity")
     @CrossOrigin("*")
     public ResponseEntity<?> transactionActivity(@RequestHeader("Authorization") String authorization,
-                                                 @Valid @RequestBody Transactions transaction, BindingResult result) {
+                                                 @Valid @RequestBody Transactions transaction, BindingResult result,
+                                                 @RequestParam(name = "payWithPoints", required = false) int payWithPoints) {
 
         HashMap response = new HashMap();
 
@@ -74,7 +76,13 @@ public class ActivityController {
                 }
 
                 TransactionType transactionType;
-                if(transaction.getTransactionTypeId().equals("")) {
+                if(payWithPoints == 1){
+                    transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.POINTS_REDEMPTION, account.getId());
+                }
+                else if(payWithPoints == 2){
+                    transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REWARD_POINTS, account.getId());
+                }
+                else if(transaction.getTransactionTypeId().equals("")) {
                     transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
                 }else{
                     transactionType = transactionTypeRepo.findByIdAndAccountId(transaction.getTransactionTypeId(), account.getId());
@@ -87,6 +95,11 @@ public class ActivityController {
                 }
 
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                if(generalSettings.getSimphonyQuota() == null){
+                    generalSettings.setSimphonyQuota(new SimphonyQuota());
+                    generalSettingsRepo.save(generalSettings);
+                }
 
                 if(generalSettings.getSimphonyQuota().getTransactionQuota() == generalSettings.getSimphonyQuota().getUsedTransactionQuota()){
                     response.put("isSuccess", false);
@@ -110,9 +123,11 @@ public class ActivityController {
                     }
 
                 } else {
+
                     response.put("isSuccess", false);
                     response.put("message", Constants.WRONG_REVENUE_CENTER);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
+
                 }
 
             } else {
@@ -121,7 +136,7 @@ public class ActivityController {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
         } catch (Exception e) {
-
+            e.printStackTrace();
             response.put("isSuccess", false);
             response.put("message", "Some thing went wrong.");
             return ResponseEntity.status(HttpStatus.OK).body(response);

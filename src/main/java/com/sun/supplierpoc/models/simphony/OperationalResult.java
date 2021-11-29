@@ -13,7 +13,7 @@ import javax.xml.bind.annotation.XmlType;
         "Success"
 })
 public class OperationalResult {
-    @XmlElement(name = "ErrorCode")
+    @XmlElement(name = "errorCode")
     private String ErrorCode;
     @XmlElement(name = "ErrorMessage")
     private String ErrorMessage;

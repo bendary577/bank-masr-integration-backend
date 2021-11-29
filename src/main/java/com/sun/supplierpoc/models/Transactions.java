@@ -4,7 +4,6 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
@@ -33,6 +32,8 @@ public class Transactions {
     private double totalPayment;
     private double discountRate;
     private double afterDiscount;
+    private int pointsRedeemed;
+    private int pointsReward;
 
     public String getId() {
         return id;
@@ -144,6 +145,22 @@ public class Transactions {
 
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
+    }
+
+    public int getPointsRedeemed() {
+        return pointsRedeemed;
+    }
+
+    public void setPointsRedeemed(int pointsRedeemed) {
+        this.pointsRedeemed = pointsRedeemed;
+    }
+
+    public int getPointsReward() {
+        return pointsReward;
+    }
+
+    public void setPointsReward(int pointsReward) {
+        this.pointsReward = pointsReward;
     }
 }
 

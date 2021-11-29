@@ -751,7 +751,7 @@ public class BookingService {
         try {
             DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
             String currentDate = fileDateFormat.format(new Date());
-            // fileName = "Expenses20210617.xls"
+
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
             String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";

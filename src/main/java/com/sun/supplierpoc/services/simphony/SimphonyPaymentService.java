@@ -163,7 +163,7 @@ public class SimphonyPaymentService {
             if (terminalResponse.getRespCode().equals("0")) {
                 transactionResponse.setStatus("Success");
 //                transactionResponse.setTransactionAmount(Float.parseFloat(terminalResponse.getAmount())/100 );
-                transactionResponse.setTransactionAmount("40");
+                transactionResponse.setTransactionAmount(simphonyPaymentReq.getPayedAmount());
                 transactionResponse.setResponseMessage(terminalResponse.getMessage());
 
             } else {

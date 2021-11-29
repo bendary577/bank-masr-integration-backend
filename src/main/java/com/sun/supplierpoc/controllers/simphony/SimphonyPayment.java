@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/simphonyPayment")
+//@RequestMapping("")
 public class SimphonyPayment{
 
     @Autowired
@@ -57,7 +57,7 @@ public class SimphonyPayment{
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
 
-    @PostMapping("/paySplitCheck")
+    @PostMapping("/test/simphonyPayment/paySplitCheck")
     public ResponseEntity<?> paymentTransaction(@RequestHeader("Authorization") String authorization,
                                                 @Valid @RequestBody SimphonyPaymentReq simphonyPayment,
                                                 BindingResult result) {
@@ -102,7 +102,7 @@ public class SimphonyPayment{
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping(value = "/simphonyCheck")
+    @PostMapping(value = "/simphonyPayment/simphonyCheck")
     @CrossOrigin("*")
     @ResponseBody
     public HashMap<String, Object> simphonyChecks(Principal principal,

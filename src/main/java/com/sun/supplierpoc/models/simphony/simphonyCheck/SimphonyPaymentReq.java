@@ -31,6 +31,8 @@ public class SimphonyPaymentReq implements Serializable {
 
     private String employeeName;
 
+    private String payedAmount;
+
     public SimphonyPaymentReq() {
     }
 
@@ -101,5 +103,13 @@ public class SimphonyPaymentReq implements Serializable {
 
     public void setCashierNumber(int cashierNumber) {
         this.cashierNumber = cashierNumber;
+    }
+
+    public String getPayedAmount() {
+        return payedAmount;
+    }
+
+    public void setPayedAmount(String payedAmount) {
+        this.payedAmount = payedAmount;
     }
 }

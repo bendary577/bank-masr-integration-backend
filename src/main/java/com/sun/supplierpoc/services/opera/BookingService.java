@@ -753,6 +753,7 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+            fileName = "SingleExpenses" + '.' + bookingConfiguration.fileExtension;
             String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
@@ -762,7 +763,7 @@ public class BookingService {
             if(bookingConfiguration.fileExtension.equals("xlsx")){
                 syncJobData = excelHelper.getExpensesUpdateFromXLS(syncJob, input, generalSettings, bookingConfiguration);
             } else if(bookingConfiguration.fileExtension.equals("xml")) {
-                syncJobData = expensesXMLHelper.getExpensesUpdateFromXLS(syncJob, localFilePath + fileName,
+                syncJobData = expensesXMLHelper.getExpensesUpdateFromDB(syncJob, localFilePath + fileName,
                         generalSettings, bookingConfiguration);
             }
 

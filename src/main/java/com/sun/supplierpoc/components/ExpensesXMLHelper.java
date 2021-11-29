@@ -207,6 +207,7 @@ public class ExpensesXMLHelper {
     public List<SyncJobData> getExpensesUpdateFromDB(SyncJob syncJob, String filePath, GeneralSettings generalSettings,
                                                       BookingConfiguration configuration) {
         ExpenseItem expenseItem;
+        ExpenseItem expenseItemTax;
         List<SyncJobData> syncJobDataList = new ArrayList<>();
         ArrayList<String> neglectedGroupCodes = configuration.neglectedGroupCodes;
 
@@ -222,11 +223,45 @@ public class ExpensesXMLHelper {
 
             NodeList list = doc.getElementsByTagName("G_RESV_NAME_ID");
 
+            double unitPrice, vat, municipalityTax;
+
+            String currentBookingNumber = "";
+            String[] generatesArray;
+            ArrayList<SyncJobData> dataList = new ArrayList<>();
             for (int temp = 0; temp < list.getLength(); temp++) {
+                vat = 0; municipalityTax = 0;
                 // Read Expenses row
                 expenseItem = readExpensesRowDB(list, temp, generalSettings);
 
-                ArrayList<SyncJobData> dataList = syncJobDataService.getSyncJobDataByBookingNo(expenseItem.bookingNo.strip());
+                // Loop over taxes
+                if(!expenseItem.generates.equals("")){
+                    generatesArray = expenseItem.generates.split("%");
+                    for (int i = 0; i < generatesArray.length; i++) {
+                        temp++;
+                        expenseItemTax = readExpensesRowDB(list, temp, generalSettings);
+
+                        if(expenseItemTax.description.toLowerCase().contains("muncipality")){
+                            expenseItem.municipalityTax = expenseItemTax.unitPrice;
+                        }else if(expenseItemTax.description.toLowerCase().contains("vat")){
+                            expenseItem.vat = expenseItemTax.unitPrice;
+                        }
+                    }
+                }
+
+                // Calculate Grand Total
+                unitPrice = Double.parseDouble(expenseItem.unitPrice);
+                if(!expenseItem.vat.equals(""))
+                    vat = Double.parseDouble(expenseItem.vat);
+                if(!expenseItem.municipalityTax.equals(""))
+                    municipalityTax = Double.parseDouble(expenseItem.municipalityTax);
+
+                expenseItem.grandTotal = String.valueOf(conversions.roundUpDouble(unitPrice + vat + municipalityTax));
+
+                if(currentBookingNumber.equals("") || !currentBookingNumber.equals(expenseItem.bookingNo.strip())){
+                    currentBookingNumber = expenseItem.bookingNo.strip();
+                    dataList = syncJobDataService.getSyncJobDataByBookingNo(currentBookingNumber);
+                }
+
                 if (dataList.size() > 0) {
                     expenseItem.transactionId = (String) dataList.get(0).getData().get("transactionId");
                 } else {
@@ -237,7 +272,7 @@ public class ExpensesXMLHelper {
                 if(neglectedGroupCodes.contains(expenseItem.itemNumber))
                     continue;
 
-                if (expenseItem.expenseTypeId != 0 && !expenseItem.unitPrice.equals("0.0")) {
+                if (!expenseItem.unitPrice.equals("0.0")) {
                     HashMap<String, Object> data = new HashMap<>();
                     Field[] allFields = expenseItem.getClass().getDeclaredFields();
                     for (Field field : allFields) {
@@ -286,15 +321,16 @@ public class ExpensesXMLHelper {
 
             item.unitPrice = String.valueOf(conversions.roundUpDouble(Double.parseDouble(element.getElementsByTagName("NET_AMOUNT").item(0).getTextContent())));
             item.itemNumber = element.getElementsByTagName("TRX_CODE").item(0).getTextContent();
+            item.description = element.getElementsByTagName("DESCRIPTION").item(0).getTextContent();
 
             typeName = element.getElementsByTagName("TC_GROUP").item(0).getTextContent();
             item.expenseTypeId = conversions.checkBookingTypeExistence(expenseTypes, typeName).getTypeId();
 
-            typeName = element.getElementsByTagName("PAYMENT_TYPE").item(0).getTextContent();
-            item.paymentType = conversions.checkBookingTypeExistence(paymentTypes, typeName).getTypeId();
-
             generates = element.getElementsByTagName("TAX_ELEMENTS").item(0).getTextContent();
             item.generates = generates.replaceAll(",", "").replaceAll("\\s", "");
+
+            typeName = element.getElementsByTagName("PAYMENT_METHOD").item(0).getTextContent();
+            item.paymentType = conversions.checkBookingTypeExistence(paymentTypes, typeName).getTypeId();
 
             String tempDate = element.getElementsByTagName("TRX_DATE").item(0).getTextContent();
             if (!tempDate.equals("")){

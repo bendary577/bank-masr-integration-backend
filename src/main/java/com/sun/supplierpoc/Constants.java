@@ -52,6 +52,9 @@ public class Constants {
     public static String CREATE_CHECK = "Create Check";
     public static String OPERA_PAYMENT = "Opera Payment";
 
+    ///////////////////////////////////////// Simphony  Types///////////////////////////////////////////////////////////
+    public static String SIMPHONY_PAYMENT_CHECK = "simphony Payment";
+
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";
     public static String WEEKLY = "Weekly";

@@ -3,7 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
-import org.apache.poi.ss.formula.functions.T;
+import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
@@ -14,7 +14,6 @@ public class Response<T> {
     private boolean status;
     private String message;
     private ArrayList<HashMap<String, Object>> entries;
-
     private T data;
 
     // Sales Variables
@@ -43,6 +42,7 @@ public class Response<T> {
 
     private List<WebElement> rows = new ArrayList<>();
 
+    private SimphonyPaymentRes simphonyPaymentRes;
     public Response() {
     }
 
@@ -209,5 +209,13 @@ public class Response<T> {
 
     public void setData(T data) {
         this.data = data;
+    }
+
+    public SimphonyPaymentRes getSimphonyPaymentRes() {
+        return simphonyPaymentRes;
+    }
+
+    public void setSimphonyPaymentRes(SimphonyPaymentRes simphonyPaymentRes) {
+        this.simphonyPaymentRes = simphonyPaymentRes;
     }
 }

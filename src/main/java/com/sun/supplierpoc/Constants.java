@@ -216,6 +216,9 @@ public class Constants {
     // My Reports >> Inventory Cost of Sales
     public static String MICROS_COS_REPORTS_COST_CENTER = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100238";
 
+    // WASTAGE LINKS
+    public static String MICROS_WASTE_GROUPS_LINK =  MICROS_REPORT_BASE_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

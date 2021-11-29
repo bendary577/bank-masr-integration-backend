@@ -347,7 +347,7 @@ public class SalesV2Services {
             }
 
             try {
-                wait = new WebDriverWait(driver, 5);
+                wait = new WebDriverWait(driver, 7);
                 wait.until(ExpectedConditions.alertIsPresent());
                 System.out.println("No Alert");
             } catch (Exception e) {
@@ -457,8 +457,8 @@ public class SalesV2Services {
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_5450_0\"]/table")));
-            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_5450_0\"]/table"));
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_6312_0\"]/table")));
+            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_6312_0\"]/table"));
             List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 3) {
@@ -504,7 +504,6 @@ public class SalesV2Services {
                     float taxAmount;
                     taxAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip());
 
-
                     tax.setTotal(taxAmount);
                     salesTax.add(tax);
                 }
@@ -517,7 +516,6 @@ public class SalesV2Services {
 
         } catch (Exception e) {
             driver.quit();
-
             response.setStatus(false);
             response.setMessage(e.getMessage());
             response.setEntries(new ArrayList<>());
@@ -746,7 +744,6 @@ public class SalesV2Services {
                         majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
                     }
                 }else{
-
                     if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
                         majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                     } else {

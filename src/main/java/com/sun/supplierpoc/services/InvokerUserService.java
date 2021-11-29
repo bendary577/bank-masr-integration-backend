@@ -41,4 +41,19 @@ public class InvokerUserService {
             throw new UnauthorizedUserException(Constants.INVALID_USER);
         }
     }
+
+    public InvokerUser getAuthenticated(String authorization) {
+
+        final String[] values = conversions.convertBasicAuth(authorization);
+
+        if (values.length != 0) {
+            String username = values[0];
+            String password = values[1];
+            InvokerUser user = getInvokerUser(username, password);
+            return user;
+
+        }else{
+            return new InvokerUser("");
+        }
+    }
 }

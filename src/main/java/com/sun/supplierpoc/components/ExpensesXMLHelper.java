@@ -294,44 +294,46 @@ public class ExpensesXMLHelper {
                         expenseObject.transactionId = (String) dataList.get(0).getData().get("transactionId");
 
                         /* Check Existence */
-                        dataList = syncJobDataService.getSyncJobDataByBookingNoAndType(currentBookingNumber, syncJob.getId());
+                        dataList = syncJobDataService.getSyncJobDataByBookingNoAndType(currentBookingNumber, syncJobType.getId());
                     } else {
                         expenseObject.transactionId = "";
                         dataList = new ArrayList<>();
                     }
                 }
 
-                if(dataList.size() > 0){
-                    expenseObjectData = dataList.get(0).getData();
-                    ArrayList<ExpenseItem> items = (ArrayList<ExpenseItem>) expenseObjectData.get("items");
-                    /* Check if this item already exists */
-                    for (ExpenseItem item : items) {
-                        if(item.itemNumber.equals(expenseItem.itemNumber)
-                                && !item.expenseDate.equals(expenseItem.expenseDate)){
-                            expenseItem.cuFlag = "2"; // UPDATE ITEM
-                            expenseItem.vat = String.valueOf(vat + Double.parseDouble(item.vat));
-                            expenseItem.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.vat));
-                            expenseItem.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
-                            expenseItem.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
-                        }
-                    }
-                }
-
+                boolean addItem = true;
                 for (ExpenseItem item : expenseObject.items) {
                     if(item.itemNumber.equals(expenseItem.itemNumber)
                             && !item.expenseDate.equals(expenseItem.expenseDate)){
-                        expenseItem.cuFlag = "2";
-                        item.cuFlag = "2"; // UPDATE ITEM
                         item.vat = String.valueOf(vat + Double.parseDouble(item.vat));
-                        item.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.vat));
+                        item.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.municipalityTax));
                         item.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
                         item.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
-
+                        addItem = false;
                         break;
                     }
                 }
 
-                if(expenseItem.cuFlag.equals("1"))
+                if(dataList.size() > 0 && addItem){
+                    expenseObjectData = dataList.get(dataList.size() -1).getData();
+                    ArrayList<ExpenseItem> items = (ArrayList<ExpenseItem>) expenseObjectData.get("items");
+                    /* Check if this item already exists */
+                    for (ExpenseItem item : items) {
+                        if(item.itemNumber.equals(expenseItem.itemNumber)){
+                            expenseItem.cuFlag = "2"; // UPDATE ITEM
+                            if(!item.expenseDate.equals(expenseItem.expenseDate)){
+                                expenseItem.vat = String.valueOf(vat + Double.parseDouble(item.vat));
+                                expenseItem.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.municipalityTax));
+                                expenseItem.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
+                                expenseItem.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
+                            }
+                            break;
+                        }
+
+                    }
+                }
+
+                if(addItem)
                     expenseObject.items.add(expenseItem);
             }
 

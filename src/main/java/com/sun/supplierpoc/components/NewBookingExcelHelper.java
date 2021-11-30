@@ -851,7 +851,8 @@ public class NewBookingExcelHelper {
                 }
             }
 
-            SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
+            SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), syncJob.getId(),
+                    syncJobType.getId());
             checkNewBookingStatus(syncJobData);
             syncJobDataList.add(syncJobData);
         }

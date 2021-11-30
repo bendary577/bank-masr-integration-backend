@@ -3,7 +3,6 @@ package com.sun.supplierpoc.models.opera.booking;
 public class ExpenseItem {
     public int roomNo = 0;
     public String bookingNo = "";
-    public String transactionId = "";
 
     public int expenseTypeId = 0;
     public String itemNumber = "";

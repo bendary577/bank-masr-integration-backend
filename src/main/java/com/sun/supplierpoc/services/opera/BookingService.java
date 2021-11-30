@@ -726,14 +726,18 @@ public class BookingService {
     public Response fetchExpensesDetailsFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
+        Response expenseResponse;
 
         SyncJob syncJob;
         BookingConfiguration bookingConfiguration;
         SyncJobType expensesDetailsSyncType;
+        SyncJobType bookingSyncType;
         GeneralSettings generalSettings;
 
         try {
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
             expensesDetailsSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.EXPENSES_DETAILS_REPORT, account.getId(), false);
             bookingConfiguration = expensesDetailsSyncType.getConfiguration().bookingConfiguration;
 
@@ -763,16 +767,23 @@ public class BookingService {
             if(bookingConfiguration.fileExtension.equals("xlsx")){
                 syncJobData = excelHelper.getExpensesUpdateFromXLS(syncJob, input, generalSettings, bookingConfiguration);
             } else if(bookingConfiguration.fileExtension.equals("xml")) {
-                syncJobData = expensesXMLHelper.getExpensesUpdateFromDB(syncJob, localFilePath + fileName,
-                        generalSettings, bookingConfiguration);
+                syncJobData = expensesXMLHelper.getExpensesUpdateFromDB(syncJob, expensesDetailsSyncType,
+                        bookingSyncType, localFilePath + fileName, generalSettings, bookingConfiguration);
             }
 
-            syncJob.setStatus(Constants.SUCCESS);
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJob.setRowsFetched(syncJobData.size());
-            syncJobRepo.save(syncJob);
+            for (SyncJobData syncData : syncJobData) {
+                syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "");
 
-            syncJobDataRepo.saveAll(syncJobData);
+//                expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
+//
+//                if(expenseResponse.isStatus()){
+//                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
+//                }else {
+//                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, expenseResponse.getMessage());
+//                }
+            }
+
+            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
 
             message = "Sync expenses details successfully.";
             response.setStatus(true);
@@ -780,10 +791,7 @@ public class BookingService {
         } catch (Exception e) {
             e.printStackTrace();
 
-            syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason(e.getMessage());
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJobRepo.save(syncJob);
+            syncJobService.saveSyncJobStatus(syncJob, 0, response.getMessage(), Constants.FAILED);
 
             message = "Failed to sync expenses details.";
             response.setMessage(message);
@@ -793,17 +801,19 @@ public class BookingService {
         return response;
     }
 
-    private Response sendExpensesDetailsUpdates(List<SyncJobData> syncJobData, BookingConfiguration bookingConfiguration){
+    private Response sendExpensesDetailsUpdates(SyncJobData syncJobData, BookingConfiguration bookingConfiguration){
         String message = "";
         Response response = new Response();
         try {
             OkHttpClient client = new OkHttpClient();
             String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
 
-            HashMap<String, Object> data = syncJobData.get(0).getData();
+            HashMap<String, Object> data = syncJobData.getData();
 
             JSONObject json = new JSONObject();
+            json.put("transactionId", data.get("transactionId"));
             json.put("channel", bookingConfiguration.getChannel());
+            json.put("expenseItems", data.get("items"));
 
             String body = json.toString();
 

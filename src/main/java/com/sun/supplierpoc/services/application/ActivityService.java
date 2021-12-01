@@ -72,8 +72,11 @@ public class ActivityService {
 
                     double amount = transaction.getTotalPayment();
 
-                    if(transactionType.getName().equals(Constants.REWARD_POINTS)){
-                        int points = (int) Math.round(transaction.getTotalPayment()/generalSettings.getPointsPerPurchases());
+//                    private float pointReward = 0; // percentage
+//                    private float pointsRedemption = 0; // 1$ = ? points
+
+                    if(transactionType.getName().equals(Constants.POINTS_REDEMPTION)){
+                        int points = (int) Math.round(transaction.getTotalPayment() * generalSettings.getPointsRedemption());
 
                         if(points > user.getPoints()){
                             response.put("message", "There are insufficient points to redeem.");
@@ -86,6 +89,15 @@ public class ActivityService {
                         transaction.setPointsRedeemed(points);
 
                         user.setPoints(user.getPoints() - points);
+                    }
+                    else if(transactionType.getName().equals(Constants.REWARD_POINTS)){
+                        int points = (int) Math.round((transaction.getTotalPayment() * generalSettings.getPointReward())/100);
+
+                        transaction.setDiscountRate(0.0);
+                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setPointsRedeemed(0);
+                        transaction.setPointsReward(points);
+                        user.setPoints(user.getPoints() + points);
                     }
                     else if(!transactionType.getName().equals(Constants.USE_WALLET)) {
 
@@ -101,7 +113,7 @@ public class ActivityService {
                         double amountAfterDiscount = amount - (amount * (discount / 100));
                         transaction.setDiscountRate(discount);
                         transaction.setAfterDiscount(amountAfterDiscount);
-
+                        response.put("message", "Discount added successfully.");
                     }
                     else{
                         transaction.setDiscountRate(0.0);
@@ -125,7 +137,7 @@ public class ActivityService {
                                         continue;
                                     }
                                 }
-                                WalletHistory walletHistory = new WalletHistory("Use wallet in" + revenueCenter.getRevenueCenter(),
+                                WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
                                         amount, previousBalance, calculateBalance(wallet), new Date());
                                 wallet.getWalletHistory().add(walletHistory);
                                 user.setWallet(wallet);
@@ -133,10 +145,19 @@ public class ActivityService {
                             }
                         }
                         if(rest == transaction.getAfterDiscount()){
-                            response.put("rest", "All");
-                        }else{
-                            response.put("rest", rest);
+                            response.put("rest", transaction.getAfterDiscount());
+                            if(conversions.hasBalance(wallet.getBalance())){
+                                response.put("message", "There is no balance for this revenuecenter.");
+                            }else{
+                                response.put("message", "Guest has no balance.");
+                            }
+                        }else if(rest != 0){
+                            response.put("message", "Payment added succefully.");
+                        }else if(rest == 0){
+                            response.put("message", "Check paid successfully.");
                         }
+                        response.put("rest", rest);
+
                     }
 
                     userRepo.save(user);
@@ -148,7 +169,11 @@ public class ActivityService {
                     generalSettingsRepo.save(generalSettings);
 
                     response.put("isSuccess", true);
-                    response.put("message", "Transaction Done successfully.");
+                    if(transactionType.getName().equals(Constants.REWARD_POINTS)
+                            || transactionType.getName().equals(Constants.POINTS_REDEMPTION)){
+                        response.put("message", "New balance = " + user.getPoints());
+                    }
+
                     response.put("discountId", group.getSimphonyDiscount().getDiscountId());
                     response.put("group", group.getName());
                     response.put("user", user.getName());

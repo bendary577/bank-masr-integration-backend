@@ -18,6 +18,7 @@ public class Transactions {
     @NotBlank(message="Code can't be empty.")
     private String code;
     private String transactionTypeId = "";
+    private String transactionTypeName = "";
     @DBRef
     private TransactionType transactionType;
     private Date transactionDate;
@@ -33,6 +34,7 @@ public class Transactions {
     private double discountRate;
     private double afterDiscount;
     private int pointsRedeemed;
+    private int pointsReward;
 
     public String getId() {
         return id;
@@ -152,6 +154,22 @@ public class Transactions {
 
     public void setPointsRedeemed(int pointsRedeemed) {
         this.pointsRedeemed = pointsRedeemed;
+    }
+
+    public int getPointsReward() {
+        return pointsReward;
+    }
+
+    public void setPointsReward(int pointsReward) {
+        this.pointsReward = pointsReward;
+    }
+
+    public String getTransactionTypeName() {
+        return transactionTypeName;
+    }
+
+    public void setTransactionTypeName(String transactionTypeName) {
+        this.transactionTypeName = transactionTypeName;
     }
 }
 

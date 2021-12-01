@@ -594,4 +594,15 @@ public class Conversions {
         return false;
     }
 
+    public boolean hasBalance(List<Balance> balance) {
+        double totalAmount = 0;
+        for (Balance tempBalance: balance){
+            totalAmount += tempBalance.getAmount();
+        }
+        if(totalAmount > 0){
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -6,6 +6,8 @@ import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
@@ -29,12 +31,15 @@ public class WastageService {
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
+    SyncJobTypeRepo syncJobTypeRepo;
+    @Autowired
     InvoiceController invoiceController;
     @Autowired
     private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -660,6 +665,103 @@ public class WastageService {
             }
 
             wasteBatch.setWasteData(addedWaste);
+        }
+    }
+
+    public HashMap<String, Object> getWastageGroups(Account account, SyncJobType syncJobType,
+                                                    ArrayList<WasteGroup> oldWasteTypes){
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+        ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
+
+        try {
+            String URL = Constants.OHIM_LOGIN_LINK;
+
+            if(account.getMicrosVersion().equals("version1")){
+                if (!setupEnvironment.loginOHIM(driver, URL, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", wasteTypes);
+                    return response;
+                }
+                driver.get(Constants.WASTE_GROUPS_LINK);
+            }else if(account.getMicrosVersion().equals("version2")){
+                URL = Constants.MICROS_V2_LINK;
+
+                if (!microsFeatures.loginMicrosOHRA(driver, URL, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", wasteTypes);
+                    return response;
+                }
+                driver.get(Constants.MICROS_WASTE_GROUPS_LINK);
+            }
+
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
+
+            for (int i = 14; i < rows.size(); i++) {
+                WasteGroup wasteType = new WasteGroup();
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                // check existence of over group
+                WebElement td = cols.get(columns.indexOf("waste_group"));
+                WasteGroup oldWasteTypesData = conversions.checkWasteTypeExistence(oldWasteTypes, td.getText().strip());
+
+                if (oldWasteTypesData.getChecked()){
+                    wasteType= oldWasteTypesData;
+                }
+
+                else{
+                    wasteType.setChecked(false);
+                    wasteType.setWasteGroup(td.getText().strip());
+                }
+
+                wasteTypes.add(wasteType);
+            }
+
+            driver.quit();
+
+            syncJobType.getConfiguration().wastageConfiguration.wasteGroups = wasteTypes;
+            syncJobTypeRepo.save(syncJobType);
+            response.put("cols", columns);
+            response.put("data", wasteTypes);
+            response.put("message", "Get wastes successfully.");
+            response.put("success", true);
+
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("data", wasteTypes);
+            response.put("message", "Failed to get wastes.");
+            response.put("success", false);
+
+            return response;
         }
     }
 

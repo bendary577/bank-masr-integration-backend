@@ -44,6 +44,10 @@ public class SyncJobDataService {
         return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNo(bookingNo);
     }
 
+    public ArrayList<SyncJobData> getSyncJobDataByBookingNoAndType(String bookingNo, String typeId){
+        return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNoAndSyncJobTypeId(bookingNo, typeId);
+    }
+
     public ArrayList<SyncJobData> getDataByBookingNoAndSyncType(String bookingNo, String syncJobTypeId){
         List<SyncJobData> data;
         ArrayList<SyncJobData> syncJobData = new ArrayList<>();

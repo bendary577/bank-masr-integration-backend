@@ -180,7 +180,7 @@ public class MicrosFeatures {
 //                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
 //                    }
 
-                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
+                    WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){
                         input.sendKeys("all");

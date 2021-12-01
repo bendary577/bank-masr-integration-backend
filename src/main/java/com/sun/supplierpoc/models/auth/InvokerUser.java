@@ -22,6 +22,10 @@ public class InvokerUser implements Serializable {
     public InvokerUser() {
     }
 
+    public InvokerUser(String id) {
+        this.id = id;
+    }
+
     public InvokerUser(String username, String password, String accountId, List<String> typeId,
                        Date creationDate) {
         this.username = username;

@@ -51,8 +51,7 @@ public class ActivityController {
     @RequestMapping("/createTransactionActivity")
     @CrossOrigin("*")
     public ResponseEntity<?> transactionActivity(@RequestHeader("Authorization") String authorization,
-                                                 @Valid @RequestBody Transactions transaction, BindingResult result,
-                                                 @RequestParam(name = "payWithPoints", required = false) int payWithPoints) {
+                                                 @Valid @RequestBody Transactions transaction, BindingResult result){
 
         HashMap response = new HashMap();
 
@@ -76,16 +75,10 @@ public class ActivityController {
                 }
 
                 TransactionType transactionType;
-                if(payWithPoints == 1){
-                    transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.POINTS_REDEMPTION, account.getId());
-                }
-                else if(payWithPoints == 2){
-                    transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REWARD_POINTS, account.getId());
-                }
-                else if(transaction.getTransactionTypeId().equals("")) {
+                if(transaction.getTransactionTypeName().equals("")) {
                     transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
                 }else{
-                    transactionType = transactionTypeRepo.findByIdAndAccountId(transaction.getTransactionTypeId(), account.getId());
+                    transactionType = transactionTypeRepo.findByNameAndAccountId(transaction.getTransactionTypeName(), account.getId());
                 }
 
                 if (!invokerUser.getTypeId().contains(transactionType.getId())) {
@@ -121,13 +114,10 @@ public class ActivityController {
                     } else {
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
-
                 } else {
-
                     response.put("isSuccess", false);
                     response.put("message", Constants.WRONG_REVENUE_CENTER);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
-
                 }
 
             } else {

@@ -1,9 +1,11 @@
 package com.sun.supplierpoc.components;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
+import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.*;
 import com.sun.supplierpoc.services.SyncJobDataService;
@@ -204,10 +206,22 @@ public class ExpensesXMLHelper {
     }
 
     /* Expenses Exported from OPERA Database */
-    public List<SyncJobData> getExpensesUpdateFromDB(SyncJob syncJob, String filePath, GeneralSettings generalSettings,
-                                                      BookingConfiguration configuration) {
+    public List<SyncJobData> getExpensesUpdateFromDB(SyncJob syncJob, SyncJobType syncJobType,
+                                                     SyncJobType bookingSyncJobType, String filePath,
+                                                     GeneralSettings generalSettings, BookingConfiguration configuration) {
+        double unitPrice, vat, municipalityTax, grandTotal;
+
+        String currentBookingNumber = "";
+        ExpenseObject expenseObject = new ExpenseObject();
+        HashMap<String, Object> expenseObjectData;
+
         ExpenseItem expenseItem;
+        ExpenseItem expenseItemTax;
+
+        String[] generatesArray;
+        ArrayList<SyncJobData> dataList = new ArrayList<>();
         List<SyncJobData> syncJobDataList = new ArrayList<>();
+
         ArrayList<String> neglectedGroupCodes = configuration.neglectedGroupCodes;
 
         try {
@@ -223,41 +237,131 @@ public class ExpensesXMLHelper {
             NodeList list = doc.getElementsByTagName("G_RESV_NAME_ID");
 
             for (int temp = 0; temp < list.getLength(); temp++) {
+                vat = 0; municipalityTax = 0; grandTotal = 0;
                 // Read Expenses row
                 expenseItem = readExpensesRowDB(list, temp, generalSettings);
 
-                ArrayList<SyncJobData> dataList = syncJobDataService.getSyncJobDataByBookingNo(expenseItem.bookingNo.strip());
-                if (dataList.size() > 0) {
-                    expenseItem.transactionId = (String) dataList.get(0).getData().get("transactionId");
-                } else {
-                    expenseItem.transactionId = "";
+                // Loop over taxes
+                if(!expenseItem.generates.equals("")){
+                    generatesArray = expenseItem.generates.split("%");
+                }else{
+                    generatesArray = new String[0];
                 }
 
                 // Skip neglected group code
-                if(neglectedGroupCodes.contains(expenseItem.itemNumber))
+                if(neglectedGroupCodes.contains(expenseItem.itemNumber)){
+                    temp += generatesArray.length;
                     continue;
-
-                if (expenseItem.expenseTypeId != 0 && !expenseItem.unitPrice.equals("0.0")) {
-                    HashMap<String, Object> data = new HashMap<>();
-                    Field[] allFields = expenseItem.getClass().getDeclaredFields();
-                    for (Field field : allFields) {
-                        field.setAccessible(true);
-                        Object value = field.get(expenseItem);
-                        if (value != null && !value.equals("null")) {
-                            data.put(field.getName(), value);
-                        } else {
-                            data.put(field.getName(), "");
-                        }
-                    }
-
-                    SyncJobData syncJobData = new SyncJobData(data, "success", "", new Date(), syncJob.getId());
-                    syncJobDataList.add(syncJobData);
                 }
+
+                for (int i = 0; i < generatesArray.length; i++) {
+                    temp++;
+                    expenseItemTax = readExpensesRowDB(list, temp, generalSettings);
+
+                    if(expenseItemTax.description.toLowerCase().contains("muncipality")){
+                        expenseItem.municipalityTax = expenseItemTax.unitPrice;
+                    }else if(expenseItemTax.description.toLowerCase().contains("vat")){
+                        expenseItem.vat = expenseItemTax.unitPrice;
+                    }
+                }
+
+                // Calculate Grand Total
+                unitPrice = Double.parseDouble(expenseItem.unitPrice);
+                if(!expenseItem.vat.equals(""))
+                    vat = Double.parseDouble(expenseItem.vat);
+                if(!expenseItem.municipalityTax.equals(""))
+                    municipalityTax = Double.parseDouble(expenseItem.municipalityTax);
+
+                grandTotal = unitPrice + vat + municipalityTax;
+                expenseItem.grandTotal = String.valueOf(conversions.roundUpDouble(grandTotal));
+
+                /* New Expense Object */
+                if(!currentBookingNumber.equals(expenseItem.bookingNo.strip())){
+                    /* Save old one */
+                    saveExpenseObject(syncJob, syncJobType, expenseObject, syncJobDataList);
+
+                    currentBookingNumber = expenseItem.bookingNo.strip();
+                    dataList = syncJobDataService.getSyncJobDataByBookingNoAndType(currentBookingNumber,
+                            bookingSyncJobType.getId());
+
+                    expenseObject = new ExpenseObject();
+
+                    expenseObject.roomNo = expenseItem.roomNo;
+                    expenseObject.bookingNo = currentBookingNumber;
+                    expenseObject.channel = configuration.getChannel();
+
+                    if (dataList.size() > 0) {
+                        expenseObject.transactionId = (String) dataList.get(0).getData().get("transactionId");
+
+                        /* Check Existence */
+                        dataList = syncJobDataService.getSyncJobDataByBookingNoAndType(currentBookingNumber, syncJobType.getId());
+                    } else {
+                        expenseObject.transactionId = "";
+                        dataList = new ArrayList<>();
+                    }
+                }
+
+                boolean addItem = true;
+                for (ExpenseItem item : expenseObject.items) {
+                    if(item.itemNumber.equals(expenseItem.itemNumber)
+                            && !item.expenseDate.equals(expenseItem.expenseDate)){
+                        item.vat = String.valueOf(vat + Double.parseDouble(item.vat));
+                        item.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.municipalityTax));
+                        item.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
+                        item.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
+                        addItem = false;
+                        break;
+                    }
+                }
+
+                if(dataList.size() > 0 && addItem){
+                    expenseObjectData = dataList.get(dataList.size() -1).getData();
+                    ArrayList<ExpenseItem> items = (ArrayList<ExpenseItem>) expenseObjectData.get("items");
+                    /* Check if this item already exists */
+                    for (ExpenseItem item : items) {
+                        if(item.itemNumber.equals(expenseItem.itemNumber)){
+                            expenseItem.cuFlag = "2"; // UPDATE ITEM
+                            if(!item.expenseDate.equals(expenseItem.expenseDate)){
+                                expenseItem.vat = String.valueOf(vat + Double.parseDouble(item.vat));
+                                expenseItem.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.municipalityTax));
+                                expenseItem.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
+                                expenseItem.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
+                            }
+                            break;
+                        }
+
+                    }
+                }
+
+                if(addItem)
+                    expenseObject.items.add(expenseItem);
             }
+
+            saveExpenseObject(syncJob, syncJobType, expenseObject, syncJobDataList);
 
             return syncJobDataList;
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse expenses details from XML file: " + e.getMessage());
+        }
+    }
+
+    private void saveExpenseObject(SyncJob syncJob, SyncJobType syncJobType, ExpenseObject expenseObject, List<SyncJobData> syncJobDataList) throws IllegalAccessException {
+        if (!expenseObject.bookingNo.equals("")) {
+            HashMap<String, Object> data = new HashMap<>();
+            Field[] allFields = expenseObject.getClass().getDeclaredFields();
+            for (Field field : allFields) {
+                field.setAccessible(true);
+                Object value = field.get(expenseObject);
+                if (value != null && !value.equals("null")) {
+                    data.put(field.getName(), value);
+                } else {
+                    data.put(field.getName(), "");
+                }
+            }
+
+            SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "",
+                    new Date(), syncJob.getId(), syncJobType.getId());
+            syncJobDataList.add(syncJobData);
         }
     }
 
@@ -286,15 +390,16 @@ public class ExpensesXMLHelper {
 
             item.unitPrice = String.valueOf(conversions.roundUpDouble(Double.parseDouble(element.getElementsByTagName("NET_AMOUNT").item(0).getTextContent())));
             item.itemNumber = element.getElementsByTagName("TRX_CODE").item(0).getTextContent();
+            item.description = element.getElementsByTagName("DESCRIPTION").item(0).getTextContent();
 
             typeName = element.getElementsByTagName("TC_GROUP").item(0).getTextContent();
             item.expenseTypeId = conversions.checkBookingTypeExistence(expenseTypes, typeName).getTypeId();
 
-            typeName = element.getElementsByTagName("PAYMENT_TYPE").item(0).getTextContent();
-            item.paymentType = conversions.checkBookingTypeExistence(paymentTypes, typeName).getTypeId();
-
             generates = element.getElementsByTagName("TAX_ELEMENTS").item(0).getTextContent();
             item.generates = generates.replaceAll(",", "").replaceAll("\\s", "");
+
+            typeName = element.getElementsByTagName("PAYMENT_METHOD").item(0).getTextContent();
+            item.paymentType = conversions.checkBookingTypeExistence(paymentTypes, typeName).getTypeId();
 
             String tempDate = element.getElementsByTagName("TRX_DATE").item(0).getTextContent();
             if (!tempDate.equals("")){
@@ -312,9 +417,13 @@ public class ExpensesXMLHelper {
                     e.printStackTrace();
                 }
             }
+
+            item.cuFlag = "1"; // NEW ITEM
         }
         return item;
     }
+
+
 
 }
 

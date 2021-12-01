@@ -3,15 +3,14 @@ package com.sun.supplierpoc.models.opera.booking;
 public class ExpenseItem {
     public int roomNo = 0;
     public String bookingNo = "";
-    public String transactionId = "";
 
     public int expenseTypeId = 0;
     public String itemNumber = "";
-    public String unitPrice = "";
-    public String discount = "";
-    public String vat = "";
-    public String municipalityTax = "";
-    public String grandTotal = "";
+    public String unitPrice = "0";
+    public String discount = "0";
+    public String vat = "0";
+    public String municipalityTax = "0";
+    public String grandTotal = "0";
 
     public int paymentType = 0;
 
@@ -19,4 +18,5 @@ public class ExpenseItem {
     public String cuFlag = "";
 
     public String generates = "";
+    public String description = "";
 }

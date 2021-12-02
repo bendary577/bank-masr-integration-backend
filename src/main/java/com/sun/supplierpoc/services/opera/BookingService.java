@@ -774,13 +774,13 @@ public class BookingService {
             for (SyncJobData syncData : syncJobData) {
                 syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "");
 
-//                expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
-//
-//                if(expenseResponse.isStatus()){
-//                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
-//                }else {
-//                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, expenseResponse.getMessage());
-//                }
+                expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
+
+                if(expenseResponse.isStatus()){
+                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
+                }else {
+                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, expenseResponse.getMessage());
+                }
             }
 
             syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);

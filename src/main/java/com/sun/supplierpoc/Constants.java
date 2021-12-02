@@ -222,6 +222,7 @@ public class Constants {
 
     // WASTAGE LINKS
     public static String MICROS_WASTE_GROUPS_LINK =  MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+    public static String MICROS_OVER_GROUPS_LINK =  MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/OverGroups/OverviewOverGroup.aspx";
 
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";

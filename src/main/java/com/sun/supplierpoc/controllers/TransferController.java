@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.SyncJobDataService;
@@ -18,6 +19,8 @@ import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +65,7 @@ public class TransferController {
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
-
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getBookedTransfer")
@@ -284,11 +287,52 @@ public class TransferController {
             response.put("invoices", new ArrayList<>());
             return response;
         }
+        WebDriverWait wait = new WebDriverWait(driver, 20);
 
         try {
-            if (checkLogin(items, driver, response, Constants.OHIM_LOGIN_LINK, account)) return response;
+            if(account.getMicrosVersion().equals("version1")){
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
+                    driver.quit();
 
-            driver.get(Constants.MAJOR_GROUPS_LINK);
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", items);
+                    return response;
+                }
+                driver.get(Constants.MAJOR_GROUPS_LINK);
+            }
+            else if(account.getMicrosVersion().equals("version2")){
+                if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", items);
+                    return response;
+                }
+
+                try{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_MAJOR_GROUPS_LINK);
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
@@ -330,7 +374,10 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            driver.findElement(By.name("_ctl27")).click();
+            if(account.getMicrosVersion().equals("version1"))
+                driver.findElement(By.name("_ctl27")).click();
+            else
+                driver.findElement(By.name("_ctl32")).click();
 
             driver.findElement(By.id("link-27-10-4-ItemGroups")).click();
 
@@ -377,7 +424,11 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            driver.findElement(By.name("_ctl27")).click();
+            if(account.getMicrosVersion().equals("version1"))
+                driver.findElement(By.name("_ctl27")).click();
+            else
+                driver.findElement(By.name("_ctl32")).click();
+
             driver.findElement(By.id("link-27-10-2-Items")).click();
 //            driver.get(Constants.MAIN_MENU_URL);
 //            driver.get(Constants.ITEMS_LINK);
@@ -453,19 +504,6 @@ public class TransferController {
 
             return response;
         }
-    }
-
-    private boolean checkLogin(ArrayList<Item> items, WebDriver driver, HashMap<String, Object> response,
-                               String url, Account account) {
-        if (!setupEnvironment.loginOHIM(driver, url, account)) {
-            driver.quit();
-
-            response.put("status", Constants.FAILED);
-            response.put("message", "Invalid username and password.");
-            response.put("data", items);
-            return true;
-        }
-        return false;
     }
 
     @GetMapping("/transfers/export/excel")

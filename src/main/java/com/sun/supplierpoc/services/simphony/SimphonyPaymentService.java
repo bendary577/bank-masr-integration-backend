@@ -131,7 +131,7 @@ public class SimphonyPaymentService {
 
         float amount = Float.parseFloat(simphonyPaymentReq.getTotalDue()) * 100;
 
-        String POS_MACHINE_URL = "http://192.168.1.4:7070";
+        String POS_MACHINE_URL = "http://192.168.1.5:7070";
 
 //        if(transactionRequest.getSiteId() != null && transactionRequest.getSiteId().equals("ACT|SDMD")) {
 //            POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(0).getIp() +

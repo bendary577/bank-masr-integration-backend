@@ -50,6 +50,8 @@ public class WastageController {
     @Autowired
     private WastageService wastageService;
     @Autowired
+    private WastageV2Service wastageV2Service;
+    @Autowired
     private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
@@ -134,7 +136,8 @@ public class WastageController {
             }
         }
 
-        if (generalSettings.getCostCenterAccountMapping().size() == 0){
+        if (account.getMicrosVersion().equals("version1") &&
+                generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Configure cost center before sync wastage.";
             response.put("message", message);
             response.put("success", false);
@@ -163,15 +166,28 @@ public class WastageController {
         ArrayList<JournalBatch> wasteBatches = new ArrayList<>();
         try {
             Response data;
-            if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
-                data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
-                        overGroups, wasteGroups, account);
-                wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+            if (account.getMicrosVersion().equals("version1")) {
+                if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
+                    data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
+                            overGroups, wasteGroups, account);
+                    wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+                }
+                else{
+                    data = wastageService.getWastageReportData(wastageSyncJobType, generalSettings, account);
+                    wasteBatches = data.getJournalBatches();
+                }
+            } else{
+                if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
+                    data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
+                            overGroups, wasteGroups, account);
+                    wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+                }
+                else{
+                    data = wastageV2Service.getWastageReportData(wastageSyncJobType, generalSettings, account);
+                    wasteBatches = data.getJournalBatches();
+                }
             }
-            else{
-                data = wastageService.getWastageReportData(wastageSyncJobType, generalSettings, account);
-                wasteBatches = data.getJournalBatches();
-            }
+
 
             if (data.isStatus()) {
                 if (wasteBatches.size() > 0) {

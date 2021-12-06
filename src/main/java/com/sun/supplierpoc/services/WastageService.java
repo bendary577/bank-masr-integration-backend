@@ -10,6 +10,7 @@ import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -683,6 +684,7 @@ public class WastageService {
             return response;
         }
         ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
+        WebDriverWait wait = new WebDriverWait(driver, 20);
 
         try {
             String URL = Constants.OHIM_LOGIN_LINK;
@@ -708,7 +710,30 @@ public class WastageService {
                     response.put("data", wasteTypes);
                     return response;
                 }
-                driver.get(Constants.MICROS_WASTE_GROUPS_LINK);
+
+                try{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+//                        driver.close();
+//                        driver.switchTo().window(tabs2.get(0));
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_WASTE_GROUPS_LINK);
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    throw e;
+                }
             }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
@@ -749,7 +774,7 @@ public class WastageService {
             syncJobTypeRepo.save(syncJobType);
             response.put("cols", columns);
             response.put("data", wasteTypes);
-            response.put("message", "Get wastes successfully.");
+            response.put("message", "Get waste groups successfully.");
             response.put("success", true);
 
             return response;
@@ -758,7 +783,7 @@ public class WastageService {
             driver.quit();
 
             response.put("data", wasteTypes);
-            response.put("message", "Failed to get wastes.");
+            response.put("message", "Failed to get waste groups.");
             response.put("success", false);
 
             return response;

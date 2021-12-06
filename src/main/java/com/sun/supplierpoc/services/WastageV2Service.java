@@ -165,12 +165,16 @@ public class WastageV2Service {
                         if (j == columns.indexOf("date"))
                             continue;
                         if (j == columns.indexOf("document_name")){
-                            String extension = td.findElement(By.tagName("div")).getAttribute("onclick");
-                            int index = extension.indexOf('\'');
-                            int index2 = extension.indexOf(',');
-                            extension = extension.substring(index+1 , index2-1);
+                            td = cols.get(columns.indexOf("document_name"));
+                            String extension = td.findElement(By.tagName("a")).getAttribute("href");
+                            int index = extension.indexOf('(');
+                            int index2 = extension.indexOf(')');
+                            extension = extension.substring(index+1 , index2);
+                            extension = extension.split(",")[1];
+                            extension = extension.replace(",", "");
                             waste.put("waste_details_link", extension);
                             continue;
+                            // reportGroup=100267&100267=rpt1&rpt1=myInvenItemWasteDetail
                         }
                         waste.put(columns.get(j), td.getText().strip());
                     }
@@ -208,7 +212,9 @@ public class WastageV2Service {
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
-            driver.get(Constants.OHRA_LINK + waste.get("waste_details_link"));
+            // reportGroup=100267&100267=rpt1&rpt1=myInvenItemWasteDetail
+
+            driver.get(Constants.MICROS_REPORT_BASE_LINK + waste.get("waste_details_link"));
 
             WebElement tableContainer = driver.findElement(By.xpath("/html/body/div[3]/table"));
             List<WebElement> rows = tableContainer.findElements(By.tagName("tr"));

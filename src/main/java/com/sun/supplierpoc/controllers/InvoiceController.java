@@ -87,8 +87,8 @@ public class InvoiceController {
         response.put("success", false);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-    }
 
+    }
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 

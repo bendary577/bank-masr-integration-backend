@@ -258,7 +258,7 @@ public class ExpensesXMLHelper {
                     temp++;
                     expenseItemTax = readExpensesRowDB(list, temp, generalSettings);
 
-                    if(expenseItemTax.description.toLowerCase().contains("muncipality")){
+                    if(expenseItemTax.description.toLowerCase().contains("municipality")){
                         expenseItem.municipalityTax = expenseItemTax.unitPrice;
                     }else if(expenseItemTax.description.toLowerCase().contains("vat")){
                         expenseItem.vat = expenseItemTax.unitPrice;

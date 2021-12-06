@@ -757,7 +757,8 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            fileName = "SingleExpenses" + '.' + bookingConfiguration.fileExtension;
+//            fileName = "SingleExpenses" + '.' + bookingConfiguration.fileExtension;
+            fileName = "Expenses20211203.xml";
             String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
@@ -772,7 +773,7 @@ public class BookingService {
             }
 
             for (SyncJobData syncData : syncJobData) {
-                syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "");
+//                syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "");
 
                 expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
 

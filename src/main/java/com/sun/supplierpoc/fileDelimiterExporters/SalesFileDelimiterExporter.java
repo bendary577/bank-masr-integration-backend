@@ -295,7 +295,8 @@ public class SalesFileDelimiterExporter {
             }
             syncJobDataCSV.accountCode = accountCode;
 
-        } else if (CDMaker.equals("DV")) {
+        }
+        else if (CDMaker.equals("DV")) {
             syncJobDataCSV.DCMarker = "D";
             totalDr = syncJobData.getData().get("vat").toString();
 
@@ -312,7 +313,8 @@ public class SalesFileDelimiterExporter {
             }
             syncJobDataCSV.accountCode = accountCode;
             syncJobDataCSV.description = "TAX" + syncJobDataCSV.description.substring(3, 25);
-        } else {
+        }
+        else {
             syncJobDataCSV.DCMarker = "C";
 
             // 18 char --> 15 char + 3 decimals
@@ -343,10 +345,6 @@ public class SalesFileDelimiterExporter {
 
 
             String accountCode = syncJobData.getData().get("inventoryAccount").toString();
-
-            if (syncJobType.getName().equals(Constants.WASTAGE)) {
-                accountCode = syncJobData.getData().get("fromLocation").toString();
-            }
 
             if (accountCode.length() < 10) {
                 accountCode = String.format("%-10s", accountCode);

@@ -50,8 +50,14 @@ public class WastageV2Service {
         ArrayList<CostCenter> locations = generalSettings.getLocations();
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
-        ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
         ArrayList<WasteGroup> wasteGroups = syncJobType.getConfiguration().wastageConfiguration.wasteGroups;
+
+        ArrayList<OverGroup> overGroups;
+        if (!syncJobType.getConfiguration().uniqueOverGroupMapping){
+            overGroups =  generalSettings.getOverGroups();
+        }else{
+            overGroups =  syncJobType.getConfiguration().overGroups;
+        }
 
         ArrayList<HashMap<String, Object>> wastesStatus;
         JournalBatch journalBatch;
@@ -124,6 +130,12 @@ public class WastageV2Service {
                 }
 
                 driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+                /* Wait until table loaded */
+                try {
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tableContainer")));
+                } catch (Exception e) {
+                    System.out.println("Waiting");
+                }
 
                 WebElement table = driver.findElement(By.id("tableContainer"));
                 List<WebElement> rows = table.findElements(By.tagName("tr"));
@@ -166,15 +178,9 @@ public class WastageV2Service {
                             continue;
                         if (j == columns.indexOf("document_name")){
                             td = cols.get(columns.indexOf("document_name"));
-                            String extension = td.findElement(By.tagName("a")).getAttribute("href");
-                            int index = extension.indexOf('(');
-                            int index2 = extension.indexOf(')');
-                            extension = extension.substring(index+1 , index2);
-                            extension = extension.split(",")[1];
-                            extension = extension.replace(",", "");
-                            waste.put("waste_details_link", extension);
+                            String extension = td.findElement(By.tagName("a")).getText();
+                            waste.put("waste_details_element", extension);
                             continue;
-                            // reportGroup=100267&100267=rpt1&rpt1=myInvenItemWasteDetail
                         }
                         waste.put(columns.get(j), td.getText().strip());
                     }
@@ -186,7 +192,7 @@ public class WastageV2Service {
                             waste, syncJobType, driver, journalEntries);
                 }
 
-                journalBatch.setLocation(location);
+                journalBatch.setCostCenter(location);
                 journalBatch.setWaste(journalEntries);
                 journalBatches.add(journalBatch);
 
@@ -212,16 +218,25 @@ public class WastageV2Service {
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
-            // reportGroup=100267&100267=rpt1&rpt1=myInvenItemWasteDetail
 
-            driver.get(Constants.MICROS_REPORT_BASE_LINK + waste.get("waste_details_link"));
+            /* Click on specific document */
+            WebElement wastageDoc = driver.findElement(By.partialLinkText(String.valueOf(waste.get("waste_details_element"))));
+            wastageDoc.click();
 
-            WebElement tableContainer = driver.findElement(By.xpath("/html/body/div[3]/table"));
+            /* Wait until table loaded */
+            WebDriverWait wait = new WebDriverWait(driver, 30);
+            try {
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tableContainer")));
+            } catch (Exception e) {
+                System.out.println("Waiting");
+                return;
+            }
+            WebElement tableContainer = driver.findElement(By.id("tableContainer"));
             List<WebElement> rows = tableContainer.findElements(By.tagName("tr"));
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
 
             String group;
-            for (int i = 3; i < rows.size(); i++) {
+            for (int i = 2; i < rows.size(); i++) {
                 HashMap<String, Object> wasteDetails = new HashMap<>();
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements(By.tagName("td"));
@@ -264,9 +279,6 @@ public class WastageV2Service {
             }
 
             for (Journal journal : journals) {
-//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-//                    continue;
-
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
                 if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
@@ -324,10 +336,10 @@ public class WastageV2Service {
                 journalEntry.put("fromAccountCode", costCenter.accountCode);
 
                 journalEntry.put("toCostCenter", "Waste");
-                journalEntry.put("toAccountCode", "4110006");
+                journalEntry.put("toAccountCode", "");
 
                 journalEntry.put("fromLocation", costCenter.accountCode);
-                journalEntry.put("toLocation", "4110006");
+                journalEntry.put("toLocation", "");
 
                 String description =  journal.getOverGroup();
                 if (description.length() > 50){
@@ -335,7 +347,7 @@ public class WastageV2Service {
                 }
 
                 journalEntry.put("description", description);
-                journalEntry.put("transactionReference", "Waste" + " - " + location.costCenterReference);
+                journalEntry.put("transactionReference", location.costCenterReference);
 
                 journalEntry.put("transactionDate", String.valueOf(waste.get("waste_date")));
 
@@ -358,6 +370,8 @@ public class WastageV2Service {
                     journalEntries.add(journalEntry);
             }
 
+            /* Back to Waste Summary */
+            driver.findElement(By.id("100267")).click();
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -234,7 +234,7 @@ public class ExpensesXMLHelper {
             Document doc = db.parse(file);
             doc.getDocumentElement().normalize();
 
-            NodeList list = doc.getElementsByTagName("G_RESV_NAME_ID");
+            NodeList list = doc.getElementsByTagName("G_BOOKING_NO");
 
             for (int temp = 0; temp < list.getLength(); temp++) {
                 vat = 0; municipalityTax = 0; grandTotal = 0;
@@ -258,7 +258,8 @@ public class ExpensesXMLHelper {
                     temp++;
                     expenseItemTax = readExpensesRowDB(list, temp, generalSettings);
 
-                    if(expenseItemTax.description.toLowerCase().contains("municipality")){
+                    if(expenseItemTax.description.toLowerCase().contains("municipality") ||
+                            expenseItemTax.description.toLowerCase().contains("muncipality")){
                         expenseItem.municipalityTax = expenseItemTax.unitPrice;
                     }else if(expenseItemTax.description.toLowerCase().contains("vat")){
                         expenseItem.vat = expenseItemTax.unitPrice;
@@ -314,27 +315,27 @@ public class ExpensesXMLHelper {
                     }
                 }
 
-                if(dataList.size() > 0 && addItem){
-                    expenseObjectData = dataList.get(dataList.size() -1).getData();
-                    ArrayList<ExpenseItem> items = (ArrayList<ExpenseItem>) expenseObjectData.get("items");
-                    /* Check if this item already exists */
-                    for (ExpenseItem item : items) {
-                        if(item.itemNumber.equals(expenseItem.itemNumber)){
-                            expenseItem.cuFlag = "2"; // UPDATE ITEM
-                            if(!item.expenseDate.equals(expenseItem.expenseDate)){
-                                expenseItem.vat = String.valueOf(vat + Double.parseDouble(item.vat));
-                                expenseItem.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.municipalityTax));
-                                expenseItem.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
-                                expenseItem.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
-                            }
-                            break;
-                        }
-
-                    }
-                }
-
                 if(addItem)
                     expenseObject.items.add(expenseItem);
+
+//                if(dataList.size() > 0 && addItem){
+//                    expenseObjectData = dataList.get(dataList.size() -1).getData();
+//                    ArrayList<ExpenseItem> items = (ArrayList<ExpenseItem>) expenseObjectData.get("items");
+//                    /* Check if this item already exists */
+//                    for (ExpenseItem item : items) {
+//                        if(item.itemNumber.equals(expenseItem.itemNumber)){
+//                            expenseItem.cuFlag = "2"; // UPDATE ITEM
+//                            if(!item.expenseDate.equals(expenseItem.expenseDate)){
+//                                expenseItem.vat = String.valueOf(vat + Double.parseDouble(item.vat));
+//                                expenseItem.municipalityTax = String.valueOf(municipalityTax + Double.parseDouble(item.municipalityTax));
+//                                expenseItem.unitPrice = String.valueOf(unitPrice + Double.parseDouble(item.unitPrice));
+//                                expenseItem.grandTotal = String.valueOf(grandTotal + Double.parseDouble(item.grandTotal));
+//                            }
+//                            break;
+//                        }
+//
+//                    }
+//                }
             }
 
             saveExpenseObject(syncJob, syncJobType, expenseObject, syncJobDataList);
@@ -379,7 +380,7 @@ public class ExpensesXMLHelper {
 
         if (node.getNodeType() == Node.ELEMENT_NODE) {
             Element element = (Element) node;
-            item.bookingNo = element.getElementsByTagName("RESV_NAME_ID").item(0).getTextContent();
+            item.bookingNo = element.getElementsByTagName("BOOKING_NO").item(0).getTextContent();
 
             try{
                 item.roomNo = Integer.parseInt(element.getElementsByTagName("ROOM").item(0).getTextContent());
@@ -393,7 +394,7 @@ public class ExpensesXMLHelper {
             item.description = element.getElementsByTagName("DESCRIPTION").item(0).getTextContent();
 
             typeName = element.getElementsByTagName("TC_GROUP").item(0).getTextContent();
-            item.expenseTypeId = conversions.checkBookingTypeExistence(expenseTypes, typeName).getTypeId();
+            item.expenseTypeId = conversions.checkBookingTypeExistence(expenseTypes, item.itemNumber).getTypeId();
 
             generates = element.getElementsByTagName("TAX_ELEMENTS").item(0).getTextContent();
             item.generates = generates.replaceAll(",", "").replaceAll("\\s", "");

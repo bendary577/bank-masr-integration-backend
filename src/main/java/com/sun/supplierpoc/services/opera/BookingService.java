@@ -758,7 +758,7 @@ public class BookingService {
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
 //            fileName = "SingleExpenses" + '.' + bookingConfiguration.fileExtension;
-            fileName = "Expenses20211203.xml";
+//            fileName = "expensesperreserv2.xml";
             String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Expenses/" + fileName;
             String localFilePath = account.getName() + "/Expenses/";
 
@@ -773,14 +773,16 @@ public class BookingService {
             }
 
             for (SyncJobData syncData : syncJobData) {
-//                syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "");
+                if(syncData.getData().get("roomNo").equals(-1)){
+                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "Neglected Reservation");
+                }else{
+                    expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
 
-                expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
-
-                if(expenseResponse.isStatus()){
-                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
-                }else {
-                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, expenseResponse.getMessage());
+                    if(expenseResponse.isStatus()){
+                        syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
+                    }else {
+                        syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, expenseResponse.getMessage());
+                    }
                 }
             }
 

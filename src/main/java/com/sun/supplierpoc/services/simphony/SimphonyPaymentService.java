@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyCheck;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.TransactionResponse;
@@ -131,33 +132,25 @@ public class SimphonyPaymentService {
 
         float amount = Float.parseFloat(simphonyPaymentReq.getTotalDue()) * 100;
 
-        String POS_MACHINE_URL = "http://192.168.1.4:7070";
-
-//        if(transactionRequest.getSiteId() != null && transactionRequest.getSiteId().equals("ACT|SDMD")) {
-//            POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(0).getIp() +
-//                    ":" + generalSettings.getPosMachineMaps().get(0).getPort();
-//        }else{
-//            POS_MACHINE_URL = "http://" + generalSettings.getPosMachineMaps().get(1).getIp() +
-//                    ":" + generalSettings.getPosMachineMaps().get(1).getPort();
-//        }
-
+        String POS_MACHINE_URL = "http://192.168.1.5:7070";
+        for(PosMachineMap posMachineMap : generalSettings.getPosMachineMaps()) {
+            if (simphonyPaymentReq.getCashierNumber() != 0 && posMachineMap.getFlag().equals(String.valueOf(simphonyPaymentReq.getCashierNumber()))){
+                POS_MACHINE_URL = "http://" + posMachineMap.getIp() +
+                        ":" + posMachineMap.getPort();
+            }
+        }
         ResponseEntity<String> result = null;
-
         try {
-
             result = restTemplate.getForEntity(POS_MACHINE_URL + "?transactionAmount=" +
                     Math.round(1f) + "&currency=" + currency + "&transType=" + transType, String.class);
-
         } catch (Exception e) {
-
             e.printStackTrace();
             logger.error(String.join("Failed in transaction method with ", e.getMessage()));
-
         }
 
         if (result != null && result.getBody() != null) {
-            // Parse POS machine result
 
+            // Parse POS machine result
             TerminalResponse terminalResponse = new Gson().fromJson(result.getBody(), TerminalResponse.class);
 
             if (terminalResponse.getRespCode().equals("0")) {

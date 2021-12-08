@@ -1,6 +1,9 @@
 package com.sun.supplierpoc;
 
 public class Constants {
+    ///////////////////////////////////////// OHRA Versions ////////////////////////////////////////////////////////////
+    public static String VERSION_1 = "version1";
+    public static String VERSION_2 = "version2";
 
     ///////////////////////////////////////// Sync Job Data Status//////////////////////////////////////////////////////
     public static String SUCCESS = "Success";
@@ -198,6 +201,7 @@ public class Constants {
 
     public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
     public static String MICROS_REPORT_BASE_LINK = "https://mte4-ohra.oracleindustry.com/portal/";
+    public static String MICROS_INVENTORY_BASE_LINK = "https://mte4-ohra-ohim.oracleindustry.com";
     public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
     public static String MICROS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports";
 
@@ -220,8 +224,11 @@ public class Constants {
     public static String MICROS_COS_REPORTS_COST_CENTER = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100238";
 
     // WASTAGE LINKS
-    public static String MICROS_WASTE_GROUPS_LINK =  MICROS_REPORT_BASE_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+    public static String MICROS_WASTE_GROUPS_LINK =  MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+    public static String MICROS_OVER_GROUPS_LINK =  MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/OverGroups/OverviewOverGroup.aspx";
+    public static String MICROS_MAJOR_GROUPS_LINK = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
 
+    public static String MICROS_WATE_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100267";
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

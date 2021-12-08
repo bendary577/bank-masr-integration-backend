@@ -50,6 +50,8 @@ public class WastageController {
     @Autowired
     private WastageService wastageService;
     @Autowired
+    private WastageV2Service wastageV2Service;
+    @Autowired
     private SunService sunService;
     @Autowired
     private InvoiceController invoiceController;
@@ -59,6 +61,14 @@ public class WastageController {
     private SyncJobDataService syncJobDataService;
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private GoogleDriveService googleDriveService;
+    @Autowired
+    private ImageService imageService;
+    @Autowired
+    FtpService ftpService;
+    @Autowired
+    private SalesController salesController;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -113,6 +123,8 @@ public class WastageController {
             overGroups =  wastageSyncJobType.getConfiguration().overGroups;
         }
 
+        ///////////////////////////////////////// Start Validation /////////////////////////////////////////////////////
+
         HashMap<String, Object> sunConfigResponse = conversions.checkSunDefaultConfiguration(wastageSyncJobType, account.getERD());
         if (sunConfigResponse != null){
             return sunConfigResponse;
@@ -134,7 +146,8 @@ public class WastageController {
             }
         }
 
-        if (generalSettings.getCostCenterAccountMapping().size() == 0){
+        if (account.getMicrosVersion().equals(Constants.VERSION_1) &&
+                generalSettings.getCostCenterAccountMapping().size() == 0){
             String message = "Configure cost center before sync wastage.";
             response.put("message", message);
             response.put("success", false);
@@ -155,6 +168,8 @@ public class WastageController {
             return response;
         }
 
+        ///////////////////////////////////////// Start New Job ///////////////////////////////////////////////////////
+
         SyncJob syncJob = new SyncJob(Constants.RUNNING, "", new Date(), null, userId,
                 account.getId(), wastageSyncJobType.getId(), 0);
 
@@ -163,15 +178,28 @@ public class WastageController {
         ArrayList<JournalBatch> wasteBatches = new ArrayList<>();
         try {
             Response data;
-            if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
-                data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
-                        overGroups, wasteGroups, account);
-                wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+            if (account.getMicrosVersion().equals(Constants.VERSION_1)) {
+                if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
+                    data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
+                            overGroups, wasteGroups, account);
+                    wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+                }
+                else{
+                    data = wastageService.getWastageReportData(wastageSyncJobType, generalSettings, account);
+                    wasteBatches = data.getJournalBatches();
+                }
+            } else{
+                if(wastageSyncJobType.getConfiguration().wastageConfiguration.wasteReport.equals(Constants.INVENTORY_WASTE)){
+                    data = wastageService.getWastageData(wastageSyncJobType, items, itemGroups, costCenters,
+                            overGroups, wasteGroups, account);
+                    wasteBatches.add(new JournalBatch(new CostCenter(), data.getWaste()));
+                }
+                else{
+                    data = wastageV2Service.getWastageReportData(wastageSyncJobType, generalSettings, account);
+                    wasteBatches = data.getJournalBatches();
+                }
             }
-            else{
-                data = wastageService.getWastageReportData(wastageSyncJobType, generalSettings, account);
-                wasteBatches = data.getJournalBatches();
-            }
+
 
             if (data.isStatus()) {
                 if (wasteBatches.size() > 0) {
@@ -230,46 +258,31 @@ public class WastageController {
                         FtpClient ftpClient = new FtpClient();
                         ftpClient = ftpClient.createFTPClient(account);
 
+                        boolean sendStatus = true;
+                        File file = null;
+                        String fileStoragePath = "";
+                        ArrayList<File> files = new ArrayList<>();
                         if(wastageSyncJobType.getConfiguration().exportFilePerLocation){
-                            ArrayList<File> files = createWastesFilePerLocation(wasteBatches, wastageSyncJobType, account.getName());
+                            files = createWastesFilePerLocation(wasteBatches, wastageSyncJobType, account.getName());
                         }else {
                             SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(wastageSyncJobType, wasteList);
-                            File file = exporter.prepareNDFFile(wasteList, wastageSyncJobType, account.getName(), "");
+                            file = exporter.prepareNDFFile(wasteList, wastageSyncJobType, account.getName(), "");
+                            if (file != null)
+                                files.add(file);
                         }
 
-                        if(ftpClient != null){
-                            if(ftpClient.open()){
-//                                boolean sendFileFlag = false;
-//                                try {
-//                                    sendFileFlag = ftpClient.putFileToPath(file, file.getName());
-//                                    ftpClient.close();
-//                                } catch (IOException e) {
-//                                    ftpClient.close();
-//                                }
-//                                if (sendFileFlag){
-                            if (true){
-                                    syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);
-                                    syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
-                                            "Sync wastage successfully.", Constants.SUCCESS);
+                        if(files.size() > 0){
+                            sendStatus = salesController.isSendStatus(account, sendStatus, fileStoragePath, files, imageService, googleDriveService, ftpService);
+                        }
 
-                                    response.put("success", true);
-                                    response.put("message", "Sync wastage successfully.");
-                                }else {
-                                    syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.FAILED);
-                                    syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
-                                            "Failed to sync wastage to sun system via FTP.", Constants.FAILED);
 
-                                    response.put("success", false);
-                                    response.put("message", "Failed to sync wastage to sun system via FTP.");
-                                }
-                            }
-                            else {
-                                syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
-                                        "Failed to connect to sun system via FTP.", Constants.FAILED);
+                        if(sendStatus){
+                            syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);
+                            syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
+                                    "Sync wastage successfully.", Constants.SUCCESS);
 
-                                response.put("success", false);
-                                response.put("message", "Failed to connect to sun system via FTP.");
-                            }
+                            response.put("success", true);
+                            response.put("message", "Sync wastage successfully.");
                         }else{
                             syncJobDataService.updateSyncJobDataStatus(wasteList, Constants.SUCCESS);
                             syncJobService.saveSyncJobStatus(syncJob, wasteBatches.size(),
@@ -392,6 +405,7 @@ public class WastageController {
                 wasteList = new ArrayList<>(locationBatch.getWasteData());
  
                 excelExporter = new SalesFileDelimiterExporter(syncJobType, wasteList);
+
                 file = excelExporter.prepareNDFFile(wasteList, syncJobType, AccountName, locationBatch.getCostCenter().costCenterReference);
                 if(file != null)
                     locationFiles.add(file);

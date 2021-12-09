@@ -229,6 +229,10 @@ public class Constants {
     public static String MICROS_MAJOR_GROUPS_LINK = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
 
     public static String MICROS_WATE_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100267";
+
+    // CONSUMPTION LINKS >> Inventory Cost of Sales
+    public static String MICROS_CONSUMPTION_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100067";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";

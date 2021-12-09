@@ -249,8 +249,17 @@ public class JournalController {
                             consumptionCostCenters, account);
                 }
             } else if(account.getMicrosVersion().equals("version2")){
-                ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
-                data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+                if (consumptionBasedOnType.equals("Cost Center")) {
+                    data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+                }
+                else if (consumptionBasedOnType.equals("Location")) {
+                    data = journalV2Service.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
+                } else {
+                    ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
+                    ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+                    data = journalService.getJournalDataByItemGroup(journalSyncJobType, consumptionLocations,
+                            consumptionCostCenters, account);
+                }
             } else {
                 response.put("message", "Please configure account version before starting the process.");
                 response.put("success", false);
@@ -319,7 +328,7 @@ public class JournalController {
                             response.put("success", false);
                         }
                     }
-                    else if (addedJournalBatches.size() > 0 && !account.getSendMethod().equals("other")) {
+                    else if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                         List<SyncJobData> consumptionList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                         File file;
@@ -344,7 +353,7 @@ public class JournalController {
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
                                     "Sync consumption successfully.", Constants.SUCCESS);
 
-                            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
+                            if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
                                 response.put("files", files);
                             }
 

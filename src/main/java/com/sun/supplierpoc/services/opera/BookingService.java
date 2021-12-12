@@ -580,10 +580,10 @@ public class BookingService {
 
             if(response.isStatus()){
                 syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData, Constants.SUCCESS);
+                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.SUCCESS, response.getMessage());
             }else {
                 syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.FAILED);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData, Constants.FAILED);
+                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.FAILED, response.getMessage());
             }
         } catch (Exception e) {
             e.printStackTrace();

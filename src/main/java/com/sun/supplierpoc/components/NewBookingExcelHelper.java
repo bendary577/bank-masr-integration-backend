@@ -816,13 +816,28 @@ public class NewBookingExcelHelper {
                 syncJobType.getId());
 
         boolean createUpdateFlag;
-
-        if (list.size() > 0 && !list.get(0).getStatus().equals(Constants.FAILED)) {
-            // Update, Check if there is any change
+        boolean found;
+        if (list.size() > 0 && !list.get(0).getData().get("transactionId").equals("")){
+            //Update
             bookingDetails.cuFlag = "2";
             bookingDetails.transactionId = (String) list.get(0).getData().get("transactionId");
             createUpdateFlag = checkChanges(bookingDetails, list.get(0));
-        } else {
+
+            found = false;
+            for (SyncJobData data : list) {
+                if(bookingDetails.transactionTypeId == (int) data.getData().get("transactionTypeId") &&
+                        data.getStatus().equals(Constants.SUCCESS)){
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found){
+                bookingDetails.cuFlag = "1";
+                createUpdateFlag = true;
+            }
+
+        }else{
             // New
             bookingDetails.cuFlag = "1";
             bookingDetails.transactionId = "";
@@ -859,9 +874,11 @@ public class NewBookingExcelHelper {
     }
 
     private boolean checkChanges(BookingDetails bookingDetails, SyncJobData data) {
-        if (bookingDetails.transactionTypeId != (int) data.getData().get("transactionTypeId"))
-            return true;
-        else if (!bookingDetails.checkInDate.equals(data.getData().get("checkInDate")))
+//        if (bookingDetails.transactionTypeId != (int) data.getData().get("transactionTypeId")){
+//            return true;
+//        }
+//        else
+        if (!bookingDetails.checkInDate.equals(data.getData().get("checkInDate")))
             return true;
         else if (!bookingDetails.checkOutDate.equals(data.getData().get("checkOutDate")))
             return true;

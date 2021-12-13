@@ -208,6 +208,9 @@ public class Constants {
     // SALES LINKS
     // Reports >> Tenders Media >> Payments bye Tender Types
     public static String MICROS_TENDERS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
+   // Approved Invoices
+   public static String MICROS_APPROVED_INVOICES = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+
 
     // Reports >> Taxes >> Daily Taxes by Tax Type
     public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";

@@ -140,8 +140,8 @@ public class NewBookingExcelHelper {
                         if (bookingDetails.checkOutTime.equals(""))
                             bookingDetails.checkOutTime = "12:00";
 
-                        bookingDetails.grandTotal = conversions.roundUpDouble(
-                                bookingDetails.grandTotal * bookingDetails.noOfRooms);
+//                        bookingDetails.grandTotal = conversions.roundUpDouble(
+//                                bookingDetails.grandTotal * bookingDetails.noOfRooms);
 
                         saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
                     }
@@ -207,8 +207,8 @@ public class NewBookingExcelHelper {
             if (bookingDetails.checkOutTime.equals(""))
                 bookingDetails.checkOutTime = "12:00";
 
-            bookingDetails.grandTotal = conversions.roundUpDouble(
-                    bookingDetails.grandTotal * bookingDetails.noOfRooms);
+//            bookingDetails.grandTotal = conversions.roundUpDouble(
+//                    bookingDetails.grandTotal * bookingDetails.noOfRooms);
 
             saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
 
@@ -432,8 +432,9 @@ public class NewBookingExcelHelper {
                         if (bookingDetails.checkOutTime.equals(""))
                             bookingDetails.checkOutTime = "120000";
 
-                        bookingDetails.grandTotal = conversions.roundUpDouble(
-                                bookingDetails.grandTotal * bookingDetails.noOfRooms);
+//                        bookingDetails.dailyRoomRate = bookingDetails.totalRoomRate / bookingDetails.totalDurationDays;
+//                        bookingDetails.grandTotal = conversions.roundUpDouble(
+//                                bookingDetails.grandTotal * bookingDetails.noOfRooms);
 
                         saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
                     }
@@ -514,8 +515,8 @@ public class NewBookingExcelHelper {
                     bookingDetails.municipalityTax = conversions.roundUpDouble(bookingDetails.municipalityTax + municipalityTax);
                     bookingDetails.grandTotal = conversions.roundUpDouble(bookingDetails.grandTotal + grandTotal);
 
-                    bookingDetails.dailyRoomRate = conversions.roundUpDouble(basicRoomRate + rateCode.basicPackageValue);
-                    bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + rateCode.basicPackageValue);
+                    bookingDetails.dailyRoomRate = conversions.roundUpDouble(basicRoomRate + totalPackageAmount + rateCode.basicPackageValue);
+                    bookingDetails.totalRoomRate = conversions.roundUpDouble(bookingDetails.totalRoomRate + basicRoomRate + totalPackageAmount + rateCode.basicPackageValue);
                 }
             }
 
@@ -525,8 +526,9 @@ public class NewBookingExcelHelper {
             if (bookingDetails.checkOutTime.equals(""))
                 bookingDetails.checkOutTime = "120000";
 
-            bookingDetails.grandTotal = conversions.roundUpDouble(
-                    bookingDetails.grandTotal * bookingDetails.noOfRooms);
+//            bookingDetails.dailyRoomRate = bookingDetails.totalRoomRate / bookingDetails.totalDurationDays;
+//            bookingDetails.grandTotal = conversions.roundUpDouble(
+//                    bookingDetails.grandTotal * bookingDetails.noOfRooms);
 
             saveBooking(bookingDetails, syncJob, syncJobType, syncJobDataList);
 

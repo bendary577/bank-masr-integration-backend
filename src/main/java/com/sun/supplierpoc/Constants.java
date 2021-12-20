@@ -17,6 +17,7 @@ public class Constants {
 
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_USER = "Invalid user.";
+    public static String INVALID_ACCOUNT = "Invalid Account Id, Please provide valid id.";
     public static String NOT_ELIGIBLE_ACCOUNT = "This account is not eligible for this action.";
     public static String NOT_ELIGIBLE_USER = "This user is not eligible for this action.";
     public static String ACCOUNT_NOT_EXIST = "This account is not exist.";

@@ -8,6 +8,7 @@ import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.SupplierService;
@@ -17,6 +18,8 @@ import com.systemsunion.ssc.client.SoapFaultException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +47,7 @@ public class SupplierController {
 
     public Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -384,7 +388,7 @@ public class SupplierController {
 
 
         try {
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
+            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                 driver.quit();
 
                 response.put("status", Constants.FAILED);
@@ -394,6 +398,7 @@ public class SupplierController {
             }
 
             driver.get(Constants.SUPPLIER_GROUPS_URL);
+
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
@@ -464,14 +469,49 @@ public class SupplierController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to establish connection with firefox driver.");
         }
 
+
+
         try {
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
-                driver.quit();
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid username and password.");
+
+            if(account.getMicrosVersion().equals("version1")) {
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
+                    driver.quit();
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid username and password.");
+                }
+
+                driver.get(Constants.SUPPLIER_URL);
+            }else{
+
+                if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                    driver.quit();
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid username and password.");
+                }
+
+                try{
+                    WebDriverWait wait = new WebDriverWait(driver, 30);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+//
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+
+                        driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/MasterData/Vendors/OverviewVendor.aspx");
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-
-            driver.get(Constants.SUPPLIER_URL);
-
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));

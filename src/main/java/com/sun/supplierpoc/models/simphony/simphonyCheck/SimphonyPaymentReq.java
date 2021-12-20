@@ -27,7 +27,7 @@ public class SimphonyPaymentReq implements Serializable {
     private String totalDue;
 
 //    @NotNull(message = "Employee ID can't be empty.")
-    private int cashierNumber;
+    private String cashierNumber;
 
     private String employeeName;
 
@@ -88,11 +88,6 @@ public class SimphonyPaymentReq implements Serializable {
         this.totalDue = totalDue;
     }
 
-    public int getCashierNumber() {
-        return cashierNumber;
-    }
-
-
     public String getEmployeeName() {
         return employeeName;
     }
@@ -101,7 +96,11 @@ public class SimphonyPaymentReq implements Serializable {
         this.employeeName = employeeName;
     }
 
-    public void setCashierNumber(int cashierNumber) {
+    public String getCashierNumber() {
+        return cashierNumber;
+    }
+
+    public void setCashierNumber(String cashierNumber) {
         this.cashierNumber = cashierNumber;
     }
 

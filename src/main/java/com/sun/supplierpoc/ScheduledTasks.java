@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -32,7 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
-@Controller
+@RestController
 public class ScheduledTasks {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
@@ -112,6 +113,7 @@ public class ScheduledTasks {
                     applicationUser.setExpire(applicationUser.getExpire() - 1);
                 }
             }
+//            applicationUserRepo.saveAll(applicationUsers);
 
             if (syncJobTypes.size() == 0) continue;
 

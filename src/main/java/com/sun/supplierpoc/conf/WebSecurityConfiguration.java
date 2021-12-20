@@ -77,7 +77,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().antMatchers("/opera/*");
         web.ignoring().antMatchers("/CreateOrder");
-        web.ignoring().antMatchers("/Simphony/*");
+        web.ignoring().antMatchers("/Simphony/**");
         web.ignoring().antMatchers("/zeal/**");
         web.ignoring().antMatchers("/addAccount");
         web.ignoring().antMatchers("/opera/**");

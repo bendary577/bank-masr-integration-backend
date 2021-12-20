@@ -36,6 +36,7 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/paymentTest").authenticated()
                 .antMatchers("/role/test/**").authenticated()
                 .antMatchers("/test/**").authenticated()
+                .antMatchers("/Simphony/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }
 

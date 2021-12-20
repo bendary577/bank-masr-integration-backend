@@ -6,8 +6,9 @@ import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.boot.devtools.remote.client.HttpHeaderInterceptor;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,8 @@ import java.util.List;
 @Service
 public class CallRestService {
 
-//    Logger logger = LoggerFactory.getLogger(CallRestService.class);
+    Logger logger = LoggerFactory.getLogger(CallRestService.class);
+
     @Autowired
     private RestTemplate restTemplate;
 

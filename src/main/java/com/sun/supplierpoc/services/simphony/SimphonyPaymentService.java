@@ -134,7 +134,7 @@ public class SimphonyPaymentService {
 
         String POS_MACHINE_URL = "http://192.168.1.5:7070";
         for(PosMachineMap posMachineMap : generalSettings.getPosMachineMaps()) {
-            if (simphonyPaymentReq.getCashierNumber() != 0 && posMachineMap.getFlag().equals(String.valueOf(simphonyPaymentReq.getCashierNumber()))){
+            if (!simphonyPaymentReq.getCashierNumber().equals("") && posMachineMap.getFlag().equals(String.valueOf(simphonyPaymentReq.getCashierNumber()))){
                 POS_MACHINE_URL = "http://" + posMachineMap.getIp() +
                         ":" + posMachineMap.getPort();
             }

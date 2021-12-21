@@ -501,8 +501,18 @@ public class JournalV2Service {
                     System.out.println("Waiting");
                 }
 
+                //Run
                 driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
-                /* Wait until table loaded */
+
+                // Validate Report Parameters
+                Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate,null);
+
+                if(!validateParameters.isStatus()){
+                    response.setStatus(false);
+                    response.setMessage(validateParameters.getMessage());
+                    return response;
+                }
+
                 try {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tableContainer")));
                 } catch (Exception e) {
@@ -657,7 +667,6 @@ public class JournalV2Service {
         } catch (Exception e) {
             System.out.println("Waiting");
         }
-
         List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
         response.setStatus(true);

@@ -691,6 +691,7 @@ public class InvoiceService {
             }
         }
 
+
         driver.get((String) invoice.get("reference_link"));
 
         WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -882,9 +883,9 @@ public class InvoiceService {
 
                 String description;
                 if (!flag){
-                    description = "Inv F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
+                    description = "Inv F "+ supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
                 }else{
-                    description = "CN F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
+                    description = "CN F "+ supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
                 }
 
                 if (description.length() > 50){

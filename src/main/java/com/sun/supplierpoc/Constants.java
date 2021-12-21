@@ -150,6 +150,12 @@ public class Constants {
 
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
+    // Items_Group_link
+    public static String OHRA_ITEMS_GROUP_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
+
+    // Items Links
+    public static String OHRA_ITEMS_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/Items/OverviewItem.aspx";
+
     // Daily Detail >> Discount
     public static String DISCOUNT_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=13";
     public static String DISCOUNT_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=13&reportID=DiscDailyDetail&method=run";
@@ -250,7 +256,7 @@ public class Constants {
     public static String LAST_YEAR_YTD = "Last Year YTD";
     public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
     public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
-
+    public static String POWER_SELECT="Power Select";
     //////////////////////////////////////////////// AMAZON PAYMENT /////////////////////////////////////////////////////
 
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";

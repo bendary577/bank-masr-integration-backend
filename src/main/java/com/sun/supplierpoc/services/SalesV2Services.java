@@ -15,7 +15,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.crypto.Data;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -266,9 +270,18 @@ public class SalesV2Services {
             } catch (Exception e) {
                 System.out.println("Waiting");
             }
-
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // validate Report parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
+
 
             try{
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table")));
@@ -277,7 +290,7 @@ public class SalesV2Services {
                 response.setMessage(Constants.NO_INFO);
                 return response;
             }
-            WebElement statTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table"));
+       WebElement statTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -361,15 +374,26 @@ public class SalesV2Services {
             }
 
             // Run
-            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
-            try{
+
+              // Validate Report Parameters
+              Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+              if(!validateParameters.isStatus()){
+                  response.setStatus(false);
+                  response.setMessage(validateParameters.getMessage());
+                  return response;
+              }
+
+                try{
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_6316_0']/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
                 return response;
             }
+
 
             WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_6316_0']/table"));
 
@@ -468,6 +492,15 @@ public class SalesV2Services {
 
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
 
             // Fetch tenders table
             try{
@@ -584,6 +617,15 @@ public class SalesV2Services {
 
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
 
             // Fetch tenders table
             try{
@@ -710,6 +752,14 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
             // Fetch major groups table
             try{
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_5723_0']/table")));

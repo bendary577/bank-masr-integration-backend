@@ -4,6 +4,8 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -240,5 +242,56 @@ public class MicrosFeatures {
         return response;
     }
 
+    public String getActualBusinessDate(WebDriver driver){
+      return    driver.findElement(By.id("dateTime_input")).getText();
+    }
+    public String getActualLocation(WebDriver driver){
+        return driver.findElement(By.id("search_locations_input")).getText();
+    }
+    public String getActualRevenueCenter(WebDriver driver){
+      return driver.findElement(By.id("search-rvc-input")).getText();
+    }
+
+
+    public Response checkReportParameters(WebDriver driver,String fromDate,String toDate,String businessDate,String locationName ) throws Exception{
+
+        Response response = new Response();
+        String actualBusinessDate= driver.findElement(By.id("dateTime_input")).getText();;
+        String actaulLocation = driver.findElement(By.id("search_locations_input")).getText();
+       // String revenueCenter = driver.findElement(By.id("search-rvc-input")).getText();
+
+
+        if(actualBusinessDate.equals(Constants.POWER_SELECT)){
+            driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[5]/div[2]/div[2]/div[1]/div/oj-button")).click();
+            String rangeDate = driver.findElement(By.className("oj-fbgbu-popup-list")).getText();
+
+            DateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
+            Date formatedFromDate = formater.parse(fromDate);
+            Date formatedToDate = formater.parse(toDate);
+            DateFormat BusinessDateFormatV2 = new SimpleDateFormat("MM/dd/yyyy");
+            String modifiedFromDate = BusinessDateFormatV2.format(formatedFromDate);
+            String modifiedToDate = BusinessDateFormatV2.format(formatedToDate);
+            String modifiedBusinessDate = modifiedFromDate +" - "+ modifiedToDate;
+            if(!rangeDate.equals(modifiedBusinessDate)){
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                return response;
+            }
+        }
+
+        else if(!actualBusinessDate.equals(Constants.LAST_MONTH) && businessDate.equals(Constants.LAST_MONTH)){
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_BUSINESS_DATE);
+            return response;
+        }
+
+        if(!actaulLocation.equals(locationName)){
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_LOCATION);
+            return response;
+        }
+        response.setStatus(true);
+        return response;
+    }
 
 }

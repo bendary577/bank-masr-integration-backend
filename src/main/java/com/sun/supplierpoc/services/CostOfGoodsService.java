@@ -430,7 +430,18 @@ public class CostOfGoodsService {
                                 System.out.println(ex.getMessage());
                             }
 
+                            //RUN
                             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+
+                            // Validate Report Parameters
+                            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+                            if(!validateParameters.isStatus()){
+                                response.setStatus(false);
+                                response.setMessage(validateParameters.getMessage());
+                                return response;
+                            }
 
                             fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, orderType, journals, driver);
                         }
@@ -452,6 +463,16 @@ public class CostOfGoodsService {
                         }
 
                         driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+
+                        // Validate Report Parameters
+                        Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+                        if(!validateParameters.isStatus()){
+                            response.setStatus(false);
+                            response.setMessage(validateParameters.getMessage());
+                            return response;
+                        }
 
                         fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, null, journals, driver);
                     }

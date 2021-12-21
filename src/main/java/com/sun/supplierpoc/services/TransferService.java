@@ -114,7 +114,7 @@ public class TransferService {
 
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+               //         wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
                         driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/Store/TransferNew/TrStatus.aspx?Type=Booked");
 
                     }else {

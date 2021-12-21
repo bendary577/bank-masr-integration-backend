@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping(("/test/feature"))
+@RequestMapping(("/feature"))
 public class FeatureController {
 
     @Autowired
@@ -79,21 +79,27 @@ public class FeatureController {
 //        }
     }
 
-    //, Principal principal
     @GetMapping("/getFeatures")
-    public ResponseEntity<?> featureRequest(@RequestParam(required = false, name = "accountId", defaultValue = "") String accountId){
+    public ResponseEntity<?> featureRequest(Principal principal,
+                                            @RequestParam(required = false, name = "accountId", defaultValue = "") String accountId){
         Response response = new Response();
-//        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-//        if(user != null){
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if(user != null){
+            if(accountId == null){
+                response.setMessage(Constants.INVALID_ACCOUNT);
+                response.setStatus(false);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+
             List<Feature> features = featureService.findAllFeature(accountId);
             response.setStatus(true);
             response.setData(features);
             return new ResponseEntity<>(response, HttpStatus.OK);
-//        }else{
-//            response.setMessage(Constants.INVALID_USER);
-//            response.setStatus(false);
-//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-//        }
+        }else{
+            response.setMessage(Constants.INVALID_USER);
+            response.setStatus(false);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
     }
     //,Principal principal
     @PostMapping("addAccountFeatures")

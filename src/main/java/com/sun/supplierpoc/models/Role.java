@@ -20,8 +20,8 @@ public class Role {
     @JsonIgnore
     private String featureId;
 
-    @DBRef
-    private Feature feature;
+//    @DBRef
+//    private Feature feature;
 
     public Role() {
     }
@@ -57,12 +57,12 @@ public class Role {
     public void setReference(String reference) {
         this.reference = reference;
     }
-
-    public Feature getFeature() {
-        return feature;
-    }
-
-    public void setFeature(Feature feature) {
-        this.feature = feature;
-    }
+//
+//    public Feature getFeature() {
+//        return feature;
+//    }
+//
+//    public void setFeature(Feature feature) {
+//        this.feature = feature;
+//    }
 }

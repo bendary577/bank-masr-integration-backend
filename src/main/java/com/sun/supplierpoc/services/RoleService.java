@@ -86,12 +86,13 @@ public class RoleService {
                     Account account = accountOptional.get();
                     for(Role role : roles){
                         String featureId = role.getFeatureId();
-                        if(role.getFeature() != null){
-                            featureId = role.getFeature().getId();
-                        }
+//                        if(role.getFeature() != null){
+//                            featureId = role.getFeature().getId();
+//                        }
                         if(!conversions.checkIfAccountHasFeature(account.getFeatures(), featureId)){
-                            response.setMessage("Account " + account.getName() + " doesn't have the feature of "
-                                    + role.getFeature().getName());
+//                            response.setMessage("Account " + account.getName() + " doesn't have the feature of "
+//                                    + role.getFeature().getName());
+                            response.setMessage("Account " + account.getName() + " doesn't have the feature");
                             response.setStatus(false);
                             return response;
                         }

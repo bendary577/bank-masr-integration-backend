@@ -40,7 +40,7 @@ public class FeatureService {
     }
 
     public List<Feature> findAllFeature(String accountId) {
-        List<Feature> features ;
+        List<Feature> features;
         if(accountId.equals("")){
             features = featureRepository.findAll();
         }else{

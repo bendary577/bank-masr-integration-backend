@@ -59,7 +59,8 @@ public class SyncJobDataService {
             }else {
                 data = syncJobDataRepo.findByBookingNoAndSyncJobIdAndstatus(bookingNo, syncJob.getId(), Constants.SUCCESS);
             }
-            syncJobData.addAll(data);
+            if(data != null)
+                syncJobData.addAll(data);
         }
 
         return syncJobData;

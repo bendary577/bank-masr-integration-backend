@@ -381,7 +381,7 @@ public class MenuItemService {
         List<DbMenuItemMaster> dbMenuItemMasters = masterObject.getDbMenuItemMaster();
 
         for (DbMenuItemMaster dbMenuItemMaster : dbMenuItemMasters){
-            if(dbMenuItemDefinition.getMenuItemMasterID().equals(dbMenuItemMaster.getMenuItemMasterID())){
+            if(dbMenuItemDefinition.getMenuItemMasterID().equals(String.valueOf(dbMenuItemMaster.getMenuItemMasterID()))){
                 return dbMenuItemMaster.getObjectNumber();
             }
         }
@@ -407,9 +407,9 @@ public class MenuItemService {
         for (DbMenuItemDefinition menuItem : menuItems) {
 
             MenuItemResponse itemResponse = new MenuItemResponse();
-            if (!menuItem.getMenuItemClassObjNum().equals(null) && !menuItem.getMenuItemClassObjNum().equals("0")) {
-                itemResponse = getCondiments(menuItem, syncMenuItemClasses, menuItems);
-            }
+//            if (!menuItem.getMenuItemClassObjNum().equals(null) && !menuItem.getMenuItemClassObjNum().equals("0")) {
+//                itemResponse = getCondiments(menuItem, syncMenuItemClasses, menuItems);
+//            }
 
             HashMap<String, Object> menuItemData = new HashMap<>();
 
@@ -422,11 +422,11 @@ public class MenuItemService {
             menuItemData.put("secondName", menuItem.getName2().getStringText());
             itemResponse.setSecondName(menuItem.getName2().getStringText());
 
-            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
-            itemResponse.setAvailability(menuItem.getCheckAvailability().toString());
+//            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
+//            itemResponse.setAvailability(menuItem.getCheckAvailability().toString());
 
-            menuItemData.put("requiredCondiments", itemResponse.getRequiredCondiments());
-            menuItemData.put("optionalCondiments", itemResponse.getOptionalCondiments());
+//            menuItemData.put("requiredCondiments", itemResponse.getRequiredCondiments());
+//            menuItemData.put("optionalCondiments", itemResponse.getOptionalCondiments());
 
             if (menuItem.getMenuItemPrice() != null) {
                 menuItemData.put("price", menuItem.getMenuItemPrice().getPrice());

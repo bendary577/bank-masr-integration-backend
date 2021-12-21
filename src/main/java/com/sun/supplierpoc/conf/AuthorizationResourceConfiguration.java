@@ -35,6 +35,7 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/amazon/**").authenticated()
                 .antMatchers("/paymentTest").authenticated()
                 .antMatchers("/role/test/**").authenticated()
+                .antMatchers("/feature/test/**").authenticated()
                 .antMatchers("/test/**").authenticated()
                 .antMatchers("/Simphony/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());

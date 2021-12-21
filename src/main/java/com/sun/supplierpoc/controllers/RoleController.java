@@ -79,31 +79,32 @@ public class RoleController {
 //        }
 
     }
-    //, Principal principal
-    @PostMapping("/test/addUserRole")
-    public ResponseEntity<?> addUserRole(@RequestParam("userId") String userId,
+
+    @PostMapping("/addUserRole")
+    public ResponseEntity<?> addUserRole(Principal principal,
+                                         @RequestParam("userId") String userId,
                                          @RequestParam("roleIds") List<String> roleIds) {
 
         Response response = new Response();
-//        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-//        if (authedUser != null) {
-//            if (userService.eligibleForRole(authedUser, Constants.ADD_USER_ROLE)) {
+        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (authedUser != null) {
+            if (userService.eligibleForRole(authedUser, Constants.ADD_USER_ROLE)) {
                 response = roleService.addUserRole(userId, roleIds);
                 if (response.isStatus()) {
                     return new ResponseEntity<>(response, HttpStatus.OK);
                 } else {
                     return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 }
-//            } else {
-//                response.setStatus(false);
-//                response.setMessage(Constants.NOT_ELIGIBLE_USER);
-//                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-//            }
-//        } else {
-//            response.setStatus(false);
-//            response.setMessage(Constants.INVALID_USER);
-//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-//        }
+            } else {
+                response.setStatus(false);
+                response.setMessage(Constants.NOT_ELIGIBLE_USER);
+                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_USER);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @GetMapping("/getRoles")
@@ -113,9 +114,9 @@ public class RoleController {
                                       Principal principal) {
 
         Response response = new Response();
-        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        if (authedUser != null) {
-            response = roleService.getUserRoles(userId, sameUser, authedUser);
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (user != null) {
+            response = roleService.getUserRoles(userId, sameUser, user);
             if(response.isStatus()) {
                 return new ResponseEntity<>(response, HttpStatus.OK);
             }else{

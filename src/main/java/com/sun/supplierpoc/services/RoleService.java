@@ -117,6 +117,32 @@ public class RoleService {
         return response;
     }
 
+    public Response updateUserRoles(String userId, List<String> roleIds) {
+
+        Response response = new Response();
+        Optional<User> userOptional = userRepo.findById(userId);
+        if (userOptional.isPresent()) {
+            try {
+
+                User user = userOptional.get();
+                List<Role> roles = roleRepository.findAllByIdIn(roleIds);
+
+                user.setRoles(roles);
+                userRepo.save(user);
+
+                response.setStatus(true);
+                response.setMessage("Roles updates successfully.");
+            } catch (Exception e) {
+                response.setMessage(e.getMessage());
+                response.setStatus(false);
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_USER);
+        }
+        return response;
+    }
+
     public Response getUserRoles(String userId, boolean sameUser, User authedUser) {
 
         Response response = new Response();

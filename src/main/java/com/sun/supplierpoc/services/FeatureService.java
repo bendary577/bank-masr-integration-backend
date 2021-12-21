@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Feature;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.FeatureRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,5 +94,14 @@ public class FeatureService {
             }
         }
         return hasRole;
+    }
+
+    public boolean checkRoleExistence(List<Role> roles, String roleId){
+        for (Role role : roles) {
+            if(role.getId().equals(roleId)){
+                return true;
+            }
+        }
+        return false;
     }
 }

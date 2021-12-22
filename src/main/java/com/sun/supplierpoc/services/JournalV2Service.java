@@ -136,7 +136,7 @@ public class JournalV2Service {
                     continue;
                 }
 
-          ////////////////////////////////      ////////////////////////////////////////////////////////////
+          ////////////////////////////////////////////////////////////////////////////////////////////
                 try {
                     WebElement td = cols.get(columns.indexOf("cost_center"));
 
@@ -244,7 +244,7 @@ public class JournalV2Service {
     /*
      * Get consumptions entries based on cost center
      * */
-    public Response getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> costCenters,
+    public Response getJournalDataByCostCenter(SyncJobType journalSyncJobType, ArrayList<CostCenter> tempCostCenters,
                                                ArrayList<ItemGroup> itemGroups, Account account) {
         Response response = new Response();
 
@@ -304,12 +304,9 @@ public class JournalV2Service {
 
             ArrayList<HashMap<String, Object>> selectedCostCenter = new ArrayList<>();
 
+            List<CostCenter> costCenters = new ArrayList<>();
+
             for(int i = 7 ; i < rows.size() ; i ++) {
-
-                journalBatch = new JournalBatch();
-                journals = new ArrayList<>();
-
-                HashMap<String, Object> costCenter = new HashMap<>();
 
                 WebElement row = rows.get(i);
                 List<WebElement> cols = row.findElements((By.tagName("td")));
@@ -319,16 +316,21 @@ public class JournalV2Service {
                 }
 
                 WebElement td = cols.get(columns.indexOf("cost_center"));
-                CostCenter oldCostCenter = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), true);
+                CostCenter costCenter = conversions.checkCostCenterExistence(tempCostCenters, td.getText().strip(), true);
 
-                if (!oldCostCenter.checked) {
+                if (!costCenter.checked) {
                     continue;
                 }
 
-                costCenter.put("costCenter", oldCostCenter);
+                costCenters.add(costCenter);
 
-                // Open Cost Center
-                cols.get(0).findElement(By.tagName("a")).click();
+            }
+
+            for(CostCenter costCenter : costCenters){
+
+                journalBatch = new JournalBatch();
+                journals = new ArrayList<>();
+
 
                 try {
                     wait = new WebDriverWait(driver, 5);
@@ -337,18 +339,22 @@ public class JournalV2Service {
                     System.out.println("Waiting");
                 }
 
+                // Open Cost Center
+                driver.findElement(By.linkText(costCenter.costCenter)).click();
+
                 List<WebElement> costRows = driver.findElements(By.tagName("tr"));
 
                 if (costRows.size() <= 3) {
+                    driver.findElement(By.linkText("Inventory Cost of Sales")).click();
                     continue;
                 }
 
-                ArrayList<String> costColumns = setupEnvironment.getTableColumns(costRows, false, 4);
+                ArrayList<String> costColumns = setupEnvironment.getTableColumns(costRows, false, 3);
 
                 String group;
                 for (int j = 6; j < costRows.size(); j++) {
 
-                    HashMap<String, Object> transferDetails = new HashMap<>();
+                    HashMap<String, Object> consumptionDetails = new HashMap<>();
 
                     WebElement costRow = costRows.get(j);
 
@@ -372,20 +378,29 @@ public class JournalV2Service {
                         group = itemGroup.getItemGroup();
                     }
 
-                    transferDetails.put("actual_usage", costCols.get(costColumns.indexOf("actual_usage")).getText().strip());
+                    String actualUsage = costCols.get(costColumns.indexOf("actual_usage")).getText().strip();
+
+                    if(Double.parseDouble(actualUsage) == 0){
+                        continue;
+                    }
+                    consumptionDetails.put("actual_usage", actualUsage);
 
                     Journal journal = new Journal();
 
-                    float cost = conversions.convertStringToFloat(transferDetails.get("actual_usage").toString());
-                    journals = journal.checkExistence(journals, group, 0, cost, 0);
+                    float cost = conversions.convertStringToFloat(actualUsage);
+                    journals = journal.checkExistence(journals  , group, 0, cost, 0);
 
                 }
 
-                journalBatch.setCostCenter((CostCenter) costCenter.get("costCenter"));
+                if(journals.size() == 0){
+                    continue;
+                }
+
+                journalBatch.setCostCenter(costCenter);
                 journalBatch.setConsumption(journals);
                 journalBatches.add(journalBatch);
 
-
+                driver.findElement(By.linkText("Inventory Cost of Sales")).click();
                 response = getRows(driver, businessDate, fromDate, toDate);
 
                 if(response.isStatus()){
@@ -400,9 +415,7 @@ public class JournalV2Service {
                     response.setMessage(Constants.NO_INFO);
                     return response;
                 }
-
-                columns = setupEnvironment.getTableColumns(rows, false, 5);
-
+//                columns = setupEnvironment.getTableColumns(rows, false, 5);
             }
 
             driver.quit();

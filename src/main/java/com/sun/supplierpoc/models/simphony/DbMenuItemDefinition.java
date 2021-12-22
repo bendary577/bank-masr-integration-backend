@@ -57,7 +57,7 @@ public class DbMenuItemDefinition {
     @XmlElement(name = "NextScreen")
     private String NextScreen ;
     @XmlElement(name = "MiMasterObjNum")
-    private String MiMasterObjNum ;
+    private String MiMasterObjNum = "" ;
     @XmlElement(name = "CheckAvailability")
     private Boolean CheckAvailability ;
     @XmlElement(name = "OutOfMenuItem")

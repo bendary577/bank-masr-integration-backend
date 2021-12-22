@@ -333,7 +333,7 @@ public class JournalV2Service {
 
 
                 try {
-                    wait = new WebDriverWait(driver, 3);
+                    wait = new WebDriverWait(driver, 5);
                     wait.until(ExpectedConditions.alertIsPresent());
                 } catch (Exception e) {
                     System.out.println("Waiting");
@@ -343,7 +343,7 @@ public class JournalV2Service {
                 driver.findElement(By.linkText(costCenter.costCenter)).click();
 
                 try {
-                    wait = new WebDriverWait(driver, 3);
+                    wait = new WebDriverWait(driver, 5);
                     wait.until(ExpectedConditions.alertIsPresent());
                 } catch (Exception e) {
                     System.out.println("Waiting");
@@ -386,8 +386,17 @@ public class JournalV2Service {
                     }
 
                     String actualUsage = costCols.get(costColumns.indexOf("actual_usage")).getText().strip();
+                    double actualUsageDouble = 0;
 
-                    if(Double.parseDouble(actualUsage) == 0){
+                    try{
+                        actualUsageDouble = Double.parseDouble(actualUsage);
+                    }catch(Exception e){
+                            if(actualUsage.contains("(")){
+                            actualUsageDouble = Double.parseDouble(
+                                    actualUsage.substring((actualUsage.indexOf("(") + 1), actualUsage.indexOf(")")));
+                        }
+                    }
+                    if(actualUsageDouble == 0){
                         continue;
                     }
                     consumptionDetails.put("actual_usage", actualUsage);
@@ -399,6 +408,7 @@ public class JournalV2Service {
 
                 }
 
+                driver.findElement(By.linkText("Inventory Cost of Sales")).click();
                 if(journals.size() == 0){
                     continue;
                 }
@@ -407,22 +417,21 @@ public class JournalV2Service {
                 journalBatch.setConsumption(journals);
                 journalBatches.add(journalBatch);
 
-                driver.findElement(By.linkText("Inventory Cost of Sales")).click();
-                response = getRows(driver, businessDate, fromDate, toDate);
-
-                if(response.isStatus()){
-                    rows = response.getRows();
-                }else{
-                    return response;
-                }
-
-                if(rows.size() < 4 ) {
-                    driver.quit();
-                    response.setStatus(true);
-                    response.setMessage(Constants.NO_INFO);
-                    return response;
-                }
-//                columns = setupEnvironment.getTableColumns(rows, false, 5);
+//                response = getRows(driver, businessDate, fromDate, toDate);
+//
+//                if(response.isStatus()){
+//                    rows = response.getRows();
+//                }else{
+//                    return response;
+//                }
+//
+//                if(rows.size() < 4 ) {
+//                    driver.quit();
+//                    response.setStatus(true);
+//                    response.setMessage(Constants.NO_INFO);
+//                    return response;
+//                }
+////                columns = setupEnvironment.getTableColumns(rows, false, 5);
             }
 
             driver.quit();

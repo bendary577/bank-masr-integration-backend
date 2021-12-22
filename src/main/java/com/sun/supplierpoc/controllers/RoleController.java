@@ -9,6 +9,7 @@ import com.sun.supplierpoc.services.RoleService;
 import com.sun.supplierpoc.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -88,10 +89,10 @@ public class RoleController {
         }
     }
 
-    @PostMapping("/updateUserRoles")
+    @RequestMapping(value = "/updateUserRoles", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> updateUserRoles(Principal principal,
                                          @RequestParam("userId") String userId,
-                                             @RequestParam(name = "roleIds") ArrayList<String> roleIds) {
+                                             @RequestBody ArrayList<String> roleIds) {
 
         Response response = new Response();
         User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();

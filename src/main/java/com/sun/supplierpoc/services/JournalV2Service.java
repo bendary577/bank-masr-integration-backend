@@ -333,7 +333,7 @@ public class JournalV2Service {
 
 
                 try {
-                    wait = new WebDriverWait(driver, 5);
+                    wait = new WebDriverWait(driver, 3);
                     wait.until(ExpectedConditions.alertIsPresent());
                 } catch (Exception e) {
                     System.out.println("Waiting");
@@ -341,6 +341,13 @@ public class JournalV2Service {
 
                 // Open Cost Center
                 driver.findElement(By.linkText(costCenter.costCenter)).click();
+
+                try {
+                    wait = new WebDriverWait(driver, 3);
+                    wait.until(ExpectedConditions.alertIsPresent());
+                } catch (Exception e) {
+                    System.out.println("Waiting");
+                }
 
                 List<WebElement> costRows = driver.findElements(By.tagName("tr"));
 

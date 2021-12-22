@@ -31,35 +31,13 @@ public class RoleController {
 
     @PostMapping("/test/addRole")
     public ResponseEntity<?> addRole(@RequestBody Role roleRequest) {
-
-        Response response = new Response();
-//        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-//        if (user != null) {
-
-//            if(userService.eligibleForRole(user, Constants.ADD_ROLE)) {
-//                Account account = accountService.getAccount(user.getAccountId());
-//                if (account != null) {
-                    response = roleService.addRole(roleRequest);
-                    if (response.isStatus()) {
-                        return new ResponseEntity<>(response, HttpStatus.OK);
-                    } else {
-                        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                    }
-//                } else {
-//                    response.setMessage(Constants.ACCOUNT_NOT_EXIST);
-//                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-//                }
-//            }else{
-//                response.setStatus(false);
-//                response.setMessage(Constants.NOT_ELIGIBLE_USER);
-//                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-//            }
-//
-//        } else {
-//            response.setMessage(Constants.INVALID_USER);
-//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-//        }
-
+        Response response ;
+        response = roleService.addRole(roleRequest);
+        if (response.isStatus()) {
+            return new ResponseEntity<>(response.getData(), HttpStatus.OK);
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getMessage());
+        }
     }
 
     @PostMapping("/addUserRole")

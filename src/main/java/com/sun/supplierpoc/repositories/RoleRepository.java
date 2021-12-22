@@ -14,4 +14,6 @@ public interface RoleRepository extends MongoRepository<Role, String> {
 
     List<Role> findAllByIdIn(List<String> roleIds);
 
+    Role findRoleByReference(String reference);
+
 }

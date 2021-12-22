@@ -31,16 +31,18 @@ public class FeatureController {
     @Autowired
     private RoleRepository roleRepo;
 
-    @PostMapping("/addFeature")
+    @PostMapping("/test/addFeature")
     @CrossOrigin(origins = "*")
     public ResponseEntity<?> addFeature(@RequestBody Feature featureRequest) {
         Response response = new Response();
 
         try {
-            Feature feature = featureService.save(featureRequest);
-            response.setData(feature);
-            response.setStatus(true);
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            response = featureService.addFeature(featureRequest);
+            if (response.isStatus()) {
+                return new ResponseEntity<>(response.getData(), HttpStatus.OK);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getMessage());
+            }
         } catch (Exception e) {
             response.setStatus(false);
             response.setMessage(e.getMessage());

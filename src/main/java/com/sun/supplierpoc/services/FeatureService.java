@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.FeatureRepository;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,16 +29,28 @@ public class FeatureService {
     @Autowired
     private AccountRepo accountRepo;
 
-    public Feature save(Feature feature) {
-        if(featureRepository.existsByName(feature.getName()))
-            return new Feature();
-        Feature tempFeature;
+    public Response addFeature(Feature feature) {
+        Response response = new Response();
+
         try {
-            tempFeature = featureRepository.save(feature);
-        }catch (Exception e){
-            tempFeature = new Feature();
+            if(featureRepository.existsByName(feature.getName())){
+                response.setStatus(false);
+                response.setMessage("This feature already exists with the same name.");
+            } else if(featureRepository.existsByReference(feature.getReference())){
+                response.setStatus(false);
+                response.setMessage("This feature already exists with the same reference.");
+            } else {
+                feature = featureRepository.save(feature);
+                response.setStatus(true);
+                response.setData(feature);
+            }
+            return response;
+
+        } catch (Exception e) {
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+            return response;
         }
-        return tempFeature;
     }
 
     public List<Feature> findAllFeature(String accountId) {

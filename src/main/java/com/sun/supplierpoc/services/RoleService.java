@@ -37,18 +37,27 @@ public class RoleService {
     private Conversions conversions;
 
     public Response addRole(Role roleRequest) {
-
+        Role role;
         Response response = new Response();
 
         try {
             Optional<Feature> featureOptional = featureRepository.findById(roleRequest.getFeatureId());
             if(featureOptional.isPresent()) {
                 Feature feature = featureOptional.get();
-                Role role = roleRepository.save(roleRequest);
-                feature.getRoles().add(role);
-                featureRepository.save(feature);
-                response.setStatus(true);
-                response.setData(role);
+                role = roleRepository.findRoleByReference(roleRequest.getReference());
+                if(role != null){
+                    response.setStatus(false);
+                    response.setMessage("This role already exists.");
+                }else{
+                    role = roleRepository.save(roleRequest);
+                    feature.getRoles().add(role);
+                    featureRepository.save(feature);
+
+                    response.setStatus(true);
+                    response.setMessage("Role added successfully.");
+                    response.setData(role);
+                }
+
                 return response;
             }else{
                 response.setStatus(false);

@@ -80,13 +80,17 @@ public class FeatureService {
                     response.setMessage(Constants.INVALID_FEATURE_ID + featureId);
                     return response;
                 }
-                features.add(featureOptional.get());
+                if(!hasFeature(account, featureOptional.get().getReference()))
+                    features.add(featureOptional.get());
             }
 
-            account.getFeatures().addAll(features);
-            accountRepo.save(account);
+            if(features.size() > 0){
+                account.getFeatures().addAll(features);
+                accountRepo.save(account);
+            }
 
             response.setStatus(true);
+            response.setMessage(features.size() + " Features added successfully.");
             response.setData(account);
             return response;
 

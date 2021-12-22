@@ -72,31 +72,19 @@ public class FeatureController {
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
     }
-    //,Principal principal
-    @PostMapping("addAccountFeatures")
+
+
+    @PostMapping("/test/addAccountFeatures")
     public ResponseEntity<?> addAccountFeatures(@RequestParam("accountId") String accountId,
                                                @RequestParam("featuresIds") List<String> featuresIds){
-        Response response = new Response();
-//        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-//        if(authedUser != null){
-//            if(userService.eligibleForRole(authedUser, Constants.ADD_USER_FEATURE)){
-                response = featureService.setAccountFeatures(accountId, featuresIds);
-                if(response.isStatus()){
-                    return new ResponseEntity<>(response, HttpStatus.OK);
-                }else{
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
-//            }else{
-//                response.setStatus(false);
-//                response.setMessage(Constants.NOT_ELIGIBLE_USER);
-//                return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-//            }
-//
-//        }else{
-//            response.setMessage(Constants.INVALID_USER);
-//            response.setStatus(false);
-//            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-//        }
+        Response response ;
+
+        response = featureService.setAccountFeatures(accountId, featuresIds);
+        if(response.isStatus()){
+            return new ResponseEntity<>(response.getData(), HttpStatus.OK);
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getMessage());
+        }
     }
 
 

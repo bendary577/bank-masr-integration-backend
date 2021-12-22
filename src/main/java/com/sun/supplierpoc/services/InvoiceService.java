@@ -815,10 +815,7 @@ public class InvoiceService {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
 
-                if(toCostCenter.location != null)
-                    syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
-                else
-                    syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
+                syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
 
                 if(!configuration.invoiceConfiguration.invoiceSyncPlace.equals("Invoice")){
                 journalEntry.put("invoiceNo", invoice.get("document"));}

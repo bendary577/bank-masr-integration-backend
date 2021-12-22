@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController()
-@RequestMapping(value = {"/Simphony"})
+@RequestMapping(value = {"/test/Simphony"})
 public class CreateOrder {
 
     @Autowired
@@ -50,8 +50,8 @@ public class CreateOrder {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @PostMapping(path = "/CreateOrder", produces = MediaType.APPLICATION_JSON)
-    public ResponseEntity CreateOpenCheckRequest(@Valid @RequestBody CreateCheckRequest checkDetails, BindingResult result
-            , @RequestHeader("Authorization") String authorization) {
+    public ResponseEntity CreateOpenCheckRequest(@Valid @RequestBody CreateCheckRequest checkDetails, BindingResult result,
+                                                 @RequestHeader("Authorization") String authorization) {
 
         if (result.hasErrors()) {
             HashMap<String, Object> errors = new HashMap<>();

@@ -381,7 +381,7 @@ public class MenuItemService {
         List<DbMenuItemMaster> dbMenuItemMasters = masterObject.getDbMenuItemMaster();
 
         for (DbMenuItemMaster dbMenuItemMaster : dbMenuItemMasters){
-            if(dbMenuItemDefinition.getMenuItemMasterID().equals(dbMenuItemMaster.getMenuItemMasterID())){
+            if(dbMenuItemDefinition.getMenuItemMasterID().equals(String.valueOf(dbMenuItemMaster.getMenuItemMasterID()))){
                 return dbMenuItemMaster.getObjectNumber();
             }
         }
@@ -414,7 +414,11 @@ public class MenuItemService {
             HashMap<String, Object> menuItemData = new HashMap<>();
 
             menuItemData.put("id", menuItem.getMiMasterObjNum());
-            itemResponse.setId(Integer.parseInt(menuItem.getMiMasterObjNum()));
+            try {
+                itemResponse.setId(Long.parseLong(menuItem.getMiMasterObjNum()));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
 
             menuItemData.put("firstName", menuItem.getName1().getStringText());
             itemResponse.setFirstName(menuItem.getName1().getStringText());
@@ -422,8 +426,8 @@ public class MenuItemService {
             menuItemData.put("secondName", menuItem.getName2().getStringText());
             itemResponse.setSecondName(menuItem.getName2().getStringText());
 
-            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
-            itemResponse.setAvailability(menuItem.getCheckAvailability().toString());
+//            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
+//            itemResponse.setAvailability(menuItem.getCheckAvailability().toString());
 
             menuItemData.put("requiredCondiments", itemResponse.getRequiredCondiments());
             menuItemData.put("optionalCondiments", itemResponse.getOptionalCondiments());
@@ -436,17 +440,17 @@ public class MenuItemService {
                 itemResponse.setPrice(Double.parseDouble("0"));
             }
 
-            menuItemData.put("imageUrl", "https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
-            itemResponse.setImageUrl("https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
-
-            menuItemData.put("priceMedium", "90");
-            itemResponse.setPriceMedium(Double.parseDouble("90"));
-
-            menuItemData.put("priceLarge", "140");
-            itemResponse.setPriceLarge(Double.parseDouble("140"));
-
-            menuItemData.put("rating", 4);
-            itemResponse.setRating(4);
+//            menuItemData.put("imageUrl", "https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
+//            itemResponse.setImageUrl("https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
+//
+//            menuItemData.put("priceMedium", "90");
+//            itemResponse.setPriceMedium(Double.parseDouble("90"));
+//
+//            menuItemData.put("priceLarge", "140");
+//            itemResponse.setPriceLarge(Double.parseDouble("140"));
+//
+//            menuItemData.put("rating", 4);
+//            itemResponse.setRating(4);
 
             SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
                     syncJob.getId());
@@ -531,7 +535,7 @@ public class MenuItemService {
                             CondimentResponse condimentResponse = new CondimentResponse();
                             condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum()));
                             condimentResponse.setFirstName(tempMenuItem.getName1().getStringText());
-                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
+//                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
                             condimentResponse.setSecondName(tempMenuItem.getName2().getStringText());
                             if (tempMenuItem.getMenuItemPrice() != null) {
                                 condimentResponse.setPrice(Double.parseDouble(tempMenuItem.getMenuItemPrice().getPrice()));
@@ -549,9 +553,9 @@ public class MenuItemService {
                     for (DbMenuItemDefinition tempMenuItem : menuItems) {
                         if (Integer.parseInt(tempMenuItem.getMenuItemClassObjNum()) == Integer.parseInt(tempMenuItemClass.get("classNumber").toString())) {
                             CondimentResponse condimentResponse = new CondimentResponse();
-                            condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum().toString()));
+//                            condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum().toString()));
                             condimentResponse.setFirstName(tempMenuItem.getName1().getStringText());
-                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
+//                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
                             condimentResponse.setSecondName(tempMenuItem.getName2().getStringText());
                             if (tempMenuItem.getMenuItemPrice() != null) {
                                 condimentResponse.setPrice(Double.parseDouble(tempMenuItem.getMenuItemPrice().getPrice()));

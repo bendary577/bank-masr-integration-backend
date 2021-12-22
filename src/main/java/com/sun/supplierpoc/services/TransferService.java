@@ -6,6 +6,7 @@ import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.JournalSSC;
 import com.sun.supplierpoc.soapModels.Message;
@@ -53,6 +54,7 @@ public class TransferService {
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -79,20 +81,51 @@ public class TransferService {
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
-                driver.quit();
+            if(account.getMicrosVersion().equals("version1")) {
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
+                    driver.quit();
 
-                data.put("status", Constants.FAILED);
-                data.put("message", "Invalid username and password.");
-                data.put("transfers", transfers);
-                return data;
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Invalid username and password.");
+                    data.put("transfers", transfers);
+                    return data;
+                }
+                String bookedTransfersUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/TransferNew/TrStatus.aspx?Type=Booked";
+                driver.get(bookedTransfersUrl);
+            }else if(account.getMicrosVersion().equals("version2")){
+                if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                    driver.quit();
+                    data.put("status", Constants.FAILED);
+                    data.put("message", "Invalid username and password.");
+                    data.put("invoices", journalEntries);
+                    return data;
+                }
+                try{
+                    WebDriverWait wait = new WebDriverWait(driver, 30);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+               //         wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/Store/TransferNew/TrStatus.aspx?Type=Booked");
+
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-
-            String bookedTransfersUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/TransferNew/TrStatus.aspx?Type=Booked";
-            driver.get(bookedTransfersUrl);
-
+            driver.findElement(By.name("filterPanel_btnToggleFilter")).click();
             Select select = new Select(driver.findElement(By.id("_ctl5")));
-
             data = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
             if (!data.get("status").equals(Constants.SUCCESS)){
@@ -112,7 +145,7 @@ public class TransferService {
 
                     WebElement row = rows.get(i);
                     List<WebElement> cols = row.findElements(By.tagName("td"));
-                    if (cols.size() != columns.size()) {
+                    if (cols.size() < columns.size()) {
                         continue;
                     }
 
@@ -127,7 +160,7 @@ public class TransferService {
                     td = cols.get(columns.indexOf("to_cost_center"));
                     oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
-                    if (! oldCostCenterData.checked) {
+                    if (!oldCostCenterData.checked) {
                         continue;
                     }
                     transfer.put("toCostCenter", oldCostCenterData);
@@ -304,7 +337,7 @@ public class TransferService {
                     }
                     journalEntry.put("transactionReference", reference);
                 }else {
-                    journalEntry.put("transactionReference", "Transfer Reference");
+                    journalEntry.put("transactionReference", "Transfer");
                 }
                 journalEntry.put("overGroup", journal.getOverGroup());
 

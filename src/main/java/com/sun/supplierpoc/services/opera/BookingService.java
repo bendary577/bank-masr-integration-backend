@@ -93,6 +93,7 @@ public class BookingService {
             String currentDate = fileDateFormat.format(new Date());
 
             String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+//            fileName = "Booking20211212.xml";
             String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Booking/" + fileName;
             String localFilePath = account.getName() + "/Booking/";
 
@@ -142,6 +143,8 @@ public class BookingService {
 
             JSONObject json = new JSONObject();
             json.put("bookingNo", String.valueOf(data.get("bookingNo")));
+            if(!String.valueOf(data.get("transactionId")).equals(""))
+                json.put("transactionId", String.valueOf(data.get("transactionId")));
             json.put("nationalityCode", String.valueOf(data.get("nationalityCode")));
             json.put("checkInDate", String.valueOf(data.get("checkInDate")));
             json.put("checkOutDate", String.valueOf(data.get("checkOutDate")));
@@ -580,10 +583,10 @@ public class BookingService {
 
             if(response.isStatus()){
                 syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData, Constants.SUCCESS);
+                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.SUCCESS, response.getMessage());
             }else {
                 syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.FAILED);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData, Constants.FAILED);
+                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.FAILED, response.getMessage());
             }
         } catch (Exception e) {
             e.printStackTrace();

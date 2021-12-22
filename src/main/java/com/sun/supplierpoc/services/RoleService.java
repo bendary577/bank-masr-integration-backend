@@ -37,18 +37,27 @@ public class RoleService {
     private Conversions conversions;
 
     public Response addRole(Role roleRequest) {
-
+        Role role;
         Response response = new Response();
 
         try {
             Optional<Feature> featureOptional = featureRepository.findById(roleRequest.getFeatureId());
             if(featureOptional.isPresent()) {
                 Feature feature = featureOptional.get();
-                Role role = roleRepository.save(roleRequest);
-                feature.getRoles().add(role);
-                featureRepository.save(feature);
-                response.setStatus(true);
-                response.setData(role);
+                role = roleRepository.findRoleByReference(roleRequest.getReference());
+                if(role != null){
+                    response.setStatus(false);
+                    response.setMessage("This role already exists.");
+                }else{
+                    role = roleRepository.save(roleRequest);
+                    feature.getRoles().add(role);
+                    featureRepository.save(feature);
+
+                    response.setStatus(true);
+                    response.setMessage("Role added successfully.");
+                    response.setData(role);
+                }
+
                 return response;
             }else{
                 response.setStatus(false);
@@ -86,12 +95,11 @@ public class RoleService {
                     Account account = accountOptional.get();
                     for(Role role : roles){
                         String featureId = role.getFeatureId();
-                        if(role.getFeature() != null){
-                            featureId = role.getFeature().getId();
-                        }
+
                         if(!conversions.checkIfAccountHasFeature(account.getFeatures(), featureId)){
-                            response.setMessage("Account " + account.getName() + " doesn't have the feature of "
-                                    + role.getFeature().getName());
+//                            response.setMessage("Account " + account.getName() + " doesn't have the feature of "
+//                                    + role.getFeature().getName());
+                            response.setMessage("Account " + account.getName() + " doesn't have the feature");
                             response.setStatus(false);
                             return response;
                         }
@@ -114,6 +122,32 @@ public class RoleService {
         } else {
             response.setMessage(Constants.INVALID_USER);
             response.setStatus(false);
+        }
+        return response;
+    }
+
+    public Response updateUserRoles(String userId, List<String> roleIds) {
+
+        Response response = new Response();
+        Optional<User> userOptional = userRepo.findById(userId);
+        if (userOptional.isPresent()) {
+            try {
+
+                User user = userOptional.get();
+                List<Role> roles = roleRepository.findAllByIdIn(roleIds);
+
+                user.setRoles(roles);
+                userRepo.save(user);
+
+                response.setStatus(true);
+                response.setMessage("Roles updates successfully.");
+            } catch (Exception e) {
+                response.setMessage(e.getMessage());
+                response.setStatus(false);
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_USER);
         }
         return response;
     }

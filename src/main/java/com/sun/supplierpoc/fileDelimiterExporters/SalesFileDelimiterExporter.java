@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.configurations.Configuration;
 import com.sun.supplierpoc.models.util.SyncJobDataCSV;
 
 import java.io.*;
@@ -38,7 +39,8 @@ public class SalesFileDelimiterExporter {
         if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
                 || syncJobType.getName().equals(Constants.CONSUMPTION))
             this.extractSalesSyncJobData();
-        else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES))
+        else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) || syncJobType.getName().equals(Constants.CREDIT_NOTES)
+                || syncJobType.getName().equals(Constants.TRANSFERS))
             this.extractInvoicesSyncJobData();
         else if (syncJobType.getName().equals(Constants.WASTAGE))
             this.extractWastageSyncJobData();
@@ -82,7 +84,8 @@ public class SalesFileDelimiterExporter {
             if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
             || syncJobType.getName().equals(Constants.CONSUMPTION))
                 this.extractSalesSyncJobData();
-            else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES))
+            else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) || (syncJobType.getName().equals(Constants.TRANSFERS))
+                    || (syncJobType.getName().equals(Constants.CREDIT_NOTES)))
                 this.extractInvoicesSyncJobData();
             else if (syncJobType.getName().equals(Constants.WASTAGE))
                 this.extractWastageSyncJobData();
@@ -195,6 +198,7 @@ public class SalesFileDelimiterExporter {
                 tempSyncJobData = syncJobData;
             }
 
+
             if (!syncJobData.getData().get("invoiceNo").toString().equals(invoiceNumber)) {
                 tempSyncJobData.getData().put("vat", vat);
                 syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
@@ -206,6 +210,7 @@ public class SalesFileDelimiterExporter {
             } else {
                 vat = vat + conversions.convertStringToFloat(syncJobData.getData().get("vat").toString());
             }
+
 
             syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
             if (syncJobDataCSV != null)
@@ -295,8 +300,7 @@ public class SalesFileDelimiterExporter {
             }
             syncJobDataCSV.accountCode = accountCode;
 
-        }
-        else if (CDMaker.equals("DV")) {
+        } else if (CDMaker.equals("DV")) {
             syncJobDataCSV.DCMarker = "D";
             totalDr = syncJobData.getData().get("vat").toString();
 
@@ -306,15 +310,14 @@ public class SalesFileDelimiterExporter {
 
             splitTotalAmount(syncJobDataCSV, totalDr);
 
-            String accountCode = "9230002";
+            String accountCode = syncJobType.getConfiguration().inforConfiguration.taxAccountCode;
 
             if (accountCode.length() < 10) {
                 accountCode = String.format("%-10s", accountCode);
             }
             syncJobDataCSV.accountCode = accountCode;
             syncJobDataCSV.description = "TAX" + syncJobDataCSV.description.substring(3, 25);
-        }
-        else {
+        } else {
             syncJobDataCSV.DCMarker = "C";
 
             // 18 char --> 15 char + 3 decimals
@@ -364,16 +367,16 @@ public class SalesFileDelimiterExporter {
         }
 
         /* 15 char */
-        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker,syncJobType.getConfiguration());
 
         if (syncJobDataCSV.amount.equals("000000000000000000")) {
             return null;
@@ -403,7 +406,7 @@ public class SalesFileDelimiterExporter {
         syncJobDataCSV.amount = amountPart + decimalPart;
     }
 
-    private String fillTCode(int index, SyncJobData syncJobData, String CDMaker) {
+    private String fillTCode(int index, SyncJobData syncJobData, String CDMaker , Configuration configuration) {
         String analysisTCode = "";
         if (syncJobType.getConfiguration().analysis.get(index - 1).getChecked())
             analysisTCode = "#";
@@ -418,16 +421,16 @@ public class SalesFileDelimiterExporter {
                 if (("analysisCodeT" + index).equals("analysisCodeT1") && CDMaker.equals("D")) {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-            } else {
+            }  else {
                 if (CDMaker.equals("D") || CDMaker.equals("DV")) {
-                    if (!("analysisCodeT" + index).equals("analysisCodeT9") &&
-                            !("analysisCodeT" + index).equals("analysisCodeT10")) {
+                    if (!("analysisCodeT" + index).equals("analysisCodeT"+configuration.taxesCodeAnalysisCode) &&
+                            !("analysisCodeT" + index).equals("analysisCodeT"+configuration.supplierCodeAnalysisCode)) {
                         analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                     }
                 } else {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-            }
+           }
         }
 
         if (analysisTCode.length() > 15) {

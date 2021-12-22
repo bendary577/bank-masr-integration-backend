@@ -6,6 +6,7 @@ import com.sun.supplierpoc.controllers.SyncJobDataController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.openqa.selenium.*;
@@ -14,7 +15,6 @@ import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -28,6 +28,8 @@ public class InvoiceService {
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public HashMap<String, Object> getInvoicesData(Boolean creditNoteFlag, int typeFlag
@@ -51,49 +53,69 @@ public class InvoiceService {
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK , account)){
-                driver.quit();
+            if(account.getMicrosVersion().equals("version1")) {
 
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                response.put("invoices", journalEntries);
-                return response;
-            }
-            if (typeFlag == 1){
-                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
-                        suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
-                        timePeriod, fromDate, toDate);
-                if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
-                    return invoiceResponse;
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("invoices", journalEntries);
+                    return response;
                 }
-                invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
-            }else if (typeFlag == 2){
-                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, suppliers,
-                        costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
-                        timePeriod, fromDate, toDate);
-                if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
-                    return accountPayableResponse;
+                if (typeFlag == 1) {
+                    HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
+                            suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
+                            timePeriod, fromDate, toDate,account);
+                    if (!invoiceResponse.get("status").equals(Constants.SUCCESS)) {
+                        return invoiceResponse;
+                    }
+                    invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
+                } else if (typeFlag == 2) {
+                    HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag, suppliers,
+                            costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
+                            timePeriod, fromDate, toDate,account);
+                    if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)) {
+                        return accountPayableResponse;
+                    }
+                    ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
+                    invoices.addAll(accountPayable);
+                } else {
+                    HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
+                            suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
+                            timePeriod, fromDate, toDate ,account);
+                    if (!invoiceResponse.get("status").equals(Constants.SUCCESS)) {
+                        return invoiceResponse;
+                    }
+
+                    invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
+
+                    HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
+                            suppliers, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
+                            timePeriod, fromDate, toDate ,account);
+                    if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)) {
+                        return accountPayableResponse;
+                    }
+                    ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
+                    invoices.addAll(accountPayable);
                 }
-                ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
-                invoices.addAll(accountPayable);
             }else{
-                HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
-                        suppliers, costCenters, driver, Constants.APPROVED_INVOICES_LINK,
-                        timePeriod, fromDate, toDate);
-                if (!invoiceResponse.get("status").equals(Constants.SUCCESS)){
-                    return invoiceResponse;
+                if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                    driver.quit();
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("invoices", journalEntries);
+                    return response;
                 }
-
-                invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
-
-                HashMap<String, Object> accountPayableResponse = this.getAccountPayableData(creditNoteFlag,
-                        suppliers, costCenters, driver, Constants.ACCOUNT_PAYABLE_LINK,
-                        timePeriod, fromDate, toDate);
-                if (!accountPayableResponse.get("status").equals(Constants.SUCCESS)){
-                    return accountPayableResponse;
+                if (typeFlag == 1) {
+                    HashMap<String, Object> invoiceResponse = this.getAccountPayableData(creditNoteFlag,
+                            suppliers, costCenters, driver, Constants.MICROS_APPROVED_INVOICES,
+                            timePeriod, fromDate, toDate ,account);
+                    if (!invoiceResponse.get("status").equals(Constants.SUCCESS)) {
+                        return invoiceResponse;
+                    }
+                    invoices = (ArrayList<HashMap<String, Object>>) invoiceResponse.get("invoices");
                 }
-                ArrayList<HashMap<String, Object>> accountPayable = (ArrayList<HashMap<String, Object>>) accountPayableResponse.get("invoices");
-                invoices.addAll(accountPayable);
             }
 
             for (HashMap<String, Object> invoice:invoices) {
@@ -119,11 +141,37 @@ public class InvoiceService {
     private HashMap<String, Object> getAccountPayableData(Boolean creditNoteFlag,
                                                           ArrayList<Supplier> suppliers,
                                                           ArrayList<CostCenter> costCenters, WebDriver driver,
-                                                          String url, String timePeriod, String fromDate, String toDate){
+                                                          String url, String timePeriod, String fromDate, String toDate,Account account){
 
         HashMap<String, Object> response;
         ArrayList<HashMap<String, Object>> invoices = new ArrayList<>();
-        driver.get(url);
+        if(account.getMicrosVersion().equals("version1")) {
+            driver.get(url);
+        }
+        else{
+            try{
+                WebDriverWait wait = new WebDriverWait(driver, 30);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                driver.findElement(By.id("drawerToggleButton")).click();
+
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                driver.findElement(By.partialLinkText("Inventory Management")).click();
+                List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                if(elements.size() >= 2){
+                    driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                    ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                    driver.switchTo().window(tabs2.get(1));
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                    driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1");
+                }else {
+                    throw new Exception();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         Select select = new Select(driver.findElement(By.id("_ctl5")));
 
@@ -214,10 +262,14 @@ public class InvoiceService {
 
                 String link = cols.get(columns.indexOf("invoice_no.")).findElement(By.tagName("a")).getAttribute("href");
                 link = link.substring(link.indexOf('(') + 1, link.indexOf(','));
-                String fullLink = "https://mte3-ohim.oracleindustry.com/InventoryManagement/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
+                String fullLink;
+                if(account.getMicrosVersion().equals("version1")) {
+                     fullLink = "https://mte3-ohim.oracleindustry.com/InventoryManagement/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID=" + link;
+
+                }else{
+                    fullLink = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/Purchase/Invoicing/InvoiceDetail.aspx?RNG_ID="+link+"&OVTYPE=1";
+                }
                 invoice.put("reference_link", fullLink);
-
-
                 td = cols.get(columns.indexOf("invoice_date"));
                 String deliveryDate = td.getText().strip();
                 SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
@@ -639,6 +691,7 @@ public class InvoiceService {
             }
         }
 
+
         driver.get((String) invoice.get("reference_link"));
 
         WebDriverWait wait = new WebDriverWait(driver, 20);
@@ -762,10 +815,7 @@ public class InvoiceService {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
 
-                if(toCostCenter.location != null)
-                    syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
-                else
-                    syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
+                syncJobDataService.prepareAnalysisForInvoices(journalEntry, configuration, toCostCenter, null, null, supplier, journal);
 
                 if(!configuration.invoiceConfiguration.invoiceSyncPlace.equals("Invoice")){
                 journalEntry.put("invoiceNo", invoice.get("document"));}
@@ -830,9 +880,9 @@ public class InvoiceService {
 
                 String description;
                 if (!flag){
-                    description = "Inv F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
+                    description = "Inv F "+ supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
                 }else{
-                    description = "CN F "+ supplier.getSupplierReference() + " T " + toCostCenter.costCenterReference;
+                    description = "CN F "+ supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
                 }
 
                 if (description.length() > 50){

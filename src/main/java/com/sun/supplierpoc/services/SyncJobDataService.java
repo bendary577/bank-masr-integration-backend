@@ -57,9 +57,10 @@ public class SyncJobDataService {
             if(bookingNo == null || bookingNo.equals("")){
                 data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
             }else {
-                data = syncJobDataRepo.findByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
+                data = syncJobDataRepo.findByBookingNoAndSyncJobIdAndstatus(bookingNo, syncJob.getId(), Constants.SUCCESS);
             }
-            syncJobData.addAll(data);
+            if(data != null)
+                syncJobData.addAll(data);
         }
 
         return syncJobData;
@@ -179,12 +180,13 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, supplier.getAccountCode());
         }
 
-        if(journal != null ){
+        if(supplier != null && !supplier.getAccountCode().equals("")){
             index = configuration.taxesCodeAnalysisCode;
             if(journal.getTax() == 14.00){
-            data.put("analysisCodeT" + index, "DV114");}
+            data.put("analysisCodeT" + index, configuration.inforConfiguration.taxAccountReference);}
             else{
-            data.put("analysisCodeT" + index, "NOTAX");}
+            data.put("analysisCodeT" + index, configuration.inforConfiguration.noTaxAccountReference);
+            }
         }
     }
 }

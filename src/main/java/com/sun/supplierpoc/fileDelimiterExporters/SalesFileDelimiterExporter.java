@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.SyncJobData;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.configurations.Configuration;
 import com.sun.supplierpoc.models.util.SyncJobDataCSV;
 
 import java.io.*;
@@ -309,7 +310,7 @@ public class SalesFileDelimiterExporter {
 
             splitTotalAmount(syncJobDataCSV, totalDr);
 
-            String accountCode = "213302";
+            String accountCode = syncJobType.getConfiguration().inforConfiguration.taxAccountCode;
 
             if (accountCode.length() < 10) {
                 accountCode = String.format("%-10s", accountCode);
@@ -366,16 +367,16 @@ public class SalesFileDelimiterExporter {
         }
 
         /* 15 char */
-        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker);
-        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker);
+        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker,syncJobType.getConfiguration());
 
         if (syncJobDataCSV.amount.equals("000000000000000000")) {
             return null;
@@ -405,7 +406,7 @@ public class SalesFileDelimiterExporter {
         syncJobDataCSV.amount = amountPart + decimalPart;
     }
 
-    private String fillTCode(int index, SyncJobData syncJobData, String CDMaker) {
+    private String fillTCode(int index, SyncJobData syncJobData, String CDMaker , Configuration configuration) {
         String analysisTCode = "";
         if (syncJobType.getConfiguration().analysis.get(index - 1).getChecked())
             analysisTCode = "#";
@@ -420,16 +421,16 @@ public class SalesFileDelimiterExporter {
                 if (("analysisCodeT" + index).equals("analysisCodeT1") && CDMaker.equals("D")) {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-            } else {
+            }  else {
                 if (CDMaker.equals("D") || CDMaker.equals("DV")) {
-                    if (!("analysisCodeT" + index).equals("analysisCodeT9") &&
-                            !("analysisCodeT" + index).equals("analysisCodeT10")) {
+                    if (!("analysisCodeT" + index).equals("analysisCodeT"+configuration.taxesCodeAnalysisCode) &&
+                            !("analysisCodeT" + index).equals("analysisCodeT"+configuration.supplierCodeAnalysisCode)) {
                         analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                     }
                 } else {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-            }
+           }
         }
 
         if (analysisTCode.length() > 15) {

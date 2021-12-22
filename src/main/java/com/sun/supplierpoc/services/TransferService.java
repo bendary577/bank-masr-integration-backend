@@ -145,7 +145,7 @@ public class TransferService {
 
                     WebElement row = rows.get(i);
                     List<WebElement> cols = row.findElements(By.tagName("td"));
-                    if (cols.size() != columns.size()) {
+                    if (cols.size() < columns.size()) {
                         continue;
                     }
 
@@ -160,7 +160,7 @@ public class TransferService {
                     td = cols.get(columns.indexOf("to_cost_center"));
                     oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
 
-                    if (! oldCostCenterData.checked) {
+                    if (!oldCostCenterData.checked) {
                         continue;
                     }
                     transfer.put("toCostCenter", oldCostCenterData);

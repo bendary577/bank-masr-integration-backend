@@ -180,13 +180,12 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, supplier.getAccountCode());
         }
 
-        if(journal != null ){
+        if(supplier != null && !supplier.getAccountCode().equals("")){
             index = configuration.taxesCodeAnalysisCode;
             if(journal.getTax() == 14.00){
-          //  data.put("analysisCodeT" + index, "DV114");}
-                data.put("analysisCodeT" + index, "VAT14");}
+            data.put("analysisCodeT" + index, configuration.inforConfiguration.taxAccountReference);}
             else{
-            data.put("analysisCodeT" + index, "NOTAX");
+            data.put("analysisCodeT" + index, configuration.inforConfiguration.noTaxAccountReference);
             }
         }
     }

@@ -172,7 +172,7 @@ public class RoleService {
             return response;
         }
         response.setStatus(true);
-        response.setData(roleList);
+        response.setData(user);
         return response;
     }
 

@@ -2,11 +2,13 @@ package com.sun.supplierpoc.controllers;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.applications.Action;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.InvokerUserRepo;
 import com.sun.supplierpoc.repositories.UserRepo;
+import com.sun.supplierpoc.services.ActionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +25,15 @@ import java.util.Optional;
 public class UserController {
     @Autowired
     UserRepo userRepo;
+
     @Autowired
     InvokerUserRepo invokerUserRepo;
+
     @Autowired
     private AccountRepo accountRepo;
+
+    @Autowired
+    private ActionService actionService;
 
 
     @RequestMapping("/getUsers")
@@ -108,4 +115,34 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get web service invoker.");
         }
     }
+
+    /* Entry System Web Services */
+
+    @RequestMapping("/getAgentActions")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getAgentActions(Principal principal,
+                                          @RequestParam(name = "userId") String userId,
+                                          @RequestParam(name = "actionType") String actionType) {
+        try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_USER);
+            }
+
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+
+                ArrayList<Action> actions = actionService.getUserAction(userId, account.getId(), actionType);
+                return ResponseEntity.status(HttpStatus.OK).body(actions);
+            }else{
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_ACCOUNT);
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
+
 }

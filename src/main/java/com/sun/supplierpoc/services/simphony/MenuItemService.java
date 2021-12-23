@@ -553,7 +553,11 @@ public class MenuItemService {
                     for (DbMenuItemDefinition tempMenuItem : menuItems) {
                         if (Integer.parseInt(tempMenuItem.getMenuItemClassObjNum()) == Integer.parseInt(tempMenuItemClass.get("classNumber").toString())) {
                             CondimentResponse condimentResponse = new CondimentResponse();
-//                            condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum().toString()));
+                            try {
+                                condimentResponse.setId(Integer.parseInt(tempMenuItem.getMiMasterObjNum().toString()));
+                            }catch(Exception e){
+
+                            }
                             condimentResponse.setFirstName(tempMenuItem.getName1().getStringText());
 //                            itemResponse.setAvailability(tempMenuItem.getCheckAvailability().toString());
                             condimentResponse.setSecondName(tempMenuItem.getName2().getStringText());

@@ -3,10 +3,13 @@ package com.sun.supplierpoc.controllers.application;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.applications.Action;
+import com.sun.supplierpoc.models.applications.ActionType;
 import com.sun.supplierpoc.models.applications.Balance;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
+import com.sun.supplierpoc.services.ActionService;
 import com.sun.supplierpoc.services.RoleService;
 import com.sun.supplierpoc.services.application.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,15 +19,12 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.Date;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/wallet")
 public class WalletController {
-
-    @Autowired
-    private ApplicationUserRepo userRepo;
-
     @Autowired
     private AccountRepo accountRepo;
 
@@ -33,6 +33,8 @@ public class WalletController {
 
     @Autowired
     private WalletService walletService;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @PostMapping("/chargeWallet")
     public ResponseEntity<?> chargeWallet(@RequestParam("userId") String userId,
@@ -48,7 +50,8 @@ public class WalletController {
 
             if(accountOptional.isPresent()) {
                 if (roleService.hasRole(authedUser, Constants.CHARGE_WALLET)) {
-                    response = walletService.chargeWallet(userId, balance);
+                    response = walletService.chargeWallet(authedUser, userId, balance);
+
                     return new ResponseEntity<>(response, HttpStatus.OK);
                 }else{
                     response.setStatus(false);

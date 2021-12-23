@@ -1,11 +1,10 @@
 package com.sun.supplierpoc.services.application;
 
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.applications.Balance;
-import com.sun.supplierpoc.models.applications.Wallet;
-import com.sun.supplierpoc.models.applications.WalletHistory;
+import com.sun.supplierpoc.models.applications.*;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
+import com.sun.supplierpoc.services.ActionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +17,12 @@ public class WalletService {
     @Autowired
     private ApplicationUserRepo applicationUserRepo;
 
-    public Response chargeWallet(String userId, Balance balance) {
+    @Autowired
+    private ActionService actionService;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public Response chargeWallet(User agent, String userId, Balance balance) {
 
         Response response = new Response();
 
@@ -33,15 +37,27 @@ public class WalletService {
                     lastBalance = lastBalance+ tempBalance.getAmount();
                 }
                 applicationUser.getWallet().getBalance().add(balance);
-                WalletHistory walletHistory = new WalletHistory("Charge Wallet" , balance.getAmount() , lastBalance, (lastBalance + balance.getAmount()), new Date());
+                WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() , lastBalance, (lastBalance + balance.getAmount()), new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
+
+                /* Create new user action */
+                Action action = new Action();
+                action.setUser(agent);
+                action.setApplicationUser(applicationUser);
+                action.setAccountId(agent.getAccountId());
+                action.setAmount(balance.getAmount());
+                action.setDate(new Date());
+                action.setActionType(ActionType.CHARGE_WALLET);
+
+                actionService.createUserAction(action);
 
                 response.setStatus(true);
                 response.setMessage("Wallet Charged Successfully.");
                 response.setData(applicationUser);
                 return response;
             }catch(Exception e) {
+                response.setStatus(false);
                 response.setMessage(e.getMessage());
             }
         }else{
@@ -82,7 +98,7 @@ public class WalletService {
                         applicationUser.getWallet().getBalance().get(index).getAmount() - amount
                 );
 
-                WalletHistory walletHistory = new WalletHistory("Deduct From Wallet", amount, lastBalance, (lastBalance - amount), new Date());
+                WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount), new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 

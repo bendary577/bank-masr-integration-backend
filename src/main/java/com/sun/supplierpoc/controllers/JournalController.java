@@ -41,7 +41,6 @@ public class JournalController {
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @Autowired
     private JournalService journalService;
     @Autowired
@@ -65,7 +64,6 @@ public class JournalController {
     FtpService ftpService;
     @Autowired
     private SalesController salesController;
-
     public Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

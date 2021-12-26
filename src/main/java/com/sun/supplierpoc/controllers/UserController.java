@@ -123,7 +123,9 @@ public class UserController {
     @ResponseBody
     public ResponseEntity getAgentActions(Principal principal,
                                           @RequestParam(name = "userId") String userId,
-                                          @RequestParam(name = "actionType") String actionType) {
+                                          @RequestParam(name = "actionType") String actionType,
+                                          @RequestParam(name = "fromDate", required = false) String fromDate,
+                                          @RequestParam(name = "toDate", required = false) String toDate) {
         try {
             User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
             if(user == null){
@@ -134,7 +136,16 @@ public class UserController {
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-                ArrayList<Action> actions = actionService.getUserAction(userId, account.getId(), actionType);
+                User agentUser = null;
+                if(!userId.equals("")){
+                    Optional<User> agentOption = userRepo.findById(userId);
+                    if(agentOption.isPresent()){
+                        agentUser = agentOption.get();
+                    }
+                }
+
+                ArrayList<Action> actions = actionService.getUserAction(agentUser, account.getId(), actionType,
+                        fromDate, toDate);
                 return ResponseEntity.status(HttpStatus.OK).body(actions);
             }else{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_ACCOUNT);

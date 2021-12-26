@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.models.applications.Action;
+import com.sun.supplierpoc.models.applications.ActionSummary;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.applications.ActionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,5 +64,11 @@ public class ActionService {
             e.printStackTrace();
         }
         return actions;
+    }
+
+    public ArrayList<ActionSummary> getUserActionSummary(String accountId){
+        ArrayList<ActionSummary> actionSummaries = new ArrayList<>();
+
+        return actionSummaries;
     }
 }

@@ -314,6 +314,7 @@ public class TransferController {
                 try{
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     driver.findElement(By.id("drawerToggleButton")).click();
 
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
@@ -324,8 +325,11 @@ public class TransferController {
 
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
-                        driver.get(Constants.MICROS_MAJOR_GROUPS_LINK);
+                        try {
+                            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        }catch (Exception e) {
+                            driver.get(Constants.MICROS_MAJOR_GROUPS_LINK);
+                        }
                     }else {
                         throw new Exception();
                     }
@@ -377,7 +381,7 @@ public class TransferController {
             if(account.getMicrosVersion().equals("version1"))
                 driver.findElement(By.name("_ctl27")).click();
             else
-                driver.findElement(By.name("_ctl32")).click();
+                driver.findElement(By.name("_ctl31")).click();
 
             driver.findElement(By.id("link-27-10-4-ItemGroups")).click();
 
@@ -427,7 +431,7 @@ public class TransferController {
             if(account.getMicrosVersion().equals("version1"))
                 driver.findElement(By.name("_ctl27")).click();
             else
-                driver.findElement(By.name("_ctl32")).click();
+                driver.findElement(By.name("_ctl31")).click();
 
             driver.findElement(By.id("link-27-10-2-Items")).click();
 //            driver.get(Constants.MAIN_MENU_URL);

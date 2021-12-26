@@ -707,6 +707,8 @@ public class JournalV2Service {
 
         ArrayList<Journal> journals;
         ArrayList<ConsumptionJournal> costCenterJournals;
+        ConsumptionJournal consumptionJournal = new ConsumptionJournal();
+
         JournalBatch journalBatch;
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
@@ -751,6 +753,9 @@ public class JournalV2Service {
             ArrayList columns = setupEnvironment.getTableColumns(rows, false, 4);
 
             ArrayList<CostCenter> costCenters = new ArrayList<>();
+            journalBatch = new JournalBatch();
+            journals = new ArrayList<>();
+            costCenterJournals = new ArrayList<>();
 
             for (int i = 7; i < rows.size(); i++) {
 
@@ -763,14 +768,14 @@ public class JournalV2Service {
 //                ConsumptionLocation consumptionCostCenter = conversions.checkConCostCenterExistence(consumptionLocations, td.getText().strip());
                 CostCenter costCenter = conversions.checkCostCenterExistence(consumptionCostCenters, td.getText().strip(), true);
 
-                costCenters.add(costCenter);
+                if (costCenter.checked) {
+                    costCenters.add(costCenter);
+                }
             }
 
             for (CostCenter costCenter : costCenters) {
 
-                journalBatch = new JournalBatch();
-                journals = new ArrayList<>();
-                costCenterJournals = new ArrayList<>();
+
                 try {
                     wait = new WebDriverWait(driver, 5);
                     wait.until(ExpectedConditions.alertIsPresent());
@@ -792,6 +797,7 @@ public class JournalV2Service {
                 }
                 ArrayList<String> costColumns = setupEnvironment.getTableColumns(costRows, false, 3);
                 String group;
+                float costCenterTotalCost = 0;
                 for (int j = 6; j < costRows.size(); j++) {
 
                     HashMap<String, Object> transferDetails = new HashMap<>();
@@ -819,27 +825,40 @@ public class JournalV2Service {
                     group = itemGroup.getItemGroup();
 
 
-                    float cost  = 0;
+                    float cost = 0;
                     String costString = costCols.get(costColumns.indexOf("actual_usage")).getText().strip();
 
-                    transferDetails.put("actual_usage",cost );
+                    transferDetails.put("actual_usage", cost);
                     try {
-                        cost = conversions.convertStringToFloat(costString) ;
+                        cost = conversions.convertStringToFloat(costString);
                     } catch (Exception e) {
                         if (costString.contains("(")) {
                             cost = Float.parseFloat(
                                     costString.substring((costString.indexOf("(") + 1), costString.indexOf(")")));
                         }
                     }
-                    ConsumptionJournal consumptionJournal = new ConsumptionJournal();
+
+                    if (cost == 0) {
+                        continue;
+                    }
+
+                    costCenterTotalCost += cost;
+
                     costCenterJournals = consumptionJournal.checkJournalExistence(costCenterJournals, group, cost, itemGroup.getExpensesAccount(),
                             costCenter, "D");
                 }
 
-                journalBatch.setCostCenter(costCenter);
-                journalBatch.setConsumptionJournals(costCenterJournals);
-                journalBatches.add(journalBatch);
+                costCenterJournals = consumptionJournal.checkJournalExistence(costCenterJournals, "", costCenterTotalCost, costCenter.accountCode,
+                        costCenter, "C");
+
+                driver.findElement(By.linkText("Inventory Cost of Sales")).click();
+
             }
+
+            journalBatch.setCostCenter(consumptionLocations.get(0));
+            journalBatch.setConsumptionJournals(costCenterJournals);
+            journalBatches.add(journalBatch);
+
             driver.quit();
 
             response.setStatus(true);

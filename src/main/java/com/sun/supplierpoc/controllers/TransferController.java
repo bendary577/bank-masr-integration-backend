@@ -431,7 +431,7 @@ public class TransferController {
             if(account.getMicrosVersion().equals("version1"))
                 driver.findElement(By.name("_ctl27")).click();
             else
-                driver.findElement(By.name("_ctl32")).click();
+                driver.findElement(By.name("_ctl31")).click();
 
             driver.findElement(By.id("link-27-10-2-Items")).click();
 //            driver.get(Constants.MAIN_MENU_URL);

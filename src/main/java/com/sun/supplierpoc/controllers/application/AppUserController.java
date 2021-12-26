@@ -241,7 +241,7 @@ public class AppUserController {
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                     response = appUserService
-                            .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
+                            .addUpdateGuest(user, addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
                                     image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile, points);
 
                     if ((Boolean) response.get("success")) {

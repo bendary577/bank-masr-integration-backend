@@ -3,17 +3,16 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.controllers.application.TransactionController;
 import com.sun.supplierpoc.excelExporters.ActionsExcelExporter;
-import com.sun.supplierpoc.excelExporters.TransactionExcelExport;
 import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.Action;
-import com.sun.supplierpoc.models.applications.ActionSummary;
+import com.sun.supplierpoc.models.applications.ActionStats;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.InvokerUserRepo;
 import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.services.ActionService;
+import com.sun.supplierpoc.services.application.ActionStatsService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -42,6 +41,10 @@ public class UserController {
     @Autowired
     private ActionService actionService;
 
+    @Autowired
+    private ActionStatsService actionStatsService;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getUsers")
     @CrossOrigin(origins = "*")
@@ -177,7 +180,7 @@ public class UserController {
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-                ArrayList<ActionSummary> actions = actionService.getUserActionSummary(account.getId());
+                ArrayList<ActionStats> actions = actionStatsService.findActionStatsByAccount(account.getId());
                 return ResponseEntity.status(HttpStatus.OK).body(actions);
             }else{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_ACCOUNT);

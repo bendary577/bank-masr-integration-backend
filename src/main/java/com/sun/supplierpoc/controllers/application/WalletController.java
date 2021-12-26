@@ -11,6 +11,7 @@ import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.services.ActionService;
 import com.sun.supplierpoc.services.RoleService;
+import com.sun.supplierpoc.services.application.ActionStatsService;
 import com.sun.supplierpoc.services.application.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -84,7 +85,7 @@ public class WalletController {
             if(accountOptional.isPresent()) {
                 if (roleService.hasRole(authedUser, Constants.DEDUCT_WALLET)) {
 
-                    response = walletService.deductWallet(userId, amount);
+                    response = walletService.deductWallet(authedUser, userId, amount);
 
                     if(response.isStatus()){
                     return new ResponseEntity<>(response, HttpStatus.OK);

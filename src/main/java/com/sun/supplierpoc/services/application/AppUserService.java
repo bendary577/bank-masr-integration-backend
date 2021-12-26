@@ -7,17 +7,13 @@ import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.*;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
-import com.sun.supplierpoc.services.ImageService;
-import com.sun.supplierpoc.services.QRCodeGenerator;
-import com.sun.supplierpoc.services.SendEmailService;
-import com.sun.supplierpoc.services.SmsService;
+import com.sun.supplierpoc.services.*;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,6 +41,14 @@ public class AppUserService {
     @Autowired
     SmsService service;
 
+    @Autowired
+    private ActionService actionService;
+
+    @Autowired
+    private ActionStatsService actionStatsService;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     public List<ApplicationUser> getTopUsers(Account account) {
 
         List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);
@@ -52,7 +56,7 @@ public class AppUserService {
         return applicationUsers;
     }
 
-    public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
+    public HashMap addUpdateGuest(User agent, boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
                                   boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
                                   String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile, int points) {
 
@@ -180,6 +184,29 @@ public class AppUserService {
                 }
 
                 userRepo.save(applicationUser);
+
+                /* Create new user action */
+                Action action = new Action();
+                action.setUser(agent);
+                action.setApplicationUser(applicationUser);
+                action.setAccountId(agent.getAccountId());
+                action.setAmount(Double.parseDouble(balance));
+                action.setDate(new Date());
+                action.setActionType(ActionType.ENTRANCE_AMOUNT);
+
+                actionService.createUserAction(action);
+
+                /* Update agent action stats */
+                ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
+                if(actionStats == null){
+                    actionStats = new ActionStats(agent, 0, 0,
+                            Double.parseDouble(balance), agent.getAccountId());
+                    actionStatsService.createActionStats(actionStats);
+                }else {
+                    actionStats.setEntranceAmount(actionStats.getEntranceAmount() + Double.parseDouble(balance));
+                    actionStatsService.createActionStats(actionStats);
+                }
+
 
                 response.put("message", "User added successfully.");
                 response.put("success", true);

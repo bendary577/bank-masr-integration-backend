@@ -5,6 +5,7 @@ import com.sun.supplierpoc.controllers.*;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
@@ -72,7 +73,7 @@ public class SupportService {
         FileSystemResource file = null;
         if(status){
             /* Check if user has custom report feature */
-            if (featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+            if (featureService.hasFeature(account, Features.CUSTOM_REPORT)){
                 file = getReportsZip(account, fromDate, toDate,modules);
             }else{
                 file = getZip(account, fromDate, toDate, stores, modules);
@@ -85,7 +86,7 @@ public class SupportService {
                 response.setMessage("Your request has been received successfully.");
                 response.setStatus(true);
             } catch (Exception e) {
-                if(featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+                if(featureService.hasFeature(account, Features.CUSTOM_REPORT)){
                     emailService.sendFailureMail(user, email, modules);
                 }else{
                     emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);
@@ -94,7 +95,7 @@ public class SupportService {
                 response.setStatus(false);
             }
         } else {
-            if(featureService.hasFeature(account, Constants.CUSTOM_REPORT)){
+            if(featureService.hasFeature(account, Features.CUSTOM_REPORT)){
                 emailService.sendFailureMail(user, email, modules);
             }else{
                 emailService.sendExportedSyncsMailMail(file, account, user, fromDate, toDate, stores, email, modules);

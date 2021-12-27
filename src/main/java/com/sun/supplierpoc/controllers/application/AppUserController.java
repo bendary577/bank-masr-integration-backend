@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -45,17 +46,16 @@ public class AppUserController {
     @Autowired
     private AppUserService appUserService;
     @Autowired
-    private ImageService imageService;
-    @Autowired
     private GroupRepo groupRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-    @Autowired
-    private SimpMessagingTemplate webSocket;
+
     @Autowired
     private SmsService smsService;
     @Autowired
     InvokerUserService invokerUserService;
+    @Autowired
+    FeatureService featureService;
 
     private Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -184,6 +184,14 @@ public class AppUserController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
+
+//            if(featureService.hasFeature(account, Features.ENTRY_SYSTEM)){
+//                /* Calculate expiry date */
+//                for (ApplicationUser applicationUser : applicationUsers) {
+//                    if(applicationUser.isExpired())
+//                        continue;
+//                }
+//            }
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);

@@ -8,6 +8,7 @@ import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.*;
@@ -206,7 +207,7 @@ public class WastageController {
                     wastageService.saveWastageSunData(wasteBatches, syncJob);
 
                     /* Check generate waste report feature */
-                    if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.GENERATE_WASTAGE_REPORT)){
+                    if (wasteBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Roles.GENERATE_WASTAGE_REPORT)){
                         WastageExcelExporter excelExporter = new WastageExcelExporter();
                         try{
                             excelExporter.exportMonthlyReport(account.getName(),generalSettings, wastageSyncJobType, wasteBatches);

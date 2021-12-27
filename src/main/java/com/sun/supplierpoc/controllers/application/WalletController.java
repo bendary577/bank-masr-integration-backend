@@ -7,6 +7,7 @@ import com.sun.supplierpoc.models.applications.Action;
 import com.sun.supplierpoc.models.applications.ActionType;
 import com.sun.supplierpoc.models.applications.Balance;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.services.ActionService;
@@ -50,7 +51,7 @@ public class WalletController {
             Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
 
             if(accountOptional.isPresent()) {
-                if (roleService.hasRole(authedUser, Constants.CHARGE_WALLET)) {
+                if (roleService.hasRole(authedUser, Roles.CHARGE_WALLET)) {
                     response = walletService.chargeWallet(authedUser, userId, balance);
 
                     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -83,7 +84,7 @@ public class WalletController {
             Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
 
             if(accountOptional.isPresent()) {
-                if (roleService.hasRole(authedUser, Constants.DEDUCT_WALLET)) {
+                if (roleService.hasRole(authedUser, Roles.DEDUCT_WALLET)) {
 
                     response = walletService.deductWallet(authedUser, userId, amount);
 

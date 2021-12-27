@@ -311,6 +311,7 @@ public class AppUserService {
                 }
                 applicationUser.setName(name);
                 applicationUser.setMobile(mobile);
+                applicationUser.setExpire(expire);
                 applicationUser.setAccountId(account.getId());
                 group.setLastUpdate(new Date());
                 userRepo.save(applicationUser);

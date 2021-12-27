@@ -210,8 +210,8 @@ public class AppUserController {
     @RequestMapping("/addApplicationUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag", required = true) boolean addFlag,
-                                                   @RequestParam(name = "isGeneric", required = true) boolean isGeneric,
+    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
+                                                   @RequestParam(name = "isGeneric") boolean isGeneric,
                                                    @RequestPart(name = "name", required = false) String name,
                                                    @RequestPart(name = "cardCode", required = true) String cardCode,
                                                    @RequestPart(name = "groupId", required = false) String groupId,

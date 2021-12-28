@@ -183,6 +183,10 @@ public class AppUserService {
                     return response;
                 }
 
+                WalletHistory walletHistory = new WalletHistory(ActionType.ENTRANCE_AMOUNT ,Double.parseDouble(balance) ,
+                        0, Double.parseDouble(balance), agent, new Date());
+                applicationUser.getWallet().getWalletHistory().add(walletHistory);
+
                 userRepo.save(applicationUser);
 
                 /* Create new user action */

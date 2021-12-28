@@ -24,6 +24,50 @@ public class ActionService {
         return action;
     }
 
+    public int getUserActionCount(User user, String accountId, String actionType,
+                                           String from, String to){
+        int actions = 0;
+        Date fromDate = null;
+        Date toDate = null;
+        try{
+            // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && !to.equals("")){
+                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+                fromDate = dateFormat.parse(from);
+                toDate = dateFormat.parse(to);
+            }
+            /* On account level */
+            if(user == null){
+                if(actionType.equals("")){
+                    if(fromDate == null && toDate == null)
+                        actions = actionRepo.countByAccountId(accountId);
+                    else
+                        actions = actionRepo.countByAccountIdAndDateBetween(accountId, fromDate, toDate);
+                }else {
+                    if (fromDate == null && toDate == null)
+                        actions = actionRepo.countByAccountIdAndActionType(accountId, actionType);
+                    else
+                        actions = actionRepo.countByAccountIdAndActionTypeAndDateBetween(accountId, actionType, fromDate, toDate);
+                }
+            }else{
+                if(actionType.equals(""))
+                    if(fromDate == null && toDate == null)
+                        actions = actionRepo.countByUser(user);
+                    else
+                        actions = actionRepo.countByUserAndDateBetween(user, fromDate, toDate);
+                else {
+                    if (fromDate == null && toDate == null)
+                        actions = actionRepo.countByUserAndActionType(user, actionType);
+                    else
+                        actions = actionRepo.countByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return actions;
+    }
+
     public ArrayList<Action> getUserAction(User user, String accountId, String actionType,
                                            String from, String to){
         ArrayList<Action> actions = new ArrayList<>();
@@ -56,7 +100,10 @@ public class ActionService {
                     else
                         actions = actionRepo.findByUserAndDateBetween(user, fromDate, toDate);
                 else {
-                    actions = actionRepo.findByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate);
+                    if (fromDate == null && toDate == null)
+                        actions = actionRepo.findByUserAndActionType(user, actionType);
+                    else
+                        actions = actionRepo.findByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate);
                 }
             }
         }catch (Exception e){

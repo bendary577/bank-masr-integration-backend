@@ -127,6 +127,43 @@ public class UserController {
     }
 
     /* Entry System Web Services */
+    @RequestMapping("/countAgentActions")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity countAgentActions(Principal principal,
+                                          @RequestParam(name = "userId") String userId,
+                                          @RequestParam(name = "actionType") String actionType,
+                                          @RequestParam(name = "fromDate", required = false) String fromDate,
+                                          @RequestParam(name = "toDate", required = false) String toDate) {
+        try {
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_USER);
+            }
+
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+
+                User agentUser = null;
+                if(!userId.equals("")){
+                    Optional<User> agentOption = userRepo.findById(userId);
+                    if(agentOption.isPresent()){
+                        agentUser = agentOption.get();
+                    }
+                }
+
+                int actions = actionService.getUserActionCount(agentUser, account.getId(), actionType,
+                        fromDate, toDate);
+                return ResponseEntity.status(HttpStatus.OK).body(actions);
+            }else{
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_ACCOUNT);
+            }
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 
     @RequestMapping("/getAgentActions")
     @CrossOrigin(origins = "*")

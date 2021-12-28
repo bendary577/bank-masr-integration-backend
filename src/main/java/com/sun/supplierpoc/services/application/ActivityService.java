@@ -138,7 +138,7 @@ public class ActivityService {
                                     }
                                 }
                                 WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
-                                        amount, previousBalance, calculateBalance(wallet), new Date());
+                                        amount, previousBalance, calculateBalance(wallet), null, new Date());
                                 wallet.getWalletHistory().add(walletHistory);
                                 user.setWallet(wallet);
                                 break;

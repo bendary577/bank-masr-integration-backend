@@ -40,7 +40,8 @@ public class WalletService {
                     lastBalance = lastBalance+ tempBalance.getAmount();
                 }
                 applicationUser.getWallet().getBalance().add(balance);
-                WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() , lastBalance, (lastBalance + balance.getAmount()), new Date());
+                WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() ,
+                        lastBalance, (lastBalance + balance.getAmount()), agent, new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -111,7 +112,8 @@ public class WalletService {
                         applicationUser.getWallet().getBalance().get(index).getAmount() - amount
                 );
 
-                WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount), new Date());
+                WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount),
+                        agent, new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 

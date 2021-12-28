@@ -169,6 +169,8 @@ public class UserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity getAgentActions(Principal principal,
+                                          @RequestParam(name = "pageNumber") int pageNumber,
+                                          @RequestParam(name = "limit") int limit,
                                           @RequestParam(name = "userId") String userId,
                                           @RequestParam(name = "actionType") String actionType,
                                           @RequestParam(name = "fromDate", required = false) String fromDate,
@@ -192,7 +194,7 @@ public class UserController {
                 }
 
                 ArrayList<Action> actions = actionService.getUserAction(agentUser, account.getId(), actionType,
-                        fromDate, toDate);
+                        fromDate, toDate, pageNumber, limit);
                 return ResponseEntity.status(HttpStatus.OK).body(actions);
             }else{
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_ACCOUNT);
@@ -229,7 +231,9 @@ public class UserController {
     }
 
     @PostMapping("/exportAgentActionToExcel")
-    public void exportAgentActionsToExcel(@RequestParam(name = "userId") String userId,
+    public void exportAgentActionsToExcel(@RequestParam(name = "pageNumber") int pageNumber,
+                                          @RequestParam(name = "limit") int limit,
+                                          @RequestParam(name = "userId") String userId,
                                           @RequestParam(name = "actionType") String actionType,
                                           @RequestParam(name = "fromDate", required = false) String fromDate,
                                           @RequestParam(name = "toDate", required = false) String toDate,
@@ -262,7 +266,7 @@ public class UserController {
             }
 
             List<Action> actions = actionService.getUserAction(agentUser, account.getId(), actionType,
-                    fromDate, toDate);
+                    fromDate, toDate, pageNumber, limit);
 
             ActionsExcelExporter exporter = new ActionsExcelExporter(actions);
             exporter.export(httpServletResponse);

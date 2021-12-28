@@ -5,6 +5,8 @@ import com.sun.supplierpoc.models.applications.ActionStats;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.applications.ActionRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
@@ -69,7 +71,7 @@ public class ActionService {
     }
 
     public ArrayList<Action> getUserAction(User user, String accountId, String actionType,
-                                           String from, String to){
+                                           String from, String to, int pageNumber, int limit){
         ArrayList<Action> actions = new ArrayList<>();
         Date fromDate = null;
         Date toDate = null;
@@ -80,30 +82,31 @@ public class ActionService {
                 fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }
+            Pageable paging = PageRequest.of(pageNumber-1, limit);
             /* On account level */
             if(user == null){
                 if(actionType.equals("")){
                     if(fromDate == null && toDate == null)
-                        actions = actionRepo.findByAccountId(accountId);
+                        actions = actionRepo.findByAccountId(accountId, paging);
                     else
-                        actions = actionRepo.findByAccountIdAndDateBetween(accountId, fromDate, toDate);
+                        actions = actionRepo.findByAccountIdAndDateBetween(accountId, fromDate, toDate, paging);
                 }else {
                     if (fromDate == null && toDate == null)
-                        actions = actionRepo.findByAccountIdAndActionType(accountId, actionType);
+                        actions = actionRepo.findByAccountIdAndActionType(accountId, actionType, paging);
                     else
-                        actions = actionRepo.findByAccountIdAndActionTypeAndDateBetween(accountId, actionType, fromDate, toDate);
+                        actions = actionRepo.findByAccountIdAndActionTypeAndDateBetween(accountId, actionType, fromDate, toDate, paging);
                 }
             }else{
                 if(actionType.equals(""))
                     if(fromDate == null && toDate == null)
-                        actions = actionRepo.findByUser(user);
+                        actions = actionRepo.findByUser(user, paging);
                     else
-                        actions = actionRepo.findByUserAndDateBetween(user, fromDate, toDate);
+                        actions = actionRepo.findByUserAndDateBetween(user, fromDate, toDate, paging);
                 else {
                     if (fromDate == null && toDate == null)
-                        actions = actionRepo.findByUserAndActionType(user, actionType);
+                        actions = actionRepo.findByUserAndActionType(user, actionType, paging);
                     else
-                        actions = actionRepo.findByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate);
+                        actions = actionRepo.findByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate, paging);
                 }
             }
         }catch (Exception e){

@@ -70,8 +70,8 @@ public class ActionService {
         return actions;
     }
 
-    public ArrayList<Action> getUserAction(User user, String accountId, String actionType,
-                                           String from, String to, int pageNumber, int limit){
+    public ArrayList<Action> getUserActionPaginated(User user, String accountId, String actionType,
+                                                    String from, String to, int pageNumber, int limit){
         ArrayList<Action> actions = new ArrayList<>();
         Date fromDate = null;
         Date toDate = null;
@@ -107,6 +107,50 @@ public class ActionService {
                         actions = actionRepo.findByUserAndActionType(user, actionType, paging);
                     else
                         actions = actionRepo.findByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate, paging);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return actions;
+    }
+
+    public ArrayList<Action> getUserAction(User user, String accountId, String actionType,
+                                                    String from, String to){
+        ArrayList<Action> actions = new ArrayList<>();
+        Date fromDate = null;
+        Date toDate = null;
+        try{
+            // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && !to.equals("")){
+                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+                fromDate = dateFormat.parse(from);
+                toDate = dateFormat.parse(to);
+            }
+            /* On account level */
+            if(user == null){
+                if(actionType.equals("")){
+                    if(fromDate == null && toDate == null)
+                        actions = actionRepo.findByAccountId(accountId);
+                    else
+                        actions = actionRepo.findByAccountIdAndDateBetween(accountId, fromDate, toDate);
+                }else {
+                    if (fromDate == null && toDate == null)
+                        actions = actionRepo.findByAccountIdAndActionType(accountId, actionType);
+                    else
+                        actions = actionRepo.findByAccountIdAndActionTypeAndDateBetween(accountId, actionType, fromDate, toDate);
+                }
+            }else{
+                if(actionType.equals(""))
+                    if(fromDate == null && toDate == null)
+                        actions = actionRepo.findByUser(user);
+                    else
+                        actions = actionRepo.findByUserAndDateBetween(user, fromDate, toDate);
+                else {
+                    if (fromDate == null && toDate == null)
+                        actions = actionRepo.findByUserAndActionType(user, actionType);
+                    else
+                        actions = actionRepo.findByUserAndActionTypeAndDateBetween(user, actionType, fromDate, toDate);
                 }
             }
         }catch (Exception e){

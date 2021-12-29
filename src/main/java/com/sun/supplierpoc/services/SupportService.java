@@ -254,6 +254,10 @@ public class SupportService {
                     } else if (syncJobType.getName().equals(Constants.COST_OF_GOODS)) {
                         costOfGoodsController.getCostOfGoodsRequest(principal);
                     } else if (syncJobType.getName().equals(Constants.WASTAGE)) {
+                        for (CostCenter location : syncJobType.getConfiguration().wastageConfiguration.locations) {
+                            location.checked = storesList.contains(location.costCenterReference);
+                        }
+                        syncJobTypeRepo.save(syncJobType);
                         responseHash = wastageController.getWastageRequest(principal).getBody();
                     } else if (syncJobType.getName().equals(Constants.CREDIT_NOTES)) {
                         responseHash = creditNoteController.getCreditNotesRequest(principal).getBody();

@@ -169,9 +169,13 @@ public class WastageExcelExporter {
         commonFunctions.createCell(row, 3, "Total Amount", style);
 
         int colCounter = 4;
+        String locationName = "";
         for (int i = 0; i < wasteBatches.size(); i++) {
-            commonFunctions.createCell(row, i+colCounter, wasteBatches.get(i).getLocation().locationName + " Qty", style);
-            commonFunctions.createCell(row, i+colCounter+1, wasteBatches.get(i).getLocation().locationName + " Amount", style);
+            locationName = wasteBatches.get(i).getLocation().locationName;
+            if(wasteBatches.get(i).getLocation().locationName.equals(""))
+                locationName = wasteBatches.get(i).getLocation().costCenter;
+            commonFunctions.createCell(row, i+colCounter, locationName + " Qty", style);
+            commonFunctions.createCell(row, i+colCounter+1, locationName + " Amount", style);
             colCounter ++;
         }
     }

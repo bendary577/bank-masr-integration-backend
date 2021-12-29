@@ -7,6 +7,7 @@ public class CostCenter {
     public String accountCode = "";
     public String costCenterReference = "";
     public CostCenter location;
+    public boolean syncPerCostCenter;
 
     /*
     * Fusion cost center variables

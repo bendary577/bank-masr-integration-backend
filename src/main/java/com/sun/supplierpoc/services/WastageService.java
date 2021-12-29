@@ -726,7 +726,7 @@ public class WastageService {
                         driver.switchTo().window(tabs2.get(1));
 //                        driver.close();
 //                        driver.switchTo().window(tabs2.get(0));
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                   //     wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
                         driver.get(Constants.MICROS_WASTE_GROUPS_LINK);
                     }else {
                         throw new Exception();

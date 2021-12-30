@@ -27,6 +27,7 @@ public class Transactions {
     private String revenueCentreName;
     private String employeeId;
     private String checkNumber;
+    @DBRef
     private Group group;
     private ApplicationUser user;
     @NotNull(message="Total Payment can't be empty.")

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 
 @Service
@@ -31,10 +32,21 @@ public class ActionService {
         int actions = 0;
         Date fromDate = null;
         Date toDate = null;
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+
         try{
             // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
+
             if(!from.equals("") && !to.equals("")){
-                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+                // Add one day to range to include last day selected
+                Calendar c = Calendar.getInstance();
+                c.setTime(dateFormat.parse(to));
+                c.add(Calendar.DATE, 1);
+                to = dateFormat.format(c.getTime());
+
                 fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }
@@ -75,10 +87,21 @@ public class ActionService {
         ArrayList<Action> actions = new ArrayList<>();
         Date fromDate = null;
         Date toDate = null;
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+
         try{
             // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
+
             if(!from.equals("") && !to.equals("")){
-                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+                // Add one day to range to include last day selected
+                Calendar c = Calendar.getInstance();
+                c.setTime(dateFormat.parse(to));
+                c.add(Calendar.DATE, 1);
+                to = dateFormat.format(c.getTime());
+
                 fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }
@@ -117,16 +140,20 @@ public class ActionService {
 
     public ArrayList<Action> getUserAction(User user, String accountId, String actionType,
                                                     String from, String to){
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
         ArrayList<Action> actions = new ArrayList<>();
         Date fromDate = null;
         Date toDate = null;
         try{
             // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
             if(!from.equals("") && !to.equals("")){
-                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
                 fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }
+
             /* On account level */
             if(user == null){
                 if(actionType.equals("")){

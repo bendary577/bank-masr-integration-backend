@@ -44,18 +44,22 @@ public class TransactionService {
         Date fromDate = null;
         Date toDate = null;
         int transactionsCount = 0;
-
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
         try {
             List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
 
             // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
             if(!from.equals("") && !to.equals("")){
-                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
-                try {
-                    fromDate = dateFormat.parse(from);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
+                // Add one day to range to include last day selected
+                Calendar c = Calendar.getInstance();
+                c.setTime(dateFormat.parse(to));
+                c.add(Calendar.DATE, 1);
+                to = dateFormat.format(c.getTime());
+
+                fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }
 
@@ -91,12 +95,20 @@ public class TransactionService {
         Date toDate = null;
         TransactionType transactionType;
         List<Transactions> transactions = new ArrayList<>();
-
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
         try{
             Pageable paging = PageRequest.of(pageNumber-1, limit);
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
             // 2021-12-01 yyyy-mm-dd
             if(!from.equals("") && !to.equals("")){
-                DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+                // Add one day to range to include last day selected
+                Calendar c = Calendar.getInstance();
+                c.setTime(dateFormat.parse(to));
+                c.add(Calendar.DATE, 1);
+                to = dateFormat.format(c.getTime());
+
                 fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }

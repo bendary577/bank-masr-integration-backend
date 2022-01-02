@@ -86,7 +86,7 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
-                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
                 if(applicationUser != null){
                     response.put("isSuccess", true);
                     response.put("points", applicationUser.getPoints());
@@ -141,7 +141,7 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
-                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
                 if(applicationUser != null){
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);

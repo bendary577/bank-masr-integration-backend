@@ -12,6 +12,7 @@ import java.util.List;
 public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, String> {
     ArrayList<ApplicationUser> findAll();
     ApplicationUser findByCode(String code);
+    ApplicationUser findByCodeAndAccountIdAndDeleted(String code, String accountId, boolean deleted);
     ApplicationUser findFirstByEmailAndAccountId(String email, String accountId);
 
 //    @Query(value = "SELECT * u from ApplicationUser ORDER BY u.top DESC LIMIT ?")

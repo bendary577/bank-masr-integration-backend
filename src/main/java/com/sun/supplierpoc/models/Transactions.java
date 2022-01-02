@@ -9,11 +9,11 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-//@Document(collation = "transaction")
 public class Transactions {
 
     @Id
     private String id;
+    private String status;
     @NotNull(message="Code can't be empty.")
     @NotBlank(message="Code can't be empty.")
     private String code;
@@ -43,6 +43,14 @@ public class Transactions {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Date getTransactionDate() {

@@ -51,7 +51,7 @@ public class TransactionController {
                                                    @RequestParam(name = "fromDate", required = false) String fromDate,
                                                    @RequestParam(name = "toDate", required = false) String toDate,
                                                    @RequestParam(name = "group", required = false) String group,
-                                                   @RequestParam("transactionType") String transactionType) {
+                                                   @RequestParam(name = "transactionType", required = false) String transactionType) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -60,8 +60,7 @@ public class TransactionController {
 
             Account account = accountOptional.get();
 
-            int transactions = transactionService.getTransactionByTypeCount(transactionType,
-                    fromDate, toDate, group, account);
+            int transactions = transactionService.getTransactionByTypeCount(fromDate, toDate, group, account);
 
             return transactions;
         }else{

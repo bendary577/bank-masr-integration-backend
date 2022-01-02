@@ -34,6 +34,7 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
     // Add group
     int countAllByTransactionTypeIdAndGroup(String transactionTypes, Group group);
+    int countAllByTransactionTypeInAndGroup(List<TransactionType>  transactionTypes, Group group);
     int countAllByTransactionTypeInAndTransactionDateBetween(List<TransactionType> transactionTypes,Group groupId, Date start, Date end);
 
     /*
@@ -52,6 +53,7 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
     boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 
     boolean existsByCheckNumberAndRevenueCentreId(String checkNumber, int revenueCentreId);
+    boolean existsByCheckNumberAndRevenueCentreIdAndStatus(String checkNumber, int revenueCentreId, String status);
 
     List<Transactions> findAllByGroupIdAndTransactionTypeIdOrderByTransactionDateDesc(String groupId, String id);
 

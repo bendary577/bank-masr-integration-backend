@@ -144,6 +144,14 @@ public class AppUserService {
                 }
             } else {
 
+                /* Check if card code is valid */
+                ApplicationUser oldUser = userRepo.findByCodeAndAccountIdAndDeleted(cardCode, account.getId(), false);
+                if(oldUser != null){
+                    response.put("message", "Card code already used, Please enter a different card code.");
+                    response.put("success", false);
+                    return response;
+                }
+
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<AccompaniedGuests> accompaniedGuests = null;
 

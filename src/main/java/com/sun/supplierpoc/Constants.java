@@ -52,6 +52,12 @@ public class Constants {
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
 
+    ///////////////////////////////////////// Transaction Status//////////////////////////////////////////////////////
+    public static String PAID_TRANSACTION = "Paid Transaction";
+    public static String PARTIAL_PAYMENT = "Partial Payment";
+    public static String UNPAID_TRANSACTION = "Unpaid Transaction";
+    public static String INSUFFICIENT_AMOUNT = "Unpaid Transaction - Insufficient Amount";
+
     ///////////////////////////////////////// Operation Types///////////////////////////////////////////////////////////
     public static String CREATE_CHECK = "Create Check";
     public static String OPERA_PAYMENT = "Opera Payment";

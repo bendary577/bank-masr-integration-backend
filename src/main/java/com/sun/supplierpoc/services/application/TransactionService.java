@@ -39,8 +39,7 @@ public class TransactionService {
     private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
 
 
-    public int getTransactionByTypeCount(String transactionTypeId, String from, String to, String groupId,
-                                         Account account) {
+    public int getTransactionByTypeCount(String from, String to, String groupId, Account account) {
         Date fromDate = null;
         Date toDate = null;
         int transactionsCount = 0;
@@ -74,7 +73,7 @@ public class TransactionService {
                 Optional<Group> group = groupRepo.findById(groupId);
                 if (group != null){
                     if(fromDate == null && toDate == null){
-                        transactionsCount = transactionRepo.countAllByTransactionTypeIdAndGroup(transactionTypeId, group.get());
+                        transactionsCount = transactionRepo.countAllByTransactionTypeInAndGroup(transactionTypes, group.get());
                     }else {
                         transactionsCount = transactionRepo.countAllByTransactionTypeInAndTransactionDateBetween(
                                 transactionTypes, group.get(), fromDate, toDate);
@@ -112,48 +111,51 @@ public class TransactionService {
                 fromDate = dateFormat.parse(from);
                 toDate = dateFormat.parse(to);
             }
-            transactionType = transactionTypeRepo.findByNameAndAccountId(transactionTypeName, account.getId());
 
-            if(transactionType == null){
+            List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
+
+//            transactionType = transactionTypeRepo.findByNameAndAccountId(transactionTypeName, account.getId());
+
+            if(transactionTypes == null || transactionTypes.size() == 0){
                 return transactions;
             }
 
             if(groupId == null || groupId.equals("")){
                 if(pageNumber == 0 && limit ==0){
                     if(fromDate == null && toDate == null)
-                        transactions = transactionRepo.findAllByTransactionTypeOrderByTransactionDateDesc(
-                                transactionType);
+                        transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(
+                                transactionTypes);
                     else
-                        transactions = transactionRepo.findAllByTransactionTypeAndTransactionDateBetweenOrderByTransactionDateDesc(
-                                transactionType, fromDate, toDate);
+                        transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                transactionTypes, fromDate, toDate);
                 }
                 else{
                     if(fromDate == null && toDate == null)
-                        transactions = transactionRepo.findAllByTransactionTypeOrderByTransactionDateDesc(
-                                transactionType, paging);
+                        transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(
+                                transactionTypes, paging);
                     else
-                        transactions = transactionRepo.findAllByTransactionTypeAndTransactionDateBetweenOrderByTransactionDateDesc(
-                                transactionType, fromDate, toDate, paging);
+                        transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                transactionTypes, fromDate, toDate, paging);
                 }
             }else {
                 Optional<Group> group = groupRepo.findById(groupId);
                 if (group != null){
                     if(pageNumber == 0 && limit ==0){
                         if(fromDate == null && toDate == null)
-                            transactions = transactionRepo.findAllByTransactionTypeAndGroupOrderByTransactionDateDesc(
-                                    transactionType, group.get());
+                            transactions = transactionRepo.findAllByTransactionTypeInAndGroupOrderByTransactionDateDesc(
+                                    transactionTypes, group.get());
                         else
                             transactions = transactionRepo.
-                                    findAllByTransactionTypeAndGroupAndTransactionDateBetweenOrderByTransactionDateDesc(
-                                            transactionType, group.get(), fromDate, toDate);
+                                    findAllByTransactionTypeInAndGroupAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                            transactionTypes, group.get(), fromDate, toDate);
                     }
                     else{
                         if(fromDate == null && toDate == null)
-                            transactions = transactionRepo.findAllByTransactionTypeAndGroupOrderByTransactionDateDesc(
-                                    transactionType, group.get(), paging);
+                            transactions = transactionRepo.findAllByTransactionTypeInAndGroupOrderByTransactionDateDesc(
+                                    transactionTypes, group.get(), paging);
                         else
-                            transactions = transactionRepo.findAllByTransactionTypeAndGroupAndTransactionDateBetweenOrderByTransactionDateDesc(
-                                    transactionType, group.get(), fromDate, toDate, paging);
+                            transactions = transactionRepo.findAllByTransactionTypeInAndGroupAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                    transactionTypes, group.get(), fromDate, toDate, paging);
                     }
                 }
             }

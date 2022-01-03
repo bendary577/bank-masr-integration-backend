@@ -1,19 +1,12 @@
 package com.sun.supplierpoc.controllers.simphony;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.OperaTransaction;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyCheck;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentReq;
-import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
-import com.sun.supplierpoc.repositories.OperationTypeRepo;
-import com.sun.supplierpoc.repositories.opera.OperaTransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.simphony.SimphonyPaymentService;
@@ -23,22 +16,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
 import java.security.Principal;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
-//@RequestMapping("")
 public class SimphonyPayment{
-
     @Autowired
     private SimphonyPaymentService simphonyPaymentService;
     @Autowired
@@ -46,16 +31,8 @@ public class SimphonyPayment{
     @Autowired
     private AccountService accountService;
     @Autowired
-    private RestTemplate restTemplate;
-    @Autowired
     private AccountRepo accountRepo;
-    @Autowired
-    private OperationTypeRepo operationTypeRepo;
-    @Autowired
-    private OperaTransactionRepo operaTransactionRepo;
-    private Conversions conversions = new Conversions();
-    @Autowired
-    private GeneralSettingsRepo generalSettingsRepo;
+
 
     @PostMapping("/test/simphonyPayment/paySplitCheck")
     public ResponseEntity<?> paymentTransaction(@RequestHeader("Authorization") String authorization,

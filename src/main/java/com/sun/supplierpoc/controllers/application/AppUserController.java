@@ -390,32 +390,39 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity deleteApplicationUsers(@RequestParam(name = "addFlag") boolean addFlag,
-                                                 @RequestBody List<ApplicationUser> applicationUsers, Principal principal) {
+                                                 @RequestBody List<String> applicationUsers, Principal principal) {
 
         HashMap response = new HashMap();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            for (ApplicationUser applicationUser : applicationUsers) {
+            for (String applicationUserId : applicationUsers) {
+                Optional<ApplicationUser> applicationUserObj = userRepo.findById(applicationUserId);
+                ApplicationUser applicationUser;
 
-                Optional<Group> groupOptional = groupRepo.findById(applicationUser.getGroup().getId());
+                if(applicationUserObj.isPresent()){
+                    applicationUser = applicationUserObj.get();
 
-                if (groupOptional.isPresent()) {
-                    Group group = groupOptional.get();
+                    Optional<Group> groupOptional = groupRepo.findById(applicationUser.getGroup().getId());
 
-                    if (!group.isDeleted()) {
-                        applicationUser.setDeleted(addFlag);
-                        applicationUser.setSuspended(addFlag);
-                        userRepo.save(applicationUser);
+                    if (groupOptional.isPresent()) {
+                        Group group = groupOptional.get();
+
+                        if (!group.isDeleted()) {
+                            applicationUser.setDeleted(addFlag);
+                            applicationUser.setSuspended(addFlag);
+                            userRepo.save(applicationUser);
+                        } else {
+                            response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted,\n try to update his group.");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
                     } else {
-                        response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted,\n try to update his group.");
+                        response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted, \n try to update his group.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
-                } else {
-                    response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted, \n try to update his group.");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
+                }else
+                    continue;
             }
             if (addFlag) {
                 response.put("message", "Deleted Successfully.");

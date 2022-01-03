@@ -162,6 +162,7 @@ public class ActivityService {
                             }
                         }
                         paidAmount = transaction.getAfterDiscount() - rest;
+                        transaction.setPartialPayment(paidAmount);
 
                         /* Remove zero balance/voucher */
                         List<Balance> newBalanceList = new ArrayList<>();

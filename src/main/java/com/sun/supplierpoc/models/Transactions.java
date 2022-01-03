@@ -10,7 +10,6 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 public class Transactions {
-
     @Id
     private String id;
     private String status;
@@ -32,6 +31,7 @@ public class Transactions {
     private ApplicationUser user;
     @NotNull(message="Total Payment can't be empty.")
     private double totalPayment;
+    private double partialPayment;
     private double discountRate;
     private double afterDiscount;
     private int pointsRedeemed;
@@ -83,6 +83,14 @@ public class Transactions {
 
     public void setTotalPayment(double totalPayment) {
         this.totalPayment = totalPayment;
+    }
+
+    public double getPartialPayment() {
+        return partialPayment;
+    }
+
+    public void setPartialPayment(double partialPayment) {
+        this.partialPayment = partialPayment;
     }
 
     public double getDiscountRate() {

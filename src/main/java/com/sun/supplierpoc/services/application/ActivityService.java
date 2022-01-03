@@ -163,6 +163,16 @@ public class ActivityService {
                         }
                         paidAmount = transaction.getAfterDiscount() - rest;
 
+                        /* Remove zero balance/voucher */
+                        List<Balance> newBalanceList = new ArrayList<>();
+                        for(int i = 0; i <  wallet.getBalance().size(); i ++){
+                            if(wallet.getBalance().get(i).getAmount() == 0)
+                                continue;
+                            else
+                                newBalanceList.add(wallet.getBalance().get(i));
+                        }
+                        wallet.setBalance(newBalanceList);
+
                         WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
                                 paidAmount, previousBalance, calculateBalance(wallet), null, new Date());
                         wallet.getWalletHistory().add(walletHistory);

@@ -128,6 +128,13 @@ public class ActivityService {
                             return response;
                         }
 
+                        /* Check if user expired or deleted */
+                        if(user.isExpired() || user.getExpire() == 0 || user.isSuspended() || user.isDeleted()){
+                            response.put("isSuccess", false);
+                            response.put("message", "This user is currently unable to use the wallet system.");
+                            return response;
+                        }
+
                         /* check if account has loyalty system */
                         transaction.setAfterDiscount(transaction.getTotalPayment());
 

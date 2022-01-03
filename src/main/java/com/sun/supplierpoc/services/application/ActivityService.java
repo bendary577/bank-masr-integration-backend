@@ -135,6 +135,7 @@ public class ActivityService {
                         double previousBalance = calculateBalance(wallet);
                         double rest = transaction.getAfterDiscount();
                         double newBalance = 0;
+                        double paidAmount = 0;
 
                         for(int i = 0; i <  wallet.getBalance().size(); i ++){
                             if(wallet.getBalance().get(i).getAmount() == 0)
@@ -153,9 +154,10 @@ public class ActivityService {
                                 }
                             }
                         }
+                        paidAmount = transaction.getAfterDiscount() - rest;
 
                         WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
-                                amount, previousBalance, calculateBalance(wallet), null, new Date());
+                                paidAmount, previousBalance, calculateBalance(wallet), null, new Date());
                         wallet.getWalletHistory().add(walletHistory);
                         user.setWallet(wallet);
 
@@ -175,6 +177,7 @@ public class ActivityService {
 
                         response.put("rest", rest);
                         response.put("newBalance", newBalance);
+                        response.put("paidAmount", paidAmount);
                     }
                     else{
                         transaction.setDiscountRate(0.0);

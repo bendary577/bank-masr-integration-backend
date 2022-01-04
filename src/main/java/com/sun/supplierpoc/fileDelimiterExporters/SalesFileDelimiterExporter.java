@@ -84,11 +84,12 @@ public class SalesFileDelimiterExporter {
             if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
             || syncJobType.getName().equals(Constants.CONSUMPTION))
                 this.extractSalesSyncJobData();
-            else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) || (syncJobType.getName().equals(Constants.TRANSFERS))
-                    || (syncJobType.getName().equals(Constants.CREDIT_NOTES)))
+            else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) ||(syncJobType.getName().equals(Constants.CREDIT_NOTES)))
                 this.extractInvoicesSyncJobData();
             else if (syncJobType.getName().equals(Constants.WASTAGE))
                 this.extractWastageSyncJobData();
+            else if (syncJobType.getName().equals(Constants.TRANSFERS))
+                this.extractTransferSyncJobData();
 
             file = createNDFFile();
             System.out.println(file.getName());
@@ -226,6 +227,21 @@ public class SalesFileDelimiterExporter {
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
             counter++;
+        }
+    }
+
+    private void extractTransferSyncJobData() {
+        SyncJobDataCSV syncJobDataCSV;
+        for (SyncJobData syncJobData : listSyncJobData) {
+
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+            if (syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
+            if (syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+
         }
     }
 

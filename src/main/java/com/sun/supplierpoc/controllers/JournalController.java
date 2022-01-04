@@ -254,8 +254,8 @@ public class JournalController {
                 else if (consumptionBasedOnType.equals("Location")) {
                     data = journalV2Service.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
                 } else {
-                    ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
-                    ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+//                    ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
+//                    ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
                     data = journalV2Service.getJournalDataByCostCenterAndLocation(journalSyncJobType, costCentersLocation,
                             costCenters, itemGroups, account);
                 }

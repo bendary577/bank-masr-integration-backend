@@ -105,15 +105,18 @@ public class ScheduledTasks {
             ArrayList<SyncJobType> syncJobTypes = (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeleted(account.getId(), false);
             ArrayList<ApplicationUser> applicationUsers = applicationUserRepo.findAllByAccountId(account.getId());
 
-            List<ApplicationUser> tempAppUsers = new ArrayList<>();
-            for(ApplicationUser applicationUser :  applicationUsers){
-                if(applicationUser.getExpire() > 0 ){
-                    long diff = applicationUser.getCreationDate().getTime() - new Date().getTime();
-                    long diffHours = diff / (60 * 60 * 1000);
-                    applicationUser.setExpire(applicationUser.getExpire() - 1);
-                }
-            }
-            applicationUserRepo.saveAll(applicationUsers);
+            /* Check application user expiry date */
+//            List<ApplicationUser> tempAppUsers = new ArrayList<>();
+//            for(ApplicationUser applicationUser :  applicationUsers){
+//                if(applicationUser.getExpire() > 0 ){
+//                    long diff = applicationUser.getCreationDate().getTime() - new Date().getTime();
+//                    long diffHours = diff / (60 * 60 * 1000);
+//                    applicationUser.setExpire(applicationUser.getExpire() - 1);
+//                    if(applicationUser.getExpire() == 0)
+//                        applicationUser.setExpired(true);
+//                }
+//            }
+//            applicationUserRepo.saveAll(applicationUsers);
 
             if (syncJobTypes.size() == 0) continue;
 

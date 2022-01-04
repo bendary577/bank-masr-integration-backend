@@ -1,26 +1,23 @@
 package com.sun.supplierpoc.services.application;
 
-import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.Group;
-import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.simphony.response.TransInRange;
-import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.repositories.TransactionTypeRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
-import com.sun.supplierpoc.services.AccountService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,12 +38,147 @@ public class TransactionService {
 
     private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
 
-    public List<Transactions> getTransactionByType(String transactionTypeId, String time, Account account) {
 
+    public int getTransactionByTypeCount(String from, String to, String groupId, Account account) {
+        Date fromDate = null;
+        Date toDate = null;
+        int transactionsCount = 0;
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        try {
+            List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
+
+            // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
+            if(!from.equals("") && !to.equals("")){
+                // Add one day to range to include last day selected
+                Calendar c = Calendar.getInstance();
+                c.setTime(dateFormat.parse(to));
+                c.add(Calendar.DATE, 1);
+                to = dateFormat.format(c.getTime());
+
+                fromDate = dateFormat.parse(from);
+                toDate = dateFormat.parse(to);
+            }
+
+            if(groupId == null || groupId.equals("")){
+                if(fromDate == null && toDate == null){
+                    transactionsCount = transactionRepo.countAllByTransactionTypeIn(transactionTypes);
+                }else {
+                    transactionsCount = transactionRepo.countAllByTransactionTypeInAndTransactionDateBetween(
+                            transactionTypes, fromDate, toDate);
+                }
+            }else {
+                Optional<Group> group = groupRepo.findById(groupId);
+                if (group != null){
+                    if(fromDate == null && toDate == null){
+                        transactionsCount = transactionRepo.countAllByTransactionTypeInAndGroup(transactionTypes, group.get());
+                    }else {
+                        transactionsCount = transactionRepo.countAllByTransactionTypeInAndTransactionDateBetween(
+                                transactionTypes, group.get(), fromDate, toDate);
+                    }
+                }
+            }
+
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return transactionsCount;
+    }
+
+    public List<Transactions> getTransactionByTypePaginated(String transactionTypeName, String from, String to,
+                                                            String groupId, Account account, int pageNumber, int limit) {
+        Date fromDate = null;
+        Date toDate = null;
+        TransactionType transactionType;
+        List<Transactions> transactions = new ArrayList<>();
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        try{
+            Pageable paging = PageRequest.of(pageNumber-1, limit);
+            if(!from.equals("") && to.equals("")){
+                to = dateFormat.format(new Date());
+            }
+            // 2021-12-01 yyyy-mm-dd
+            if(!from.equals("") && !to.equals("")){
+                // Add one day to range to include last day selected
+                Calendar c = Calendar.getInstance();
+                c.setTime(dateFormat.parse(to));
+                c.add(Calendar.DATE, 1);
+                to = dateFormat.format(c.getTime());
+
+                fromDate = dateFormat.parse(from);
+                toDate = dateFormat.parse(to);
+            }
+
+            List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
+
+//            transactionType = transactionTypeRepo.findByNameAndAccountId(transactionTypeName, account.getId());
+
+            if(transactionTypes == null || transactionTypes.size() == 0){
+                return transactions;
+            }
+
+            if(groupId == null || groupId.equals("")){
+                if(pageNumber == 0 && limit ==0){
+                    if(fromDate == null && toDate == null)
+                        transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(
+                                transactionTypes);
+                    else
+                        transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                transactionTypes, fromDate, toDate);
+                }
+                else{
+                    if(fromDate == null && toDate == null)
+                        transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(
+                                transactionTypes, paging);
+                    else
+                        transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                transactionTypes, fromDate, toDate, paging);
+                }
+            }else {
+                Optional<Group> group = groupRepo.findById(groupId);
+                if (group != null){
+                    if(pageNumber == 0 && limit ==0){
+                        if(fromDate == null && toDate == null)
+                            transactions = transactionRepo.findAllByTransactionTypeInAndGroupOrderByTransactionDateDesc(
+                                    transactionTypes, group.get());
+                        else
+                            transactions = transactionRepo.
+                                    findAllByTransactionTypeInAndGroupAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                            transactionTypes, group.get(), fromDate, toDate);
+                    }
+                    else{
+                        if(fromDate == null && toDate == null)
+                            transactions = transactionRepo.findAllByTransactionTypeInAndGroupOrderByTransactionDateDesc(
+                                    transactionTypes, group.get(), paging);
+                        else
+                            transactions = transactionRepo.findAllByTransactionTypeInAndGroupAndTransactionDateBetweenOrderByTransactionDateDesc(
+                                    transactionTypes, group.get(), fromDate, toDate, paging);
+                    }
+                }
+            }
+
+        }catch (Exception e){
+
+        }
+
+        return transactions;
+    }
+
+    public List<Transactions> getTransactionByTypeStat(String transactionTypeId, String time, Account account,
+                                                       int pageNumber, int limit) {
+        List<Transactions> transactions;
         List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
-        
+
+        if(pageNumber == 0 && limit ==0)
+            transactions = getTransactionsByTime(transactionTypes, time);
+        else
+            transactions = getTransactionsByTimePaginated(transactionTypes, time, pageNumber, limit);
+
+
         return getTransactionsByTime(transactionTypes, time);
-        
     }
 
     public void createTransactionType(Account account, TransactionType transactionType) {
@@ -67,17 +199,25 @@ public class TransactionService {
 
     public HashMap getTotalSpendTransactions(String dateFlag, String transactionTypeName, Account account) {
 
-        HashMap statistic;
-        List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
-        List<Transactions> transactions;
-        double totalSpend = 0;
-        transactions = getTransactionsByTime(transactionTypes, dateFlag);
-        for (Transactions transaction : transactions) {
-            totalSpend = totalSpend + transaction.getAfterDiscount();
+        HashMap statistic = new HashMap();
+        try{
+            List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountId(account.getId());
+            List<Transactions> transactions;
+            double totalSpend = 0;
+
+            transactions = getTransactionsByTime(transactionTypes, dateFlag);
+
+            for (Transactions transaction : transactions) {
+                totalSpend = totalSpend + transaction.getAfterDiscount();
+            }
+
+            statistic = calculateActivityStatistic(transactions);
+            statistic.put("transactions", transactions);
+            statistic.put("totalSpend", totalSpend);
+        }catch (Exception e){
+            e.printStackTrace();
         }
-        statistic = calculateActivityStatistic(transactions);
-        statistic.put("transactions", transactions);
-        statistic.put("totalSpend", totalSpend);
+
         return statistic;
     }
 
@@ -149,20 +289,19 @@ public class TransactionService {
     }
 
     public List<Transactions> getTransactionsByTime(List<TransactionType> transactionTypes, String time) {
-
-
         List<Transactions> transactions;
 
         if (time.equals("Today")) {
-
             double totalSpend = 0;
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
             calendar.set(Calendar.HOUR_OF_DAY, 0);
             calendar.set(Calendar.MINUTE, 59);
             calendar.set(Calendar.SECOND, 59);
             Date date = calendar.getTime();
-            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, date, new Date());
-        } else if (time.equals("Last Week")) {
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                    transactionTypes, date, new Date());
+        }
+        else if (time.equals("Last Week")) {
             double totalSpend = 0;
             Calendar c = Calendar.getInstance();
             c.add(Calendar.DATE, -7);
@@ -176,7 +315,8 @@ public class TransactionService {
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
             transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, start, end);
-        } else if (time.equals("Last Month")) {
+        }
+        else if (time.equals("Last Month")) {
             double totalSpend = 0;
             Calendar c = Calendar.getInstance();
             c.set(Calendar.DAY_OF_MONTH, 0);
@@ -196,7 +336,69 @@ public class TransactionService {
             c.set(Calendar.SECOND, 0);
             Date end = c.getTime();
             transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(transactionTypes, start, end);
-        } else {
+        }
+        else {
+            transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(transactionTypes);
+        }
+        return transactions;
+    }
+
+
+    public List<Transactions> getTransactionsByTimePaginated(List<TransactionType> transactionTypes, String time,
+                                                    int pageNumber, int limit) {
+        List<Transactions> transactions;
+
+        Pageable paging = PageRequest.of(pageNumber-1, limit);
+
+        if (time.equals("Today")) {
+            double totalSpend = 0;
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("EET"), Locale.US);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 59);
+            calendar.set(Calendar.SECOND, 59);
+            Date date = calendar.getTime();
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                    transactionTypes, date, new Date());
+        }
+        else if (time.equals("Last Week")) {
+            double totalSpend = 0;
+            Calendar c = Calendar.getInstance();
+            c.add(Calendar.DATE, -7);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            Date start = c.getTime();
+            c.add(Calendar.DATE, 7);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            Date end = c.getTime();
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                    transactionTypes, start, end);
+        }
+        else if (time.equals("Last Month")) {
+            double totalSpend = 0;
+            Calendar c = Calendar.getInstance();
+            c.set(Calendar.DAY_OF_MONTH, 0);
+            c.add(Calendar.DATE, -30);
+            c.add(Calendar.DATE, 0);
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            Date start = c.getTime();
+            c.add(Calendar.DATE, 30);
+            Month month = Month.of(c.getTime().getMonth() + 1);
+            if (month.maxLength() == 31) {
+                c.add(Calendar.DATE, 1);
+            }
+            c.set(Calendar.HOUR_OF_DAY, 0);
+            c.set(Calendar.MINUTE, 0);
+            c.set(Calendar.SECOND, 0);
+            Date end = c.getTime();
+            transactions = transactionRepo.findAllByTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(
+                    transactionTypes, start, end);
+        }
+        else {
             transactions = transactionRepo.findAllByTransactionTypeInOrderByTransactionDateDesc(transactionTypes);
         }
         return transactions;

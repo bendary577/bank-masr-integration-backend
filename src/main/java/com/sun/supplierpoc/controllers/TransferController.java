@@ -417,7 +417,6 @@ public class TransferController {
                 try{
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     driver.findElement(By.id("drawerToggleButton")).click();
 
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
@@ -428,11 +427,8 @@ public class TransferController {
 
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
-                        try {
-                            wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
-                        }catch (Exception e) {
-                            driver.get(Constants.MICROS_MAJOR_GROUPS_LINK);
-                        }
+                    //    wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_MAJOR_GROUPS_LINK);
                     }else {
                         throw new Exception();
                     }
@@ -481,12 +477,17 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            if(account.getMicrosVersion().equals("version1"))
-                driver.findElement(By.name("_ctl27")).click();
-            else
-                driver.findElement(By.name("_ctl31")).click();
+            if(account.getMicrosVersion().equals("version1")) {
+              /*  driver.findElement(By.name("_ctl27")).click();
+                driver.findElement(By.id("link-27-10-4-ItemGroups")).click();*/
+                driver.get(Constants.ITEMS_GROUPS_LINK);
+            }else{
+                driver.get("https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx");
+            }
+         /*   else
+                driver.findElement(By.name("_ctl67")).click();
 
-            driver.findElement(By.id("link-27-10-4-ItemGroups")).click();
+            driver.findElement(By.id("link-27-10-4-ItemGroups")).click();*/
 
 //            driver.get(Constants.MAIN_MENU_URL);
 //            driver.get(Constants.ITEMS_GROUPS_LINK);
@@ -531,12 +532,15 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            if(account.getMicrosVersion().equals("version1"))
-                driver.findElement(By.name("_ctl27")).click();
-            else
-                driver.findElement(By.name("_ctl31")).click();
+            if(account.getMicrosVersion().equals("version1")) {
+              /*  driver.findElement(By.name("_ctl31")).click();
+                driver.findElement(By.id("link-27-10-2-Items")).click();*/
+                driver.get(Constants.ITEMS_LINK);
+            }
+            else {
+               driver.get("https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/Items/OverviewItem.aspx");
+            }
 
-            driver.findElement(By.id("link-27-10-2-Items")).click();
 //            driver.get(Constants.MAIN_MENU_URL);
 //            driver.get(Constants.ITEMS_LINK);
 

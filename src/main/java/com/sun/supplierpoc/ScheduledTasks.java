@@ -113,7 +113,7 @@ public class ScheduledTasks {
                     applicationUser.setExpire(applicationUser.getExpire() - 1);
                 }
             }
-//            applicationUserRepo.saveAll(applicationUsers);
+            applicationUserRepo.saveAll(applicationUsers);
 
             if (syncJobTypes.size() == 0) continue;
 

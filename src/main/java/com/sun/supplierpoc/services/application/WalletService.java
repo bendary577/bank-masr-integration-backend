@@ -20,6 +20,9 @@ public class WalletService {
     @Autowired
     private ActionService actionService;
 
+    @Autowired
+    private ActionStatsService actionStatsService;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public Response chargeWallet(User agent, String userId, Balance balance) {
@@ -37,7 +40,8 @@ public class WalletService {
                     lastBalance = lastBalance+ tempBalance.getAmount();
                 }
                 applicationUser.getWallet().getBalance().add(balance);
-                WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() , lastBalance, (lastBalance + balance.getAmount()), new Date());
+                WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() ,
+                        lastBalance, (lastBalance + balance.getAmount()), agent, new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -51,6 +55,16 @@ public class WalletService {
                 action.setActionType(ActionType.CHARGE_WALLET);
 
                 actionService.createUserAction(action);
+
+                /* Update agent action stats */
+                ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
+                if(actionStats == null){
+                    actionStats = new ActionStats(agent, balance.getAmount(), 0,0, agent.getAccountId());
+                    actionStatsService.createActionStats(actionStats);
+                }else {
+                    actionStats.setChargeAmount(actionStats.getChargeAmount() + balance.getAmount());
+                    actionStatsService.createActionStats(actionStats);
+                }
 
                 response.setStatus(true);
                 response.setMessage("Wallet Charged Successfully.");
@@ -68,7 +82,7 @@ public class WalletService {
     }
 
 
-    public Response deductWallet(String userId, double amount) {
+    public Response deductWallet(User agent, String userId, double amount) {
 
         Response response = new Response();
 
@@ -98,9 +112,31 @@ public class WalletService {
                         applicationUser.getWallet().getBalance().get(index).getAmount() - amount
                 );
 
-                WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount), new Date());
+                WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount),
+                        agent, new Date());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
+
+                /* Create new user action */
+                Action action = new Action();
+                action.setUser(agent);
+                action.setApplicationUser(applicationUser);
+                action.setAccountId(agent.getAccountId());
+                action.setAmount(amount);
+                action.setDate(new Date());
+                action.setActionType(ActionType.DEDUCT_WALLET);
+
+                actionService.createUserAction(action);
+
+                /* Update agent action stats */
+                ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
+                if(actionStats == null){
+                    actionStats = new ActionStats(agent, 0, amount,0, agent.getAccountId());
+                    actionStatsService.createActionStats(actionStats);
+                }else {
+                    actionStats.setDeductAmount(actionStats.getDeductAmount() + amount);
+                    actionStatsService.createActionStats(actionStats);
+                }
 
                 response.setMessage("Amount deducted from Wallet successfully.");
                 response.setStatus(true);

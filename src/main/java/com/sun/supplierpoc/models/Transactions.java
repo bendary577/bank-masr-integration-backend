@@ -9,11 +9,10 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-//@Document(collation = "transaction")
 public class Transactions {
-
     @Id
     private String id;
+    private String status;
     @NotNull(message="Code can't be empty.")
     @NotBlank(message="Code can't be empty.")
     private String code;
@@ -27,10 +26,12 @@ public class Transactions {
     private String revenueCentreName;
     private String employeeId;
     private String checkNumber;
+    @DBRef
     private Group group;
     private ApplicationUser user;
     @NotNull(message="Total Payment can't be empty.")
     private double totalPayment;
+    private double partialPayment;
     private double discountRate;
     private double afterDiscount;
     private int pointsRedeemed;
@@ -42,6 +43,14 @@ public class Transactions {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Date getTransactionDate() {
@@ -74,6 +83,14 @@ public class Transactions {
 
     public void setTotalPayment(double totalPayment) {
         this.totalPayment = totalPayment;
+    }
+
+    public double getPartialPayment() {
+        return partialPayment;
+    }
+
+    public void setPartialPayment(double partialPayment) {
+        this.partialPayment = partialPayment;
     }
 
     public double getDiscountRate() {

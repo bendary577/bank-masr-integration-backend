@@ -428,7 +428,7 @@ public class SalesFileDelimiterExporter {
             analysisTCode = "#";
 
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")) {
-
+/*
             if (!syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && !syncJobType.getName().equals(Constants.APPROVED_INVOICES)) {
 
                 analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
@@ -437,7 +437,7 @@ public class SalesFileDelimiterExporter {
                 if (("analysisCodeT" + index).equals("analysisCodeT1") && CDMaker.equals("D")) {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-            }  else {
+            }  else {*/
                 if (CDMaker.equals("D") || CDMaker.equals("DV")) {
                     if (!("analysisCodeT" + index).equals("analysisCodeT"+configuration.taxesCodeAnalysisCode) &&
                             !("analysisCodeT" + index).equals("analysisCodeT"+configuration.supplierCodeAnalysisCode)) {
@@ -446,7 +446,7 @@ public class SalesFileDelimiterExporter {
                 } else {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-           }
+           //}
         }
 
         if (analysisTCode.length() > 15) {

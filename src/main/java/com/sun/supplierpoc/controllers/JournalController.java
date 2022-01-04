@@ -8,6 +8,7 @@ import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -279,7 +280,7 @@ public class JournalController {
                     }
 
                     /* Check generate journals report feature */
-                    if (addedJournalBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.CONSUMPTION_CUSTOM_REPORT)){
+                    if (addedJournalBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Roles.CONSUMPTION_CUSTOM_REPORT)){
                         ConsumptionExcelExporter excelExporter = new ConsumptionExcelExporter();
                         try{
                             excelExporter.exportMonthlyReport(account.getName(),generalSettings, journalSyncJobType, addedJournalBatches);

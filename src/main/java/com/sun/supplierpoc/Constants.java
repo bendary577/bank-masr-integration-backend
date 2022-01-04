@@ -52,6 +52,12 @@ public class Constants {
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
 
+    ///////////////////////////////////////// Transaction Status//////////////////////////////////////////////////////
+    public static String PAID_TRANSACTION = "Paid Transaction";
+    public static String PARTIAL_PAYMENT = "Partial Payment";
+    public static String UNPAID_TRANSACTION = "Unpaid Transaction";
+    public static String INSUFFICIENT_AMOUNT = "Unpaid Transaction - Insufficient Amount";
+
     ///////////////////////////////////////// Operation Types///////////////////////////////////////////////////////////
     public static String CREATE_CHECK = "Create Check";
     public static String OPERA_PAYMENT = "Opera Payment";
@@ -261,20 +267,6 @@ public class Constants {
     //////////////////////////////////////////////// AMAZON PAYMENT /////////////////////////////////////////////////////
 
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
-
-    ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
-    public static final String ADD_ROLE = "add_role";
-    public static final String ADD_USER_ROLE = "add_user_role";
-    public static final String ADD_USER_FEATURE = "add_user_feature";
-    public static final String ADD_FEATURE = "add_feature";
-    public static  final String CHARGE_WALLET = "charge_wallet";
-    public static  final String DEDUCT_WALLET = "deduct_wallet";
-    public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
-    public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
-
-    ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
-    public static final String CUSTOM_REPORT = "generate_custom_report";
-
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";

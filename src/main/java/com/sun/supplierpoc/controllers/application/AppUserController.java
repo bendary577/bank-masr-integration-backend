@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -45,17 +46,16 @@ public class AppUserController {
     @Autowired
     private AppUserService appUserService;
     @Autowired
-    private ImageService imageService;
-    @Autowired
     private GroupRepo groupRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-    @Autowired
-    private SimpMessagingTemplate webSocket;
+
     @Autowired
     private SmsService smsService;
     @Autowired
     InvokerUserService invokerUserService;
+    @Autowired
+    FeatureService featureService;
 
     private Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -86,7 +86,7 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
-                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
                 if(applicationUser != null){
                     response.put("isSuccess", true);
                     response.put("points", applicationUser.getPoints());
@@ -141,7 +141,7 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
-                ApplicationUser applicationUser = userRepo.findByCode(guestCode);
+                ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
                 if(applicationUser != null){
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);
@@ -184,6 +184,14 @@ public class AppUserController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
+
+//            if(featureService.hasFeature(account, Features.ENTRY_SYSTEM)){
+//                /* Calculate expiry date */
+//                for (ApplicationUser applicationUser : applicationUsers) {
+//                    if(applicationUser.isExpired())
+//                        continue;
+//                }
+//            }
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -210,8 +218,8 @@ public class AppUserController {
     @RequestMapping("/addApplicationUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag", required = true) boolean addFlag,
-                                                   @RequestParam(name = "isGeneric", required = true) boolean isGeneric,
+    public ResponseEntity addApplicationGroupImage(@RequestParam(name = "addFlag") boolean addFlag,
+                                                   @RequestParam(name = "isGeneric") boolean isGeneric,
                                                    @RequestPart(name = "name", required = false) String name,
                                                    @RequestPart(name = "cardCode", required = true) String cardCode,
                                                    @RequestPart(name = "groupId", required = false) String groupId,
@@ -241,7 +249,7 @@ public class AppUserController {
                     GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                     response = appUserService
-                            .addUpdateGuest(addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
+                            .addUpdateGuest(user, addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
                                     image, account, generalSettings, accompaniedGuests, balance, cardCode, expire, mobile, points);
 
                     if ((Boolean) response.get("success")) {
@@ -382,32 +390,39 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity deleteApplicationUsers(@RequestParam(name = "addFlag") boolean addFlag,
-                                                 @RequestBody List<ApplicationUser> applicationUsers, Principal principal) {
+                                                 @RequestBody List<String> applicationUsers, Principal principal) {
 
         HashMap response = new HashMap();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
-            for (ApplicationUser applicationUser : applicationUsers) {
+            for (String applicationUserId : applicationUsers) {
+                Optional<ApplicationUser> applicationUserObj = userRepo.findById(applicationUserId);
+                ApplicationUser applicationUser;
 
-                Optional<Group> groupOptional = groupRepo.findById(applicationUser.getGroup().getId());
+                if(applicationUserObj.isPresent()){
+                    applicationUser = applicationUserObj.get();
 
-                if (groupOptional.isPresent()) {
-                    Group group = groupOptional.get();
+                    Optional<Group> groupOptional = groupRepo.findById(applicationUser.getGroup().getId());
 
-                    if (!group.isDeleted()) {
-                        applicationUser.setDeleted(addFlag);
-                        applicationUser.setSuspended(addFlag);
-                        userRepo.save(applicationUser);
+                    if (groupOptional.isPresent()) {
+                        Group group = groupOptional.get();
+
+                        if (!group.isDeleted()) {
+                            applicationUser.setDeleted(addFlag);
+                            applicationUser.setSuspended(addFlag);
+                            userRepo.save(applicationUser);
+                        } else {
+                            response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted,\n try to update his group.");
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                        }
                     } else {
-                        response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted,\n try to update his group.");
+                        response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted, \n try to update his group.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
-                } else {
-                    response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted, \n try to update his group.");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-                }
+                }else
+                    continue;
             }
             if (addFlag) {
                 response.put("message", "Deleted Successfully.");

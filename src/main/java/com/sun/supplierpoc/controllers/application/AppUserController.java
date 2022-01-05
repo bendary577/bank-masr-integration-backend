@@ -3,10 +3,7 @@ package com.sun.supplierpoc.controllers.application;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.SmsPojo;
-import com.sun.supplierpoc.models.Transactions;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
@@ -17,6 +14,7 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.services.application.ActivityService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,11 +49,15 @@ public class AppUserController {
     private GeneralSettingsRepo generalSettingsRepo;
 
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private SmsService smsService;
     @Autowired
     InvokerUserService invokerUserService;
     @Autowired
     FeatureService featureService;
+    @Autowired
+    ActivityService activityService;
 
     private Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -141,7 +143,7 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
-                ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
+                ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, user.getAccountId());
                 if(applicationUser != null){
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);
@@ -174,6 +176,60 @@ public class AppUserController {
 
     /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////// Entry System ////////////////////////////////////////////////////
+
+    @GetMapping("/checkGuestBalance")
+    public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
+                                               @RequestParam("guestCode") String guestCode) {
+        HashMap response = new HashMap();
+        try{
+            InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+            if(invokerUser == null){
+                response.put("isSuccess", false);
+                response.put("balance", 0);
+                response.put("message", "This user not allowed to access this method.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            if(guestCode.equals("")){
+                response.put("isSuccess", false);
+                response.put("balance", 0);
+                response.put("message", "Kindly provide the customer code.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            Account account = accountService.getAccount(invokerUser.getAccountId());
+
+            if (account != null) {
+                ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, account.getId());
+                double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+                if(applicationUser != null){
+                    response.put("isSuccess", true);
+                    response.put("balance", guestBalance);
+                    response.put("message", "");
+                }else {
+                    response.put("isSuccess", false);
+                    response.put("balance", 0);
+                    response.put("message", "This user is not a member of wallet system.");
+                }
+
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                response.put("isSuccess", true);
+                response.put("balance", 0);
+                response.put("message", "This user is not a member of wallet system.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            response.put("isSuccess", false);
+            response.put("message", "");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+    }
+
+    /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")

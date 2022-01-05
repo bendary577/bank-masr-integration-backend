@@ -129,7 +129,8 @@ public class ActivityService {
                         }
 
                         /* Check if user expired or deleted */
-                        if(user.isExpired() || user.getExpire() == 0 || user.isSuspended() || user.isDeleted()){
+                        if(user.getExpiryDate() == null || new Date().compareTo(user.getExpiryDate()) >= 0
+                                || user.isSuspended() || user.isDeleted()){
                             response.put("isSuccess", false);
                             response.put("message", "This user is currently unable to use the wallet system.");
                             return response;
@@ -174,8 +175,9 @@ public class ActivityService {
                         }
                         wallet.setBalance(newBalanceList);
 
+                        newBalance = calculateBalance(wallet);
                         WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
-                                paidAmount, previousBalance, calculateBalance(wallet), null, new Date());
+                                paidAmount, previousBalance, newBalance, null, new Date());
                         wallet.getWalletHistory().add(walletHistory);
                         user.setWallet(wallet);
 

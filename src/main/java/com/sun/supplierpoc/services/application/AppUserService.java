@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -58,7 +61,8 @@ public class AppUserService {
 
     public HashMap addUpdateGuest(User agent, boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
                                   boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
-                                  String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile, int points) {
+                                  String accompaniedGuestsJson, String balance, String cardCode, String expiryDate,
+                                  String mobile, int points) {
 
         HashMap response = new HashMap();
 
@@ -142,8 +146,8 @@ public class AppUserService {
                     response.put("success", false);
                     return response;
                 }
-            } else {
-
+            }
+            else {
                 /* Check if card code is valid */
                 ApplicationUser oldUser = userRepo.findByCodeAndAccountIdAndDeleted(cardCode, account.getId(), false);
                 if(oldUser != null){
@@ -166,8 +170,17 @@ public class AppUserService {
                 applicationUser.setCode(cardCode);
                 List<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
                 applicationUser.setWallet(new Wallet(List.of(new Balance(Double.parseDouble(balance), revenueCenters))));
-                applicationUser.setExpire(expire);
                 applicationUser.setGeneric(true);
+
+                /* save expiry date 2022-01-06T14:28 */
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm");
+                Date expiry = null;
+                try {
+                    expiry = fileDateFormat.parse(expiryDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                applicationUser.setExpiryDate(expiry);
 
                 if (sendEmail && email != null && !email.equals("")) {
                     emailService.sendWalletMail(email);
@@ -185,7 +198,8 @@ public class AppUserService {
                         response.put("success", false);
                         return response;
                     }
-                } else if (sendSMS && (mobile == null || mobile.equals(""))) {
+                }
+                else if (sendSMS && (mobile == null || mobile.equals(""))) {
                     response.put("message", "Invalid Mobile");
                     response.put("success", false);
                     return response;
@@ -321,11 +335,22 @@ public class AppUserService {
                     }
                     applicationUser.setLogoUrl(logoUrl);
                 }
+
+                /* save expiry date 2022-01-06T14:28 */
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm");
+                Date expiry = null;
+                try {
+                    expiry = fileDateFormat.parse(expiryDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                applicationUser.setExpiryDate(expiry);
+
                 applicationUser.setName(name);
                 applicationUser.setMobile(mobile);
-                applicationUser.setExpire(expire);
                 applicationUser.setAccountId(account.getId());
                 group.setLastUpdate(new Date());
+
                 userRepo.save(applicationUser);
 
                 response.put("message", "User Updated successfully.");

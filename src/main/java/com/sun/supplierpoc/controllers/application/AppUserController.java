@@ -439,7 +439,8 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity suspendApplicationUsers(@RequestParam(name = "susFlag") boolean susFlage,
-                                                  @RequestBody ApplicationUser applicationUser, Principal principal) {
+                                                  @RequestParam(name = "userId") String userId,
+                                                  Principal principal) {
 
         try {
             HashMap response = new HashMap();
@@ -449,9 +450,10 @@ public class AppUserController {
 
             if (accountOptional.isPresent()) {
 
-                Optional<ApplicationUser> tempApplicationUserOptional = userRepo.findById(applicationUser.getId());
+                Optional<ApplicationUser> tempApplicationUserOptional = userRepo.findById(userId);
 
                 if (tempApplicationUserOptional.isPresent()) {
+                    ApplicationUser applicationUser = tempApplicationUserOptional.get();
                     applicationUser.setSuspended(susFlage);
                     userRepo.save(applicationUser);
 

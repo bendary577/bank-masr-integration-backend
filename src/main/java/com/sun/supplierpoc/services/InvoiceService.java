@@ -901,6 +901,8 @@ public class InvoiceService {
                 }
 
                 journalEntry.put("description", description);
+                journalEntry.put("JournalType", Constants.APPROVED_INVOICES);
+
 //                journalEntry.put("overGroup", journal.getOverGroup());
 
                 journalEntries.add(journalEntry);

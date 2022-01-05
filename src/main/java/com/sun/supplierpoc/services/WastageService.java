@@ -749,9 +749,21 @@ public class WastageService {
                 try{
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     driver.findElement(By.id("drawerToggleButton")).click();
 
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     driver.findElement(By.partialLinkText("Inventory Management")).click();
                     List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
                     if(elements.size() >= 2){
@@ -759,6 +771,12 @@ public class WastageService {
 
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
+                        try {
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
 //                        driver.close();
 //                        driver.switchTo().window(tabs2.get(0));
                    //     wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
@@ -771,6 +789,12 @@ public class WastageService {
                 }
             }
 
+            try {
+                WebDriverWait newWait = new WebDriverWait(driver, 10);
+                newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel_")));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));

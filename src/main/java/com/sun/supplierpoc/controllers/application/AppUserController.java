@@ -224,6 +224,7 @@ public class AppUserController {
             e.printStackTrace();
 
             response.put("isSuccess", false);
+            response.put("balance", 0);
             response.put("message", "");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }

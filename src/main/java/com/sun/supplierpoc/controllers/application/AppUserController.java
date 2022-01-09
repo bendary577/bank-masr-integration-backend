@@ -8,7 +8,6 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -20,13 +19,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailException;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
@@ -240,15 +236,8 @@ public class AppUserController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
+            ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountId(account.getId());
 
-//            if(featureService.hasFeature(account, Features.ENTRY_SYSTEM)){
-//                /* Calculate expiry date */
-//                for (ApplicationUser applicationUser : applicationUsers) {
-//                    if(applicationUser.isExpired())
-//                        continue;
-//                }
-//            }
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);

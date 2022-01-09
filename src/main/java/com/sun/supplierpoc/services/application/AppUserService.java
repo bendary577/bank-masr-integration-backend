@@ -52,6 +52,10 @@ public class AppUserService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public ArrayList<ApplicationUser> getAppUsersByAccountId(String accountId){
+        return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId);
+    }
+
     public ApplicationUser getAppUserByCode(String guestCode, String accountCode){
         return userRepo.findByCodeAndAccountIdAndDeleted(guestCode, accountCode, false);
     }

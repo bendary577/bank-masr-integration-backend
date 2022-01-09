@@ -178,7 +178,7 @@ public class AppUserController {
 
     ////////////////////////////////////////////////// Entry System ////////////////////////////////////////////////////
 
-    @GetMapping("/checkGuestBalance")
+    @GetMapping("/walletSystem/checkGuestBalance")
     public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
                                                @RequestParam("guestCode") String guestCode) {
         HashMap response = new HashMap();

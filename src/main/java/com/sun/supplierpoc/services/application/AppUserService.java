@@ -52,6 +52,14 @@ public class AppUserService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public ArrayList<ApplicationUser> getAppUsersByAccountId(String accountId){
+        return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId);
+    }
+
+    public ApplicationUser getAppUserByCode(String guestCode, String accountCode){
+        return userRepo.findByCodeAndAccountIdAndDeleted(guestCode, accountCode, false);
+    }
+
     public List<ApplicationUser> getTopUsers(Account account) {
 
         List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);

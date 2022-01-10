@@ -3,32 +3,26 @@ package com.sun.supplierpoc.controllers.application;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.SmsPojo;
-import com.sun.supplierpoc.models.Transactions;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.*;
+import com.sun.supplierpoc.services.application.ActivityService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.MailException;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
@@ -51,11 +45,15 @@ public class AppUserController {
     private GeneralSettingsRepo generalSettingsRepo;
 
     @Autowired
+    private AccountService accountService;
+    @Autowired
     private SmsService smsService;
     @Autowired
     InvokerUserService invokerUserService;
     @Autowired
     FeatureService featureService;
+    @Autowired
+    ActivityService activityService;
 
     private Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -141,7 +139,7 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
-                ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
+                ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, user.getAccountId());
                 if(applicationUser != null){
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);
@@ -174,6 +172,61 @@ public class AppUserController {
 
     /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
 
+    ////////////////////////////////////////////////// Entry System ////////////////////////////////////////////////////
+
+    @GetMapping("/walletSystem/checkGuestBalance")
+    public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
+                                               @RequestParam("guestCode") String guestCode) {
+        HashMap response = new HashMap();
+        try{
+            InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+            if(invokerUser == null){
+                response.put("isSuccess", false);
+                response.put("balance", 0);
+                response.put("message", "This user not allowed to access this method.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            if(guestCode.equals("")){
+                response.put("isSuccess", false);
+                response.put("balance", 0);
+                response.put("message", "Kindly provide the customer code.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            Account account = accountService.getAccount(invokerUser.getAccountId());
+
+            if (account != null) {
+                ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, account.getId());
+                double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+                if(applicationUser != null){
+                    response.put("isSuccess", true);
+                    response.put("balance", guestBalance);
+                    response.put("message", "");
+                }else {
+                    response.put("isSuccess", false);
+                    response.put("balance", 0);
+                    response.put("message", "This user is not a member of wallet system.");
+                }
+
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            } else {
+                response.put("isSuccess", true);
+                response.put("balance", 0);
+                response.put("message", "This user is not a member of wallet system.");
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+
+            response.put("isSuccess", false);
+            response.put("balance", 0);
+            response.put("message", "");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+    }
+
+    /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
 
     @RequestMapping("/getApplicationUsers")
     @CrossOrigin(origins = "*")
@@ -183,15 +236,8 @@ public class AppUserController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            ArrayList<ApplicationUser> applicationUsers = userRepo.findAllByAccountId(account.getId());
+            ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountId(account.getId());
 
-//            if(featureService.hasFeature(account, Features.ENTRY_SYSTEM)){
-//                /* Calculate expiry date */
-//                for (ApplicationUser applicationUser : applicationUsers) {
-//                    if(applicationUser.isExpired())
-//                        continue;
-//                }
-//            }
             return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
         }
         return new ResponseEntity(HttpStatus.FORBIDDEN);

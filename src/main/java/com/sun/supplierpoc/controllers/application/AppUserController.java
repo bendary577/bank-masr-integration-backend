@@ -15,6 +15,7 @@ import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.services.application.ActivityService;
 import com.sun.supplierpoc.services.application.AppUserService;
+import io.jsonwebtoken.impl.Base64UrlCodec;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -348,6 +349,7 @@ public class AppUserController {
 
                         Random random = new Random();
                         String code = appUser.getEmail().substring(0, appUser.getEmail().indexOf('@')) + random.nextInt(100);
+                        code = Base64UrlCodec.BASE64URL.encode(code);
                         String QRPath = "QRCodes/" + code + ".png";
                         String accountLogo = account.getImageUrl();
                         String mailSubj = generalSettings.getMailSub();

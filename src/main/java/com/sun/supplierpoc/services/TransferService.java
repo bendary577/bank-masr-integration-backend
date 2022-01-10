@@ -52,6 +52,8 @@ public class TransferService {
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
     private final Conversions conversions = new Conversions();
     private final SetupEnvironment setupEnvironment = new SetupEnvironment();
@@ -59,9 +61,9 @@ public class TransferService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer,
-                                                   ArrayList<CostCenter> costCenters, ArrayList<Item> items,
-                                                   ArrayList<ItemGroup> itemsGroups, ArrayList<OverGroup> overGroups, Account account, String syncPer) {
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer, ArrayList<CostCenter> costCenters, ArrayList<Item> items,
+                                                   ArrayList<ItemGroup> itemsGroups, ArrayList<OverGroup> overGroups, Account account,
+                                                   String syncPer, SyncJobType transferSyncJobType) {
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver;
         try {
@@ -122,7 +124,8 @@ public class TransferService {
                     List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
                     if (elements.size() >= 2) {
                         try {
-                            wait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement_")));
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                         }
@@ -131,8 +134,8 @@ public class TransferService {
                         ArrayList<String> tabs2 = new ArrayList<String>(driver.getWindowHandles());
 
                         try {
-                            WebDriverWait newWait = new WebDriverWait(driver, 12);
-                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement_")));
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
                         }
@@ -150,7 +153,7 @@ public class TransferService {
 
             try {
                 WebDriverWait newWait = new WebDriverWait(driver, 10);
-                newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel")));
+                newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel_")));
             } catch (Exception e) {
                 System.out.println(e.getMessage());
             }
@@ -237,7 +240,7 @@ public class TransferService {
                 }
             }
             for (HashMap<String, Object> transfer : transfers) {
-                getBookedTransferDetails(items, overGroups, itemsGroups, transfer, driver, journalEntries, syncPer);
+                getBookedTransferDetails(items, overGroups, itemsGroups, transfer, driver, journalEntries, syncPer, transferSyncJobType);
             }
 
             driver.quit();
@@ -286,7 +289,7 @@ public class TransferService {
     }
 
     private void getBookedTransferDetails(ArrayList<Item> items, ArrayList<OverGroup> overGroups, ArrayList<ItemGroup> itemsGroups, HashMap<String, Object> transfer, WebDriver driver,
-                                          ArrayList<HashMap<String, Object>> journalEntries, String syncPer) {
+                                          ArrayList<HashMap<String, Object>> journalEntries, String syncPer, SyncJobType transferSyncJobType) {
 
         ArrayList<Journal> journals = new ArrayList<>();
 
@@ -353,6 +356,9 @@ public class TransferService {
                 if (toCostCenter.costCenterReference.equals("")) {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
+
+                syncJobDataService.prepareAnalysis(journalEntry, transferSyncJobType.getConfiguration(),
+                        fromCostCenter, null, null);
 
                 journalEntry.put("accountingPeriod", ((String) transfer.get("delivery_date")).substring(2, 6));
                 journalEntry.put("transactionDate", transfer.get("delivery_date"));

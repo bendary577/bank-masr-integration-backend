@@ -93,6 +93,7 @@ public class InvoiceController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 
     }
+
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 

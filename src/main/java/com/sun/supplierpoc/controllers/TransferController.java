@@ -82,7 +82,7 @@ public class TransferController {
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
             response = syncBookedTransferInDayRange(user.getId(), account);
-            if(response.get("success").equals(false)){
+            if(response.get("Success").equals(false)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -162,7 +162,7 @@ public class TransferController {
         try {
 
             HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, costCenters, items, itemsGroups,
-                    overGroups, account, syncPer);
+                    overGroups, account, syncPer, transferSyncJobType);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> transfers = (ArrayList<HashMap<String, Object>>) data.get("transfers");

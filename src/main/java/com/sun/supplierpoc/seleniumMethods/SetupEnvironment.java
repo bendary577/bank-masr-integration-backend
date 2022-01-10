@@ -48,7 +48,7 @@ public class SetupEnvironment {
         } else {
 
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -493,17 +493,12 @@ public class SetupEnvironment {
     public Response chooseRangeDaysDateOHRA(String syncFromDate, String syncToDate, WebDriver driver) {
         Response response = new Response();
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
-
-            driver.findElement(By.id("clear0")).click();
+            SimpleDateFormat format = new SimpleDateFormat("EEEE");
+            Calendar cals = Calendar.getInstance();
 
             DateFormat Date = DateFormat.getDateInstance();
             Date fromDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncFromDate);
             Date toDate = new SimpleDateFormat("yyyy-MM-dd").parse(syncToDate);
-
-            SimpleDateFormat format = new SimpleDateFormat("EEEE");
-            Calendar cals = Calendar.getInstance();
 
             cals.setTime(fromDate);
             String fromDateFormatted = Date.format(cals.getTime());
@@ -518,6 +513,28 @@ public class SetupEnvironment {
             String midDateFormatted = Date.format(cals.getTime());
             String midDayName = format.format(cals.getTime());
 
+            try{
+                WebDriverWait newWait = new WebDriverWait(driver, 3);
+                newWait.until(ExpectedConditions.alertIsPresent());
+            }catch(Exception e){
+                System.out.println("No Alert");
+            }
+            String year = String.valueOf(cals.getWeekYear());
+            Select select = new Select(driver.findElement(By.xpath("//*[@id=\"selectYear\"]")));
+            select.selectByVisibleText(year);
+
+            WebDriverWait wait = new WebDriverWait(driver, 20);
+            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+
+            driver.findElement(By.id("clear0")).click();
+
+            try{
+                WebDriverWait newWait = new WebDriverWait(driver, 3);
+                newWait.until(ExpectedConditions.alertIsPresent());
+            }catch(Exception e){
+                System.out.println("No Alert");
+            }
+
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
 
@@ -527,6 +544,13 @@ public class SetupEnvironment {
                     .build()
                     .perform();
 
+            try{
+                WebDriverWait newWait = new WebDriverWait(driver, 2);
+                newWait.until(ExpectedConditions.alertIsPresent());
+            }catch(Exception e){
+                System.out.println("No Alert");
+            }
+
             if(!midDateFormatted.equals(fromDateFormatted)){
                 List<WebElement> midDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + midDayName + ", " + midDateFormatted + "']"));
@@ -535,12 +559,25 @@ public class SetupEnvironment {
                         .perform();
             }
 
+            try{
+                WebDriverWait newWait = new WebDriverWait(driver, 2);
+                newWait.until(ExpectedConditions.alertIsPresent());
+            }catch(Exception e){
+                System.out.println("No Alert");
+            }
+
             if (!toDateFormatted.equals(fromDateFormatted)) {
                 List<WebElement> toDateElements = driver.findElements(By.cssSelector("*[title='Select "
                         + toDayName + ", " + toDateFormatted + "']"));
                 actions.click(toDateElements.get(0))
                         .build()
                         .perform();
+            }
+            try{
+                WebDriverWait newWait = new WebDriverWait(driver, 2);
+                newWait.until(ExpectedConditions.alertIsPresent());
+            }catch(Exception e){
+                System.out.println("No Alert");
             }
 
             Select dateSelected = new Select(driver.findElement(By.id("altOutput0")));

@@ -93,6 +93,7 @@ public class InvoiceController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 
     }
+
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
@@ -109,7 +110,7 @@ public class InvoiceController {
 
         String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
         String fromDate = invoiceSyncJobType.getConfiguration().fromDate;
-        String toDate = fromDate;
+        String toDate  = invoiceSyncJobType.getConfiguration().toDate;
 
         ArrayList<OverGroup> overGroups ;
         if (!invoiceSyncJobType.getConfiguration().uniqueOverGroupMapping){
@@ -321,6 +322,7 @@ public class InvoiceController {
         DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
         DateFormat monthFormat = new SimpleDateFormat("MM");
 
+
         int tryCount = 2;
 
         /*
@@ -386,6 +388,7 @@ public class InvoiceController {
                     startDate = dateFormat.format(calendar.getTime());
                     syncJobType.getConfiguration().fromDate = startDate;
                     syncJobType.getConfiguration().toDate = startDate;
+                    endDate=startDate;
                     syncJobTypeRepo.save(syncJobType);
                 }else{
                     tryCount = tryCount;
@@ -515,7 +518,7 @@ public class InvoiceController {
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
 
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                    //    wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
 
                         driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/MasterData/CostCenters/OverviewCC.aspx");
                     }else {

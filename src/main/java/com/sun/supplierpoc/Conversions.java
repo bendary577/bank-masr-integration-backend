@@ -192,6 +192,16 @@ public class Conversions {
         return new CostCenter();
     }
 
+    public CostCenter checkCostCenterExistence(ArrayList<CostCenter> costCenters, String costCenterName){
+        for (CostCenter costCenter : costCenters) {
+            String savedCostCenterName = costCenter.costCenter;
+            if (savedCostCenterName.equals(costCenterName)) {
+                return costCenter;
+            }
+        }
+        return new CostCenter();
+    }
+
     public ConsumptionLocation checkConCostCenterExistence(ArrayList<ConsumptionLocation> costCenters, String costCenterName){
         for (ConsumptionLocation costCenter : costCenters) {
             if (costCenter.costCenter.costCenter.equals(costCenterName.toLowerCase())) {

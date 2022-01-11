@@ -348,7 +348,8 @@ public class WastageService {
         String toDate = syncJobType.getConfiguration().toDate;
 
         ArrayList<Item> items = generalSettings.getItems();
-        ArrayList<CostCenter> locations = generalSettings.getLocations();
+//        ArrayList<CostCenter> accountlocations = generalSettings.getLocations();
+        ArrayList<CostCenter> locations = syncJobType.getConfiguration().wastageConfiguration.locations;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
@@ -387,10 +388,10 @@ public class WastageService {
 
         for (CostCenter location : locations) {
             try {
+                if (!location.checked) continue;
+
                 journalBatch = new JournalBatch();
                 journalEntries = new ArrayList<>();
-
-                if (!location.checked) continue;
 
                 wastesStatus = new ArrayList<>();
                 driver.get(Constants.BOOKED_WASTE_REPORT_LINK);
@@ -469,15 +470,51 @@ public class WastageService {
                     wastesStatus.add(waste);
                 }
 
-                for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
-                            waste, syncJobType, driver, journalEntries);
+                if(location.syncPerCostCenter){
+                    /* Create batch for each cost center */
+                    String currentCostCenterName = "";
+                    CostCenter currentCostCenter = new CostCenter();
+                    JournalBatch tempJournalBatch = new JournalBatch();
+                    ArrayList<JournalBatch> tempJournalBatches = new ArrayList<>();
+
+                    for (HashMap<String, Object> waste: wastesStatus) {
+                        if(!currentCostCenterName.equals("") &&
+                                !currentCostCenterName.equals(String.valueOf(waste.get("location")))){
+
+                            if(journalEntries.size() > 0){
+                                currentCostCenter = (CostCenter) journalEntries.get(0).get("costCenter");
+                                tempJournalBatch.setLocation(currentCostCenter);
+                                tempJournalBatch.getWaste().addAll(journalEntries);
+                                journalBatches.add(tempJournalBatch);
+                            }
+
+                            journalEntries = new ArrayList<>();
+                            tempJournalBatch = new JournalBatch();
+                        }
+
+                        currentCostCenterName = String.valueOf(waste.get("location"));
+
+                        getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
+                                waste, syncJobType, driver, journalEntries);
+                    }
+
+                    /* Add last cost center data */
+                    if(journalEntries.size() > 0){
+                        currentCostCenter = (CostCenter) journalEntries.get(0).get("costCenter");
+                        tempJournalBatch.setLocation(currentCostCenter);
+                        tempJournalBatch.getWaste().addAll(journalEntries);
+                        journalBatches.add(tempJournalBatch);
+                    }
+                }else{
+                    for (HashMap<String, Object> waste: wastesStatus) {
+                        getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
+                                waste, syncJobType, driver, journalEntries);
+                    }
+
+                    journalBatch.setLocation(location);
+                    journalBatch.setWaste(journalEntries);
+                    journalBatches.add(journalBatch);
                 }
-
-                journalBatch.setLocation(location);
-                journalBatch.setWaste(journalEntries);
-                journalBatches.add(journalBatch);
-
             } catch (Exception e) {
                 driver.quit();
                 response.setStatus(false);
@@ -550,9 +587,6 @@ public class WastageService {
             }
 
             for (Journal journal : journals) {
-//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-//                    continue;
-
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
                 if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
@@ -606,14 +640,15 @@ public class WastageService {
                     }
                 }
 
+                journalEntry.put("costCenter", costCenter);
                 journalEntry.put("fromCostCenter", costCenter.costCenter);
                 journalEntry.put("fromAccountCode", costCenter.accountCode);
 
                 journalEntry.put("toCostCenter", "Waste");
-                journalEntry.put("toAccountCode", "4110006");
+                journalEntry.put("toAccountCode", "");
 
                 journalEntry.put("fromLocation", costCenter.accountCode);
-                journalEntry.put("toLocation", "4110006");
+                journalEntry.put("toLocation", "");
 
                 String description =  journal.getOverGroup();
                 if (description.length() > 50){
@@ -714,9 +749,21 @@ public class WastageService {
                 try{
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     driver.findElement(By.id("drawerToggleButton")).click();
 
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     driver.findElement(By.partialLinkText("Inventory Management")).click();
                     List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
                     if(elements.size() >= 2){
@@ -724,9 +771,15 @@ public class WastageService {
 
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
+                        try {
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
 //                        driver.close();
 //                        driver.switchTo().window(tabs2.get(0));
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                   //     wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
                         driver.get(Constants.MICROS_WASTE_GROUPS_LINK);
                     }else {
                         throw new Exception();
@@ -736,6 +789,12 @@ public class WastageService {
                 }
             }
 
+            try {
+                WebDriverWait newWait = new WebDriverWait(driver, 10);
+                newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel_")));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 
             List<WebElement> rows = driver.findElements(By.tagName("tr"));

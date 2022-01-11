@@ -5,23 +5,24 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.controllers.application.AppUserController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.*;
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
-import com.sun.supplierpoc.services.ImageService;
-import com.sun.supplierpoc.services.QRCodeGenerator;
-import com.sun.supplierpoc.services.SendEmailService;
-import com.sun.supplierpoc.services.SmsService;
+import com.sun.supplierpoc.services.*;
+import io.jsonwebtoken.impl.Base64UrlCodec;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Service
@@ -45,6 +46,25 @@ public class AppUserService {
     @Autowired
     SmsService service;
 
+    @Autowired
+    private ActionService actionService;
+
+    @Autowired
+    private ActionStatsService actionStatsService;
+
+    @Autowired
+    private AppUserController appUserController;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public ArrayList<ApplicationUser> getAppUsersByAccountId(String accountId){
+        return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId);
+    }
+
+    public ApplicationUser getAppUserByCode(String guestCode, String accountCode){
+        return userRepo.findByCodeAndAccountIdAndDeleted(guestCode, accountCode, false);
+    }
+
     public List<ApplicationUser> getTopUsers(Account account) {
 
         List<ApplicationUser> applicationUsers = userRepo.findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);
@@ -52,9 +72,10 @@ public class AppUserService {
         return applicationUsers;
     }
 
-    public HashMap addUpdateGuest(boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
+    public HashMap addUpdateGuest(User agent, boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
                                   boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
-                                  String accompaniedGuestsJson, String balance, String cardCode, double expire, String mobile, int points) {
+                                  String accompaniedGuestsJson, String balance, String cardCode, String expiryDate,
+                                  String mobile, int points) {
 
         HashMap response = new HashMap();
 
@@ -113,8 +134,7 @@ public class AppUserService {
                     return response;
                 }
 
-                Random random = new Random();
-                String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
+                String code = appUserController.createCode(applicationUser);
                 String accountLogo = account.getImageUrl();
                 String mailSubj = generalSettings.getMailSub();
                 String QRPath = "QRCodes/" + code + ".png";
@@ -138,7 +158,15 @@ public class AppUserService {
                     response.put("success", false);
                     return response;
                 }
-            } else {
+            }
+            else {
+                /* Check if card code is valid */
+                ApplicationUser oldUser = userRepo.findByCodeAndAccountIdAndDeleted(cardCode, account.getId(), false);
+                if(oldUser != null){
+                    response.put("message", "Card code already used, Please enter a different card code.");
+                    response.put("success", false);
+                    return response;
+                }
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 List<AccompaniedGuests> accompaniedGuests = null;
@@ -154,8 +182,17 @@ public class AppUserService {
                 applicationUser.setCode(cardCode);
                 List<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
                 applicationUser.setWallet(new Wallet(List.of(new Balance(Double.parseDouble(balance), revenueCenters))));
-                applicationUser.setExpire(expire);
                 applicationUser.setGeneric(true);
+
+                /* save expiry date 2022-01-06T14:28 */
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm");
+                Date expiry = null;
+                try {
+                    expiry = fileDateFormat.parse(expiryDate);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                applicationUser.setExpiryDate(expiry);
 
                 if (sendEmail && email != null && !email.equals("")) {
                     emailService.sendWalletMail(email);
@@ -173,13 +210,41 @@ public class AppUserService {
                         response.put("success", false);
                         return response;
                     }
-                } else if (sendSMS && (mobile == null || mobile.equals(""))) {
+                }
+                else if (sendSMS && (mobile == null || mobile.equals(""))) {
                     response.put("message", "Invalid Mobile");
                     response.put("success", false);
                     return response;
                 }
 
+                WalletHistory walletHistory = new WalletHistory(ActionType.ENTRANCE_AMOUNT ,Double.parseDouble(balance) ,
+                        0, Double.parseDouble(balance), agent, new Date());
+                applicationUser.getWallet().getWalletHistory().add(walletHistory);
+
                 userRepo.save(applicationUser);
+
+                /* Create new user action */
+                Action action = new Action();
+                action.setUser(agent);
+                action.setApplicationUser(applicationUser);
+                action.setAccountId(agent.getAccountId());
+                action.setAmount(Double.parseDouble(balance));
+                action.setDate(new Date());
+                action.setActionType(ActionType.ENTRANCE_AMOUNT);
+
+                actionService.createUserAction(action);
+
+                /* Update agent action stats */
+                ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
+                if(actionStats == null){
+                    actionStats = new ActionStats(agent, 0, 0,
+                            Double.parseDouble(balance), agent.getAccountId());
+                    actionStatsService.createActionStats(actionStats);
+                }else {
+                    actionStats.setEntranceAmount(actionStats.getEntranceAmount() + Double.parseDouble(balance));
+                    actionStatsService.createActionStats(actionStats);
+                }
+
 
                 response.put("message", "User added successfully.");
                 response.put("success", true);
@@ -282,10 +347,22 @@ public class AppUserService {
                     }
                     applicationUser.setLogoUrl(logoUrl);
                 }
+
+                /* save expiry date 2022-01-06T14:28 */
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm");
+                Date expiry = null;
+                try {
+                    expiry = fileDateFormat.parse(expiryDate);
+                } catch (ParseException e) {
+                    e.getMessage();
+                }
+                applicationUser.setExpiryDate(expiry);
+
                 applicationUser.setName(name);
                 applicationUser.setMobile(mobile);
                 applicationUser.setAccountId(account.getId());
                 group.setLastUpdate(new Date());
+
                 userRepo.save(applicationUser);
 
                 response.put("message", "User Updated successfully.");

@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -51,22 +52,23 @@ public class TransferService {
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
     InvoiceController invoiceController;
+    @Autowired
+    private SyncJobDataService syncJobDataService;
 
-    private Conversions conversions = new Conversions();
-    private SetupEnvironment setupEnvironment = new SetupEnvironment();
-    private MicrosFeatures microsFeatures = new MicrosFeatures();
+    private final Conversions conversions = new Conversions();
+    private final SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private final MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer,
-                                                   ArrayList<CostCenter> costCenters, ArrayList<Item> items,
-                                                   ArrayList<OverGroup> overGroups , Account account) {
+    public HashMap<String, Object> getTransferData(SyncJobType syncJobTypeTransfer, ArrayList<CostCenter> costCenters, ArrayList<Item> items,
+                                                   ArrayList<ItemGroup> itemsGroups, ArrayList<OverGroup> overGroups, Account account,
+                                                   String syncPer, SyncJobType transferSyncJobType) {
         HashMap<String, Object> data = new HashMap<>();
         WebDriver driver;
-        try{
+        try {
             driver = setupEnvironment.setupSeleniumEnv(false);
-        }
-        catch (Exception ex){
+        } catch (Exception ex) {
             data.put("status", Constants.FAILED);
             data.put("message", "Failed to establish connection with firefox driver.");
             data.put("invoices", new ArrayList<>());
@@ -81,7 +83,9 @@ public class TransferService {
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
-            if(account.getMicrosVersion().equals("version1")) {
+            WebDriverWait wait = new WebDriverWait(driver, 5);
+
+            if (account.getMicrosVersion().equals("version1")) {
                 if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
                     driver.quit();
 
@@ -92,7 +96,7 @@ public class TransferService {
                 }
                 String bookedTransfersUrl = "https://mte03-ohim-prod.hospitality.oracleindustry.com/Webclient/Store/TransferNew/TrStatus.aspx?Type=Booked";
                 driver.get(bookedTransfersUrl);
-            }else if(account.getMicrosVersion().equals("version2")){
+            } else if (account.getMicrosVersion().equals("version2")) {
                 if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
                     driver.quit();
                     data.put("status", Constants.FAILED);
@@ -100,35 +104,64 @@ public class TransferService {
                     data.put("invoices", journalEntries);
                     return data;
                 }
-                try{
-                    WebDriverWait wait = new WebDriverWait(driver, 30);
+                try {
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
                     wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    try {
+                        wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleT")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     driver.findElement(By.id("drawerToggleButton")).click();
 
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                     driver.findElement(By.partialLinkText("Inventory Management")).click();
                     List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
-                    if(elements.size() >= 2){
+                    if (elements.size() >= 2) {
+                        try {
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement_")));
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
                         driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
 
-                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
-                        driver.switchTo().window(tabs2.get(1));
-               //         wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
-                        driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/Store/TransferNew/TrStatus.aspx?Type=Booked");
+                        ArrayList<String> tabs2 = new ArrayList<String>(driver.getWindowHandles());
 
-                    }else {
+                        try {
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement_")));
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+                        driver.switchTo().window(tabs2.get(1));
+                        //         wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/Store/TransferNew/TrStatus.aspx?Type=Booked");
+
+                    } else {
                         throw new Exception();
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    System.out.println(e.getMessage());
                 }
+            }
+
+            try {
+                WebDriverWait newWait = new WebDriverWait(driver, 10);
+                newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel_")));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
             }
             driver.findElement(By.name("filterPanel_btnToggleFilter")).click();
             Select select = new Select(driver.findElement(By.id("_ctl5")));
             data = setupEnvironment.selectTimePeriodOHIM(timePeriod, fromDate, toDate, select, driver);
 
-            if (!data.get("status").equals(Constants.SUCCESS)){
+            if (!data.get("status").equals(Constants.SUCCESS)) {
                 return data;
             }
 
@@ -149,57 +182,65 @@ public class TransferService {
                         continue;
                     }
 
-                    WebElement td = cols.get(columns.indexOf("from_cost_center"));
-                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                    int columnIndex = 0;
+                    WebElement td = cols.get((columns.indexOf("from_cost_center")));
+                    if (td.getText().equals("Booked")) {
+                        td = cols.get((columns.indexOf("from_cost_center") + 1));
+                        columnIndex = 1;
+                    }
 
-                    if (! oldCostCenterData.checked) {
+                    CostCenter oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip());
+
+                    if (!oldCostCenterData.checked) {
                         continue;
                     }
                     transfer.put("fromCostCenter", oldCostCenterData);
 
-                    td = cols.get(columns.indexOf("to_cost_center"));
-                    oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip(), false);
+                    td = cols.get((columns.indexOf("to_cost_center")) + columnIndex);
+                    oldCostCenterData = conversions.checkCostCenterExistence(costCenters, td.getText().strip());
 
                     if (!oldCostCenterData.checked) {
                         continue;
                     }
                     transfer.put("toCostCenter", oldCostCenterData);
 
-                    td = cols.get(columns.indexOf("document"));
-                    transfer.put(columns.get(columns.indexOf("document")), td.getText().strip());
+                    td = cols.get((columns.indexOf("document") + columnIndex));
+                    transfer.put(columns.get((columns.indexOf("document")) + columnIndex), td.getText().strip());
                     String detailsLink = td.findElement(By.tagName("a")).getAttribute("href");
                     transfer.put("details_url", detailsLink);
 
-
-                    td = cols.get(columns.indexOf("delivery_date"));
+                    td = cols.get((columns.indexOf("delivery_date")) + columnIndex);
                     String deliveryDate = td.getText().strip();
                     // 7/11/2020 "Hospitality Format"
-                    SimpleDateFormat formatter1=new SimpleDateFormat("MM/dd/yyyy");
-                    Date deliveryDateFormatted =formatter1.parse(deliveryDate);
+                    SimpleDateFormat formatter1 = new SimpleDateFormat("MM/dd/yyyy");
+                    Date deliveryDateFormatted = formatter1.parse(deliveryDate);
 
-                    SimpleDateFormat simpleformat = new SimpleDateFormat("ddMMy");
-                    String date = simpleformat.format(deliveryDateFormatted);
+                    SimpleDateFormat simpleFormat = new SimpleDateFormat("ddMMy");
+                    String date = simpleFormat.format(deliveryDateFormatted);
 
                     transfer.put("delivery_date", date);
 
-                    for (int j = columns.indexOf("delivery_date")+1 ; j < cols.size(); j++) {
-                        transfer.put(columns.get(j), cols.get(j).getText().strip());
+                    for (int j = (columns.indexOf("delivery_date")) + 1; j < cols.size(); j++) {
+                        try {
+                            transfer.put(columns.get(j), cols.get(j).getText().strip());
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
                     }
                     transfers.add(transfer);
                 }
 
                 // check if there is other pages
-                if (driver.findElements(By.linkText("Next")).size() == 0){
+                if (driver.findElements(By.linkText("Next")).size() == 0) {
                     break;
-                }
-                else {
+                } else {
                     checkPagination(driver, "dg_rc_0_1");
                     table = driver.findElement(By.id("dg_main"));
                     rows = table.findElements(By.tagName("tr"));
                 }
             }
-            for (HashMap<String, Object> transfer: transfers) {
-                getBookedTransferDetails(items, overGroups, transfer, driver, journalEntries);
+            for (HashMap<String, Object> transfer : transfers) {
+                getBookedTransferDetails(items, overGroups, itemsGroups, transfer, driver, journalEntries, syncPer, transferSyncJobType);
             }
 
             driver.quit();
@@ -233,8 +274,8 @@ public class TransferService {
             element_txt = "";
         }
 
-        while (true){
-            if (element_txt.equals(first_element_text)){
+        while (true) {
+            if (element_txt.equals(first_element_text)) {
                 wait = new WebDriverWait(driver, 20);
                 element = wait.until(ExpectedConditions.presenceOfElementLocated(By.id(itemChanged)));
                 try {
@@ -242,22 +283,23 @@ public class TransferService {
                 } catch (Exception e) {
                     element_txt = "";
                 }
-            }
-            else break;
+            } else break;
         }
         return true;
     }
 
-    private void getBookedTransferDetails(
-            ArrayList<Item> items, ArrayList<OverGroup> overGroups, HashMap<String, Object> transfer, WebDriver driver,
-            ArrayList<HashMap<String, Object>> journalEntries){
+    private void getBookedTransferDetails(ArrayList<Item> items, ArrayList<OverGroup> overGroups, ArrayList<ItemGroup> itemsGroups, HashMap<String, Object> transfer, WebDriver driver,
+                                          ArrayList<HashMap<String, Object>> journalEntries, String syncPer, SyncJobType transferSyncJobType) {
+
         ArrayList<Journal> journals = new ArrayList<>();
 
         try {
             driver.get((String) transfer.get("details_url"));
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
 
-            if (rows.size() <= 22){ return; }
+            if (rows.size() <= 22) {
+                return;
+            }
 
             ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 22);
 
@@ -279,8 +321,13 @@ public class TransferService {
                     continue;
                 }
 
-                String overGroup = oldItemData.getOverGroup();
-                if (overGroup.equals("")){
+                String group;
+                if (syncPer.equals("OverGroups")) {
+                    group = oldItemData.getOverGroup();
+                } else {
+                    group = oldItemData.getItemGroup();
+                }
+                if (group.equals("")) {
                     continue;
                 }
 
@@ -289,8 +336,11 @@ public class TransferService {
                 td = cols.get(columns.indexOf("total"));
                 transferDetails.put("total", td.getText().strip());
 
+//                td = cols.get(columns.indexOf("Item/Recipe No."));
+//                transferDetails.put("invoiceNo", td.getText().strip());
+
                 Journal journal = new Journal();
-                journals = journal.checkExistence(journals, overGroup, 0,0,
+                journals = journal.checkExistence(journals, group, 0, 0,
                         conversions.convertStringToFloat((String) transferDetails.get("total")));
 
             }
@@ -300,14 +350,17 @@ public class TransferService {
                 CostCenter fromCostCenter = (CostCenter) transfer.get("fromCostCenter");
                 CostCenter toCostCenter = (CostCenter) transfer.get("toCostCenter");
 
-                if (fromCostCenter.costCenterReference.equals("")){
+                if (fromCostCenter.costCenterReference.equals("")) {
                     fromCostCenter.costCenterReference = fromCostCenter.costCenter;
                 }
-                if (toCostCenter.costCenterReference.equals("")){
+                if (toCostCenter.costCenterReference.equals("")) {
                     toCostCenter.costCenterReference = toCostCenter.costCenter;
                 }
 
-                journalEntry.put("accountingPeriod", ((String)transfer.get("delivery_date")).substring(2,6));
+                syncJobDataService.prepareAnalysis(journalEntry, transferSyncJobType.getConfiguration(),
+                        fromCostCenter, null, null);
+
+                journalEntry.put("accountingPeriod", ((String) transfer.get("delivery_date")).substring(2, 6));
                 journalEntry.put("transactionDate", transfer.get("delivery_date"));
 
                 journalEntry.put("totalCr", conversions.roundUpFloat(journal.getTotalTransfer()));
@@ -322,35 +375,40 @@ public class TransferService {
                 journalEntry.put("fromLocation", fromCostCenter.accountCode);
                 journalEntry.put("toLocation", toCostCenter.accountCode);
 
-                String description = "Tr F " + fromCostCenter.costCenterReference + " T "+
+                String description = "Tr F " + fromCostCenter.costCenterReference + " T " +
                         toCostCenter.costCenterReference + " - " + journal.getOverGroup();
-                if (description.length() > 50){
+                if (description.length() > 50) {
                     description = description.substring(0, 50);
                 }
 
                 journalEntry.put("description", description);
 
-                if (!transfer.get("reference").equals("")){
-                    String reference = (String)transfer.get("reference");
-                    if(reference.length() > 30){
+                if (!transfer.get("reference").equals("")) {
+                    String reference = (String) transfer.get("reference");
+                    if (reference.length() > 30) {
                         reference = reference.substring(0, 30);
                     }
                     journalEntry.put("transactionReference", reference);
-                }else {
+                } else {
                     journalEntry.put("transactionReference", "Transfer");
                 }
                 journalEntry.put("overGroup", journal.getOverGroup());
 
-                OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
-
-                journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                if (syncPer.equals("OverGroups")) {
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
+                    journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
+                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                } else {
+                    ItemGroup itemGroup = conversions.checkItemGroupExistence(itemsGroups, journal.getOverGroup());
+                    journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
+                    journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
+                }
 
                 journalEntries.add(journalEntry);
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println(e.getMessage());
         }
 
     }
@@ -367,6 +425,5 @@ public class TransferService {
             addedTransfers.add(syncJobData);
         }
         return addedTransfers;
-
     }
 }

@@ -27,6 +27,7 @@ public class AuthorizationResourceConfiguration  extends
                 anonymous().disable()
                 .authorizeRequests()
                 .antMatchers("/rewardPoints/**").permitAll()
+                .antMatchers("/walletSystem/**").permitAll()
                 .antMatchers("/zeal/**").permitAll()
                 .antMatchers("/addAccount").authenticated()
                 .antMatchers("/opera/**").authenticated()

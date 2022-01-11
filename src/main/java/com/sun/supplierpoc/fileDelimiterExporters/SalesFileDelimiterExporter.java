@@ -84,11 +84,12 @@ public class SalesFileDelimiterExporter {
             if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
             || syncJobType.getName().equals(Constants.CONSUMPTION))
                 this.extractSalesSyncJobData();
-            else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) || (syncJobType.getName().equals(Constants.TRANSFERS))
-                    || (syncJobType.getName().equals(Constants.CREDIT_NOTES)))
+            else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) ||(syncJobType.getName().equals(Constants.CREDIT_NOTES)))
                 this.extractInvoicesSyncJobData();
             else if (syncJobType.getName().equals(Constants.WASTAGE))
                 this.extractWastageSyncJobData();
+            else if (syncJobType.getName().equals(Constants.TRANSFERS))
+                this.extractTransferSyncJobData();
 
             file = createNDFFile();
             System.out.println(file.getName());
@@ -226,6 +227,21 @@ public class SalesFileDelimiterExporter {
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
             counter++;
+        }
+    }
+
+    private void extractTransferSyncJobData() {
+        SyncJobDataCSV syncJobDataCSV;
+        for (SyncJobData syncJobData : listSyncJobData) {
+
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+            if (syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+
+            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
+            if (syncJobDataCSV != null)
+                this.syncJobDataCSVList.add(syncJobDataCSV);
+
         }
     }
 
@@ -412,7 +428,7 @@ public class SalesFileDelimiterExporter {
             analysisTCode = "#";
 
         if (syncJobData.getData().containsKey("analysisCodeT" + index) && !syncJobData.getData().get("analysisCodeT" + index).equals("")) {
-
+/*
             if (!syncJobType.getAccountId().equals("600424f292be3d32dfe0208b") && !syncJobType.getName().equals(Constants.APPROVED_INVOICES)) {
 
                 analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
@@ -421,7 +437,7 @@ public class SalesFileDelimiterExporter {
                 if (("analysisCodeT" + index).equals("analysisCodeT1") && CDMaker.equals("D")) {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-            }  else {
+            }  else {*/
                 if (CDMaker.equals("D") || CDMaker.equals("DV")) {
                     if (!("analysisCodeT" + index).equals("analysisCodeT"+configuration.taxesCodeAnalysisCode) &&
                             !("analysisCodeT" + index).equals("analysisCodeT"+configuration.supplierCodeAnalysisCode)) {
@@ -430,7 +446,7 @@ public class SalesFileDelimiterExporter {
                 } else {
                     analysisTCode = syncJobData.getData().get("analysisCodeT" + index).toString();
                 }
-           }
+           //}
         }
 
         if (analysisTCode.length() > 15) {

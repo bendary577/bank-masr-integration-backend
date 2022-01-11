@@ -42,14 +42,16 @@ public class ActivityService {
         HashMap response = new HashMap();
 
         try {
-            ApplicationUser user = userRepo.findByCode(transaction.getCode());
+            ApplicationUser user = userRepo.findByCodeAndAccountIdAndDeleted(transaction.getCode(), account.getId(), false);
+
             if(user == null){
                 response.put("message", "No user for this code.");
             }else if(user.isDeleted()){
                 response.put("message", "This user is deleted.");
             } else if(!user.getAccountId().equals(account.getId())){
                 response.put("message", "This user does not belong to this account loyalty program.");
-            } else if(transactionRepo.existsByCheckNumberAndRevenueCentreId(transaction.getCheckNumber(), transaction.getRevenueCentreId())){
+            } else if(transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatus(
+                    transaction.getCheckNumber(), transaction.getRevenueCentreId(), Constants.PAID_TRANSACTION)){
                 response.put("message", "Can't use code for the same check twice.");
             }
             else {
@@ -72,9 +74,11 @@ public class ActivityService {
 
                     double amount = transaction.getTotalPayment();
 
-//                    private float pointReward = 0; // percentage
-//                    private float pointsRedemption = 0; // 1$ = ? points
 
+                    /*
+                    * pointReward = 0; // percentage
+                    * pointsRedemption = 0; // 1$ = ? points
+                    * */
                     if(transactionType.getName().equals(Constants.POINTS_REDEMPTION)){
                         int points = (int) Math.round(transaction.getTotalPayment() * generalSettings.getPointsRedemption());
 
@@ -113,67 +117,106 @@ public class ActivityService {
                         double amountAfterDiscount = amount - (amount * (discount / 100));
                         transaction.setDiscountRate(discount);
                         transaction.setAfterDiscount(amountAfterDiscount);
+                        transaction.setStatus(Constants.PAID_TRANSACTION);
+
                         response.put("message", "Discount added successfully.");
+                    }
+                    else if(transactionType.getName().equals(Constants.USE_WALLET)){
+                        if(user.getWallet() == null){
+                            response.put("isSuccess", false);
+                            response.put("message", "This user is not a member of the wallet system.");
+                            return response;
+                        }
+
+                        /* Check if user expired or deleted */
+                        if(user.getExpiryDate() == null || new Date().compareTo(user.getExpiryDate()) >= 0
+                                || user.isSuspended() || user.isDeleted()){
+                            response.put("isSuccess", false);
+                            response.put("message", "This user is currently unable to use the wallet system.");
+                            return response;
+                        }
+
+                        /* check if account has loyalty system */
+                        transaction.setAfterDiscount(transaction.getTotalPayment());
+
+                        Wallet wallet = user.getWallet();
+                        double previousBalance = calculateBalance(wallet);
+                        double rest = transaction.getAfterDiscount();
+                        double newBalance = 0;
+                        double paidAmount = 0;
+
+                        for(int i = 0; i <  wallet.getBalance().size(); i ++){
+                            if(wallet.getBalance().get(i).getAmount() == 0)
+                                continue;
+
+                            if(conversions.containRevenueCenter(wallet.getBalance().get(i), revenueCenter)){
+                                if(wallet.getBalance().get(i).getAmount() >= rest) {
+                                    newBalance = wallet.getBalance().get(i).getAmount() - rest;
+                                    wallet.getBalance().get(i).setAmount(newBalance);
+                                    rest = 0;
+                                    break;
+                                }else{
+                                    rest -= wallet.getBalance().get(i).getAmount();
+                                    wallet.getBalance().get(i).setAmount(0);
+                                    continue;
+                                }
+                            }
+                        }
+                        paidAmount = transaction.getAfterDiscount() - rest;
+                        transaction.setPartialPayment(paidAmount);
+
+                        /* Remove zero balance/voucher */
+                        List<Balance> newBalanceList = new ArrayList<>();
+                        for(int i = 0; i <  wallet.getBalance().size(); i ++){
+                            if(wallet.getBalance().get(i).getAmount() == 0)
+                                continue;
+                            else
+                                newBalanceList.add(wallet.getBalance().get(i));
+                        }
+                        wallet.setBalance(newBalanceList);
+
+                        newBalance = calculateBalance(wallet);
+                        WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
+                                paidAmount, previousBalance, newBalance, null, new Date());
+                        wallet.getWalletHistory().add(walletHistory);
+                        user.setWallet(wallet);
+
+                        if(rest == transaction.getAfterDiscount()){
+                            response.put("rest", transaction.getAfterDiscount());
+                            transaction.setStatus(Constants.INSUFFICIENT_AMOUNT);
+                            response.put("message", "Guest has no balance to spend at this revenue center.");
+                        }else if(rest != 0){
+                            transaction.setStatus(Constants.PARTIAL_PAYMENT);
+                            response.put("message", "Payment added succefully.");
+                        }else if(rest == 0){
+                            transaction.setStatus(Constants.PAID_TRANSACTION);
+                            response.put("message", "Check paid successfully.");
+                        }else {
+                            transaction.setStatus(Constants.PAID_TRANSACTION);
+                        }
+
+                        response.put("rest", rest);
+                        response.put("newBalance", newBalance);
+                        response.put("paidAmount", paidAmount);
                     }
                     else{
                         transaction.setDiscountRate(0.0);
                         transaction.setAfterDiscount(transaction.getTotalPayment());
                     }
 
-                    if(user.isGeneric() && user.getWallet() != null){
-                        Wallet wallet = user.getWallet();
-                        double previousBalance = calculateBalance(wallet);
-                        double rest = transaction.getAfterDiscount();
-                        for(int i = 0; i <  wallet.getBalance().size(); i ++){
-                            if(conversions.containRevenueCenter(wallet.getBalance().get(i), revenueCenter)){
-                                if(wallet.getBalance().get(i).getAmount() >= transaction.getAfterDiscount()) {
-                                    double newBalance = wallet.getBalance().get(i).getAmount() - transaction.getAfterDiscount();
-                                    wallet.getBalance().get(i).setAmount(newBalance);
-                                    rest = 0;
-                                }else{
-                                    rest -= wallet.getBalance().get(i).getAmount();
-                                    wallet.getBalance().get(i).setAmount(0);
-                                    if((i+1) < wallet.getBalance().size()) {
-                                        continue;
-                                    }
-                                }
-                                WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
-                                        amount, previousBalance, calculateBalance(wallet), new Date());
-                                wallet.getWalletHistory().add(walletHistory);
-                                user.setWallet(wallet);
-                                break;
-                            }
-                        }
-                        if(rest == transaction.getAfterDiscount()){
-                            response.put("rest", transaction.getAfterDiscount());
-                            if(conversions.hasBalance(wallet.getBalance())){
-                                response.put("message", "There is no balance for this revenuecenter.");
-                            }else{
-                                response.put("message", "Guest has no balance.");
-                            }
-                        }else if(rest != 0){
-                            response.put("message", "Payment added succefully.");
-                        }else if(rest == 0){
-                            response.put("message", "Check paid successfully.");
-                        }
-                        response.put("rest", rest);
-
-                    }
-
                     userRepo.save(user);
                     groupRepo.save(group);
-
                     transactionRepo.save(transaction);
 
                     generalSettings.getSimphonyQuota().setUsedTransactionQuota(generalSettings.getSimphonyQuota().getUsedTransactionQuota() + 1);
                     generalSettingsRepo.save(generalSettings);
 
-                    response.put("isSuccess", true);
                     if(transactionType.getName().equals(Constants.REWARD_POINTS)
                             || transactionType.getName().equals(Constants.POINTS_REDEMPTION)){
                         response.put("message", "New balance = " + user.getPoints());
                     }
 
+                    response.put("isSuccess", true);
                     response.put("discountId", group.getSimphonyDiscount().getDiscountId());
                     response.put("group", group.getName());
                     response.put("user", user.getName());
@@ -189,7 +232,7 @@ public class ActivityService {
 
         }catch(Exception e){
             response.put("isSuccess", false);
-            response.put("message", "Can't apply discount.");
+            response.put("message", "This is an error occurs, Please contact support team.");
             return response;
         }
     }

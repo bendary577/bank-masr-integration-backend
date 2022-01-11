@@ -87,6 +87,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/role/test/**");
         web.ignoring().antMatchers("/feature/test/**");
         web.ignoring().antMatchers("/rewardPoints/**");
+        web.ignoring().antMatchers("/walletSystem/**");
         web.ignoring().antMatchers("/test/**");
     }
 /* @Override

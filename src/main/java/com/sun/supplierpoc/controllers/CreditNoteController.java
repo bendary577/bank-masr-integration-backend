@@ -210,8 +210,8 @@ public class CreditNoteController {
                 else if (addedInvoices.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
                     FtpClient ftpClient = new FtpClient();
                     ftpClient = ftpClient.createFTPClient(account);
-                    SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(invoiceSyncJobType, addedInvoices);
-                    File file = exporter.prepareNDFFile(addedInvoices, invoiceSyncJobType, account.getName(), "");
+                    SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(creditNoteSyncJobType, addedInvoices);
+                    File file = exporter.prepareNDFFile(addedInvoices, creditNoteSyncJobType, account.getName(), "");
 
                     if(file != null && ftpClient != null){
                         if(ftpClient.open()){

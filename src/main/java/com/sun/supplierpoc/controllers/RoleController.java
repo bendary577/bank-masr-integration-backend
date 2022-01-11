@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.Role;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.RoleRepository;
 import com.sun.supplierpoc.services.RoleService;
 import com.sun.supplierpoc.services.UserService;
@@ -48,7 +49,7 @@ public class RoleController {
         Response response = new Response();
         User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         if (authedUser != null) {
-            if (userService.eligibleForRole(authedUser, Constants.ADD_USER_ROLE)) {
+            if (userService.eligibleForRole(authedUser, Roles.ADD_USER_ROLE)) {
                 response = roleService.addUserRole(userId, roleIds);
                 if (response.isStatus()) {
                     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -75,7 +76,7 @@ public class RoleController {
         Response response = new Response();
         User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         if (authedUser != null) {
-            if (userService.eligibleForRole(authedUser, Constants.ADD_USER_ROLE)) {
+            if (userService.eligibleForRole(authedUser, Roles.ADD_USER_ROLE)) {
                 response = roleService.updateUserRoles(userId, roleIds);
                 if (response.isStatus()) {
                     return new ResponseEntity<>(response, HttpStatus.OK);

@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.applications.BirthdayGift;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.applications.SimphonyQuota;
 import com.sun.supplierpoc.models.configurations.*;
@@ -47,6 +48,7 @@ public class GeneralSettings {
     /* Reword Points */
     private float pointReward = 0; // percentage
     private float pointsRedemption = 0; // 1$ = ? points
+    private BirthdayGift birthdayGift = new BirthdayGift();
 
     private Date creationDate;
     private boolean deleted;
@@ -307,6 +309,14 @@ public class GeneralSettings {
 
     public void setPointsRedemption(float pointsRedemption) {
         this.pointsRedemption = pointsRedemption;
+    }
+
+    public BirthdayGift getBirthdayGift() {
+        return birthdayGift;
+    }
+
+    public void setBirthdayGift(BirthdayGift birthdayGift) {
+        this.birthdayGift = birthdayGift;
     }
 }
 

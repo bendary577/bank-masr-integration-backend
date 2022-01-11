@@ -56,7 +56,7 @@ public class AppUserController {
     @Autowired
     ActivityService activityService;
 
-    private Conversions conversions = new Conversions();
+    private final Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
 
     @RequestMapping("/rewardPoints/getGuestPoints")
@@ -71,14 +71,14 @@ public class AppUserController {
                 username = values[0];
                 password = values[1];
                 InvokerUser user = invokerUserService.getInvokerUser(username, password);
-                if(user == null){
+                if (user == null) {
                     response.put("isSuccess", false);
                     response.put("points", 0);
                     response.put("message", "This user not allowed to access this method.");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                 }
 
-                if(guestCode.equals("")){
+                if (guestCode.equals("")) {
                     response.put("isSuccess", false);
                     response.put("points", 0);
                     response.put("message", "Kindly provide the customer code.");
@@ -86,26 +86,26 @@ public class AppUserController {
                 }
 
                 ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
-                if(applicationUser != null){
+                if (applicationUser != null) {
                     response.put("isSuccess", true);
                     response.put("points", applicationUser.getPoints());
                     response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
-                }else {
+                } else {
                     response.put("isSuccess", false);
                     response.put("points", 0);
                     response.put("message", "This user is not a member of the reward points system.");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 
-            }else{
+            } else {
                 response.put("isSuccess", false);
                 response.put("points", 0);
                 response.put("message", "This user not allowed to access this method.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             response.put("isSuccess", false);
             response.put("points", 0);
             response.put("message", "There was a problem, please try again.");
@@ -126,14 +126,14 @@ public class AppUserController {
                 username = values[0];
                 password = values[1];
                 InvokerUser user = invokerUserService.getInvokerUser(username, password);
-                if(user == null){
+                if (user == null) {
                     response.put("isSuccess", false);
                     response.put("points", 0);
                     response.put("message", "This user not allowed to access this method.");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                 }
 
-                if(guestCode.equals("")){
+                if (guestCode.equals("")) {
                     response.put("isSuccess", false);
                     response.put("points", 0);
                     response.put("message", "Kindly provide the customer code.");
@@ -141,7 +141,7 @@ public class AppUserController {
                 }
 
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, user.getAccountId());
-                if(applicationUser != null){
+                if (applicationUser != null) {
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);
 
@@ -149,21 +149,21 @@ public class AppUserController {
                     response.put("points", applicationUser.getPoints());
                     response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
-                }else {
+                } else {
                     response.put("isSuccess", false);
                     response.put("points", 0);
                     response.put("message", "This user is not a member of the reward points system.");
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 
-            }else{
+            } else {
                 response.put("isSuccess", false);
                 response.put("points", 0);
                 response.put("message", "This user not allowed to access this method.");
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             response.put("isSuccess", false);
             response.put("points", 0);
             response.put("message", "There was a problem, please try again.");
@@ -179,16 +179,16 @@ public class AppUserController {
     public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
                                                @RequestParam("guestCode") String guestCode) {
         HashMap response = new HashMap();
-        try{
+        try {
             InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
-            if(invokerUser == null){
+            if (invokerUser == null) {
                 response.put("isSuccess", false);
                 response.put("balance", 0);
                 response.put("message", "This user not allowed to access this method.");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
 
-            if(guestCode.equals("")){
+            if (guestCode.equals("")) {
                 response.put("isSuccess", false);
                 response.put("balance", 0);
                 response.put("message", "Kindly provide the customer code.");
@@ -200,11 +200,11 @@ public class AppUserController {
             if (account != null) {
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, account.getId());
                 double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
-                if(applicationUser != null){
+                if (applicationUser != null) {
                     response.put("isSuccess", true);
                     response.put("balance", guestBalance);
                     response.put("message", "");
-                }else {
+                } else {
                     response.put("isSuccess", false);
                     response.put("balance", 0);
                     response.put("message", "This user is not a member of wallet system.");
@@ -339,17 +339,13 @@ public class AppUserController {
             if (applicationUser.isPresent()) {
 
                 ApplicationUser appUser = applicationUser.get();
-
                 Optional<Group> groupOptional = groupRepo.findById(appUser.getGroup().getId());
                 if (groupOptional.isPresent()) {
 
                     Group group = groupOptional.get();
 
                     try {
-
-                        Random random = new Random();
-                        String code = appUser.getEmail().substring(0, appUser.getEmail().indexOf('@')) + random.nextInt(100);
-                        code = Base64UrlCodec.BASE64URL.encode(code);
+                        String code = createCode(appUser);
                         String QRPath = "QRCodes/" + code + ".png";
                         String accountLogo = account.getImageUrl();
                         String mailSubj = generalSettings.getMailSub();
@@ -382,6 +378,24 @@ public class AppUserController {
             response.put("message", "Invalid user.");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
+    }
+
+    public String createCode(ApplicationUser appUser) {
+        String code;
+        try {
+            Random random = new Random();
+            code = appUser.getEmail().substring(0, appUser.getEmail().indexOf('@'));
+            if (code.length() > 17) {
+                code = code.substring(0, 17);
+            } else {
+                code = code + code.substring(0, 3);
+            }
+            code = (code + random.nextInt(1000)).replace(".", "");
+            code = Base64UrlCodec.BASE64URL.encode(code);
+        }catch (Exception e){
+            throw new RuntimeException();
+        }
+        return code;
     }
 
     @PostMapping(path = "/sendWelcomeMail")
@@ -450,7 +464,7 @@ public class AppUserController {
                 Optional<ApplicationUser> applicationUserObj = userRepo.findById(applicationUserId);
                 ApplicationUser applicationUser;
 
-                if(applicationUserObj.isPresent()){
+                if (applicationUserObj.isPresent()) {
                     applicationUser = applicationUserObj.get();
 
                     Optional<Group> groupOptional = groupRepo.findById(applicationUser.getGroup().getId());
@@ -470,7 +484,7 @@ public class AppUserController {
                         response.put("message", "The group of the user " + applicationUser.getName() + " is already deleted, \n try to update his group.");
                         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                     }
-                }else
+                } else
                     continue;
             }
             if (addFlag) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.controllers.application.AppUserController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.auth.User;
@@ -50,6 +51,9 @@ public class AppUserService {
 
     @Autowired
     private ActionStatsService actionStatsService;
+
+    @Autowired
+    private AppUserController appUserController;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -130,9 +134,7 @@ public class AppUserService {
                     return response;
                 }
 
-                Random random = new Random();
-                String code = applicationUser.getEmail().substring(0, applicationUser.getEmail().indexOf('@')) + random.nextInt(100);
-                code = Base64UrlCodec.BASE64URL.encode(code);
+                String code = appUserController.createCode(applicationUser);
                 String accountLogo = account.getImageUrl();
                 String mailSubj = generalSettings.getMailSub();
                 String QRPath = "QRCodes/" + code + ".png";
@@ -352,7 +354,7 @@ public class AppUserService {
                 try {
                     expiry = fileDateFormat.parse(expiryDate);
                 } catch (ParseException e) {
-                    e.printStackTrace();
+                    e.getMessage();
                 }
                 applicationUser.setExpiryDate(expiry);
 

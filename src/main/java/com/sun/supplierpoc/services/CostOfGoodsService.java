@@ -505,7 +505,7 @@ public class CostOfGoodsService {
 
 //        driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
-            WebElement table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+            WebElement table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
             List<WebElement> rows = table.findElements(By.tagName("tr"));
 
             if (rows.size() < 4)
@@ -548,7 +548,6 @@ public class CostOfGoodsService {
 
                     MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
 
-
                     CostCenter costCenter = new CostCenter();
                     List<CostCenter> costCenters = majorGroup.getCostCenters();
                     for (CostCenter costCenter1 : costCenters) {
@@ -563,7 +562,7 @@ public class CostOfGoodsService {
                        link.click();
                    }
 
-                   table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+                   table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
                    rows = table.findElements(By.tagName("tr"));
 
                     // Debit lines
@@ -606,17 +605,19 @@ public class CostOfGoodsService {
                             link.click();
                         }
 
-                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
                         rows = table.findElements(By.tagName("tr"));
 
                     }
 
                     // Credit line
                     journals = journal.checkExistence(journals, majorGroup,majorGroupAmountTotal,
-                            costCenter, MGRevenueCenter,orderType, "", "C");
+                            costCenter, MGRevenueCenter, orderType, "", "C");
                 }
             }
-        }catch(Exception e){e.getMessage();}
+        }catch(Exception e){
+            e.getMessage();
+        }
     }
 
 }

@@ -137,6 +137,25 @@ public class AppUserService {
         }
     }
 
+    public HashMap updateRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account, GeneralSettings generalSettings) {
+        HashMap response = new HashMap();
+
+        if (applicationUser.getEmail() != null && applicationUser.getEmail().equals("")
+                && userRepo.existsByEmailAndAccountId(applicationUser.getEmail(), account.getId())) {
+            response.put("message", "There is user exist with this email.");
+            response.put("success", false);
+            return response;
+        }
+        applicationUser.setLastUpdate(new Date());
+        userRepo.save(applicationUser);
+
+        response.put("message", "User updated successfully.");
+        response.put("success", true);
+        return response;
+    }
+
+    /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
+
     public HashMap addUpdateGuest(User agent, boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
                                   boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
                                   String accompaniedGuestsJson, String balance, String cardCode, String expiryDate,

@@ -23,6 +23,12 @@ public class SyncJobDataService {
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
 
+    public void updateSyncJobDataStatus(SyncJobData syncJobData, String status, String reason) {
+        syncJobData.setStatus(status);
+        syncJobData.setReason(reason);
+        syncJobDataRepo.save(syncJobData);
+    }
+
     public void updateSyncJobDataStatus(List<SyncJobData> syncJobDataArrayList, String status) {
         for (SyncJobData syncJobData : syncJobDataArrayList) {
             syncJobData.setStatus(status);
@@ -38,6 +44,10 @@ public class SyncJobDataService {
         return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNo(bookingNo);
     }
 
+    public ArrayList<SyncJobData> getSyncJobDataByBookingNoAndType(String bookingNo, String typeId){
+        return (ArrayList<SyncJobData>) syncJobDataRepo.findByDataByBookingNoAndSyncJobTypeId(bookingNo, typeId);
+    }
+
     public ArrayList<SyncJobData> getDataByBookingNoAndSyncType(String bookingNo, String syncJobTypeId){
         List<SyncJobData> data;
         ArrayList<SyncJobData> syncJobData = new ArrayList<>();
@@ -47,9 +57,10 @@ public class SyncJobDataService {
             if(bookingNo == null || bookingNo.equals("")){
                 data = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
             }else {
-                data = syncJobDataRepo.findByBookingNoAndSyncJobId(bookingNo, syncJob.getId());
+                data = syncJobDataRepo.findByBookingNoAndSyncJobIdAndstatus(bookingNo, syncJob.getId(), Constants.SUCCESS);
             }
-            syncJobData.addAll(data);
+            if(data != null)
+                syncJobData.addAll(data);
         }
 
         return syncJobData;
@@ -169,12 +180,13 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, supplier.getAccountCode());
         }
 
-        if(journal != null ){
+        if(supplier != null && !supplier.getAccountCode().equals("")){
             index = configuration.taxesCodeAnalysisCode;
             if(journal.getTax() == 14.00){
-            data.put("analysisCodeT" + index, "DV114");}
+            data.put("analysisCodeT" + index, configuration.inforConfiguration.taxAccountReference);}
             else{
-            data.put("analysisCodeT" + index, "NOTAX");}
+            data.put("analysisCodeT" + index, configuration.inforConfiguration.noTaxAccountReference);
+            }
         }
     }
 }

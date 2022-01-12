@@ -41,7 +41,6 @@ public class SyncJobTypeController {
             analysis.add(new Analysis(false, "10", "", ""));
             syncJobType.getConfiguration().analysis = (analysis);
         }
-
         return syncJobType;
     }
 

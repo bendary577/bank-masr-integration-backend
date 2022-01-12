@@ -26,6 +26,8 @@ public class AuthorizationResourceConfiguration  extends
         http.
                 anonymous().disable()
                 .authorizeRequests()
+                .antMatchers("/rewardPoints/**").permitAll()
+                .antMatchers("/walletSystem/**").permitAll()
                 .antMatchers("/zeal/**").permitAll()
                 .antMatchers("/addAccount").authenticated()
                 .antMatchers("/opera/**").authenticated()
@@ -34,7 +36,9 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/amazon/**").authenticated()
                 .antMatchers("/paymentTest").authenticated()
                 .antMatchers("/role/test/**").authenticated()
+                .antMatchers("/feature/test/**").authenticated()
                 .antMatchers("/test/**").authenticated()
+                .antMatchers("/Simphony/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }
 

@@ -21,6 +21,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -32,7 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Component
-@Controller
+@RestController
 public class ScheduledTasks {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
@@ -104,14 +105,18 @@ public class ScheduledTasks {
             ArrayList<SyncJobType> syncJobTypes = (ArrayList<SyncJobType>) syncJobTypeRepo.findByAccountIdAndDeleted(account.getId(), false);
             ArrayList<ApplicationUser> applicationUsers = applicationUserRepo.findAllByAccountId(account.getId());
 
-            List<ApplicationUser> tempAppUsers = new ArrayList<>();
-            for(ApplicationUser applicationUser :  applicationUsers){
-                if(applicationUser.getExpire() > 0 ){
-                    long diff = applicationUser.getCreationDate().getTime() - new Date().getTime();
-                    long diffHours = diff / (60 * 60 * 1000);
-                    applicationUser.setExpire(applicationUser.getExpire() - 1);
-                }
-            }
+            /* Check application user expiry date */
+//            List<ApplicationUser> tempAppUsers = new ArrayList<>();
+//            for(ApplicationUser applicationUser :  applicationUsers){
+//                if(applicationUser.getExpire() > 0 ){
+//                    long diff = applicationUser.getCreationDate().getTime() - new Date().getTime();
+//                    long diffHours = diff / (60 * 60 * 1000);
+//                    applicationUser.setExpire(applicationUser.getExpire() - 1);
+//                    if(applicationUser.getExpire() == 0)
+//                        applicationUser.setExpired(true);
+//                }
+//            }
+//            applicationUserRepo.saveAll(applicationUsers);
 
             if (syncJobTypes.size() == 0) continue;
 

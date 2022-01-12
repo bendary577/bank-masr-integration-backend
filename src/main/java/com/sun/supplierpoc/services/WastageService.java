@@ -6,8 +6,11 @@ import com.sun.supplierpoc.controllers.InvoiceController;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
+import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -29,12 +32,15 @@ public class WastageService {
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
     @Autowired
+    SyncJobTypeRepo syncJobTypeRepo;
+    @Autowired
     InvoiceController invoiceController;
     @Autowired
     private SyncJobDataService syncJobDataService;
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -342,7 +348,8 @@ public class WastageService {
         String toDate = syncJobType.getConfiguration().toDate;
 
         ArrayList<Item> items = generalSettings.getItems();
-        ArrayList<CostCenter> locations = generalSettings.getLocations();
+//        ArrayList<CostCenter> accountlocations = generalSettings.getLocations();
+        ArrayList<CostCenter> locations = syncJobType.getConfiguration().wastageConfiguration.locations;
         ArrayList<CostCenter> costCenters = generalSettings.getCostCenterAccountMapping();
         ArrayList<ItemGroup> itemGroups = generalSettings.getItemGroups();
         ArrayList<OverGroup> overGroups = generalSettings.getOverGroups();
@@ -381,10 +388,10 @@ public class WastageService {
 
         for (CostCenter location : locations) {
             try {
+                if (!location.checked) continue;
+
                 journalBatch = new JournalBatch();
                 journalEntries = new ArrayList<>();
-
-                if (!location.checked) continue;
 
                 wastesStatus = new ArrayList<>();
                 driver.get(Constants.BOOKED_WASTE_REPORT_LINK);
@@ -463,15 +470,51 @@ public class WastageService {
                     wastesStatus.add(waste);
                 }
 
-                for (HashMap<String, Object> waste: wastesStatus) {
-                    getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
-                            waste, syncJobType, driver, journalEntries);
+                if(location.syncPerCostCenter){
+                    /* Create batch for each cost center */
+                    String currentCostCenterName = "";
+                    CostCenter currentCostCenter = new CostCenter();
+                    JournalBatch tempJournalBatch = new JournalBatch();
+                    ArrayList<JournalBatch> tempJournalBatches = new ArrayList<>();
+
+                    for (HashMap<String, Object> waste: wastesStatus) {
+                        if(!currentCostCenterName.equals("") &&
+                                !currentCostCenterName.equals(String.valueOf(waste.get("location")))){
+
+                            if(journalEntries.size() > 0){
+                                currentCostCenter = (CostCenter) journalEntries.get(0).get("costCenter");
+                                tempJournalBatch.setLocation(currentCostCenter);
+                                tempJournalBatch.getWaste().addAll(journalEntries);
+                                journalBatches.add(tempJournalBatch);
+                            }
+
+                            journalEntries = new ArrayList<>();
+                            tempJournalBatch = new JournalBatch();
+                        }
+
+                        currentCostCenterName = String.valueOf(waste.get("location"));
+
+                        getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
+                                waste, syncJobType, driver, journalEntries);
+                    }
+
+                    /* Add last cost center data */
+                    if(journalEntries.size() > 0){
+                        currentCostCenter = (CostCenter) journalEntries.get(0).get("costCenter");
+                        tempJournalBatch.setLocation(currentCostCenter);
+                        tempJournalBatch.getWaste().addAll(journalEntries);
+                        journalBatches.add(tempJournalBatch);
+                    }
+                }else{
+                    for (HashMap<String, Object> waste: wastesStatus) {
+                        getWasteReportDetails(items, itemGroups, overGroups, location, costCenters,
+                                waste, syncJobType, driver, journalEntries);
+                    }
+
+                    journalBatch.setLocation(location);
+                    journalBatch.setWaste(journalEntries);
+                    journalBatches.add(journalBatch);
                 }
-
-                journalBatch.setLocation(location);
-                journalBatch.setWaste(journalEntries);
-                journalBatches.add(journalBatch);
-
             } catch (Exception e) {
                 driver.quit();
                 response.setStatus(false);
@@ -544,9 +587,6 @@ public class WastageService {
             }
 
             for (Journal journal : journals) {
-//                if(conversions.roundUpFloat(journal.getTotalWaste()) == 0)
-//                    continue;
-
                 HashMap<String, Object> journalEntry = new HashMap<>();
 
                 if(syncJobType.getConfiguration().syncPerGroup.equals("OverGroups")){
@@ -600,14 +640,15 @@ public class WastageService {
                     }
                 }
 
+                journalEntry.put("costCenter", costCenter);
                 journalEntry.put("fromCostCenter", costCenter.costCenter);
                 journalEntry.put("fromAccountCode", costCenter.accountCode);
 
                 journalEntry.put("toCostCenter", "Waste");
-                journalEntry.put("toAccountCode", "4110006");
+                journalEntry.put("toAccountCode", "");
 
                 journalEntry.put("fromLocation", costCenter.accountCode);
-                journalEntry.put("toLocation", "4110006");
+                journalEntry.put("toLocation", "");
 
                 String description =  journal.getOverGroup();
                 if (description.length() > 50){
@@ -660,6 +701,151 @@ public class WastageService {
             }
 
             wasteBatch.setWasteData(addedWaste);
+        }
+    }
+
+    public HashMap<String, Object> getWastageGroups(Account account, SyncJobType syncJobType,
+                                                    ArrayList<WasteGroup> oldWasteTypes){
+        HashMap<String, Object> response = new HashMap<>();
+
+        WebDriver driver;
+        try{
+            driver = setupEnvironment.setupSeleniumEnv(false);
+        }
+        catch (Exception ex){
+            response.put("status", Constants.FAILED);
+            response.put("message", "Failed to establish connection with firefox driver.");
+            response.put("invoices", new ArrayList<>());
+            return response;
+        }
+        ArrayList<WasteGroup> wasteTypes = new ArrayList<>();
+        WebDriverWait wait = new WebDriverWait(driver, 20);
+
+        try {
+            String URL = Constants.OHIM_LOGIN_LINK;
+
+            if(account.getMicrosVersion().equals("version1")){
+                if (!setupEnvironment.loginOHIM(driver, URL, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", wasteTypes);
+                    return response;
+                }
+                driver.get(Constants.WASTE_GROUPS_LINK);
+            }else if(account.getMicrosVersion().equals("version2")){
+                URL = Constants.MICROS_V2_LINK;
+
+                if (!microsFeatures.loginMicrosOHRA(driver, URL, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", wasteTypes);
+                    return response;
+                }
+
+                try{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    try {
+                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+                        try {
+                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement")));
+                        } catch (Exception e) {
+                            System.out.println(e.getMessage());
+                        }
+//                        driver.close();
+//                        driver.switchTo().window(tabs2.get(0));
+                   //     wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_WASTE_GROUPS_LINK);
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
+
+            try {
+                WebDriverWait newWait = new WebDriverWait(driver, 10);
+                newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel_")));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            driver.findElement(By.name("filterPanel_btnRefresh")).click();
+
+            List<WebElement> rows = driver.findElements(By.tagName("tr"));
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 13);
+
+            for (int i = 14; i < rows.size(); i++) {
+                WasteGroup wasteType = new WasteGroup();
+
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                // check existence of over group
+                WebElement td = cols.get(columns.indexOf("waste_group"));
+                WasteGroup oldWasteTypesData = conversions.checkWasteTypeExistence(oldWasteTypes, td.getText().strip());
+
+                if (oldWasteTypesData.getChecked()){
+                    wasteType= oldWasteTypesData;
+                }
+
+                else{
+                    wasteType.setChecked(false);
+                    wasteType.setWasteGroup(td.getText().strip());
+                }
+
+                wasteTypes.add(wasteType);
+            }
+
+            driver.quit();
+
+            syncJobType.getConfiguration().wastageConfiguration.wasteGroups = wasteTypes;
+            syncJobTypeRepo.save(syncJobType);
+            response.put("cols", columns);
+            response.put("data", wasteTypes);
+            response.put("message", "Get waste groups successfully.");
+            response.put("success", true);
+
+            return response;
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.put("data", wasteTypes);
+            response.put("message", "Failed to get waste groups.");
+            response.put("success", false);
+
+            return response;
         }
     }
 

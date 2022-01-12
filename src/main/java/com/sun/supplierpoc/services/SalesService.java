@@ -902,7 +902,7 @@ public class SalesService {
                 saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
                 float majorGroupGrossTotal = conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost());
-                totalMajorGroupNet += Math.abs(majorGroupGrossTotal);
+                totalMajorGroupNet += majorGroupGrossTotal;
             }
 
             // Save taxes {Credit}
@@ -1088,7 +1088,7 @@ public class SalesService {
 
                 saveTender(journalBatch, transactionDate, configuration, syncJob, tender);
 
-                float tenderTotal = Math.abs(tender.getTotal());
+                float tenderTotal = tender.getTotal();
                 totalTender += tenderTotal;
             }
 
@@ -1280,7 +1280,7 @@ public class SalesService {
             tenderData.put("transactionDate", transactionDate);
 
             if (tender.getTotal() < 0){
-                tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(tenderCommunicationTotal)));
+                tenderData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(tenderCommunicationTotal)));
             }else {
                 tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(tenderCommunicationTotal) * -1));
             }
@@ -1330,9 +1330,11 @@ public class SalesService {
         tenderData.put("transactionDate", transactionDate);
 
         if (tender.getTotal() < 0){
-            tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(subTenderTotal)));
+            tenderData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(subTenderTotal)));
+            tenderData.put("inventoryAccount", tender.getAccount());
         }else {
             tenderData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(subTenderTotal) * -1));
+            tenderData.put("expensesAccount", tender.getAccount());
         }
 
         tenderData.put("fromCostCenter", tender.getCostCenter().costCenter);
@@ -1343,8 +1345,6 @@ public class SalesService {
 
         tenderData.put("fromLocation", tender.getCostCenter().accountCode);
         tenderData.put("toLocation", tender.getCostCenter().accountCode);
-
-        tenderData.put("expensesAccount", tender.getAccount());
 
         String description = "";
         if (tender.getCostCenter().costCenterReference.equals("")){
@@ -1421,13 +1421,24 @@ public class SalesService {
         majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
         majorGroupData.put("transactionDate", transactionDate);
 
-        majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
-        // Major Group account
-        if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0
-                && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
-            majorGroupData.put("inventoryAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
-        }else {
-            majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
+        if(majorGroupJournal.getTotalCost() > 0){
+            majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
+            // Major Group account
+            if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0
+                    && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
+                majorGroupData.put("inventoryAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
+            }else {
+                majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
+            }
+        }else{
+            majorGroupData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
+            // Major Group account
+            if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0
+                    && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
+                majorGroupData.put("expensesAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
+            }else {
+                majorGroupData.put("expensesAccount", majorGroupJournal.getMajorGroup().getAccount());
+            }
         }
 
         majorGroupData.put("fromCostCenter", majorGroupJournal.getCostCenter().costCenter);

@@ -3,12 +3,14 @@ package com.sun.supplierpoc.controllers;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.TransfersExcelExporter;
+import com.sun.supplierpoc.fileDelimiterExporters.GeneralExporterMethods;
 import com.sun.supplierpoc.fileDelimiterExporters.SalesFileDelimiterExporter;
 import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.*;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.SunService;
 import com.sun.supplierpoc.services.SyncJobDataService;
@@ -18,6 +20,8 @@ import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +34,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.DateFormatSymbols;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -62,13 +67,13 @@ public class TransferController {
 
     private Conversions conversions = new Conversions();
     private SetupEnvironment setupEnvironment = new SetupEnvironment();
-
+    private MicrosFeatures microsFeatures = new MicrosFeatures();
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @RequestMapping("/getBookedTransfer")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<HashMap<String, Object>> getBookedTransferRequest(Principal principal) {
+    public ResponseEntity<HashMap<String, Object>> getBookedTransferRequest(Principal principal) throws IOException, ParseException {
         HashMap<String, Object> response = new HashMap<>();
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -76,8 +81,8 @@ public class TransferController {
 
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = getBookedTransfer(user.getId(), account);
-            if(response.get("success").equals(false)){
+            response = syncBookedTransferInDayRange(user.getId(), account);
+            if(response.get("Success").equals(false)){
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }else {
                 return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -98,11 +103,13 @@ public class TransferController {
 
         ArrayList<CostCenter> costCenters =  generalSettings.getCostCenterAccountMapping();
         ArrayList<Item> items =  generalSettings.getItems();
+        ArrayList<ItemGroup> itemsGroups =  generalSettings.getItemGroups();
         ArrayList<OverGroup> overGroups;
 
         String timePeriod = transferSyncJobType.getConfiguration().timePeriod;
         String fromDate = transferSyncJobType.getConfiguration().fromDate;
         String toDate = transferSyncJobType.getConfiguration().toDate;
+        String syncPer = transferSyncJobType.getConfiguration().syncPerGroup;
 
 
         if (!transferSyncJobType.getConfiguration().uniqueOverGroupMapping){
@@ -154,8 +161,8 @@ public class TransferController {
 
         try {
 
-            HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, costCenters, items,
-                    overGroups, account);
+            HashMap<String, Object> data = transferService.getTransferData(transferSyncJobType, costCenters, items, itemsGroups,
+                    overGroups, account, syncPer, transferSyncJobType);
 
             if (data.get("status").equals(Constants.SUCCESS)) {
                 ArrayList<HashMap<String, Object>> transfers = (ArrayList<HashMap<String, Object>>) data.get("transfers");
@@ -258,6 +265,105 @@ public class TransferController {
         }
     }
 
+    public HashMap<String, Object> syncBookedTransferInDayRange(String userId, Account account) throws ParseException, IOException {
+        HashMap<String, Object> response = new HashMap<>();
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.TRANSFERS, account.getId(), false);
+
+        DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
+        DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
+        DateFormat monthFormat = new SimpleDateFormat("MM");
+
+        int tryCount = 2;
+
+        /*
+         * Sync days of last month
+         * */
+        if(syncJobType.getConfiguration().schedulerConfiguration.duration.equals(Constants.DAILY_PER_MONTH)) {
+            syncJobType.getConfiguration().timePeriod = Constants.USER_DEFINED;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MONTH, -1);
+            calendar.set(Calendar.DAY_OF_MONTH, 1);
+
+            int numDays = calendar.getActualMaximum(Calendar.DATE);
+            String startDate;
+
+            while (numDays != 0){
+                startDate = dateFormat.format(calendar.getTime());
+                syncJobType.getConfiguration().fromDate = startDate;
+                syncJobType.getConfiguration().toDate = startDate;
+                syncJobTypeRepo.save(syncJobType);
+
+                response = getBookedTransfer(userId, account);
+                if (response.get("Success").toString().equals("true")){
+                    calendar.add(Calendar.DATE, +1);
+                    numDays--;
+                }
+            }
+
+            /*
+             * Generate single file
+             * */
+            String month = monthFormat.format(calendar.getTime());
+            String date = fileDateFormat.format(calendar.getTime());
+
+            String path = account.getName();
+            String fileName = date + ".ndf";
+            boolean perLocation = syncJobType.getConfiguration().exportFilePerLocation;
+
+            GeneralExporterMethods exporterMethods = new GeneralExporterMethods(fileName);
+            exporterMethods.generateSingleFile(null, path, month, fileName, perLocation);
+
+            String message = "Sync approved invoices of last month successfully";
+            response.put("Success", "true");
+            response.put("message", message);
+        }
+        /*
+         * Sync days in range
+         * */
+        else if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
+            String startDate = syncJobType.getConfiguration().fromDate;
+            String endDate = syncJobType.getConfiguration().toDate;
+
+            Date date= dateFormat.parse(startDate);
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(date);
+
+            while (!startDate.equals(endDate)){
+                response = getBookedTransfer(userId, account);
+                if (response.get("success").toString().equals("true") || tryCount == 0){
+                    tryCount = 2;
+                    calendar.add(Calendar.DATE, +1);
+                    startDate = dateFormat.format(calendar.getTime());
+                    syncJobType.getConfiguration().fromDate = startDate;
+                    syncJobType.getConfiguration().toDate = startDate;
+                    syncJobTypeRepo.save(syncJobType);
+                }else{
+                    tryCount = tryCount;
+                }
+                tryCount--;
+            }
+
+            String message = "Sync sales successfully.";
+            response.put("Success", "true");
+            response.put("message", message);
+        }
+        else{
+            if (syncJobType.getConfiguration().timePeriod.equals(Constants.YESTERDAY)) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.add(Calendar.DATE, -1);
+
+                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
+                syncJobTypeRepo.save(syncJobType);
+            }
+
+            response = getBookedTransfer(userId, account);
+        }
+        return response;
+    }
+
     @RequestMapping("/mapItems")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -284,11 +390,52 @@ public class TransferController {
             response.put("invoices", new ArrayList<>());
             return response;
         }
+        WebDriverWait wait = new WebDriverWait(driver, 20);
 
         try {
-            if (checkLogin(items, driver, response, Constants.OHIM_LOGIN_LINK, account)) return response;
+            if(account.getMicrosVersion().equals("version1")){
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
+                    driver.quit();
 
-            driver.get(Constants.MAJOR_GROUPS_LINK);
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", items);
+                    return response;
+                }
+                driver.get(Constants.MAJOR_GROUPS_LINK);
+            }
+            else if(account.getMicrosVersion().equals("version2")){
+                if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                    driver.quit();
+
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("data", items);
+                    return response;
+                }
+
+                try{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+                    //    wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                        driver.get(Constants.MICROS_MAJOR_GROUPS_LINK);
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    throw e;
+                }
+            }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
             List<WebElement> rows = driver.findElements(By.tagName("tr"));
@@ -330,9 +477,17 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            driver.findElement(By.name("_ctl27")).click();
+            if(account.getMicrosVersion().equals("version1")) {
+              /*  driver.findElement(By.name("_ctl27")).click();
+                driver.findElement(By.id("link-27-10-4-ItemGroups")).click();*/
+                driver.get(Constants.ITEMS_GROUPS_LINK);
+            }else{
+                driver.get("https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx");
+            }
+         /*   else
+                driver.findElement(By.name("_ctl67")).click();
 
-            driver.findElement(By.id("link-27-10-4-ItemGroups")).click();
+            driver.findElement(By.id("link-27-10-4-ItemGroups")).click();*/
 
 //            driver.get(Constants.MAIN_MENU_URL);
 //            driver.get(Constants.ITEMS_GROUPS_LINK);
@@ -377,8 +532,15 @@ public class TransferController {
 
             // Get Items Group
             driver.findElement(By.partialLinkText("Main Menu")).click();
-            driver.findElement(By.name("_ctl27")).click();
-            driver.findElement(By.id("link-27-10-2-Items")).click();
+            if(account.getMicrosVersion().equals("version1")) {
+              /*  driver.findElement(By.name("_ctl31")).click();
+                driver.findElement(By.id("link-27-10-2-Items")).click();*/
+                driver.get(Constants.ITEMS_LINK);
+            }
+            else {
+               driver.get("https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/Items/OverviewItem.aspx");
+            }
+
 //            driver.get(Constants.MAIN_MENU_URL);
 //            driver.get(Constants.ITEMS_LINK);
 
@@ -453,19 +615,6 @@ public class TransferController {
 
             return response;
         }
-    }
-
-    private boolean checkLogin(ArrayList<Item> items, WebDriver driver, HashMap<String, Object> response,
-                               String url, Account account) {
-        if (!setupEnvironment.loginOHIM(driver, url, account)) {
-            driver.quit();
-
-            response.put("status", Constants.FAILED);
-            response.put("message", "Invalid username and password.");
-            response.put("data", items);
-            return true;
-        }
-        return false;
     }
 
     @GetMapping("/transfers/export/excel")

@@ -213,38 +213,48 @@ public class CreditNoteController {
                     SalesFileDelimiterExporter exporter = new SalesFileDelimiterExporter(creditNoteSyncJobType, addedInvoices);
                     File file = exporter.prepareNDFFile(addedInvoices, creditNoteSyncJobType, account.getName(), "");
 
-                    if(file != null && ftpClient.open()){
-                        boolean sendFileFlag = false;
-                        try {
-                            sendFileFlag = ftpClient.putFileToPath(file, file.getName());
-                            ftpClient.close();
-                        } catch (IOException e) {
-                            ftpClient.close();
+                    if(file != null && ftpClient != null){
+                        if(ftpClient.open()){
+
+                            boolean sendFileFlag = false;
+                            try {
+                                sendFileFlag = ftpClient.putFileToPath(file, file.getName());
+                                ftpClient.close();
+                            } catch (IOException e) {
+                                ftpClient.close();
+                            }
+
+                            if (sendFileFlag){
+                                syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
+                                syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                        "Sync  credit notes successfully.", Constants.SUCCESS);
+
+                                response.put("success", true);
+                                response.put("message", "Sync credit notes successfully.");
+                            }
+                            else {
+                                syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.FAILED);
+                                syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
+                                        "Failed to sync credit notes to sun system via FTP.", Constants.FAILED);
+
+                                response.put("success", false);
+                                response.put("message", "Failed to sync credit notes to sun system via FTP.");
+                            }
                         }
-
-                        if (sendFileFlag){
-//                            if (true){
-                            syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
+                        else {
                             syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
-                                    "Sync credit notes successfully.", Constants.SUCCESS);
-
-                            response.put("success", true);
-                            response.put("message", "Sync credit notes successfully.");
-                        }else {
-                            syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.FAILED);
-                            syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
-                                    "Failed to sync credit notes to sun system via FTP.", Constants.FAILED);
+                                    "Failed to connect to sun system via FTP.", Constants.FAILED);
 
                             response.put("success", false);
-                            response.put("message", "Failed to sync credit notes to sun system via FTP.");
+                            response.put("message", "Failed to connect to sun system via FTP.");
                         }
-                    }
-                    else {
+                    }else {
+                        syncJobDataService.updateSyncJobDataStatus(addedInvoices, Constants.SUCCESS);
                         syncJobService.saveSyncJobStatus(syncJob, addedInvoices.size(),
-                                "Failed to connect to sun system via FTP.", Constants.FAILED);
+                                "Sync approved Invoices successfully.", Constants.SUCCESS);
 
-                        response.put("success", false);
-                        response.put("message", "Failed to connect to sun system via FTP.");
+                        response.put("success", true);
+                        response.put("message", "Sync sales successfully.");
                     }
                 }
                 else {

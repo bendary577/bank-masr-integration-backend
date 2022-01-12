@@ -1,7 +1,6 @@
 package com.sun.supplierpoc.controllers.application;
 
 import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.excelExporters.TransactionExcelExport;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
@@ -47,8 +46,35 @@ public class TransactionController {
     @Autowired
     private TransactionRepo transactionsRepo;
 
+    @RequestMapping("/getTransactionsCount")
+    public int getTransactionsCount(Principal principal,
+                                                   @RequestParam(name = "fromDate", required = false) String fromDate,
+                                                   @RequestParam(name = "toDate", required = false) String toDate,
+                                                   @RequestParam(name = "group", required = false) String group,
+                                                   @RequestParam(name = "transactionType", required = false) String transactionType) {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            int transactions = transactionService.getTransactionByTypeCount(fromDate, toDate, group, account);
+
+            return transactions;
+        }else{
+            return 0;
+        }
+    }
+
     @RequestMapping("/getTransactions")
-    public List<Transactions> getTransactionByType(Principal principal,@RequestParam("time") String time,
+    public List<Transactions> getTransactionByType(Principal principal,
+                                                   @RequestParam(name = "pageNumber") int pageNumber,
+                                                   @RequestParam(name = "limit") int limit,
+                                                   @RequestParam(name = "fromDate", required = false) String fromDate,
+                                                   @RequestParam(name = "toDate", required = false) String toDate,
+                                                   @RequestParam(name = "group", required = false) String group,
                                                    @RequestParam("transactionType") String transactionType) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
@@ -58,7 +84,8 @@ public class TransactionController {
 
             Account account = accountOptional.get();
 
-            List<Transactions> transactions = transactionService.getTransactionByType(transactionType, time, account);
+            List<Transactions> transactions = transactionService.getTransactionByTypePaginated(transactionType, fromDate,
+                    toDate, group, account, pageNumber, limit);
 
             return transactions;
         }else{
@@ -67,8 +94,9 @@ public class TransactionController {
     }
 
     @RequestMapping("/getTotalSpendTransactions")
-    public ResponseEntity getTotalSpendTransactions(Principal principal,@RequestParam("transactionType") String transactionType,
-                                                   @RequestParam("dateFlag") String dateFlag) {
+    public ResponseEntity getTotalSpendTransactions(Principal principal,
+                                                    @RequestParam("transactionType") String transactionType,
+                                                    @RequestParam("dateFlag") String dateFlag) {
 
         HashMap response = new HashMap();
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();

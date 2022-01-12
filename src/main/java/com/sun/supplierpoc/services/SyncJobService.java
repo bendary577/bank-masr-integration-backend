@@ -19,7 +19,7 @@ public class SyncJobService {
     public void saveSyncJobStatus(SyncJob syncJob, int rowsCount, String message, String status){
         syncJob.setStatus(status);
         syncJob.setReason(message);
-        syncJob.setEndDate(new Date());
+        syncJob.setEndDate(new Date(System.currentTimeMillis()));
         syncJob.setRowsFetched(rowsCount);
         syncJobRepo.save(syncJob);
     }

@@ -1,6 +1,9 @@
 package com.sun.supplierpoc;
 
 public class Constants {
+    ///////////////////////////////////////// OHRA Versions ////////////////////////////////////////////////////////////
+    public static String VERSION_1 = "version1";
+    public static String VERSION_2 = "version2";
 
     ///////////////////////////////////////// Sync Job Data Status//////////////////////////////////////////////////////
     public static String SUCCESS = "Success";
@@ -14,6 +17,7 @@ public class Constants {
 
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_USER = "Invalid user.";
+    public static String INVALID_ACCOUNT = "Invalid Account Id, Please provide valid id.";
     public static String NOT_ELIGIBLE_ACCOUNT = "This account is not eligible for this action.";
     public static String NOT_ELIGIBLE_USER = "This user is not eligible for this action.";
     public static String ACCOUNT_NOT_EXIST = "This account is not exist.";
@@ -33,9 +37,9 @@ public class Constants {
     ///////////////////////////////////////// Sync Job Types////////////////////////////////////////////////////////////
     public static String wLsIntegration = "2wLsIntegration";
     public static String NEW_BOOKING_REPORT = "New/Update Booking"; // New Booking Report
-    public static String CANCEL_BOOKING_REPORT = "Cancel Booking Report";
-    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update Report";
-    public static String EXPENSES_DETAILS_REPORT = "Expenses Details Report";
+    public static String CANCEL_BOOKING_REPORT = "Cancel Booking";
+    public static String OCCUPANCY_UPDATE_REPORT = "Occupancy Update";
+    public static String EXPENSES_DETAILS_REPORT = "Expenses Details";
 
     public static String SUPPLIERS = "Suppliers";
     public static String APPROVED_INVOICES = "Approved Invoices";
@@ -48,9 +52,18 @@ public class Constants {
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
 
+    ///////////////////////////////////////// Transaction Status//////////////////////////////////////////////////////
+    public static String PAID_TRANSACTION = "Paid Transaction";
+    public static String PARTIAL_PAYMENT = "Partial Payment";
+    public static String UNPAID_TRANSACTION = "Unpaid Transaction";
+    public static String INSUFFICIENT_AMOUNT = "Unpaid Transaction - Insufficient Amount";
+
     ///////////////////////////////////////// Operation Types///////////////////////////////////////////////////////////
     public static String CREATE_CHECK = "Create Check";
     public static String OPERA_PAYMENT = "Opera Payment";
+
+    ///////////////////////////////////////// Simphony  Types///////////////////////////////////////////////////////////
+    public static String SIMPHONY_PAYMENT_CHECK = "simphony Payment";
 
     ////////////////////////////////////////// Sync Job Scheduler //////////////////////////////////////////////////////
     public static String DAILY = "Daily";
@@ -61,12 +74,13 @@ public class Constants {
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
     public static String USE_WALLET = "Wallet";
-
+    public static String REWARD_POINTS = "Reward Points";
+    public static String POINTS_REDEMPTION = "Points Redemption";
 
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
-    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/operaReports";
+    public static String REPORTS_BUCKET_PATH = "https://storage.googleapis.com/oracle-integrator-bucket/";
 
     public static String USER_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultImage.jpg";
     public static String GROUP_IMAGE_URL = "https://storage.googleapis.com/oracle-integrator-bucket/AccourImage/defaultGroup.png";
@@ -143,6 +157,12 @@ public class Constants {
 
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
+    // Items_Group_link
+    public static String OHRA_ITEMS_GROUP_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
+
+    // Items Links
+    public static String OHRA_ITEMS_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/Items/OverviewItem.aspx";
+
     // Daily Detail >> Discount
     public static String DISCOUNT_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=13";
     public static String DISCOUNT_TABLE_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=13&reportID=DiscDailyDetail&method=run";
@@ -194,12 +214,16 @@ public class Constants {
 
     public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
     public static String MICROS_REPORT_BASE_LINK = "https://mte4-ohra.oracleindustry.com/portal/";
+    public static String MICROS_INVENTORY_BASE_LINK = "https://mte4-ohra-ohim.oracleindustry.com";
     public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
     public static String MICROS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports";
 
     // SALES LINKS
     // Reports >> Tenders Media >> Payments bye Tender Types
     public static String MICROS_TENDERS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
+   // Approved Invoices
+   public static String MICROS_APPROVED_INVOICES = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+
 
     // Reports >> Taxes >> Daily Taxes by Tax Type
     public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
@@ -215,6 +239,16 @@ public class Constants {
     // My Reports >> Inventory Cost of Sales
     public static String MICROS_COS_REPORTS_COST_CENTER = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100238";
 
+    // WASTAGE LINKS
+    public static String MICROS_WASTE_GROUPS_LINK =  MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/WasteGroups/WasteGroup.aspx";
+    public static String MICROS_OVER_GROUPS_LINK =  MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/OverGroups/OverviewOverGroup.aspx";
+    public static String MICROS_MAJOR_GROUPS_LINK = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
+
+    public static String MICROS_WATE_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100267";
+
+    // CONSUMPTION LINKS >> Inventory Cost of Sales
+    public static String MICROS_CONSUMPTION_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100067";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";
@@ -229,24 +263,10 @@ public class Constants {
     public static String LAST_YEAR_YTD = "Last Year YTD";
     public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
     public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
-
+    public static String POWER_SELECT="Power Select";
     //////////////////////////////////////////////// AMAZON PAYMENT /////////////////////////////////////////////////////
 
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
-
-    ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
-    public static final String ADD_ROLE = "add_role";
-    public static final String ADD_USER_ROLE = "add_user_role";
-    public static final String ADD_USER_FEATURE = "add_user_feature";
-    public static final String ADD_FEATURE = "add_feature";
-    public static  final String CHARGE_WALLET = "charge_wallet";
-    public static  final String DEDUCT_WALLET = "deduct_wallet";
-    public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
-    public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
-
-    ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
-    public static final String CUSTOM_REPORT = "generate_custom_report";
-
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";

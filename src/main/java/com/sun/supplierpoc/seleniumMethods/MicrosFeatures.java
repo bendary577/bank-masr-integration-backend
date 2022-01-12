@@ -4,6 +4,8 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
+import com.sun.supplierpoc.models.configurations.CostCenter;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -55,7 +57,7 @@ public class MicrosFeatures {
         }
     }
 
-    public Response selectDateRangeMicros(String timePeriod, String dayDate,
+    public Response selectDateRangeMicros(String timePeriod, String fromDate, String toDate,
                                          String location, String revenueCenter, String orderType, WebDriver driver){
         Response response = new Response();
         try {
@@ -84,8 +86,12 @@ public class MicrosFeatures {
                         return response;
                     }
 
-                    // Choose Date
-                    response = setupEnvironment.chooseDayDateOHRA(dayDate,driver);
+                    // Choose Date Range
+                    if (fromDate.equals(toDate)){
+                        response = setupEnvironment.chooseDayDateOHRA(fromDate,driver);
+                    }else{
+                        response = setupEnvironment.chooseRangeDaysDateOHRA(fromDate, toDate, driver);
+                    }
 
                     if (!response.isStatus()){
                         return response;
@@ -176,7 +182,7 @@ public class MicrosFeatures {
 //                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
 //                    }
 
-                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
+                    WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){
                         input.sendKeys("all");
@@ -236,5 +242,56 @@ public class MicrosFeatures {
         return response;
     }
 
+    public String getActualBusinessDate(WebDriver driver){
+      return    driver.findElement(By.id("dateTime_input")).getText();
+    }
+    public String getActualLocation(WebDriver driver){
+        return driver.findElement(By.id("search_locations_input")).getText();
+    }
+    public String getActualRevenueCenter(WebDriver driver){
+      return driver.findElement(By.id("search-rvc-input")).getText();
+    }
+
+
+    public Response checkReportParameters(WebDriver driver,String fromDate,String toDate,String businessDate,String locationName ) throws Exception{
+
+        Response response = new Response();
+        String actualBusinessDate= driver.findElement(By.id("dateTime_input")).getText();;
+        String actaulLocation = driver.findElement(By.id("search_locations_input")).getText();
+       // String revenueCenter = driver.findElement(By.id("search-rvc-input")).getText();
+
+
+        if(actualBusinessDate.equals(Constants.POWER_SELECT)){
+            driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[5]/div[2]/div[2]/div[1]/div/oj-button")).click();
+            String rangeDate = driver.findElement(By.className("oj-fbgbu-popup-list")).getText();
+
+            DateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
+            Date formatedFromDate = formater.parse(fromDate);
+            Date formatedToDate = formater.parse(toDate);
+            DateFormat BusinessDateFormatV2 = new SimpleDateFormat("MM/dd/yyyy");
+            String modifiedFromDate = BusinessDateFormatV2.format(formatedFromDate);
+            String modifiedToDate = BusinessDateFormatV2.format(formatedToDate);
+            String modifiedBusinessDate = modifiedFromDate +" - "+ modifiedToDate;
+            if(!rangeDate.equals(modifiedBusinessDate)){
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                return response;
+            }
+        }
+
+        else if(!actualBusinessDate.equals(Constants.LAST_MONTH) && businessDate.equals(Constants.LAST_MONTH)){
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_BUSINESS_DATE);
+            return response;
+        }
+
+        if(!actaulLocation.equals(locationName)){
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_LOCATION);
+            return response;
+        }
+        response.setStatus(true);
+        return response;
+    }
 
 }

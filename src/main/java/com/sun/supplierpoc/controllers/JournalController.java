@@ -8,6 +8,7 @@ import com.sun.supplierpoc.ftp.FtpClient;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.*;
+import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.*;
 import com.systemsunion.security.IAuthenticationVoucher;
@@ -41,7 +42,6 @@ public class JournalController {
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @Autowired
     private JournalService journalService;
     @Autowired
@@ -65,7 +65,6 @@ public class JournalController {
     FtpService ftpService;
     @Autowired
     private SalesController salesController;
-
     public Conversions conversions = new Conversions();
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,8 +248,17 @@ public class JournalController {
                             consumptionCostCenters, account);
                 }
             } else if(account.getMicrosVersion().equals("version2")){
-                ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
-                data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+                if (consumptionBasedOnType.equals("Cost Center")) {
+                    data = journalV2Service.getJournalDataByCostCenter(journalSyncJobType, costCenters, itemGroups, account);
+                }
+                else if (consumptionBasedOnType.equals("Location")) {
+                    data = journalV2Service.getJournalData(journalSyncJobType, costCentersLocation, itemGroups, costCenters, account);
+                } else {
+//                    ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
+//                    ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
+                    data = journalV2Service.getJournalDataByCostCenterAndLocation(journalSyncJobType, costCentersLocation,
+                            costCenters, itemGroups, account);
+                }
             } else {
                 response.put("message", "Please configure account version before starting the process.");
                 response.put("success", false);
@@ -272,7 +280,7 @@ public class JournalController {
                     }
 
                     /* Check generate journals report feature */
-                    if (addedJournalBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Constants.CONSUMPTION_CUSTOM_REPORT)){
+                    if (addedJournalBatches.size() > 0 && user != null && roleService.hasRole(user.get(), Roles.CONSUMPTION_CUSTOM_REPORT)){
                         ConsumptionExcelExporter excelExporter = new ConsumptionExcelExporter();
                         try{
                             excelExporter.exportMonthlyReport(account.getName(),generalSettings, journalSyncJobType, addedJournalBatches);
@@ -319,7 +327,7 @@ public class JournalController {
                             response.put("success", false);
                         }
                     }
-                    else if (addedJournalBatches.size() > 0 && !account.getSendMethod().equals("other")) {
+                    else if (addedJournalBatches.size() > 0 && account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)) {
                         List<SyncJobData> consumptionList = syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false);
 
                         File file;
@@ -344,7 +352,7 @@ public class JournalController {
                             syncJobService.saveSyncJobStatus(syncJob, consumptionList.size(),
                                     "Sync consumption successfully.", Constants.SUCCESS);
 
-                            if (account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
+                            if (account.getSendMethod() != null && account.getSendMethod().equals(Constants.GOOGLE_DRIVE_METHOD)) {
                                 response.put("files", files);
                             }
 

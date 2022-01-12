@@ -15,7 +15,11 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.xml.crypto.Data;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -163,27 +167,27 @@ public class SalesV2Services {
         boolean taxIncluded = configuration.taxIncluded;
 
         ArrayList<Journal> salesMajorGroupsGross = new ArrayList<>();
-//        if (revenueCenters.size() > 0 ){
-//            for (RevenueCenter rc : revenueCenters)
-//            {
-//                if(!rc.isChecked()){
-//                    continue;
-//                }
-//                Response overGroupGrossResponse;
-//
-//                overGroupGrossResponse = getSalesMajorGroups(taxIncluded, rc, timePeriod, fromDate, toDate, costCenter,
-//                        majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
-//                        driver);
-//
-//                if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
-//
-//                if (majorGroupDiscount || revenueCenterDiscount){
-//                    salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
-//                }
-//
-//                salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
-//            }
-//        }else{
+        if (configuration.syncPerRV){
+            for (RevenueCenter rc : revenueCenters)
+            {
+                if(!rc.isChecked()){
+                    continue;
+                }
+                Response overGroupGrossResponse;
+
+                overGroupGrossResponse = getSalesMajorGroups(taxIncluded, rc, timePeriod, fromDate, toDate, costCenter,
+                        majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
+                        driver);
+
+                if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
+
+                if (majorGroupDiscount || revenueCenterDiscount){
+                    salesDiscounts.addAll(overGroupGrossResponse.getSalesDiscount());
+                }
+
+                salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
+            }
+        }else{
             Response overGroupGrossResponse;
 
             overGroupGrossResponse = getSalesMajorGroups(taxIncluded, new RevenueCenter(), timePeriod, fromDate, toDate, costCenter,
@@ -197,7 +201,7 @@ public class SalesV2Services {
             }
 
             salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
-//        }
+        }
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
@@ -250,7 +254,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -266,12 +270,27 @@ public class SalesV2Services {
             } catch (Exception e) {
                 System.out.println("Waiting");
             }
-
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table")));
-            WebElement statTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table"));
+            // validate Report parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
+
+
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+       WebElement statTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[8]/div[1]/oj-rna-report-tile-cca[2]/oj-module/oj-module/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -337,7 +356,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -355,11 +374,29 @@ public class SalesV2Services {
             }
 
             // Run
-            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
-            // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table")));
-            WebElement tendersTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[4]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table"));
+
+              // Validate Report Parameters
+              Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+              if(!validateParameters.isStatus()){
+                  response.setStatus(false);
+                  response.setMessage(validateParameters.getMessage());
+                  return response;
+              }
+
+                try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_6316_0']/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+
+
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_6316_0']/table"));
+
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -436,7 +473,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -456,9 +493,24 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
+
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_5450_0\"]/table")));
-            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_5450_0\"]/table"));
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_6312_0']/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+            WebElement taxesTable = driver.findElement(By.xpath("//*[@id='standard_table_6312_0']/table"));
             List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 3) {
@@ -546,7 +598,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     null,"", driver);
 
             if (!dateResponse.isStatus()){
@@ -566,8 +618,23 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
+
             // Fetch tenders table
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table")));
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
             WebElement discountsTable = driver.findElement(By.cssSelector("#custom_report100046 > div.oj-flex.oj-sm-12 > div > div:nth-child(11) > table"));
             List<WebElement> rows = discountsTable.findElements(By.tagName("tr"));
 
@@ -665,7 +732,7 @@ public class SalesV2Services {
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName,
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                     revenueCenter.getRevenueCenter(),"", driver);
 
             if (!dateResponse.isStatus()){
@@ -685,15 +752,23 @@ public class SalesV2Services {
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
             // Fetch major groups table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_4527_0\"]/table")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_5723_0']/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage("There is no sales per major group found in this location");
                 return response;
             }
-            WebElement tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_4527_0\"]/table"));
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_5723_0']/table"));
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){

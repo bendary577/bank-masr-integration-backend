@@ -192,6 +192,16 @@ public class Conversions {
         return new CostCenter();
     }
 
+    public CostCenter checkCostCenterExistence(ArrayList<CostCenter> costCenters, String costCenterName){
+        for (CostCenter costCenter : costCenters) {
+            String savedCostCenterName = costCenter.costCenter;
+            if (savedCostCenterName.equals(costCenterName)) {
+                return costCenter;
+            }
+        }
+        return new CostCenter();
+    }
+
     public ConsumptionLocation checkConCostCenterExistence(ArrayList<ConsumptionLocation> costCenters, String costCenterName){
         for (ConsumptionLocation costCenter : costCenters) {
             if (costCenter.costCenter.costCenter.equals(costCenterName.toLowerCase())) {
@@ -316,7 +326,7 @@ public class Conversions {
 
     public BookingType checkBookingTypeExistence(ArrayList<BookingType> bookingTypes, String typeName){
         if(typeName.equals("") || bookingTypes.size() == 0){
-            typeName = "not applicable";
+            typeName = "other";
         }
         for (BookingType paymentType : bookingTypes) {
             if (paymentType.getType().toLowerCase().equals(typeName.toLowerCase())) {
@@ -590,6 +600,17 @@ public class Conversions {
             if(tempRevenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter())) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public boolean hasBalance(List<Balance> balance) {
+        double totalAmount = 0;
+        for (Balance tempBalance: balance){
+            totalAmount += tempBalance.getAmount();
+        }
+        if(totalAmount > 0){
+            return true;
         }
         return false;
     }

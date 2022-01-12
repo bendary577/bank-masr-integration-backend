@@ -1,5 +1,8 @@
 package com.sun.supplierpoc.models.applications;
 
+import com.sun.supplierpoc.models.auth.User;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+
 import java.util.Date;
 
 public class WalletHistory {
@@ -8,17 +11,29 @@ public class WalletHistory {
     private double amount;
     private double previousBalance;
     private double newBalance;
+    @DBRef
+    private User user;
     private Date date;
+
     public WalletHistory() {
     }
 
-    public WalletHistory(String operation, double amount, double previousBalance, double newBalance, Date date) {
+    public WalletHistory(String operation, double amount, double previousBalance, double newBalance, User user, Date date) {
         this.operation = operation;
         this.amount = amount;
         this.previousBalance = previousBalance;
         this.newBalance = newBalance;
-        this.date = date ;
+        this.user = user;
+        this.date = date;
     }
+
+//    public WalletHistory(String operation, double amount, double previousBalance, double newBalance, Date date) {
+//        this.operation = operation;
+//        this.amount = amount;
+//        this.previousBalance = previousBalance;
+//        this.newBalance = newBalance;
+//        this.date = date ;
+//    }
 
     public String getOperation() {
         return operation;
@@ -50,6 +65,14 @@ public class WalletHistory {
 
     public void setNewBalance(double newBalance) {
         this.newBalance = newBalance;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Date getDate() {

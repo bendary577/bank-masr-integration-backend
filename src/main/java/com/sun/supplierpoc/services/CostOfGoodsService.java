@@ -415,7 +415,7 @@ public class CostOfGoodsService {
                                 }
                             }
 
-                            dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
+                            dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName, revenueCenter.getRevenueCenter(),  orderType.getOrderType(), driver);
 
                             if (!dateResponse.isStatus()){
                                 response.setStatus(false);
@@ -430,13 +430,24 @@ public class CostOfGoodsService {
                                 System.out.println(ex.getMessage());
                             }
 
+                            //RUN
                             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+
+                            // Validate Report Parameters
+                            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+                            if(!validateParameters.isStatus()){
+                                response.setStatus(false);
+                                response.setMessage(validateParameters.getMessage());
+                                return response;
+                            }
 
                             fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, orderType, journals, driver);
                         }
                     }else {
 
-                        dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, location.locationName, revenueCenter.getRevenueCenter(),  "", driver);
+                        dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName, revenueCenter.getRevenueCenter(),  "", driver);
 
                         if (!dateResponse.isStatus()){
                             response.setStatus(false);
@@ -452,6 +463,16 @@ public class CostOfGoodsService {
                         }
 
                         driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+
+                        // Validate Report Parameters
+                        Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+                        if(!validateParameters.isStatus()){
+                            response.setStatus(false);
+                            response.setMessage(validateParameters.getMessage());
+                            return response;
+                        }
 
                         fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, null, journals, driver);
                     }
@@ -484,7 +505,7 @@ public class CostOfGoodsService {
 
 //        driver.get(Constants.CONSUMPTION_COSTOFGOODS_TABLE_LINK);
 
-            WebElement table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+            WebElement table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
             List<WebElement> rows = table.findElements(By.tagName("tr"));
 
             if (rows.size() < 4)
@@ -527,7 +548,6 @@ public class CostOfGoodsService {
 
                     MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
 
-
                     CostCenter costCenter = new CostCenter();
                     List<CostCenter> costCenters = majorGroup.getCostCenters();
                     for (CostCenter costCenter1 : costCenters) {
@@ -542,7 +562,7 @@ public class CostOfGoodsService {
                        link.click();
                    }
 
-                   table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+                   table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
                    rows = table.findElements(By.tagName("tr"));
 
                     // Debit lines
@@ -585,17 +605,19 @@ public class CostOfGoodsService {
                             link.click();
                         }
 
-                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_4438_0\"]/table"));
+                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
                         rows = table.findElements(By.tagName("tr"));
 
                     }
 
                     // Credit line
                     journals = journal.checkExistence(journals, majorGroup,majorGroupAmountTotal,
-                            costCenter, MGRevenueCenter,orderType, "", "C");
+                            costCenter, MGRevenueCenter, orderType, "", "C");
                 }
             }
-        }catch(Exception e){e.getMessage();}
+        }catch(Exception e){
+            e.getMessage();
+        }
     }
 
 }

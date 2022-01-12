@@ -19,6 +19,7 @@ public class SyncJobData implements Serializable {
     private String reason;
     private Date creationDate;
     private String syncJobId;
+    private String syncJobTypeId;
     private boolean deleted;
 
     public SyncJobData() {
@@ -33,12 +34,34 @@ public class SyncJobData implements Serializable {
         this.deleted = false;
     }
 
+    public SyncJobData(HashMap<String, Object> data, String status, String reason, Date creationDate, String syncJobId,
+                       String syncJobTypeId) {
+        this.data = data;
+        this.status = status;
+        this.reason = reason;
+        this.creationDate = creationDate;
+        this.syncJobId = syncJobId;
+        this.syncJobTypeId = syncJobTypeId;
+        this.deleted = false;
+    }
+
     public SyncJobData(Reservation reservation, String status, String reason, Date creationDate, String syncJobId, boolean deleted) {
         this.reservation = reservation;
         this.status = status;
         this.reason = reason;
         this.creationDate = creationDate;
         this.syncJobId = syncJobId;
+        this.deleted = deleted;
+    }
+
+    public SyncJobData(Reservation reservation, String status, String reason, Date creationDate, String syncJobId,
+            String syncJobTypeId, boolean deleted) {
+        this.reservation = reservation;
+        this.status = status;
+        this.reason = reason;
+        this.creationDate = creationDate;
+        this.syncJobId = syncJobId;
+        this.syncJobTypeId = syncJobTypeId;
         this.deleted = deleted;
     }
 
@@ -88,6 +111,14 @@ public class SyncJobData implements Serializable {
 
     public void setSyncJobId(String syncJobId) {
         this.syncJobId = syncJobId;
+    }
+
+    public String getSyncJobTypeId() {
+        return syncJobTypeId;
+    }
+
+    public void setSyncJobTypeId(String syncJobTypeId) {
+        this.syncJobTypeId = syncJobTypeId;
     }
 
     public boolean isDeleted() {

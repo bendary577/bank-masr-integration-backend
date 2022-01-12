@@ -4,21 +4,20 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-//@Document(collation = "transaction")
 public class Transactions {
-
     @Id
     private String id;
+    private String status;
     @NotNull(message="Code can't be empty.")
     @NotBlank(message="Code can't be empty.")
     private String code;
     private String transactionTypeId = "";
+    private String transactionTypeName = "";
     @DBRef
     private TransactionType transactionType;
     private Date transactionDate;
@@ -27,12 +26,16 @@ public class Transactions {
     private String revenueCentreName;
     private String employeeId;
     private String checkNumber;
+    @DBRef
     private Group group;
     private ApplicationUser user;
     @NotNull(message="Total Payment can't be empty.")
     private double totalPayment;
+    private double partialPayment;
     private double discountRate;
     private double afterDiscount;
+    private int pointsRedeemed;
+    private int pointsReward;
 
     public String getId() {
         return id;
@@ -40,6 +43,14 @@ public class Transactions {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Date getTransactionDate() {
@@ -72,6 +83,14 @@ public class Transactions {
 
     public void setTotalPayment(double totalPayment) {
         this.totalPayment = totalPayment;
+    }
+
+    public double getPartialPayment() {
+        return partialPayment;
+    }
+
+    public void setPartialPayment(double partialPayment) {
+        this.partialPayment = partialPayment;
     }
 
     public double getDiscountRate() {
@@ -144,6 +163,30 @@ public class Transactions {
 
     public void setTransactionType(TransactionType transactionType) {
         this.transactionType = transactionType;
+    }
+
+    public int getPointsRedeemed() {
+        return pointsRedeemed;
+    }
+
+    public void setPointsRedeemed(int pointsRedeemed) {
+        this.pointsRedeemed = pointsRedeemed;
+    }
+
+    public int getPointsReward() {
+        return pointsReward;
+    }
+
+    public void setPointsReward(int pointsReward) {
+        this.pointsReward = pointsReward;
+    }
+
+    public String getTransactionTypeName() {
+        return transactionTypeName;
+    }
+
+    public void setTransactionTypeName(String transactionTypeName) {
+        this.transactionTypeName = transactionTypeName;
     }
 }
 

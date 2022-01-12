@@ -33,6 +33,7 @@ public class ApplicationUser implements Serializable {
     private int points = 0;
 
     private Date expiryDate;
+    private Date birthDate;
     private Date creationDate;
     private Date lastUpdate;
     private boolean deleted;
@@ -187,5 +188,13 @@ public class ApplicationUser implements Serializable {
 
     public void setExpiryDate(Date expiryDate) {
         this.expiryDate = expiryDate;
+    }
+
+    public Date getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
     }
 }

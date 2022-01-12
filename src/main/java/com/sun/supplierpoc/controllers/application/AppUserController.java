@@ -1,5 +1,8 @@
 package com.sun.supplierpoc.controllers.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
@@ -262,6 +265,50 @@ public class AppUserController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
+    @RequestMapping("/addRewardPointsUser")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity addRewardPointsUser(@RequestPart(name = "user") String userJson,
+                                              @RequestPart(name = "image", required = false) MultipartFile image,
+                                                   Principal principal) {
+        HashMap response = new HashMap();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (user != null) {
+            try {
+                ApplicationUser applicationUser = new ApplicationUser();
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    applicationUser = objectMapper.readValue(userJson, new TypeReference<>() {});
+                } catch (JsonProcessingException e) {
+                    throw e;
+                }
+                Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+                if (!accountOptional.isPresent()) {
+                    response.put("message", Constants.INVALID_USER);
+                    return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+                }
+
+                Account account = accountOptional.get();
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                response = appUserService
+                        .addRewardPointsGuest(applicationUser, image,account, generalSettings);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.put("success", false);
+                response.put("message", "Invalid user.");
+            }
+
+            return new ResponseEntity(response, HttpStatus.OK);
+        }else{
+            response.put("success", false);
+            response.put("message", Constants.INVALID_USER);
+            return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
     @RequestMapping("/addApplicationUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -278,7 +325,6 @@ public class AppUserController {
                                                    @RequestParam(name = "expiryDate", required = false) String expiryDate,
                                                    @RequestParam(name = "sendEmail", required = false) boolean sendEmail,
                                                    @RequestParam(name = "sendSMS", required = false) boolean sendSMS,
-                                                   @RequestParam(name = "points", required = false) int points,
                                                    @RequestPart(name = "accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
@@ -298,7 +344,7 @@ public class AppUserController {
                     response = appUserService
                             .addUpdateGuest(user, addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
                                     image, account, generalSettings, accompaniedGuests, balance, cardCode,
-                                    expiryDate, mobile, points);
+                                    expiryDate, mobile);
 
                     if ((Boolean) response.get("success")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

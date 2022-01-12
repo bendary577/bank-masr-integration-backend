@@ -72,10 +72,75 @@ public class AppUserService {
         return applicationUsers;
     }
 
+    public HashMap addRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account, GeneralSettings generalSettings) {
+        HashMap response = new HashMap();
+
+        if (applicationUser.getEmail() != null && applicationUser.getEmail().equals("")
+                && userRepo.existsByEmailAndAccountId(applicationUser.getEmail(), account.getId())) {
+            response.put("message", "There is user exist with this email.");
+            response.put("success", false);
+            return response;
+        }
+
+        String logoUrl = Constants.USER_IMAGE_URL;
+        if (image != null) {
+            try {
+                logoUrl = imageService.store(image);
+            } catch (Exception e) {
+                response.put("message", "Can't save image due to error: " + e.getMessage() + ".");
+                response.put("success", false);
+                return response;
+
+            }
+        }
+
+        if (applicationUser.getName() == null || applicationUser.getName().equals("")) {
+            applicationUser.setName("- - - -");
+        }
+        applicationUser.setLogoUrl(logoUrl);
+        applicationUser.setAccountId(account.getId());
+        applicationUser.setCreationDate(new Date());
+        applicationUser.setDeleted(false);
+
+        /* Check mail settings validity */
+        AccountEmailConfig emailConfig = account.getEmailConfig();
+        if(emailConfig == null || (emailConfig.getHost().equals("")
+                || emailConfig.getUsername().equals("")
+                || emailConfig.getPassword().equals(""))){
+            response.put("message", "Please check email settings and try again");
+            response.put("success", false);
+            return response;
+        }
+
+        String code = appUserController.createCode(applicationUser);
+        String accountLogo = account.getImageUrl();
+        String mailSubj = generalSettings.getMailSub();
+        String QRPath = "QRCodes/" + code + ".png";
+        applicationUser.setCode(code);
+
+        try {
+            String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
+            if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account)) {
+                userRepo.save(applicationUser);
+                response.put("message", "User added successfully.");
+                response.put("success", true);
+                return response;
+            } else {
+                response.put("message", "Invalid user email.");
+                response.put("success", false);
+                return response;
+            }
+        } catch (WriterException | IOException e) {
+            response.put("message", e.getMessage());
+            response.put("success", false);
+            return response;
+        }
+    }
+
     public HashMap addUpdateGuest(User agent, boolean addFlag, boolean isGeneric, String name, String email, String groupId, String userId,
                                   boolean sendEmail, boolean sendSMS, MultipartFile image, Account account, GeneralSettings generalSettings,
                                   String accompaniedGuestsJson, String balance, String cardCode, String expiryDate,
-                                  String mobile, int points) {
+                                  String mobile) {
 
         HashMap response = new HashMap();
 
@@ -122,7 +187,6 @@ public class AppUserService {
             applicationUser.setAccountId(account.getId());
             applicationUser.setCreationDate(new Date());
             applicationUser.setDeleted(false);
-            applicationUser.setPoints(points);
             if (!isGeneric) {
                 /* Check mail settings validity */
                 AccountEmailConfig emailConfig = account.getEmailConfig();

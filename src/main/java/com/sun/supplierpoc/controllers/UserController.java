@@ -100,13 +100,13 @@ public class UserController {
                 invoker.setTypeId(invoker.getTypeId());
 
                 // check existence
-                if (invokerUserRepo.countAllByUsername(invoker.getUsername()) > 0) {
+                if (invokerUserRepo.countAllByUsernameAndAccountId(invoker.getUsername(), account.getId()) > 0) {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Username already exists!");
                 } else {
                     InvokerUser invokerUser = new InvokerUser(invoker.getUsername(), invoker.getPassword(), account.getId(),
                             invoker.getTypeId(), new Date());
                     invokerUserRepo.save(invokerUser);
-                    return ResponseEntity.status(HttpStatus.OK).body("");
+                    return ResponseEntity.status(HttpStatus.OK).body(invokerUser);
                 }
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to add web service invoker.");
@@ -119,9 +119,26 @@ public class UserController {
     @RequestMapping("/getInvokerUser")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity getInvokerUser(@RequestParam(name = "syncJobTypeId") String syncJobTypeId) {
+    public ResponseEntity getInvokerUser(Principal principal,
+                                         @RequestParam(name = "syncJobTypeId") String syncJobTypeId) {
         try {
-            ArrayList<InvokerUser> invokerUsers = invokerUserRepo.findAllByTypeId(syncJobTypeId);
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            if(user == null){
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_USER);
+            }
+
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (!accountOptional.isPresent()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Constants.INVALID_USER);
+            }
+            Account account = accountOptional.get();
+
+            ArrayList<InvokerUser> invokerUsers = new ArrayList<>();
+            if(syncJobTypeId.equals("")){
+                invokerUsers = invokerUserRepo.findAllByAccountId(account.getId());
+            }else {
+                invokerUsers = invokerUserRepo.findAllByTypeId(syncJobTypeId);
+            }
             return ResponseEntity.status(HttpStatus.OK).body(invokerUsers);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get web service invoker.");

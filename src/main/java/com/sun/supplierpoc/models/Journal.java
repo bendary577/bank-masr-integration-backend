@@ -84,9 +84,23 @@ public class Journal {
         this.revenueCenter = revenueCenter;
         this.departmentCode = departmentCode;
     }
+    private Journal(MajorGroup majorGroup, float totalCost,
+                    CostCenter costCenter, String departmentCode) {
+        this.majorGroup = majorGroup;
+        this.totalCost = totalCost;
+        this.totalTransfer = totalTransfer;
+        this.departmentCode = departmentCode;
+    }
 
     public Journal(String group) {
         this.overGroup = group;
+    }
+
+    public Journal(MajorGroup majorGroup, float cost, String departmentCode, CostCenter costCenter) {
+        this.majorGroup = majorGroup;
+        this.totalCost = cost;
+        this.departmentCode = departmentCode;
+        this.costCenter = costCenter;
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
@@ -104,6 +118,22 @@ public class Journal {
         }
 
         journals.add(new Journal(majorGroup, waste, cost, transfer, costCenter, revenueCenter, departmentCode));
+        return journals;
+
+    }
+
+    public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup, float cost,
+                                             CostCenter costCenter, String departmentCode) {
+
+        for (Journal journal : journals) {
+            if (journal.majorGroup.getMajorGroup().equals(majorGroup.getMajorGroup())) {
+                // Add new value
+                journal.totalCost += cost;
+                return journals;
+            }
+        }
+
+        journals.add(new Journal(majorGroup,  cost,  costCenter, departmentCode));
         return journals;
 
     }
@@ -147,6 +177,27 @@ public class Journal {
         }
 
         journals.add(new Journal(majorGroup, familyGroup, cost, costCenter, revenueCenter, orderType, departmentCode));
+        return journals;
+
+    }
+
+    public ArrayList<Journal> checkMGExistence(ArrayList<Journal> journals, MajorGroup majorGroup,
+                                               float cost, CostCenter locationCostCenter) {
+
+        for (Journal journal : journals) {
+            if(journal.familyGroup != null){
+                if (journal.familyGroup.familyGroup.equals(familyGroup.familyGroup)) {
+                    if(journal.revenueCenter.getRevenueCenter().equals(revenueCenter.getRevenueCenter())){
+                        if(orderType == null || (journal.orderType.getOrderType().equals(orderType.getOrderType()))){
+                            journal.totalCost += cost;
+                            return journals;
+                        }
+                    }
+                }
+            }
+        }
+
+        journals.add(new Journal(majorGroup, cost, departmentCode, locationCostCenter));
         return journals;
 
     }

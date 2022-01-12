@@ -106,6 +106,9 @@ public class Constants {
     public static String SUN_SSC_METHOD = "sun";
     public static String OTHER_METHOD = "other";
 
+    //////////////////////////////////////////////// Sync Per ///////////////////////////////////////////////////////////////
+    public static String MAJOR_GROUP = "majorGroup";
+
     ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 
         public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";

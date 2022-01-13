@@ -83,7 +83,7 @@ public class AppUserService {
     public HashMap addRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account, GeneralSettings generalSettings) {
         HashMap response = new HashMap();
 
-        if (applicationUser.getEmail() != null && applicationUser.getEmail().equals("")
+        if (applicationUser.getEmail() != null && !applicationUser.getEmail().equals("")
                 && userRepo.existsByEmailAndAccountId(applicationUser.getEmail(), account.getId())) {
             response.put("message", "There is user exist with this email.");
             response.put("success", false);
@@ -148,7 +148,7 @@ public class AppUserService {
     public HashMap updateRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account) {
         HashMap response = new HashMap();
 
-        if (applicationUser.getEmail() != null && applicationUser.getEmail().equals("")
+        if (applicationUser.getEmail() != null && !applicationUser.getEmail().equals("")
                 && userRepo.existsByEmailAndAccountId(applicationUser.getEmail(), account.getId())) {
             response.put("message", "There is user exist with this email.");
             response.put("success", false);

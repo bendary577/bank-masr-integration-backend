@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.Feature;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -11,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.common.exceptions.UnauthorizedUserException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -41,6 +43,19 @@ public class AccountService {
             return new Account();
         }
     }
+
+    public ArrayList<Account> getAccounts() {
+        return (ArrayList<Account>) accountRepo.findAll();
+    }
+
+    public ArrayList<Account> getActiveAccounts() {
+        return accountRepo.findByDeleted(false);
+    }
+
+    public ArrayList<Account> getActiveAccountsHasFeature(Feature feature) {
+        return accountRepo.findByDeletedAndFeatures(false, feature);
+    }
+
     public Account getAuthenticatedAccount(InvokerUser user) {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         Account account = accountOptional.get();

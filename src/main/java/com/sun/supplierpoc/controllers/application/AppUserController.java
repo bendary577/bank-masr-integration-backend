@@ -229,24 +229,19 @@ public class AppUserController {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         if (user != null) {
             try {
-                ApplicationUser applicationUser = new ApplicationUser();
-                try {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    applicationUser = objectMapper.readValue(userJson, new TypeReference<>() {});
-                } catch (JsonProcessingException e) {
-                    throw e;
-                }
+                ApplicationUser applicationUser;
+                ObjectMapper objectMapper = new ObjectMapper();
+                applicationUser = objectMapper.readValue(userJson, new TypeReference<>() {});
                 Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-                if (!accountOptional.isPresent()) {
+
+                if (accountOptional.isEmpty()) {
                     response.put("message", Constants.INVALID_USER);
-                    return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+                    return new ResponseEntity(Constants.INVALID_USER, HttpStatus.UNAUTHORIZED);
                 }
 
                 Account account = accountOptional.get();
-                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
-                response = appUserService
-                        .updateRewardPointsGuest(applicationUser, image,account, generalSettings);
+                response = appUserService.updateRewardPointsGuest(applicationUser, image, account);
 
             } catch (Exception e) {
                 e.printStackTrace();

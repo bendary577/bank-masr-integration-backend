@@ -29,6 +29,10 @@ public class FeatureService {
     @Autowired
     private AccountRepo accountRepo;
 
+    public Feature getFeatureByRef(String name){
+        return featureRepository.findByReference(name);
+    }
+
     public Response addFeature(Feature feature) {
         Response response = new Response();
 

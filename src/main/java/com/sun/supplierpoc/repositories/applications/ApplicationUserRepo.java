@@ -19,6 +19,7 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     List<ApplicationUser> findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(String accountId,boolean deleted, int top);
 
     ArrayList<ApplicationUser> findAllByAccountId(String accountId);
+    ArrayList<ApplicationUser> findAllByAccountIdAndDeleted(String accountId, boolean deleted);
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId);
 
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);

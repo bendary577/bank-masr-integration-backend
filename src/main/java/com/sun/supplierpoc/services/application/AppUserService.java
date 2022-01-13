@@ -57,6 +57,14 @@ public class AppUserService {
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    public ApplicationUser saveUsers(ApplicationUser user){
+        return userRepo.save(user);
+    }
+
+    public ArrayList<ApplicationUser> getActiveUsers(String accountId){
+        return userRepo.findAllByAccountIdAndDeleted(accountId, false);
+    }
+
     public ArrayList<ApplicationUser> getAppUsersByAccountId(String accountId){
         return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId);
     }
@@ -137,7 +145,7 @@ public class AppUserService {
         }
     }
 
-    public HashMap updateRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account, GeneralSettings generalSettings) {
+    public HashMap updateRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account) {
         HashMap response = new HashMap();
 
         if (applicationUser.getEmail() != null && applicationUser.getEmail().equals("")
@@ -146,6 +154,19 @@ public class AppUserService {
             response.put("success", false);
             return response;
         }
+
+        String logoUrl;
+        if (image != null) {
+            try {
+                logoUrl = imageService.store(image);
+                applicationUser.setLogoUrl(logoUrl);
+            } catch (Exception e) {
+                response.put("message", "Can't save image due to error: " + e.getMessage() + ".");
+                response.put("success", false);
+                return response;
+            }
+        }
+
         applicationUser.setLastUpdate(new Date());
         userRepo.save(applicationUser);
 

@@ -206,12 +206,19 @@ public class SendEmailService {
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 7%; margin-right: 7%;padding-left: 5%;"+
                             "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
                     "<br>";
-            mailContent +=
-                    "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
-                            "   src='" + logoPath + "'>" + "<br> <br> \n";
-            mailContent +=
-                    "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
-                            "   src='" + mailSubj + "'>" + "<br>\n";
+
+            if(!logoPath.equals("")){
+                mailContent +=
+                        "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
+                                "   src='" + logoPath + "'>" + "<br> <br> \n";
+            }
+
+            if(mailSubj != null && !mailSubj.equals("")){
+                mailContent +=
+                        "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
+                                "   src='" + mailSubj + "'>" + "<br>\n";
+            }
+
             mailContent +=
 
                     "<p style='text-align:left'>" +

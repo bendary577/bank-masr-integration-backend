@@ -206,7 +206,7 @@ public class AppUserController {
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         if (user != null) {
             try {
-                ApplicationUser applicationUser = new ApplicationUser();
+                ApplicationUser applicationUser;
                 try {
                     ObjectMapper objectMapper = new ObjectMapper();
                     applicationUser = objectMapper.readValue(userJson, new TypeReference<>() {});

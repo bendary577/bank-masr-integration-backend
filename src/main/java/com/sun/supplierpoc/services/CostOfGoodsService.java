@@ -266,6 +266,7 @@ public class CostOfGoodsService {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
         ArrayList<Journal> journals;
         CostCenter costCenter;
+        String syncPer = syncJobType.getConfiguration().syncPerGroup;
 
         for (JournalBatch batch : journalBatches) {
             addedJournals = new ArrayList<>();
@@ -303,7 +304,9 @@ public class CostOfGoodsService {
                         costData.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost() * -1)));
                         if (journal.getOrderType() != null && !journal.getOrderType().getOrderType().equals("")) {
                             costData.put("expensesAccount", journal.getOrderType().getAccount());
-                        } else {
+                        } else if(syncPer.equals(Constants.MAJOR_GROUP)){
+                            costData.put("expensesAccount", journal.getMajorGroup().getAccount());
+                        }else{
                             costData.put("expensesAccount", revenueCenter.getAccountCode());
                         }
                     }
@@ -478,7 +481,7 @@ public class CostOfGoodsService {
                         }
 
                         fetchCostOfGoodsRowsVersionTwoPerMajor(majorGroups, location, revenueCenter, journals, driver);
-
+                        break;
                     }else{
 
                         if (!(microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
@@ -508,6 +511,7 @@ public class CostOfGoodsService {
                         }
 
                         fetchCostOfGoodsRowsVersion2(majorGroups, location, revenueCenter, null, journals, driver);
+                        break;
                     }
                 }
 
@@ -568,8 +572,6 @@ public class CostOfGoodsService {
                 if (col.getAttribute("class").
                         equals("oj-helper-text-align-left oj-table-data-cell oj-form-control-inherit")) {
 
-                    majorGroupAmountTotal = 0;
-
                     majorGroupName = col.getText().strip().toLowerCase();
                     majorGroup = conversions.checkMajorGroupExistence(majorGroups, majorGroupName);
 
@@ -577,63 +579,73 @@ public class CostOfGoodsService {
                         continue;
                     }
 
-                    WebElement link = col.findElement(By.tagName("a"));
-                    if (link.getAttribute("class").
-                            equals("oj-component-icon oj-clickable-icon-nocontext oj-rowexpander-expand-icon")) {
-                        link.click();
-                    }
+//                    MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
+//
+//                    CostCenter costCenter = new CostCenter();
+//                    List<CostCenter> costCenters = majorGroup.getCostCenters();
+//                    for (CostCenter costCenter1 : costCenters) {
+//                        if (location.locationName.equals(costCenter1.locationName)) {
+//                            costCenter = costCenter1;
+//                        }
+//                    }
 
-                    table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
-                    rows = table.findElements(By.tagName("tr"));
+//                    WebElement link = col.findElement(By.tagName("a"));
+//                    if (link.getAttribute("class").
+//                            equals("oj-component-icon oj-clickable-icon-nocontext oj-rowexpander-expand-icon")) {
+//                        link.click();
+//                    }
+//
+//                    table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
+//                    rows = table.findElements(By.tagName("tr"));
 
                     // Debit lines
-                    for (int j = i + 1; j < rows.size(); j++) {
-                        WebElement FGRow = rows.get(j);
-                        List<WebElement> FGCols = FGRow.findElements(By.tagName("td"));
-                        WebElement FGCol;
+//                    for (int j = i + 1; j < rows.size(); j++) {
+//                        WebElement FGRow = rows.get(j);
+//                        List<WebElement> FGCols = FGRow.findElements(By.tagName("td"));
+//                        WebElement FGCol;
+//
+//                        FGCol = FGCols.get(columns.indexOf("name"));
+//
+//                        if (!FGCol.getAttribute("class").
+//                                equals("oj-helper-text-align-left indent_3 oj-table-data-cell oj-form-control-inherit")) {
+//                            i = j - 1;
+//                            break;
+//                        }
+//
+//                        if (FGCols.size() != columns.size()) {
+//                            continue;
+//                        }
+//
+//                        FamilyGroup familyGroup;
+//
+//                        // Check if family group exists
+//                        String familyGroupName = FGCol.getText().strip().toLowerCase();
+//                        familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
+//                                , familyGroupName);
+//
+//                        if (familyGroup.familyGroup.equals(""))
+//                            continue;
 
-                        FGCol = FGCols.get(columns.indexOf("name"));
-
-                        if (!FGCol.getAttribute("class").
-                                equals("oj-helper-text-align-left indent_3 oj-table-data-cell oj-form-control-inherit")) {
-                            i = j - 1;
-                            break;
-                        }
-
-                        if (FGCols.size() != columns.size()) {
-                            continue;
-                        }
-
-                        FamilyGroup familyGroup;
-
-                        // Check if family group exists
-                        String familyGroupName = FGCol.getText().strip().toLowerCase();
-                        familyGroup = conversions.checkFamilyGroupExistence(majorGroup.getFamilyGroups()
-                                , familyGroupName);
-
-                        if (familyGroup.familyGroup.equals(""))
-                            continue;
-
-                        majorGroupAmount = Math.abs(conversions.convertStringToFloat(FGCols.get(columns.indexOf("margin_less_item_discounts")).getText()));
+                        majorGroupAmount = Math.abs(conversions.convertStringToFloat(cols.get(columns.indexOf("margin_less_item_discounts")).getText()));
                         majorGroupAmountTotal += majorGroupAmount;
 
                         journals = journal.checkMGExistence(journals, majorGroup, majorGroupAmount, location);
 
-                        link = FGCol.findElement(By.tagName("a"));
-                        if (link.getAttribute("class").
-                                equals("oj-component-icon oj-clickable-icon-nocontext oj-rowexpander-collapse-icon")) {
-                            link.click();
-                        }
+//                        link = FGCol.findElement(By.tagName("a"));
+//                        if (link.getAttribute("class").
+//                                equals("oj-component-icon oj-clickable-icon-nocontext oj-rowexpander-collapse-icon")) {
+//                            link.click();
+//                        }
+//
+//                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
+//                        rows = table.findElements(By.tagName("tr"));
+//
+//                    }
 
-                        table = driver.findElement(By.xpath("//*[@id=\"standard_table_6520_0\"]/table"));
-                        rows = table.findElements(By.tagName("tr"));
-
-                    }
-
-                    // Credit line
-                    journals = journal.checkExistence(journals, majorGroup, majorGroupAmountTotal, location, "C");
                 }
             }
+            // Credit line
+            journals = journal.checkExistence(journals, location, majorGroupAmountTotal, "C");
         } catch (Exception e) {
             e.getMessage();
         }

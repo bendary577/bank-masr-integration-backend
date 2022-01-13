@@ -205,6 +205,41 @@ public class TransactionController {
         }
     }
 
+
+    @PostMapping("/rewardPoints/exportExcelSheet")
+    public void exportRPTransactionsExcel(@RequestBody List<Transactions> transactions,
+                                 HttpServletResponse httpServletResponse,
+                                 Principal principal) throws IOException{
+
+        HashMap response = new HashMap();
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            httpServletResponse.setContentType("application/octet-stream");
+            DateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+            String currentDateTime = dateFormatter.format(new Date());
+
+            String headerKey = "Content-Disposition";
+            String headerValue = "attachment; filename=Transactions" + currentDateTime + ".xlsx";
+            httpServletResponse.setHeader(headerKey, headerValue);
+
+            Account account = accountOptional.get();
+
+            TransactionExcelExport trans = new TransactionExcelExport(transactions);
+            trans.exportRewardPointsExcel(httpServletResponse);
+
+            response.put("message", "Excel exported successfully.");
+            LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
+
+        }else{
+
+        }
+    }
+
     @GetMapping("/transactionPagination")
     public ResponseEntity transactionPagination(@RequestParam(name="page", defaultValue = "0") int page,
                                                 @RequestParam(name="size", defaultValue = "3") int size){

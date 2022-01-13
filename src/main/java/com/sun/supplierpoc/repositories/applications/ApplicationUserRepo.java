@@ -13,6 +13,8 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     ArrayList<ApplicationUser> findAll();
     ApplicationUser findByCode(String code);
     ApplicationUser findByCodeAndAccountIdAndDeleted(String code, String accountId, boolean deleted);
+    ApplicationUser findByCodeAndAccountIdAndDeletedAndSuspended(String code, String accountId, boolean deleted, boolean suspended);
+
     ApplicationUser findFirstByEmailAndAccountId(String email, String accountId);
 
 //    @Query(value = "SELECT * u from ApplicationUser ORDER BY u.top DESC LIMIT ?")

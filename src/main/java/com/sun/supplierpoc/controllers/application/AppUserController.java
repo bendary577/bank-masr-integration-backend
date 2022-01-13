@@ -90,6 +90,13 @@ public class AppUserController {
 
                 ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
                 if (applicationUser != null) {
+                    if(applicationUser.isSuspended()){
+                        response.put("isSuccess", false);
+                        response.put("points", 0);
+                        response.put("message", "This user has been suspended and is currently unable to benefit from the reward system.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
                     response.put("isSuccess", true);
                     response.put("points", applicationUser.getPoints());
                     response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
@@ -143,8 +150,22 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
+                if(points <= 0){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "Kindly provide valid points.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, user.getAccountId());
                 if (applicationUser != null) {
+                    if(applicationUser.isSuspended()){
+                        response.put("isSuccess", false);
+                        response.put("points", 0);
+                        response.put("message", "This user has been suspended and is currently unable to benefit from the reward system.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);
 

@@ -404,6 +404,11 @@
 <!--            <version>2.3.4.RELEASE</version>-->
 <!--        </dependency>-->
 
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>itextpdf</artifactId>
+            <version>5.5.9</version>
+        </dependency>
 
     </dependencies>
 

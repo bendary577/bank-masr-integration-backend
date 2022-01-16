@@ -14,4 +14,10 @@ public interface VoucherRepository extends MongoRepository<Voucher, String> {
     ArrayList<Voucher> findAllByAccountId(String id);
 
     boolean existsByAccountIdAndNameAndDeleted(String id, String name, boolean b);
+
+    Voucher findByVoucherCodeAndAccountId(String code, String id);
+
+    Voucher findByVoucherCodeAndAccountId(String code);
+
+    Voucher findByVoucherCode(String code);
 }

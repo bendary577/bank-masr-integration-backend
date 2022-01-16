@@ -1,13 +1,18 @@
 package com.sun.supplierpoc.controllers.application;
 
+import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.requests.VoucherRequest;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
+import com.sun.supplierpoc.pdfExporters.VoucherCodePDFGenerator;
+import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.services.AccountService;
+import com.sun.supplierpoc.services.QRCodeGenerator;
 import com.sun.supplierpoc.services.simphony.VoucherService;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +20,16 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -29,10 +42,19 @@ public class VoucherController {
         @Autowired
         private AccountService accountService;
 
+        @Autowired
+        private TransactionRepo transactionService;
+
+        @Autowired
+        private VoucherCodePDFGenerator voucherCodePDFGenerator;
+
+        @Autowired
+        QRCodeGenerator qrCodeGenerator;
+
         @GetMapping
         public ResponseEntity<?> getAllVoucher(@RequestParam("page") int page,
-                                                @RequestParam("size") int size,
-                                                Principal principal){
+                                               @RequestParam("size") int size,
+                                               Principal principal){
             Response response = new Response();
             try {
                 User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -174,5 +196,34 @@ public class VoucherController {
             }
         }
 
+    @PostMapping("/exportCodePDF")
+    public void exportExcelSheet(@RequestBody Voucher voucher,
+                                 HttpServletResponse httpServletResponse,
+                                 Principal principal) throws IOException {
+
+        HashMap response = new HashMap();
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            String QRPath = "QRCodes/" + voucher.getVoucherCode() + ".png";
+            try {
+                QRPath = qrCodeGenerator.getQRCodeImage(voucher.getVoucherCode(), 200, 200, QRPath);
+            } catch (WriterException e) {
+                e.printStackTrace();
+            }
+            voucherCodePDFGenerator.generatePdfReport(account, voucher, QRPath, httpServletResponse);
+            new File(QRPath).deleteOnExit();
+            response.put("message", "Excel exported successfully.");
+            LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
+
+        }else{
+
+        }
+    }
 
 }

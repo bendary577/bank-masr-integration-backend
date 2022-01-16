@@ -24,6 +24,8 @@ public class Voucher {
 
     private int redeemQuota;
 
+    private int numberOfRedemption;
+
     private Date creationDate;
 
     private Date lastUpdate;
@@ -134,5 +136,13 @@ public class Voucher {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public int getNumberOfRedemption() {
+        return numberOfRedemption;
+    }
+
+    public void setNumberOfRedemption(int numberOfRedemption) {
+        this.numberOfRedemption = numberOfRedemption;
     }
 }

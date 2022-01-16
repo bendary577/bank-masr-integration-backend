@@ -5,10 +5,8 @@ import com.sun.supplierpoc.controllers.application.AppUserController;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
-import com.sun.supplierpoc.models.requests.CreateVoucherRequest;
-import com.sun.supplierpoc.models.requests.UpdateVoucherRequest;
+import com.sun.supplierpoc.models.requests.VoucherRequest;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.simphony.VoucherRepository;
@@ -40,7 +38,7 @@ public class VoucherService {
 
         try {
             ArrayList<Voucher> vouchers =
-                    voucherRepository.findAllByAccountIdAndDeleted(account.getId(), false);
+                    voucherRepository.findAllByAccountId(account.getId());
 
             response.setStatus(true);
             response.setData(vouchers);
@@ -52,7 +50,7 @@ public class VoucherService {
         return response;
     }
 
-    public Response addVoucher(Account account, CreateVoucherRequest voucherRequest) {
+    public Response addVoucher(Account account, VoucherRequest voucherRequest) {
 
         Response response = new Response();
 
@@ -84,7 +82,7 @@ public class VoucherService {
 
                 voucherRepository.save(voucher);
 
-                response.setMessage("Voucher saved successfully.");
+                response.setMessage("Voucher added successfully.");
                 response.setStatus(true);
                 response.setData(voucher);
             } catch (Exception e) {
@@ -95,7 +93,7 @@ public class VoucherService {
         return response;
     }
 
-    public Response updateVoucher(Account account, UpdateVoucherRequest voucherRequest) {
+    public Response updateVoucher(Account account, VoucherRequest voucherRequest) {
 
         Response response = new Response();
 
@@ -116,21 +114,19 @@ public class VoucherService {
                 } else {
 
                     SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(simphonyDiscountList,
-                            voucherRequest.getSimphonyDiscount().getDiscountId());
+                            voucherRequest.getSimphonyDiscountId());
 
-                    String code = createCode(voucherRequest.getName());
+//                    String code = createCode(voucherRequest.getName());
 
 
                     voucher.setName(voucherRequest.getName());
                     voucher.setStartDate(voucherRequest.getStartDate());
                     voucher.setEndDate(voucherRequest.getEndDate());
                     voucher.setSimphonyDiscount(simphonyDiscount);
-                    voucher.setVoucherCode(code);
+//                    voucher.setVoucherCode(code);
                     voucher.setRedeemQuota(voucherRequest.getRedeemQuota());
-                    voucher.setCreationDate(new Date());
-                    voucher.setAccountId(account.getId());
                     voucher.setLastUpdate(new Date());
-                    voucher.setDeleted(false);
+                    voucher.setDeleted(voucherRequest.isDeleted());
 
                     voucherRepository.save(voucher);
 
@@ -150,6 +146,33 @@ public class VoucherService {
         return response;
     }
 
+    public Response markVoucherDeleted(Account account, Voucher voucherRequest) {
+
+        Response response = new Response();
+
+        try{
+
+            Optional<Voucher> voucherOptional = voucherRepository.findById(voucherRequest.getId());
+
+            if(voucherOptional.isPresent()){
+                Voucher voucher = voucherOptional.get();
+                voucher.setDeleted(voucherRequest.isDeleted());
+                voucherRepository.save(voucher);
+
+                response.setStatus(true);
+                response.setMessage("Success.");
+                return response;
+            }else{
+                response.setStatus(false);
+                response.setMessage("Invalid Voucher ID.");
+                return response;
+            }
+        }catch(Exception e){
+            response.setStatus(false);
+            response.setMessage("Cant complete operation due to the error: " + e.getMessage());
+            return response;
+        }
+    }
 
     public String createCode(String name) {
         String code;
@@ -168,5 +191,6 @@ public class VoucherService {
         }
         return code;
     }
+
 
 }

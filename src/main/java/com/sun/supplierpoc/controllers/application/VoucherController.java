@@ -4,12 +4,10 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.requests.CreateVoucherRequest;
-import com.sun.supplierpoc.models.requests.UpdateVoucherRequest;
+import com.sun.supplierpoc.models.requests.VoucherRequest;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.simphony.VoucherService;
-import org.apache.tomcat.util.http.parser.Authorization;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.security.Principal;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/simphonyLoyalty/vouchers")
@@ -31,7 +30,9 @@ public class VoucherController {
         private AccountService accountService;
 
         @GetMapping
-        public ResponseEntity<?> getAllVoucher(Principal principal){
+        public ResponseEntity<?> getAllVoucher(@RequestParam("page") int page,
+                                                @RequestParam("size") int size,
+                                                Principal principal){
             Response response = new Response();
             try {
                 User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
@@ -61,7 +62,7 @@ public class VoucherController {
             }
         }
         @PostMapping("/add")
-        public ResponseEntity<?> addVoucher(@Valid @RequestBody CreateVoucherRequest createVoucherRequest,
+        public ResponseEntity<?> addVoucher(@Valid @RequestBody VoucherRequest voucherRequest,
                                                      BindingResult result, Principal principal){
 
             Response response = new Response();
@@ -77,7 +78,7 @@ public class VoucherController {
                             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                         }
 
-                        response = voucherService.addVoucher(account, createVoucherRequest);
+                        response = voucherService.addVoucher(account, voucherRequest);
 
 
                         if (response.isStatus()) {
@@ -101,7 +102,7 @@ public class VoucherController {
         }
 
         @PutMapping("/update")
-        public ResponseEntity<?> updateVoucher(@Valid @RequestBody UpdateVoucherRequest createVoucherRequest,
+        public ResponseEntity<?> updateVoucher(@Valid @RequestBody VoucherRequest voucherRequest,
                                                      BindingResult result, Principal principal){
 
             Response response = new Response();
@@ -117,7 +118,7 @@ public class VoucherController {
                             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                         }
 
-                        response = voucherService.updateVoucher(account, createVoucherRequest);
+                        response = voucherService.updateVoucher(account, voucherRequest);
 
 
                         if (response.isStatus()) {
@@ -139,4 +140,39 @@ public class VoucherController {
                 return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
             }
         }
+
+        @PutMapping("/markDeleted")
+        public ResponseEntity<?> markVoucherDeleted(@Valid @RequestBody Voucher voucher,
+                                                    Principal principal, BindingResult result){
+            Response response = new Response();
+
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+            if(user != null){
+                Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+                if(accountOptional.isPresent()){
+                    Account account = accountOptional.get();
+
+                    response = voucherService.markVoucherDeleted(account, voucher);
+
+                    if(response.isStatus()){
+                        return new ResponseEntity<>(response, HttpStatus.OK);
+                    }else{
+                        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                    }
+
+                }else{
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_ACCOUNT);
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }
+            }else{
+                response.setStatus(false);
+                response.setMessage(Constants.INVALID_USER);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+        }
+
+
 }

@@ -6,6 +6,7 @@ import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.TransactionType;
+import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.SimphonyQuota;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
@@ -54,7 +55,7 @@ public class VoucherTransController {
     @RequestMapping("/createVoucherTrans")
     @CrossOrigin("*")
     public ResponseEntity<?> transactionActivity(@RequestHeader("Authorization") String authorization,
-                                                 @Valid @RequestBody VoucherTransaction voucherTransaction, BindingResult result){
+                                                 @Valid @RequestBody Transactions voucherTransaction, BindingResult result){
 
         HashMap response = new HashMap();
 

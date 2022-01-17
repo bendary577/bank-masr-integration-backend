@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.models.voucher.VoucherTransaction;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
+import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.repositories.TransactionTypeRepo;
 import com.sun.supplierpoc.repositories.simphony.VoucherRepository;
 import com.sun.supplierpoc.repositories.simphony.VoucherTransRepo;
@@ -26,7 +27,7 @@ public class VoucherTransService {
     private VoucherRepository voucherRepository;
 
     @Autowired
-    private VoucherTransRepo voucherTransRepo;
+    private TransactionRepo transactionRepo;
 
     @Autowired
     private Conversions conversions;
@@ -38,7 +39,7 @@ public class VoucherTransService {
     private TransactionTypeRepo transactionTypeRepo;
 
 
-    public HashMap createTransaction(TransactionType transactionType, VoucherTransaction voucherTransaction, Account account, GeneralSettings generalSettings, RevenueCenter revenueCenter) {
+    public HashMap createTransaction(TransactionType transactionType, Transactions voucherTransaction, Account account, GeneralSettings generalSettings, RevenueCenter revenueCenter) {
         HashMap response = new HashMap();
         Voucher voucher = voucherRepository.findByVoucherCode(voucherTransaction.getCode());
         try {
@@ -57,8 +58,8 @@ public class VoucherTransService {
                 response.put("message", "This voucher has been ended.");
             } else if (voucher.getNumberOfRedemption() >= voucher.getRedeemQuota()) {
                 response.put("message", "This voucher has been exceeded the redemption quota.");
-            } else if (voucherTransRepo.existsByCheckNumberAndRevenueCentreIdAndStatus(
-                    voucherTransaction.getCheckNumber(), voucherTransaction.getRevenueCentreId(), Constants.PAID_TRANSACTION)) {
+            } else if (transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatus(
+                    voucherTransaction.getCheckNumber(), voucherTransaction.getRevenueCentreId(), Constants.SUCCESS)) {
                 response.put("message", "Can't use an voucher for the same check twice.");
             } else {
 
@@ -81,9 +82,9 @@ public class VoucherTransService {
                 voucherTransaction.setTransactionTypeId(transactionType.getId());
                 voucherTransaction.setVoucherId(voucher.getId());
                 voucherTransaction.setTransactionDate(new Date());
-                voucherTransaction.setStatus(Constants.PAID_TRANSACTION);
+                voucherTransaction.setStatus(Constants.SUCCESS);
 
-                voucherTransRepo.save(voucherTransaction);
+                transactionRepo.save(voucherTransaction);
                 generalSettings.getSimphonyQuota().setUsedTransactionQuota(generalSettings.getSimphonyQuota().getUsedTransactionQuota() + 1);
                 generalSettingsRepo.save(generalSettings);
 
@@ -99,11 +100,13 @@ public class VoucherTransService {
         }
         voucherTransaction.setAccountId(account.getId());
         voucherTransaction.setTransactionTypeId(transactionType.getId());
-        voucherTransaction.setVoucherId(voucher.getId());
+        if(voucher != null ){
+            voucherTransaction.setVoucherId(voucher.getId());
+        }
         voucherTransaction.setTransactionDate(new Date());
         voucherTransaction.setStatus(Constants.FAILED);
         voucherTransaction.setReason(response.get("message").toString());
-        voucherTransRepo.save(voucherTransaction);
+        transactionRepo.save(voucherTransaction);
         return response;
     }
 
@@ -116,10 +119,10 @@ public class VoucherTransService {
                 double totalSpend = 0;
                 int failedTransactionCount = 0;
                 int succeedTransactionCount = 0;
-                transactions = voucherTransRepo.findByVoucherIdAndAccountId(voucherId, account.getId());
+                transactions = transactionRepo.findByVoucherIdAndAccountId(voucherId, account.getId());
 
                 for (VoucherTransaction transaction : transactions) {
-                    if(transaction.getStatus().equals(Constants.PAID_TRANSACTION)){
+                    if(transaction.getStatus().equals(Constants.SUCCESS)){
                         totalSpend = totalSpend + transaction.getAfterDiscount();
                         succeedTransactionCount += 1;
                     }else{

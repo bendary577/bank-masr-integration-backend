@@ -24,6 +24,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -142,7 +145,6 @@ public class VoucherController {
 
                         response = voucherService.updateVoucher(account, voucherRequest);
 
-
                         if (response.isStatus()) {
                             return ResponseEntity.status(HttpStatus.OK).body(response);
                         } else {
@@ -217,7 +219,19 @@ public class VoucherController {
                 e.printStackTrace();
             }
             voucherCodePDFGenerator.generatePdfReport(account, voucher, QRPath, httpServletResponse);
-            new File(QRPath).deleteOnExit();
+
+            try {
+                Path imagesPath = Paths.get(QRPath);
+                Files.delete(imagesPath);
+                System.out.println("File "
+                        + imagesPath.toAbsolutePath().toString()
+                        + " successfully removed");
+            } catch (IOException e) {
+                System.err.println("Unable to delete "
+                        + " due to...");
+                e.printStackTrace();
+            }
+
             response.put("message", "Excel exported successfully.");
             LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
 

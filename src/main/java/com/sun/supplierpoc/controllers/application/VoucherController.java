@@ -227,14 +227,9 @@ public class VoucherController {
                         + imagesPath.toAbsolutePath().toString()
                         + " successfully removed");
             } catch (IOException e) {
-                System.err.println("Unable to delete "
-                        + " due to...");
-                e.printStackTrace();
             }
-
             response.put("message", "Excel exported successfully.");
             LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
-
         }else{
 
         }

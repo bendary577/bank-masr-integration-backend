@@ -143,30 +143,12 @@ public class VoucherCodePDFGenerator {
 
     private void addQRCode(Document document, String qrCodePath, Voucher voucher) {
         try {
-//            Paragraph p1 = new Paragraph();
-//            leaveEmptyLine(p1, 2);
-//            p1.add(new Paragraph("SCAN QR CODE TO REDEEM VOUCHER \n"
-//                    , new Font(Font.FontFamily.COURIER, 10, Font.BOLD)));
-//            p1.setAlignment(Element.ALIGN_CENTER);
-//            document.add(p1);
-//
-
-//            Paragraph paragraph = new Paragraph();
-//            paragraph.add(new Paragraph("Code: " + voucher.getVoucherCode()
-//                    , new Font(Font.FontFamily.COURIER, 13, Font.BOLD)));
-//            paragraph.setAlignment(Element.ALIGN_CENTER);
-//            document.add(paragraph);
-
             Image img = Image.getInstance(qrCodePath);
             img.scalePercent(60, 60);
             img.setAlignment(Element.ALIGN_RIGHT);
             document.add(img);
 
-//            Paragraph p2 = new Paragraph();
-//            p2.add(new Paragraph("CONTACT US: +233 302 611 000 / hotel.accra@movenpick.com \n"
-//                    , new Font(Font.FontFamily.COURIER, 10, Font.BOLD)));
-//            p2.setAlignment(Element.ALIGN_LEFT);
-//            document.add(p2);
+            new File(qrCodePath).delete();
 
         } catch (DocumentException | IOException e) {
             // TODO Auto-generated catch block

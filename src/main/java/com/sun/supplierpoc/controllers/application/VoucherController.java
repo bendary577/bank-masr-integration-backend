@@ -212,9 +212,9 @@ public class VoucherController {
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
-            String QRPath = "QRCodes/" + voucher.getVoucherCode() + ".png";
+            String QRPath = "voucher/" + voucher.getVoucherCode() + ".png";
             try {
-                qrCodeGenerator.getQRCodeImage(voucher.getVoucherCode(), 200, 200, QRPath);
+                qrCodeGenerator.generateQRCodeImage(voucher.getVoucherCode(), 200, 200, QRPath);
             } catch (WriterException e) {
                 e.printStackTrace();
             }
@@ -223,9 +223,7 @@ public class VoucherController {
             try {
                 Path imagesPath = Paths.get(QRPath);
                 Files.delete(imagesPath);
-                System.out.println("File "
-                        + imagesPath.toAbsolutePath().toString()
-                        + " successfully removed");
+                System.out.println("File " + imagesPath.toAbsolutePath().toString() + " successfully removed");
             } catch (IOException e) {
             }
             response.put("message", "Excel exported successfully.");

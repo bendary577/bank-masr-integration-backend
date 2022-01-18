@@ -16,6 +16,8 @@ import com.sun.supplierpoc.repositories.TransactionTypeRepo;
 import com.sun.supplierpoc.repositories.simphony.VoucherRepository;
 import com.sun.supplierpoc.repositories.simphony.VoucherTransRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -48,7 +50,7 @@ public class VoucherTransService {
 
             if (voucher == null) {
                 response.put("message", "No voucher for this code.");
-            } else if(!voucher.getAccountId().equals(account.getId())){
+            } else if (!voucher.getAccountId().equals(account.getId())) {
                 response.put("message", "This voucher does not belong to this account loyalty program.");
             } else if (voucher.isDeleted()) {
                 response.put("message", "This voucher is deleted.");
@@ -100,7 +102,7 @@ public class VoucherTransService {
         }
         voucherTransaction.setAccountId(account.getId());
         voucherTransaction.setTransactionTypeId(transactionType.getId());
-        if(voucher != null ){
+        if (voucher != null) {
             voucherTransaction.setVoucherId(voucher.getId());
         }
         voucherTransaction.setTransactionDate(new Date());
@@ -110,38 +112,46 @@ public class VoucherTransService {
         return response;
     }
 
-    public HashMap getTotalVoucherTransactions(String voucherId, Account account) {
+    public HashMap getVoucherTransStatistics(String voucherId, Account account) {
 
+        HashMap statistic = new HashMap();
+        try {
+            double totalSpend = 0;
+            int totalTransactions = 0;
+            int failedTransactionCount = 0;
+            int succeedTransactionCount = 0;
 
-            HashMap statistic = new HashMap();
-            try{
-                List<VoucherTransaction> transactions;
-                double totalSpend = 0;
-                int failedTransactionCount = 0;
-                int succeedTransactionCount = 0;
-                transactions = transactionRepo.findByVoucherIdAndAccountId(voucherId, account.getId());
+            totalTransactions= transactionRepo.countAllByVoucherIdAndAccountId(voucherId, account.getId());
+//            totalSpend = transactionRepo.countToTalAmountByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.SUCCESS);
+            succeedTransactionCount = transactionRepo.countAllByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.SUCCESS);
+            failedTransactionCount = transactionRepo.countAllByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.FAILED);
 
-                for (VoucherTransaction transaction : transactions) {
-                    if(transaction.getStatus().equals(Constants.SUCCESS)){
-                        totalSpend = totalSpend + transaction.getAfterDiscount();
-                        succeedTransactionCount += 1;
-                    }else{
-                        failedTransactionCount += 1;
-                    }
-                }
-
-//                int succeedTransactionCount = voucherTransRepo.getSucceedTransactionCount(voucherId, account.getId());
-////                int failedTransactionCount = voucherTransRepo.getFailedTransactionCount(voucherId, account.getId());
-
-                statistic.put("transactions", transactions);
-                statistic.put("totalSpend", totalSpend);
-                statistic.put("succeedTransactionCount", succeedTransactionCount);
-                statistic.put("failedTransactionCount", failedTransactionCount);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            return statistic;
+            statistic.put("totalSpend", totalSpend);
+            statistic.put("totalTransactions", totalTransactions);
+            statistic.put("succeedTransactionCount", succeedTransactionCount);
+            statistic.put("failedTransactionCount", failedTransactionCount);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return statistic;
+    }
 
+    public HashMap getTotalVoucherTransactions(int page, int size, String voucherId, Account account) {
+
+
+        HashMap statistic = new HashMap();
+        try {
+            List<Transactions> transactions;
+
+            Pageable paging = PageRequest.of(page - 1, size);
+
+            transactions = transactionRepo.findByVoucherIdAndAccountId(voucherId, account.getId(), paging);
+
+            statistic.put("transactions", transactions);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return statistic;
+    }
 
 }

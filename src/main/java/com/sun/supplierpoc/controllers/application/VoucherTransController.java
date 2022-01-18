@@ -68,56 +68,63 @@ public class VoucherTransController {
             }
 
             InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
-            Account account = accountService.getAccount(invokerUser.getAccountId());
 
-            if (account != null) {
+            if(invokerUser != null) {
+                Account account = accountService.getAccount(invokerUser.getAccountId());
 
-                if(voucherTransaction.getCheckNumber().equals("")){
-                    response.put("isSuccess", false);
-                    response.put("message", "Check number is a required field.");
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                }
+                if (account != null) {
 
-                TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
-                if (!invokerUser.getTypeId().contains(transactionType.getId())) {
-                    response.put("isSuccess", false);
-                    response.put("message", "You don't have role to redeem reward!.");
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                }
-
-                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-
-                if(generalSettings.getSimphonyQuota() == null){
-                    generalSettings.setSimphonyQuota(new SimphonyQuota());
-                    generalSettingsRepo.save(generalSettings);
-                }
-
-                if(generalSettings.getSimphonyQuota().getTransactionQuota() == generalSettings.getSimphonyQuota().getUsedTransactionQuota()){
-                    response.put("isSuccess", false);
-                    response.put("message", "You have exhausted your package of transactions, Pleas contact your service provider.");
-                    return ResponseEntity.status(HttpStatus.OK).body(response);
-                }
-
-                ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
-
-                if (conversions.validateRevenueCenter(revenueCenters, voucherTransaction.getRevenueCentreId())) {
-
-                    RevenueCenter revenueCenter = conversions.getRevenueCenter(revenueCenters, voucherTransaction.getRevenueCentreId());
-
-                    response = voucherTransService.createTransaction(transactionType, voucherTransaction, account, generalSettings, revenueCenter);
-
-                    if ((boolean) response.get("isSuccess")) {
-                        return ResponseEntity.status(HttpStatus.OK).body(response);
-                    } else {
+                    if (voucherTransaction.getCheckNumber().equals("")) {
+                        response.put("isSuccess", false);
+                        response.put("message", "Check number is a required field.");
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }
+
+                    TransactionType transactionType = transactionTypeRepo.findByNameAndAccountId(Constants.REDEEM_VOUCHER, account.getId());
+                    if (!invokerUser.getTypeId().contains(transactionType.getId())) {
+                        response.put("isSuccess", false);
+                        response.put("message", "You don't have role to redeem reward!.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
+                    GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                    if (generalSettings.getSimphonyQuota() == null) {
+                        generalSettings.setSimphonyQuota(new SimphonyQuota());
+                        generalSettingsRepo.save(generalSettings);
+                    }
+
+                    if (generalSettings.getSimphonyQuota().getTransactionQuota() == generalSettings.getSimphonyQuota().getUsedTransactionQuota()) {
+                        response.put("isSuccess", false);
+                        response.put("message", "You have exhausted your package of transactions, Pleas contact your service provider.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
+                    ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
+
+                    if (conversions.validateRevenueCenter(revenueCenters, voucherTransaction.getRevenueCentreId())) {
+
+                        RevenueCenter revenueCenter = conversions.getRevenueCenter(revenueCenters, voucherTransaction.getRevenueCentreId());
+
+                        response = voucherTransService.createTransaction(transactionType, voucherTransaction, account, generalSettings, revenueCenter);
+
+                        if ((boolean) response.get("isSuccess")) {
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
+                        } else {
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
+                        }
+                    } else {
+                        response.put("isSuccess", false);
+                        response.put("message", Constants.WRONG_REVENUE_CENTER);
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
                 } else {
                     response.put("isSuccess", false);
-                    response.put("message", Constants.WRONG_REVENUE_CENTER);
+                    response.put("message", Constants.INVALID_USER);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
-
-            } else {
+            }else{
                 response.put("isSuccess", false);
                 response.put("message", Constants.INVALID_USER);
                 return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -133,19 +140,34 @@ public class VoucherTransController {
     @RequestMapping("/getTotalVoucherTrans")
     public ResponseEntity getTotalVoucherTrans(Principal principal,
                                                @RequestParam("voucherId") String voucherId,
-                                               @RequestParam("page") String page,
-                                               @RequestParam("size") String size) {
+                                               @RequestParam("page") int page,
+                                               @RequestParam("size") int size) {
 
         HashMap response = new HashMap();
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = voucherTransService.getTotalVoucherTransactions(voucherId, account);
+            response = voucherTransService.getTotalVoucherTransactions(page, size, voucherId, account);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
         }
     }
 
+    @RequestMapping("/getVoucherTransStatistics")
+    public ResponseEntity getVoucherTransStatistics(Principal principal,
+                                               @RequestParam("voucherId") String voucherId) {
+
+        HashMap response = new HashMap();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            Account account = accountOptional.get();
+            response = voucherTransService.getVoucherTransStatistics(voucherId, account);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
+        }
+    }
 }

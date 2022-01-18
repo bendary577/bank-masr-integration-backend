@@ -214,7 +214,7 @@ public class VoucherController {
             Account account = accountOptional.get();
             String QRPath = "QRCodes/" + voucher.getVoucherCode() + ".png";
             try {
-                QRPath = qrCodeGenerator.getQRCodeImage(voucher.getVoucherCode(), 200, 200, QRPath);
+                qrCodeGenerator.getQRCodeImage(voucher.getVoucherCode(), 200, 200, QRPath);
             } catch (WriterException e) {
                 e.printStackTrace();
             }

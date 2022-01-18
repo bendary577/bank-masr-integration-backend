@@ -2,15 +2,21 @@ package com.sun.supplierpoc.pdfExporters;
 
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import com.google.zxing.WriterException;
 import com.itextpdf.text.*;
 import com.itextpdf.text.html.WebColors;
 
 import com.itextpdf.text.pdf.draw.VerticalPositionMark;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
+import com.sun.supplierpoc.services.QRCodeGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.itextpdf.text.pdf.PdfWriter;
@@ -21,7 +27,10 @@ import javax.servlet.http.HttpServletResponse;
 @Component
 public class VoucherCodePDFGenerator {
 
-    public void generatePdfReport(Account account, Voucher voucher, String qrCodePath, HttpServletResponse response) {
+    @Autowired
+    QRCodeGenerator qrCodeGenerator;
+
+    public void generatePdfReport(Account account, java.util.List<Voucher> vouchers, HttpServletResponse response) {
 
         Document document = new Document();
 
@@ -30,15 +39,34 @@ public class VoucherCodePDFGenerator {
             PdfWriter writer = PdfWriter.getInstance(document, baos);
 //            writer.setPageEvent(new PDFBackground());
 
-            document.setPageSize(PageSize.LETTER);
-            document.setMargins(20, 20, 20, 20);
-            document.setMarginMirroring(false);
+            for(Voucher voucher : vouchers) {
 
-            document.open();
-            addLogo(document, account.getImageUrl(), voucher);
-            addDocTitle(document, voucher);
-            addDocDetails(document, voucher);
-            addQRCode(document, qrCodePath, voucher);
+                String qrCodePath = "voucher/" + voucher.getVoucherCode() + ".png";
+                try {
+                    qrCodeGenerator.generateQRCodeImage(voucher.getVoucherCode(), 200, 200, qrCodePath);
+                } catch (WriterException e) {
+                    e.printStackTrace();
+                }
+
+                document.setPageSize(PageSize.LETTER);
+                document.setMargins(20, 20, 20, 20);
+                document.setMarginMirroring(false);
+
+                document.open();
+                addLogo(document, account.getImageUrl(), voucher);
+                addDocTitle(document, voucher);
+                addDocDetails(document, voucher);
+                addQRCode(document, qrCodePath, voucher);
+
+                try {
+                    Path imagesPath = Paths.get(qrCodePath);
+                    Files.delete(imagesPath);
+                    System.out.println("File " + imagesPath.toAbsolutePath().toString() + " successfully removed");
+                } catch (IOException e) {
+                }
+
+                document.newPage();
+            }
 //            addFooter(document, voucher);
             document.close();
 
@@ -107,12 +135,12 @@ public class VoucherCodePDFGenerator {
 
     private void addDocTitle(Document document, Voucher voucher) throws DocumentException {
         Paragraph p1 = new Paragraph();
-        p1.add(new Paragraph(String.valueOf(voucher.getSimphonyDiscount().getDiscountRate()).substring(0, 2) + "% DISCOUNT VOUCHER",
+        p1.add(new Paragraph((int) Math.round(voucher.getSimphonyDiscount().getDiscountRate()) + "% DISCOUNT VOUCHER",
                                 new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD)));
         p1.setAlignment(Element.ALIGN_CENTER);
         p1.add(new Paragraph(
                 //voucher.getName()
-                        "More benefits at a " + "glance" + " with " + voucher.getSimphonyDiscount().getDiscountRate() + "%" +
+                        "More benefits at a " + "glance" + " with " + (int) Math.round(voucher.getSimphonyDiscount().getDiscountRate()) + "%" +
                                 " savings on stays and dining."
                         , new Font(Font.FontFamily.HELVETICA, 15, Font.BOLD)));
         document.add(p1);
@@ -130,7 +158,7 @@ public class VoucherCodePDFGenerator {
         p1.add(new Paragraph(
                 ". Physical card must be presented to redeem this offer.\n" +
                         ".  Voucher is reusable and valid till " + voucher.getEndDate() + ".\n" +
-                        ".  " + String.valueOf(voucher.getSimphonyDiscount().getDiscountRate()).substring(0, 2) + "% off rooms are applicable on best available rate and subject to availability\n" +
+                        ".  " + (int) Math.round(voucher.getSimphonyDiscount().getDiscountRate()) + "% off rooms are applicable on best available rate and subject to availability\n" +
                         ".  Voucher cannot be replaced if lost or stolen, and is not refundable or redeemable for cash.\n" +
                         ".  Voucher cannot be used in conjunction with any other offer or promotion.\n" +
                         ".  Participating dining outlets include Sankofa Restaurant, Pool Bar and Lobby Lounge.\n" +

@@ -51,9 +51,6 @@ public class VoucherController {
         @Autowired
         private VoucherCodePDFGenerator voucherCodePDFGenerator;
 
-        @Autowired
-        QRCodeGenerator qrCodeGenerator;
-
         @GetMapping
         public ResponseEntity<?> getAllVoucher(@RequestParam("page") int page,
                                                @RequestParam("size") int size,
@@ -166,7 +163,7 @@ public class VoucherController {
         }
 
         @PutMapping("/markDeleted")
-        public ResponseEntity<?> markVoucherDeleted(@Valid @RequestBody Voucher voucher,
+        public ResponseEntity<?> markVoucherDeleted(@Valid @RequestBody List<Voucher> vouchers,
                                                     Principal principal, BindingResult result){
             Response response = new Response();
 
@@ -178,7 +175,7 @@ public class VoucherController {
                 if(accountOptional.isPresent()){
                     Account account = accountOptional.get();
 
-                    response = voucherService.markVoucherDeleted(account, voucher);
+                    response = voucherService.markVoucherDeleted(account, vouchers);
 
                     if(response.isStatus()){
                         return new ResponseEntity<>(response, HttpStatus.OK);
@@ -199,7 +196,7 @@ public class VoucherController {
         }
 
     @PostMapping("/exportCodePDF")
-    public void exportExcelSheet(@RequestBody Voucher voucher,
+    public void exportExcelSheet(@RequestBody List<Voucher> vouchers,
                                  HttpServletResponse httpServletResponse,
                                  Principal principal) throws IOException {
 
@@ -212,20 +209,10 @@ public class VoucherController {
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
-            String QRPath = "voucher/" + voucher.getVoucherCode() + ".png";
-            try {
-                qrCodeGenerator.generateQRCodeImage(voucher.getVoucherCode(), 200, 200, QRPath);
-            } catch (WriterException e) {
-                e.printStackTrace();
-            }
-            voucherCodePDFGenerator.generatePdfReport(account, voucher, QRPath, httpServletResponse);
 
-            try {
-                Path imagesPath = Paths.get(QRPath);
-                Files.delete(imagesPath);
-                System.out.println("File " + imagesPath.toAbsolutePath().toString() + " successfully removed");
-            } catch (IOException e) {
-            }
+            voucherCodePDFGenerator.generatePdfReport(account, vouchers, httpServletResponse);
+
+
             response.put("message", "Excel exported successfully.");
             LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
         }else{

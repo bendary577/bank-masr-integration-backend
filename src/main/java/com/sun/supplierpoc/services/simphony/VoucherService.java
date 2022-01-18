@@ -146,27 +146,17 @@ public class VoucherService {
         return response;
     }
 
-    public Response markVoucherDeleted(Account account, Voucher voucherRequest) {
+    public Response markVoucherDeleted(Account account, List<Voucher> voucherRequests) {
 
         Response response = new Response();
 
         try{
-
-            Optional<Voucher> voucherOptional = voucherRepository.findById(voucherRequest.getId());
-
-            if(voucherOptional.isPresent()){
-                Voucher voucher = voucherOptional.get();
-                voucher.setDeleted(voucherRequest.isDeleted());
-                voucherRepository.save(voucher);
+                voucherRepository.saveAll(voucherRequests);
 
                 response.setStatus(true);
                 response.setMessage("Success.");
                 return response;
-            }else{
-                response.setStatus(false);
-                response.setMessage("Invalid Voucher ID.");
-                return response;
-            }
+
         }catch(Exception e){
             response.setStatus(false);
             response.setMessage("Cant complete operation due to the error: " + e.getMessage());

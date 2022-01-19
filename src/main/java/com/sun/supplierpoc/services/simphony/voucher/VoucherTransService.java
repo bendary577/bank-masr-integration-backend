@@ -123,6 +123,7 @@ public class VoucherTransService {
 
             totalTransactions= transactionRepo.countAllByVoucherIdAndAccountId(voucherId, account.getId());
 //            totalSpend = transactionRepo.countToTalAmountByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.SUCCESS);
+            totalSpend = transactionRepo.countToTalAmountByVoucherIdAndAccountId(voucherId, account.getId());
             succeedTransactionCount = transactionRepo.countAllByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.SUCCESS);
             failedTransactionCount = transactionRepo.countAllByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.FAILED);
 

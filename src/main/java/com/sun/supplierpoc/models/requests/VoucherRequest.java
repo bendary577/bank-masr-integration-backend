@@ -1,10 +1,11 @@
 package com.sun.supplierpoc.models.requests;
 
-import com.sun.supplierpoc.models.applications.SimphonyDiscount;
+import com.sun.supplierpoc.models.simphony.redeemVoucher.UniqueVoucher;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.List;
 
 public class VoucherRequest {
 
@@ -22,8 +23,11 @@ public class VoucherRequest {
     @NotNull(message = "Simphony discount can't be empty.")
     private int simphonyDiscountId;
 
-    @NotNull(message = "Redeem quota can't be empty")
-    private int redeemQuota;
+    @NotNull(message = "Unique Voucher can't be empty.")
+    private int uniqueVouchers;
+
+    @NotNull(message = "Redemption can't be empty.")
+    private int redemption;
 
     @NotNull(message = "Deleted status can't be empty.")
     private boolean deleted;
@@ -68,12 +72,12 @@ public class VoucherRequest {
         this.simphonyDiscountId = simphonyDiscountId;
     }
 
-    public int getRedeemQuota() {
-        return redeemQuota;
+    public int getUniqueVouchers() {
+        return uniqueVouchers;
     }
 
-    public void setRedeemQuota(int redeemQuota) {
-        this.redeemQuota = redeemQuota;
+    public void setUniqueVouchers(int uniqueVouchers) {
+        this.uniqueVouchers = uniqueVouchers;
     }
 
     public boolean isDeleted() {
@@ -82,5 +86,13 @@ public class VoucherRequest {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public int getRedemption() {
+        return redemption;
+    }
+
+    public void setRedemption(int redemption) {
+        this.redemption = redemption;
     }
 }

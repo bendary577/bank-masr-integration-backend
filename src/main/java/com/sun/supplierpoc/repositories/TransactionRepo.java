@@ -72,14 +72,10 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
     List<Transactions> findAllByGroupIdAndTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(String id, List<TransactionType> transactionTypes, Date start, Date end);
 
-    List<Transactions> findByVoucherIdAndAccountId(String voucherId, String id, Pageable paging);
-
-    int countToTalAmountByVoucherIdAndAccountId(String voucherId, String id);
-
-    int countAllByVoucherIdAndAccountId(String voucherId, String id);
-
+    List<Transactions> findByVoucherIdAndCodeAndAccountId(String voucherId, String code, String id, Pageable paging);
+    int countToTalAmountByVoucherIdAndCodeAndAccountId(String s, String voucherId, String id);
+    int countAllByVoucherIdAndCodeAndAccountId(String s, String voucherId, String id);
     @Query(value = "{'transactions': {toTalAmount}, 'voucherId': ?0, 'accountId': ?1, 'status': ?2}", count = true)
     double countToTalAmountByVoucherIdAndAccountIdAndStatus(String voucherId, String id, String success);
-
-    int countAllByVoucherIdAndAccountIdAndStatus(String voucherId, String id, String failed);
+    int countAllByVoucherIdAndCodeAndAccountIdAndStatus(String s, String voucherId, String id, String failed);
 }

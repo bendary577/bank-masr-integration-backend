@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services.simphony;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.controllers.application.AppUserController;
 import com.sun.supplierpoc.models.Account;
@@ -7,6 +8,7 @@ import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.requests.VoucherRequest;
+import com.sun.supplierpoc.models.simphony.redeemVoucher.UniqueVoucher;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.simphony.VoucherRepository;
@@ -31,6 +33,23 @@ public class VoucherService {
     @Autowired
     private AppUserController appUserController;
 
+
+
+    public Response getVoucherById(Account account, String voucherId) {
+        Response response = new Response();
+
+        try {
+            Voucher vouchers = voucherRepository.getByIdAndAccountId(voucherId, account.getId());
+
+            response.setStatus(true);
+            response.setData(vouchers);
+
+        } catch (Exception e) {
+            response.setStatus(false);
+            response.setMessage("Can't get voucher list due to the error: " + e.getMessage());
+        }
+        return response;
+    }
 
     public Response getAllVoucher(Account account) {
 
@@ -67,15 +86,16 @@ public class VoucherService {
                 SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(simphonyDiscountList,
                         voucherRequest.getSimphonyDiscountId());
 
-                String code = createCode(voucherRequest.getName());
+                List<UniqueVoucher> uniqueVouchers = createUniqueVoucher(voucherRequest.getName(),
+                        voucherRequest.getUniqueVouchers());
 
                 Voucher voucher = new Voucher();
                 voucher.setName(voucherRequest.getName());
                 voucher.setStartDate(voucherRequest.getStartDate());
                 voucher.setEndDate(voucherRequest.getEndDate());
+                voucher.setRedemption(voucherRequest.getRedemption());
                 voucher.setSimphonyDiscount(simphonyDiscount);
-                voucher.setVoucherCode(code);
-                voucher.setRedeemQuota(voucherRequest.getRedeemQuota());
+                voucher.setUniqueVouchers(uniqueVouchers);
                 voucher.setCreationDate(new Date());
                 voucher.setAccountId(account.getId());
                 voucher.setDeleted(false);
@@ -91,6 +111,26 @@ public class VoucherService {
             }
         }
         return response;
+    }
+
+    private List<UniqueVoucher> createUniqueVoucher(String name, int uniqueVouchers) {
+
+        List<UniqueVoucher> uniqueVouchersList = new ArrayList<>();
+        UniqueVoucher uniqueVoucher = new UniqueVoucher();
+
+        for(int i = 1; i <= uniqueVouchers; i++){
+
+            uniqueVoucher = new UniqueVoucher();
+
+            uniqueVoucher.setId(String.valueOf(i));
+            uniqueVoucher.setCode(createCode(name));
+            uniqueVoucher.setNumOfRedemption(0);
+            uniqueVoucher.setStatus(Constants.VALID_VOUCHER);
+
+            uniqueVouchersList.add(uniqueVoucher);
+        }
+
+        return uniqueVouchersList;
     }
 
     public Response updateVoucher(Account account, VoucherRequest voucherRequest) {
@@ -118,13 +158,11 @@ public class VoucherService {
 
 //                    String code = createCode(voucherRequest.getName());
 
-
                     voucher.setName(voucherRequest.getName());
                     voucher.setStartDate(voucherRequest.getStartDate());
                     voucher.setEndDate(voucherRequest.getEndDate());
                     voucher.setSimphonyDiscount(simphonyDiscount);
 //                    voucher.setVoucherCode(code);
-                    voucher.setRedeemQuota(voucherRequest.getRedeemQuota());
                     voucher.setLastUpdate(new Date());
                     voucher.setDeleted(voucherRequest.isDeleted());
 
@@ -181,6 +219,5 @@ public class VoucherService {
         }
         return code;
     }
-
 
 }

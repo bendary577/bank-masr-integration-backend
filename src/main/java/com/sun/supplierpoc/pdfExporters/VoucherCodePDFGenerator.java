@@ -14,6 +14,7 @@ import com.itextpdf.text.html.WebColors;
 
 import com.itextpdf.text.pdf.draw.VerticalPositionMark;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.simphony.redeemVoucher.UniqueVoucher;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.services.QRCodeGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class VoucherCodePDFGenerator {
     @Autowired
     QRCodeGenerator qrCodeGenerator;
 
-    public void generatePdfReport(Account account, java.util.List<Voucher> vouchers, HttpServletResponse response) {
+    public void generatePdfReport(Account account, Voucher voucher, HttpServletResponse response) {
 
         Document document = new Document();
 
@@ -39,11 +40,11 @@ public class VoucherCodePDFGenerator {
             PdfWriter writer = PdfWriter.getInstance(document, baos);
 //            writer.setPageEvent(new PDFBackground());
 
-            for(Voucher voucher : vouchers) {
+            for(UniqueVoucher uniqueVoucher : voucher.getUniqueVouchers()) {
 
-                String qrCodePath = "voucher/" + voucher.getVoucherCode() + ".png";
+                String qrCodePath = "voucher/" + uniqueVoucher.getCode() + ".png";
                 try {
-                    qrCodeGenerator.generateQRCodeImage(voucher.getVoucherCode(), 200, 200, qrCodePath);
+                    qrCodeGenerator.generateQRCodeImage(uniqueVoucher.getCode(), 200, 200, qrCodePath);
                 } catch (WriterException e) {
                     e.printStackTrace();
                 }
@@ -53,9 +54,9 @@ public class VoucherCodePDFGenerator {
                 document.setMarginMirroring(false);
 
                 document.open();
-                addLogo(document, account.getImageUrl(), voucher);
-                addDocTitle(document, voucher);
-                addDocDetails(document, voucher);
+                addLogo(document, account.getImageUrl(), voucher, uniqueVoucher);
+                addDocTitle(document, voucher, uniqueVoucher);
+                addDocDetails(document, voucher, uniqueVoucher);
                 addQRCode(document, qrCodePath, voucher);
 
                 try {
@@ -95,7 +96,7 @@ public class VoucherCodePDFGenerator {
 
     }
 
-    private void addLogo(Document document, String imageUrl, Voucher voucher) {
+    private void addLogo(Document document, String imageUrl, Voucher voucher, UniqueVoucher uniqueVoucher) {
         try {
 
 //            Chunk glue = new Chunk(new VerticalPositionMark());
@@ -108,7 +109,7 @@ public class VoucherCodePDFGenerator {
             Paragraph p1 = new Paragraph();
             BaseColor myColorpan = WebColors.getRGBColor("#a29d7f");
             p1.add(new Chunk(glue));
-            p1.add(new Chunk(voucher.getVoucherCode(), new Font(Font.FontFamily.COURIER, 20, Font.BOLD, myColorpan)));
+            p1.add(new Chunk(uniqueVoucher.getCode(), new Font(Font.FontFamily.COURIER, 20, Font.BOLD, myColorpan)));
             document.add(p1);
 
 //            URL url = new URL(imageUrl);
@@ -133,7 +134,7 @@ public class VoucherCodePDFGenerator {
         }
     }
 
-    private void addDocTitle(Document document, Voucher voucher) throws DocumentException {
+    private void addDocTitle(Document document, Voucher voucher, UniqueVoucher uniqueVoucher) throws DocumentException {
         Paragraph p1 = new Paragraph();
         p1.add(new Paragraph((int) Math.round(voucher.getSimphonyDiscount().getDiscountRate()) + "% DISCOUNT VOUCHER",
                                 new Font(Font.FontFamily.HELVETICA, 20, Font.BOLD)));
@@ -148,7 +149,7 @@ public class VoucherCodePDFGenerator {
     }
 
 
-    private void addDocDetails(Document document, Voucher voucher) throws DocumentException {
+    private void addDocDetails(Document document, Voucher voucher, UniqueVoucher uniqueVoucher) throws DocumentException {
         Paragraph p1 = new Paragraph();
         leaveEmptyLine(p1, 1);
         leaveEmptyLine(p1, 1);

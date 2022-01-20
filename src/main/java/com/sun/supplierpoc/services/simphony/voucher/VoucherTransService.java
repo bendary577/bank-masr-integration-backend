@@ -8,13 +8,12 @@ import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
+import com.sun.supplierpoc.models.simphony.redeemVoucher.UniqueVoucher;
 import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
-import com.sun.supplierpoc.models.voucher.VoucherTransaction;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.TransactionRepo;
 import com.sun.supplierpoc.repositories.TransactionTypeRepo;
 import com.sun.supplierpoc.repositories.simphony.VoucherRepository;
-import com.sun.supplierpoc.repositories.simphony.VoucherTransRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -43,7 +42,10 @@ public class VoucherTransService {
 
     public HashMap createTransaction(TransactionType transactionType, Transactions voucherTransaction, Account account, GeneralSettings generalSettings, RevenueCenter revenueCenter) {
         HashMap response = new HashMap();
-        Voucher voucher = voucherRepository.findByVoucherCode(voucherTransaction.getCode());
+        Voucher voucher = voucherRepository.findByUniqueVouchersCodeIn(voucherTransaction.getCode());
+
+        UniqueVoucher uniqueVoucher = voucher.getUniqueVouchers().stream()
+                .filter(uniqueVoucher1 -> uniqueVoucher1.getCode().equals(voucherTransaction.getCode())).findFirst().get();
         try {
 
             Date today = new Date();
@@ -58,7 +60,7 @@ public class VoucherTransService {
                 response.put("message", "This voucher doesn't start yet.");
             } else if (voucher.getEndDate().getTime() < today.getTime()) {
                 response.put("message", "This voucher has been ended.");
-            } else if (voucher.getNumberOfRedemption() >= voucher.getRedeemQuota()) {
+            } else if (uniqueVoucher.getNumOfRedemption() >= voucher.getRedemption() ||  uniqueVoucher.getStatus().equals(Constants.CONSUMED)) {
                 response.put("message", "This voucher has been exceeded the redemption quota.");
             } else if (transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatus(
                     voucherTransaction.getCheckNumber(), voucherTransaction.getRevenueCentreId(), Constants.SUCCESS)) {
@@ -88,6 +90,16 @@ public class VoucherTransService {
 
                 transactionRepo.save(voucherTransaction);
                 generalSettings.getSimphonyQuota().setUsedTransactionQuota(generalSettings.getSimphonyQuota().getUsedTransactionQuota() + 1);
+
+                voucher.getUniqueVouchers().stream()
+                        .filter(uniqueVoucher1 -> uniqueVoucher1.getCode().equals(voucherTransaction.getCode())).findFirst().get().setNumOfRedemption(uniqueVoucher.getNumOfRedemption() + 1);
+
+                if(uniqueVoucher.getNumOfRedemption() >= voucher.getRedemption()){
+                    voucher.getUniqueVouchers().stream()
+                            .filter(uniqueVoucher1 -> uniqueVoucher1.getCode().equals(voucherTransaction.getCode())).findFirst().get().setStatus(Constants.CONSUMED);
+                }
+
+                voucherRepository.save(voucher);
                 generalSettingsRepo.save(generalSettings);
 
                 response.put("isSuccess", true);
@@ -112,7 +124,7 @@ public class VoucherTransService {
         return response;
     }
 
-    public HashMap getVoucherTransStatistics(String voucherId, Account account) {
+    public HashMap getVoucherTransStatistics(String voucherId, String voucherCode, Account account) {
 
         HashMap statistic = new HashMap();
         try {
@@ -121,11 +133,11 @@ public class VoucherTransService {
             int failedTransactionCount = 0;
             int succeedTransactionCount = 0;
 
-            totalTransactions= transactionRepo.countAllByVoucherIdAndAccountId(voucherId, account.getId());
+            totalTransactions= transactionRepo.countAllByVoucherIdAndCodeAndAccountId(voucherId, voucherCode, account.getId());
 //            totalSpend = transactionRepo.countToTalAmountByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.SUCCESS);
-            totalSpend = transactionRepo.countToTalAmountByVoucherIdAndAccountId(voucherId, account.getId());
-            succeedTransactionCount = transactionRepo.countAllByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.SUCCESS);
-            failedTransactionCount = transactionRepo.countAllByVoucherIdAndAccountIdAndStatus(voucherId, account.getId(), Constants.FAILED);
+            totalSpend = transactionRepo.countToTalAmountByVoucherIdAndCodeAndAccountId(voucherId, voucherCode, account.getId());
+            succeedTransactionCount = transactionRepo.countAllByVoucherIdAndCodeAndAccountIdAndStatus(voucherId, voucherCode, account.getId(), Constants.SUCCESS);
+            failedTransactionCount = transactionRepo.countAllByVoucherIdAndCodeAndAccountIdAndStatus(voucherId, voucherCode, account.getId(), Constants.FAILED);
 
             statistic.put("totalSpend", totalSpend);
             statistic.put("totalTransactions", totalTransactions);
@@ -137,7 +149,7 @@ public class VoucherTransService {
         return statistic;
     }
 
-    public HashMap getTotalVoucherTransactions(int page, int size, String voucherId, Account account) {
+    public HashMap getTotalVoucherTransactions(int page, int size, String voucherId, String voucherCode, Account account) {
 
 
         HashMap statistic = new HashMap();
@@ -146,7 +158,7 @@ public class VoucherTransService {
 
             Pageable paging = PageRequest.of(page - 1, size);
 
-            transactions = transactionRepo.findByVoucherIdAndAccountId(voucherId, account.getId(), paging);
+            transactions = transactionRepo.findByVoucherIdAndCodeAndAccountId(voucherId, voucherCode, account.getId(), paging);
 
             statistic.put("transactions", transactions);
         } catch (Exception e) {

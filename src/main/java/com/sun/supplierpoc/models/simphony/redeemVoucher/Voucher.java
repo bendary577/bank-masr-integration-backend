@@ -5,6 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
+import java.util.List;
 
 @Document
 public class Voucher {
@@ -20,11 +21,9 @@ public class Voucher {
 
     private SimphonyDiscount simphonyDiscount;
 
-    private String voucherCode;
+    private List<UniqueVoucher> uniqueVouchers;
 
-    private int redeemQuota;
-
-    private int numberOfRedemption;
+    private int redemption;
 
     private Date creationDate;
 
@@ -37,14 +36,13 @@ public class Voucher {
     public Voucher() {
     }
 
-    public Voucher(String name, Date startDate, Date endDate, SimphonyDiscount simphonyDiscount, String voucherCode,
-                   int redeemQuota, Date creationDate, String accountId, boolean deleted) {
+    public Voucher(String name, Date startDate, Date endDate, SimphonyDiscount simphonyDiscount,
+                   List<UniqueVoucher> uniqueVouchers, Date creationDate, String accountId, boolean deleted) {
         this.name = name;
         this.startDate = startDate;
         this.endDate = endDate;
         this.simphonyDiscount = simphonyDiscount;
-        this.voucherCode = voucherCode;
-        this.redeemQuota = redeemQuota;
+        this.uniqueVouchers = uniqueVouchers;
         this.creationDate = creationDate;
         this.accountId = accountId;
         this.deleted = deleted;
@@ -98,20 +96,12 @@ public class Voucher {
         this.simphonyDiscount = simphonyDiscount;
     }
 
-    public String getVoucherCode() {
-        return voucherCode;
+    public List<UniqueVoucher> getUniqueVouchers() {
+        return uniqueVouchers;
     }
 
-    public void setVoucherCode(String voucherCode) {
-        this.voucherCode = voucherCode;
-    }
-
-    public int getRedeemQuota() {
-        return redeemQuota;
-    }
-
-    public void setRedeemQuota(int redeemQuota) {
-        this.redeemQuota = redeemQuota;
+    public void setUniqueVouchers(List<UniqueVoucher> uniqueVouchers) {
+        this.uniqueVouchers = uniqueVouchers;
     }
 
     public Date getLastUpdate() {
@@ -138,11 +128,11 @@ public class Voucher {
         this.deleted = deleted;
     }
 
-    public int getNumberOfRedemption() {
-        return numberOfRedemption;
+    public int getRedemption() {
+        return redemption;
     }
 
-    public void setNumberOfRedemption(int numberOfRedemption) {
-        this.numberOfRedemption = numberOfRedemption;
+    public void setRedemption(int redemption) {
+        this.redemption = redemption;
     }
 }

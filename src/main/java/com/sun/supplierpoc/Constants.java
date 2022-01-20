@@ -73,6 +73,11 @@ public class Constants {
 
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
+    public static final String VALID_VOUCHER = "Valid Voucher";
+    public static final String INVALID_VOUCHER = "Invalid Voucher";
+    public static final String CONSUMED = "Consumed";
+
+
     public static String USE_WALLET = "Wallet";
     // Guest pay product to get more points
     public static String REWARD_POINTS = "Reward Points";

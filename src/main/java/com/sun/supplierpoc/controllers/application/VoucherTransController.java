@@ -140,6 +140,7 @@ public class VoucherTransController {
     @RequestMapping("/getTotalVoucherTrans")
     public ResponseEntity getTotalVoucherTrans(Principal principal,
                                                @RequestParam("voucherId") String voucherId,
+                                               @RequestParam("voucherCode") String voucherCode,
                                                @RequestParam("page") int page,
                                                @RequestParam("size") int size) {
 
@@ -148,7 +149,7 @@ public class VoucherTransController {
         Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = voucherTransService.getTotalVoucherTransactions(page, size, voucherId, account);
+            response = voucherTransService.getTotalVoucherTransactions(page, size, voucherId, voucherCode, account);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");
@@ -157,14 +158,15 @@ public class VoucherTransController {
 
     @RequestMapping("/getVoucherTransStatistics")
     public ResponseEntity getVoucherTransStatistics(Principal principal,
-                                               @RequestParam("voucherId") String voucherId) {
+                                                    @RequestParam("voucherCode") String voucherCode,
+                                                    @RequestParam("voucherId") String voucherId) {
 
         HashMap response = new HashMap();
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = voucherTransService.getVoucherTransStatistics(voucherId, account);
+            response = voucherTransService.getVoucherTransStatistics(voucherId, voucherCode, account);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }else{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("");

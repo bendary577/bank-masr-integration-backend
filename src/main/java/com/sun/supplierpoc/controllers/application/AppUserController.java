@@ -11,6 +11,8 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
+import com.sun.supplierpoc.pdfExporters.QRCodePDFGenerator;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -27,6 +29,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
@@ -58,6 +61,8 @@ public class AppUserController {
     FeatureService featureService;
     @Autowired
     ActivityService activityService;
+    @Autowired
+    QRCodePDFGenerator qrCodePDFGenerator;
 
     private final Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -275,6 +280,30 @@ public class AppUserController {
             response.put("success", false);
             response.put("message", Constants.INVALID_USER);
             return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @PostMapping("/exportQRCodePDF")
+    public void exportQRCodePDF(@RequestBody ArrayList<ApplicationUser> users,
+                                 HttpServletResponse httpServletResponse,
+                                 Principal principal) throws IOException {
+
+        HashMap response = new HashMap();
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            qrCodePDFGenerator.generatePdfReport(account, users, httpServletResponse);
+
+            response.put("message", "Excel exported successfully.");
+            LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
+        }else{
+            response.put("message", "Failed to export excel, Plese try again.");
         }
     }
 

@@ -201,7 +201,11 @@ public class VoucherService {
         Response response = new Response();
 
         try{
-                voucherRepository.saveAll(voucherRequests);
+                for(Voucher tempVoucher :voucherRequests){
+                    Voucher voucher = voucherRepository.findById(tempVoucher.getId()).get();
+                    voucher.setDeleted(!voucher.isDeleted());
+                    voucherRepository.save(voucher);
+                }
 
                 response.setStatus(true);
                 response.setMessage("Success.");

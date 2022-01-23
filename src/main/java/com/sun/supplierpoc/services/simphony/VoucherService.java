@@ -87,7 +87,7 @@ public class VoucherService {
                         voucherRequest.getSimphonyDiscountId());
 
                 List<UniqueVoucher> uniqueVouchers = createUniqueVoucher(voucherRequest.getName(),
-                        voucherRequest.getUniqueVouchers());
+                        voucherRequest.getUniqueVouchers(), 1);
 
                 Voucher voucher = new Voucher();
                 voucher.setName(voucherRequest.getName());
@@ -113,26 +113,6 @@ public class VoucherService {
         return response;
     }
 
-    private List<UniqueVoucher> createUniqueVoucher(String name, int uniqueVouchers) {
-
-        List<UniqueVoucher> uniqueVouchersList = new ArrayList<>();
-        UniqueVoucher uniqueVoucher = new UniqueVoucher();
-
-        for(int i = 1; i <= uniqueVouchers; i++){
-
-            uniqueVoucher = new UniqueVoucher();
-
-            uniqueVoucher.setId(String.valueOf(i));
-            uniqueVoucher.setCode(createCode(name));
-            uniqueVoucher.setNumOfRedemption(0);
-            uniqueVoucher.setStatus(Constants.VALID_VOUCHER);
-
-            uniqueVouchersList.add(uniqueVoucher);
-        }
-
-        return uniqueVouchersList;
-    }
-
     public Response updateVoucher(Account account, VoucherRequest voucherRequest) {
 
         Response response = new Response();
@@ -151,18 +131,32 @@ public class VoucherService {
                 if (!voucherRequest.getName().equals(voucher.getName()) && voucherRepository.existsByAccountIdAndNameAndDeleted(account.getId(), voucherRequest.getName(), false)) {
                     response.setStatus(false);
                     response.setMessage("This Voucher Is Exist With This Name.");
-                } else {
+                } else if(voucher.getUniqueVouchers().size() > voucherRequest.getUniqueVouchers()) {
+                    response.setStatus(false);
+                    response.setMessage("Invalid unique vouchers number.");
+                } else if(voucher.getRedemption() > voucherRequest.getRedemption()) {
+                    response.setStatus(false);
+                    response.setMessage("Invalid number of redemption.");
+                }else{
 
                     SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(simphonyDiscountList,
                             voucherRequest.getSimphonyDiscountId());
 
-//                    String code = createCode(voucherRequest.getName());
+                    if(voucher.getUniqueVouchers().size() < voucherRequest.getUniqueVouchers()){
+                        List<UniqueVoucher> uniqueVouchers = createUniqueVoucher(voucherRequest.getName(),
+                                voucherRequest.getUniqueVouchers(), voucher.getUniqueVouchers().size() + 1);
+                        voucher.getUniqueVouchers().addAll(uniqueVouchers);
+                    }
+                    if(voucher.getRedemption() < voucherRequest.getRedemption()) {
+                        voucher.getUniqueVouchers().stream()
+                                .forEach(uniqueVoucher1 -> uniqueVoucher1.setStatus(Constants.VALID_VOUCHER));
+                    }
+                    voucher.setRedemption(voucherRequest.getRedemption());
 
                     voucher.setName(voucherRequest.getName());
                     voucher.setStartDate(voucherRequest.getStartDate());
                     voucher.setEndDate(voucherRequest.getEndDate());
                     voucher.setSimphonyDiscount(simphonyDiscount);
-//                    voucher.setVoucherCode(code);
                     voucher.setLastUpdate(new Date());
                     voucher.setDeleted(voucherRequest.isDeleted());
 
@@ -184,6 +178,24 @@ public class VoucherService {
         return response;
     }
 
+    private List<UniqueVoucher> createUniqueVoucher(String name, int uniqueVouchers, int counter) {
+
+        List<UniqueVoucher> uniqueVouchersList = new ArrayList<>();
+        UniqueVoucher uniqueVoucher = new UniqueVoucher();
+        for(int i = counter; i <= uniqueVouchers; i++){
+
+            uniqueVoucher = new UniqueVoucher();
+
+            uniqueVoucher.setId(String.valueOf(i));
+            uniqueVoucher.setCode(createCode(name));
+            uniqueVoucher.setNumOfRedemption(0);
+            uniqueVoucher.setStatus(Constants.VALID_VOUCHER);
+
+            uniqueVouchersList.add(uniqueVoucher);
+        }
+
+        return uniqueVouchersList;
+    }
     public Response markVoucherDeleted(Account account, List<Voucher> voucherRequests) {
 
         Response response = new Response();

@@ -54,8 +54,6 @@ public class BookingService {
     CancelBookingExcelHelper cancelBookingExcelHelper;
 
     @Autowired
-    OccupancyXMLHelper occupancyXMLHelper;
-    @Autowired
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
@@ -540,192 +538,6 @@ public class BookingService {
         return message;
     }
 
-    public Response fetchOccupancyFromReport(String userId, Account account) {
-        String message = "";
-        Response response = new Response();
-
-        SyncJob syncJob;
-        SyncJobType syncJobType;
-        BookingConfiguration bookingConfiguration;
-        try {
-            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
-            bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
-
-            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
-                    userId, account.getId(), syncJobType.getId(), 0);
-            syncJobRepo.save(syncJob);
-        } catch (Exception e) {
-            message = "Failed to establish a connection with the database.";
-            response.setMessage(message);
-            response.setStatus(false);
-            return response;
-        }
-
-        try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
-
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Occupancy/" + fileName;
-            String localFilePath = account.getName() + "/Occupancy/";
-
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
-            List<SyncJobData> syncJobData = new ArrayList<>();
-
-            if(bookingConfiguration.fileExtension.equals("xlsx")){
-                syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
-            } else if(bookingConfiguration.fileExtension.equals("xml")) {
-                syncJobData = occupancyXMLHelper.getOccupancyFromXML(syncJob, localFilePath + fileName);
-            }
-
-            /* Send occupancy update */
-            response = sendOccupancyUpdates(syncJobData, bookingConfiguration);
-
-            if(response.isStatus()){
-                syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.SUCCESS, response.getMessage());
-            }else {
-                syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.FAILED);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.FAILED, response.getMessage());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            syncJobService.saveSyncJobStatus(syncJob, 0, e.getMessage(), Constants.FAILED);
-            message = "Failed to sync occupancy Updates.";
-            response.setMessage(message);
-            response.setStatus(false);
-        }
-
-        return response;
-    }
-
-    private Response sendOccupancyUpdates(List<SyncJobData> syncJobData, BookingConfiguration bookingConfiguration){
-        String message = "";
-        Response response = new Response();
-        try {
-            OkHttpClient client = new OkHttpClient();
-            String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
-
-            HashMap<String, Object> data = syncJobData.get(0).getData();
-
-            JSONObject json = new JSONObject();
-            json.put("updateDate", String.valueOf(data.get("updateDate")));
-            json.put("roomsOccupied", String.valueOf(data.get("roomsOccupied")));
-            json.put("roomsAvailable", String.valueOf(data.get("roomsAvailable")));
-            json.put("roomsBooked", String.valueOf(data.get("roomsBooked")));
-            json.put("roomsOnMaintenance", String.valueOf(data.get("roomsOnMaintenance")));
-            json.put("totalRooms", String.valueOf(data.get("totalRooms")));
-            json.put("channel", bookingConfiguration.getChannel());
-            String body = json.toString();
-
-            MediaType mediaType = MediaType.parse("application/json");
-            RequestBody requestBody = RequestBody.create(mediaType, body);
-
-            Request request = new Request.Builder()
-                    .url(bookingConfiguration.getUrl())
-                    .post(requestBody)
-                    .addHeader("X-Gateway-APIKey", bookingConfiguration.getGatewayKey())
-                    .addHeader("content-type", "application/json")
-                    .addHeader("Authorization", credential)
-                    .build();
-
-            okhttp3.Response occupancyUpdateResponse = client.newCall(request).execute();
-            if (occupancyUpdateResponse.code() == 200){
-                Gson gson = new Gson();
-                MinistryOfTourismResponse entity = gson.fromJson(occupancyUpdateResponse.body().string(), MinistryOfTourismResponse.class);
-
-                if(entity.getErrorCode().contains("0")){
-                    message = "Occupancy update send successfully.";
-                    response.setStatus(true);
-                    response.setMessage(message);
-                }else{
-                    /* Parse Error */
-                    message = parseOccupancyErrorMessage(entity.getErrorCode());
-                    response.setStatus(false);
-                    response.setMessage(message);
-                }
-            }else {
-                message = occupancyUpdateResponse.message();
-                response.setStatus(false);
-                response.setMessage(message);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            message = e.getMessage();
-            response.setStatus(false);
-            response.setMessage(message);
-        }
-
-        return response;
-    }
-
-    private String parseOccupancyErrorMessage(List<String> errorCodes){
-        String message = "";
-        String code = errorCodes.get(0);
-        switch (code) {
-            case "1":
-                message = "Invalid Update Date, It should be numeric in following format YYYYMMDD.";
-                break;
-            case "2":
-                message = "Invalid Rooms Occupied. It must be numeric only. It can contain 0.";
-                break;
-            case "3":
-                message = "Invalid Rooms Available. It must be numeric only. It can contain 0.";
-                break;
-            case "4":
-                message = "Invalid Rooms Booked. It must be numeric only. It can contain 0.";
-                break;
-            case "5":
-                message = "Invalid Rooms on Maintenance. It must be numeric only. It can contain 0.";
-                break;
-            case "6":
-                message = "Invalid UserId or User Id not found.";
-                break;
-            case "7":
-                message = "Invalid Transaction Id or TransactionId not found.";
-                break;
-            case "8":
-                message = "Invalid Day Closing value. It should be true or false.";
-                break;
-            case "9":
-                message = "Invalid Total Rooms value. It must be numeric only. It can contain 0.";
-                break;
-            case "10":
-                message = "Incorrect Total Rooms Value.";
-                break;
-            case "11":
-                message = "Invalid Total Adults value.";
-                break;
-            case "12":
-                message = "Invalid Total Children value.";
-                break;
-            case "13":
-                message = "Invalid Total Guests value.";
-                break;
-            case "14":
-                message = "Incorrect Total Guests value.";
-                break;
-            case "15":
-                message = "Total Guests is mandatory if day closing is true.";
-                break;
-            case "16":
-                message = "Invalid Total Revenue value.";
-                break;
-            case "17":
-                message = "Total Revenue is mandatory if day closing is true.";
-                break;
-            case "100":
-                message = "Invalid Credentials. Authentication failed.";
-                break;
-            case "101":
-                message = "Internal Server Error. Please try again later.";
-                break;
-        }
-
-        return message;
-    }
-
     public Response fetchExpensesDetailsFromReport(String userId, Account account) {
         String message = "";
         Response response = new Response();
@@ -924,7 +736,7 @@ public class BookingService {
         return message;
     }
 
-    private FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
+    public FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
         BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
 
         File file = new File(localFilePath + fileName);

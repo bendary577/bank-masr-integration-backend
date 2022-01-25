@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.controllers.application.talabat;
 
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.talabat.Order;
 import com.sun.supplierpoc.models.talabat.TalabatOrder;
 import com.sun.supplierpoc.models.talabat.Token;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
@@ -21,6 +22,18 @@ public class TalabatIntegratorController {
 
         Response response = talabatRestService.loginRequest();
 
+        response = talabatRestService.getOrders((Token) response.getData());
+
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("branch")
+    public ResponseEntity<?> getBranchOrders(@RequestParam("branch") String branch){
+
+        Response response = talabatRestService.loginRequest();
+
+        response = talabatRestService.getOrders((Token) response.getData(), branch);
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -33,12 +46,11 @@ public class TalabatIntegratorController {
     }
 
     @PostMapping("/order")
-    public ResponseEntity<?> getOrderById(@RequestBody Token token,
-                                          @RequestBody TalabatOrder.Order order){
+    public ResponseEntity<?> getOrderById(@RequestBody Order order){
 
         Response response = talabatRestService.loginRequest();
 
-        response = talabatRestService.getOrderById(order, token);
+        response = talabatRestService.getOrderById(order, (Token) response.getData());
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

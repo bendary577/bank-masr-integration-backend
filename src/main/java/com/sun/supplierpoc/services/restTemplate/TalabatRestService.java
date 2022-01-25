@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services.restTemplate;
 import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
+import com.sun.supplierpoc.models.talabat.Order;
 import com.sun.supplierpoc.models.talabat.TalabatOrder;
 import com.sun.supplierpoc.models.talabat.Token;
 import com.sun.supplierpoc.services.simphony.CallRestService;
@@ -80,7 +81,7 @@ public class TalabatRestService {
     }
 
 
-    public Response getOrders(Token token) {
+    public Response getOrders(Token token , String branch) {
 
         Response response = new Response();
         String message = "";
@@ -90,7 +91,11 @@ public class TalabatRestService {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             MediaType mediaType = MediaType.parse("application/json");
-            RequestBody body = RequestBody.create(mediaType, "{\r\n    \"global_vendor_codes\": [\r\n        \"HF_EG;644819\",\r\n        \"HF_EG;512662\",\r\n        \"HF_EG;510696\",\r\n        \"HF_EG;510706\",\r\n        \"HF_EG;510705\",\r\n        \"HF_EG;514804\",\r\n        \"HF_EG;514803\",\r\n        \"HF_EG;510702\",\r\n        \"HF_EG;512663\",\r\n        \"HF_EG;510703\",\r\n        \"HF_EG;510701\",\r\n        \"HF_EG;625008\",\r\n        \"HF_EG;611425\"\r\n    ],\r\n    \"time_from\": \"2022-01-24T00:00:00+02:00\",\r\n    \"time_to\": \"2022-01-24T23:59:59+02:00\"\r\n}");
+            RequestBody body = RequestBody.create(mediaType, "{\r\n    \"global_vendor_codes\": [\r\n" +
+                    "        \"" + branch +"\"\r\n    ],\r\n" +
+                    "    \"time_from\": \"2022-01-25T00:00:00+02:00\",\r\n" +
+                    "    \"time_to\": \"2022-01-25T23:59:59+02:00\"\r\n}");
+
             Request request = new Request.Builder()
                     .url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders")
                     .method("POST", body)
@@ -125,7 +130,68 @@ public class TalabatRestService {
         return response;
     }
 
-    public Response getOrderById(TalabatOrder.Order order, Token token) {
+
+    public Response getOrders(Token token) {
+
+        Response response = new Response();
+        String message = "";
+
+        try {
+
+            OkHttpClient client = new OkHttpClient().newBuilder()
+                    .build();
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, "{\r\n    \"global_vendor_codes\":" +
+                    " [\r\n        \"HF_EG;644819\",\r\n " +
+                    "       \"HF_EG;512662\",\r\n" +
+                    "        \"HF_EG;510696\",\r\n" +
+                    "        \"HF_EG;510706\",\r\n" +
+                    "        \"HF_EG;510705\",\r\n" +
+                    "        \"HF_EG;514804\",\r\n" +
+                    "        \"HF_EG;514803\",\r\n" +
+                    "        \"HF_EG;510702\",\r\n" +
+                    "        \"HF_EG;512663\",\r\n" +
+                    "        \"HF_EG;510703\",\r\n" +
+                    "        \"HF_EG;510701\",\r\n" +
+                    "        \"HF_EG;625008\",\r\n" +
+                    "        \"HF_EG;611425\"\r\n    ],\r\n" +
+                    "    \"time_from\": \"2022-01-25T00:00:00+02:00\",\r\n" +
+                    "    \"time_to\": \"2022-01-25T23:59:59+02:00\"\r\n}");
+            Request request = new Request.Builder()
+                    .url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders")
+                    .method("POST", body)
+                    .addHeader("Authorization", "Bearer " + token.getAccessToken())
+                    .addHeader("Content-Type", "application/json")
+                    .build();
+            okhttp3.Response orderResponse = client.newCall(request).execute();
+
+            if (orderResponse.code() == 200){
+                Gson gson = new Gson();
+
+                TalabatOrder talabatOrders = gson.fromJson(orderResponse.body().string(),
+                        TalabatOrder.class);
+
+
+                response.setStatus(true);
+                response.setData(talabatOrders);
+
+            }else {
+                message = orderResponse.message();
+                response.setStatus(false);
+                response.setMessage(message);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = e.getMessage();
+            response.setStatus(false);
+            response.setMessage(message);
+        }
+
+        return response;
+    }
+
+    public Response getOrderById(Order order, Token token) {
 
         Response response = new Response();
         String message = "";

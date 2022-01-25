@@ -26,13 +26,13 @@ import java.util.HashMap;
 public class CallRestService {
 
     Logger logger = LoggerFactory.getLogger(CallRestService.class);
+//
+//    @Autowired
+//    private final RestTemplate restTemplate;
 
-    @Autowired
-    private final RestTemplate restTemplate;
-
-    public CallRestService(RestTemplateBuilder restTemplateBuilder) {
-        this.restTemplate = restTemplateBuilder.build();
-    }
+//    public CallRestService(RestTemplateBuilder restTemplateBuilder) {
+//        this.restTemplate = restTemplateBuilder.build();
+//    }
 
     public ZealLoyaltyResponse zealPayment(ZealLoyaltyRequest zealPayment) {
 

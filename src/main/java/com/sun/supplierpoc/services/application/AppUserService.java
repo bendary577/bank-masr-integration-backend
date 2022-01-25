@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.RevenueCenter;
+import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.*;
@@ -55,6 +56,9 @@ public class AppUserService {
     @Autowired
     private AppUserController appUserController;
 
+    @Autowired
+    private RoleService roleService;
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public ApplicationUser saveUsers(ApplicationUser user){
@@ -80,8 +84,11 @@ public class AppUserService {
         return applicationUsers;
     }
 
-    public HashMap addRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image, Account account, GeneralSettings generalSettings) {
+    public HashMap addRewardPointsGuest(ApplicationUser applicationUser, MultipartFile image,
+                                        Account account, User user,
+                                        GeneralSettings generalSettings) {
         HashMap response = new HashMap();
+        boolean sendQRMail = roleService.hasRole(user, Roles.QR_CODE_EMAIL);
 
         if (applicationUser.getEmail() != null && !applicationUser.getEmail().equals("")
                 && userRepo.existsByEmailAndAccountId(applicationUser.getEmail(), account.getId())) {
@@ -110,34 +117,44 @@ public class AppUserService {
         applicationUser.setCreationDate(new Date());
         applicationUser.setDeleted(false);
 
-        /* Check mail settings validity */
-        AccountEmailConfig emailConfig = account.getEmailConfig();
-        if(emailConfig == null || (emailConfig.getHost().equals("")
-                || emailConfig.getUsername().equals("")
-                || emailConfig.getPassword().equals(""))){
-            response.put("message", "Please check email settings and try again");
-            response.put("success", false);
-            return response;
-        }
-
-        String code = appUserController.createCode(applicationUser);
-        String accountLogo = account.getImageUrl();
-        String mailSubj = generalSettings.getMailSub();
-        String QRPath = "QRCodes/" + code + ".png";
-        applicationUser.setCode(code);
-
-        try {
-            String QrPath = qrCodeGenerator.getQRCodeImage(code, 200, 200, QRPath);
-            if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account)) {
-                userRepo.save(applicationUser);
-                response.put("message", "User added successfully.");
-                response.put("success", true);
-                return response;
-            } else {
-                response.put("message", "Invalid user email.");
+        if(applicationUser.getCode().equals("")){
+            String code = appUserController.createCode(applicationUser);
+            applicationUser.setCode(code);
+        }else {
+            /* Check if card code is valid */
+            ApplicationUser oldUser = userRepo.findByCodeAndAccountIdAndDeleted(applicationUser.getCode(), account.getId(), false);
+            if(oldUser != null){
+                response.put("message", "Code already used, Please enter a different code.");
                 response.put("success", false);
                 return response;
             }
+        }
+
+        String accountLogo = account.getImageUrl();
+        String mailSubj = generalSettings.getMailSub();
+        String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
+
+        try {
+            String QrPath = qrCodeGenerator.getQRCodeImage(applicationUser.getCode(), 200, 200, QRPath);
+
+            /* Check mail settings validity - If user has the role to send QR code email */
+            if(sendQRMail){
+                AccountEmailConfig emailConfig = account.getEmailConfig();
+                if(emailConfig == null || (emailConfig.getHost().equals("")
+                        || emailConfig.getUsername().equals("")
+                        || emailConfig.getPassword().equals(""))){
+                    response.put("message", "Please check email settings and try again");
+                    response.put("success", false);
+                    return response;
+                }
+                emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account);
+            }
+
+            userRepo.save(applicationUser);
+            response.put("message", "User added successfully.");
+            response.put("success", true);
+            return response;
+
         } catch (WriterException | IOException e) {
             response.put("message", e.getMessage());
             response.put("success", false);

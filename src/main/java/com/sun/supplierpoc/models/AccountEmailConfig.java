@@ -7,6 +7,9 @@ public class AccountEmailConfig {
     private String username;
     private String password;
 
+    private String emailHeader;
+    private String emailFooter;
+
     public AccountEmailConfig() {
     }
 
@@ -40,5 +43,21 @@ public class AccountEmailConfig {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getEmailHeader() {
+        return emailHeader;
+    }
+
+    public void setEmailHeader(String emailHeader) {
+        this.emailHeader = emailHeader;
+    }
+
+    public String getEmailFooter() {
+        return emailFooter;
+    }
+
+    public void setEmailFooter(String emailFooter) {
+        this.emailFooter = emailFooter;
     }
 }

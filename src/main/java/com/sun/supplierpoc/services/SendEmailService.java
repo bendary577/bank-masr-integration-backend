@@ -233,10 +233,12 @@ public class SendEmailService {
 
 
             mailContent += account.getEmailConfig().getEmailFooter();
-            mailContent += "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
-                    "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
-                    "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
-                    "</div>"+ "</div>";
+            mailContent +=
+//                    "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
+//                    "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
+//                    "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
+//                    "</div>"+
+                            "</div>";
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);

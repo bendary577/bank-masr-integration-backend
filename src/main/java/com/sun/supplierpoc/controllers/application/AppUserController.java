@@ -228,7 +228,7 @@ public class AppUserController {
                 GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
                 response = appUserService
-                        .addRewardPointsGuest(applicationUser, image,account, generalSettings);
+                        .addRewardPointsGuest(applicationUser, image,account, user, generalSettings);
 
             } catch (Exception e) {
                 e.printStackTrace();

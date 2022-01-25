@@ -17,4 +17,8 @@ public class Roles {
     public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
 
     public static String INVOKE_WEB_SERVICE = "Invoke Web Service";
+
+    /* Appliction Roles */
+    public static String MAGNETIC_CARD = "magnetic_card";
+    public static String QR_CODE_EMAIL = "qr_code_email";
 }

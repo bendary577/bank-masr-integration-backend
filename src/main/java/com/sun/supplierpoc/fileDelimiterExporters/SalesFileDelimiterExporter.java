@@ -410,13 +410,13 @@ public class SalesFileDelimiterExporter {
         if (decimalPart.equals(""))
             decimalPart = "0";
         if (amountPart.length() < 15) {
-            amountPart = String.format("%0" + 15 + "d", Integer.parseInt(amountPart));
+            amountPart = String.format("%0" + 15 + "d.json", Integer.parseInt(amountPart));
         }
         if (decimalPart.length() > 3) {
             decimalPart = decimalPart.substring(0, 3);
         } else if (decimalPart.length() < 3) {
             decimalPart = decimalPart +
-                    String.format("%0" + (3 - decimalPart.length()) + "d", 0);
+                    String.format("%0" + (3 - decimalPart.length()) + "d.json", 0);
         }
 
         syncJobDataCSV.amount = amountPart + decimalPart;

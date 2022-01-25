@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
+import com.sun.supplierpoc.models.simphony.response.MenuItemResponse;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
@@ -50,6 +51,9 @@ public class ZealService {
     private OperationRepo operationRepo;
     @Autowired
     private OperationDataRepo operationDataRepo;
+
+    @Autowired
+    private SyncJobTypeRepo syncJobTypeRepo;
 
     public ZealLoyaltyResponse zealPaymentProcessor(ZealPayment zealPayment, InvokerUser user, Account account, SimphonyLocation location) {
 
@@ -139,9 +143,15 @@ public class ZealService {
 
             ZealRedeemRequest zealRedeemRequest = new ZealRedeemRequest(zealVoucher.getCode());
             response = callRestService.zealVoucher(zealRedeemRequest);
-            HashMap<String, String> responseMap = getItem(response.getMenuItemId());
 
-            ArrayList<OperationData> savedMenuItems = saveZealVoucher(responseMap, zealVoucher, operation);
+            MenuItemResponse  menuItemResponse = new MenuItemResponse();
+            try {
+                 menuItemResponse = getItem(response.getMenuItemId(), zealVoucher.getRevenueCentreId() ,account);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            ArrayList<OperationData> savedMenuItems = saveZealVoucher(menuItemResponse, zealVoucher, operation);
             operation.setStatus(Constants.SUCCESS);
             operation.setEndDate(new Date());
             operationRepo.save(operation);
@@ -163,7 +173,7 @@ public class ZealService {
         }
     }
 
-    public ArrayList<OperationData> saveZealVoucher(HashMap<String, String> map1, ZealVoucher zealVoucher, Operation operation) {
+    public ArrayList<OperationData> saveZealVoucher(MenuItemResponse itemResponse, ZealVoucher zealVoucher, Operation operation) {
 
         ArrayList<OperationData> savedMenuItems = new ArrayList<>();
         HashMap<String, Object> zealPaymentData = new HashMap<>();
@@ -173,7 +183,7 @@ public class ZealService {
         zealPaymentData.put("checkNumber", zealVoucher.getCheckNumber());
         zealPaymentData.put("status", zealVoucher.getStatus());
         zealPaymentData.put("message", zealVoucher.getMessage());
-        zealPaymentData.put("menuItems", map1);
+        zealPaymentData.put("menuItems", itemResponse);
 
         OperationData operationData = new OperationData(zealPaymentData, new Date(),
                 operation.getId());
@@ -186,30 +196,18 @@ public class ZealService {
         return savedMenuItems;
     }
 
-    public HashMap<String, String> getItem(String itemId) {
+    public MenuItemResponse getItem(String itemId, int revenueCentreId, Account account) {
 
-        List<SyncJob> syncJobs = syncJobRepo.findBySyncJobTypeIdAndDeletedOrderByCreationDateDesc("5fe34649283cde246c2d7736", false);
-        SyncJob syncJob = syncJobs.get(0);
-        System.out.println(syncJob.getEndDate());
-        ArrayList<SyncJobData> syncJobData = new ArrayList<>(syncJobDataRepo.findBySyncJobIdAndDeleted(syncJob.getId(), false));
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
+        SyncJob syncJob = syncJobService.getSyncJobByRevenueCenterID(revenueCentreId, syncJobType.getId());
+        ArrayList<SyncJobData> syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
+        ArrayList<MenuItemResponse> menuItems = (ArrayList<MenuItemResponse>) menuItemService.simplifyMenuItemData(syncJobData, false).get("menuItems");
 
-//        ArrayList<HashMap<String, Object>> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
-
-        HashMap<String, String> menuItemsMap = new HashMap<>();
-        menuItemsMap.put("itemObjectId", "4");
-        menuItemsMap.put("menuFirstName", "IFC Test Item - SI 3");
-        menuItemsMap.put("menuItemPrice", "3");
-        menuItemsMap.put("availability", "true");
-
-//        for (HashMap<String, String> tempItem : menuItems) {
-//
-//            if (tempItem.get("miObjectNum").equals(itemId)) {
-//                menuItemsMap = tempItem;
-//            }
-//
-//        }
-        return menuItemsMap;
-
+        for (MenuItemResponse menuItemResponse : menuItems) {
+            if (menuItemResponse.getId() != null && menuItemResponse.getId().equals(itemId)) {
+                return menuItemResponse;
+            }
+        }
+        return null;
     }
-
 }

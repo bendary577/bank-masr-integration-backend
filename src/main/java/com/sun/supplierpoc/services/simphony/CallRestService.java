@@ -9,7 +9,6 @@ import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
-import com.sun.supplierpoc.models.talabat.Token;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -18,13 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 @Service
 public class CallRestService {

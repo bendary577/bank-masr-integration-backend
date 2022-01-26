@@ -65,7 +65,7 @@ public class BookingService {
 
     Conversions conversions = new Conversions();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account){
+    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account, boolean newFlag){
         HashMap<String, Object> data = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -178,10 +178,11 @@ public class BookingService {
         municipalityTax = (reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100;
         vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
 
-        grandTotal = reservationRow.totalRoomRate + vat + municipalityTax;
+        grandTotal = (reservationRow.totalRoomRate + vat + municipalityTax) - reservationRow.discount;
         data.put("dailyRoomRate", basicRoomRate);
         data.put("totalRoomRate", reservationRow.totalRoomRate);
 
+        data.put("discount", reservationRow.discount);
         data.put("vat", vat);
         data.put("municipalityTax", municipalityTax);
         data.put("grandTotal", grandTotal);

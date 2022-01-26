@@ -29,7 +29,7 @@ public class OccupancyController {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     @GetMapping("/opera/occupancyUpdate")
-    public ResponseEntity uploadFile(@RequestParam(value = "roomsAvailable") String roomsAvailable,
+    public ResponseEntity occupancyUpdate(@RequestParam(value = "roomsAvailable") String roomsAvailable,
                            @RequestParam(value = "roomsOccupied") String roomsOccupied,
                            @RequestParam(value = "roomsOnMaintenance") String roomsOnMaintenance,
                            @RequestParam(value = "roomsBooked") String roomsBooked,

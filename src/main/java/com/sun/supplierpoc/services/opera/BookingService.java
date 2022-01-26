@@ -2,11 +2,15 @@ package com.sun.supplierpoc.services.opera;
 
 import com.google.gson.Gson;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.components.*;
 import com.sun.supplierpoc.controllers.opera.MinistryOfTourismResponse;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
+import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.RateCode;
+import com.sun.supplierpoc.models.opera.booking.ReservationRow;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -21,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -58,9 +63,136 @@ public class BookingService {
     @Autowired
     private SyncJobDataService syncJobDataService;
 
+    Conversions conversions = new Conversions();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account){
+        HashMap<String, Object> data = new HashMap<>();
 
-    public Response fetchNewBookingFromReport(String userId, Account account) {
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
+
+        String typeName;
+        String tempDate;
+        BookingType bookingType;
+
+        double basicRoomRate = 0;
+        double vat = 0;
+        double municipalityTax = 0;
+        double serviceCharge = 0;
+        double grandTotal = 0;
+        int nights = 0;
+
+        RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
+
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> roomTypes = generalSettings.getRoomTypes();
+        ArrayList<BookingType> genders = generalSettings.getGenders();
+        ArrayList<BookingType> nationalities = generalSettings.getNationalities();
+        ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
+        ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
+
+        Date updateDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        Date checkIn = null;
+        Date checkOut = null;
+
+        /* Reservation */
+        data.put("bookingNo", reservationRow.bookingNo);
+        data.put("allotedRoomNo", reservationRow.roomNo);
+        data.put("noOfRooms", reservationRow.noOfRooms);
+        data.put("noOfGuest", reservationRow.children + reservationRow.adults);
+
+        bookingType = conversions.checkBookingTypeExistence(roomTypes, reservationRow.roomType);
+        data.put("roomType", bookingType.getTypeId());
+
+        /* Guest Info - Use Mapping Tables */
+        bookingType = conversions.checkBookingTypeExistence(genders, reservationRow.gender);
+        data.put("gender", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(customerTypes, reservationRow.customerType);
+        data.put("customerType", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(nationalities, reservationRow.nationalityCode);
+        data.put("nationalityCode", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(purposeOfVisit, reservationRow.purposeOfVisit);
+        data.put("purposeOfVisit", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(paymentTypes, reservationRow.paymentType);
+        data.put("paymentType", bookingType.getTypeId());
+
+        data.put("dateOfBirth", bookingType.getTypeId());
+
+        /* Reservation Dates */
+        data.put("checkInTime", "140000");
+        data.put("checkOutTime", "120000");
+
+        try {
+            if (!reservationRow.checkInDate.equals("")) {
+                try {
+                    checkIn = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.checkInDate);
+                } catch (ParseException e) { // 03-DEC-20
+                    checkIn = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.checkInDate);
+                }
+            }
+        } catch (Exception e) {
+            checkIn = null;
+        }
+
+        try {
+            if (!reservationRow.checkOutDate.equals("")) {
+                try {
+                    checkOut = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.checkOutDate);
+                } catch (ParseException e) { // 03-DEC-20
+                    checkOut = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.checkOutDate);
+                }
+            }
+        } catch (Exception e) {
+            checkOut = null;
+        }
+
+        if (checkIn != null)
+            data.put("checkInDate", dateFormat.format(checkIn));
+        if (checkOut != null)
+            data.put("checkOutDate", dateFormat.format(checkOut));
+
+
+        if (checkIn != null && checkOut != null) {
+            nights = conversions.getNights(checkIn, checkOut);
+            data.put("roomRentType", conversions.checkRoomRentType(checkIn, checkOut));
+        }
+
+        data.put("totalDurationDays", nights);
+
+        /* Payment Info */
+        if(nights == 0)
+            nights = 1;
+
+        basicRoomRate = reservationRow.totalRoomRate/nights;
+
+        serviceCharge = (reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100;
+        municipalityTax = (reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100;
+        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
+
+        grandTotal = reservationRow.totalRoomRate + vat + municipalityTax;
+        data.put("dailyRoomRate", basicRoomRate);
+        data.put("totalRoomRate", reservationRow.totalRoomRate);
+
+        data.put("vat", vat);
+        data.put("municipalityTax", municipalityTax);
+        data.put("grandTotal", grandTotal);
+
+        data.put("cuFlag", 1); // NEW
+
+        SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), "", syncJobType.getId());
+        return syncJobData;
+    }
+
+    public Response fetchNewBookingFromReport(String userId, Account account, SyncJobData syncJobData) {
         String message = "";
         Response response = new Response();
         Response createBookingResponse;
@@ -87,24 +219,27 @@ public class BookingService {
         }
 
         try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
+            List<SyncJobData> syncJobDataList = new ArrayList<>();
+            if(syncJobData != null){
+                syncJobData.setSyncJobId(syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }else{
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+                String currentDate = fileDateFormat.format(new Date());
 
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-//            fileName = "Booking20211212.xml";
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Booking/" + fileName;
-            String localFilePath = account.getName() + "/Booking/";
+                String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+                String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Booking/" + fileName;
+                String localFilePath = account.getName() + "/Booking/";
 
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+                FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
-            List<SyncJobData> syncJobData = new ArrayList<>();
-            if(bookingConfiguration.fileExtension.toLowerCase().equals("xlsx"))
-                syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
-            else if(bookingConfiguration.fileExtension.toLowerCase().equals("xml"))
-                syncJobData = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
+                if(bookingConfiguration.fileExtension.toLowerCase().equals("xlsx"))
+                    syncJobDataList = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+                else if(bookingConfiguration.fileExtension.toLowerCase().equals("xml"))
+                    syncJobDataList = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
+            }
 
-
-            for (SyncJobData syncData : syncJobData) {
+            for (SyncJobData syncData : syncJobDataList) {
                 createBookingResponse = sendNewBooking(syncData, bookingConfiguration);
                 if(createBookingResponse.isStatus()){
                     HashMap<String, Object> data = syncData.getData();
@@ -115,7 +250,7 @@ public class BookingService {
                     syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, createBookingResponse.getMessage());
                 }
             }
-            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), "Sync new booking successfully.", Constants.SUCCESS);
+            syncJobService.saveSyncJobStatus(syncJob, syncJobDataList.size(), "Sync new booking successfully.", Constants.SUCCESS);
 
             response.setStatus(true);
             response.setMessage(message);

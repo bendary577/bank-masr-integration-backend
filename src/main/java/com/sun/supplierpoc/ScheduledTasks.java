@@ -244,7 +244,7 @@ public class ScheduledTasks {
                         }
                     }
                 } else if (syncJobType.getName().equals(Constants.NEW_BOOKING_REPORT)) {
-                    bookingService.fetchNewBookingFromReport("Automated User", account);
+                    bookingService.fetchNewBookingFromReport("Automated User", account, null);
                 } else if (syncJobType.getName().equals(Constants.CANCEL_BOOKING_REPORT)) {
                     bookingService.fetchCancelBookingFromReport("Automated User", account);
                 } else if (syncJobType.getName().equals(Constants.OCCUPANCY_UPDATE_REPORT)) {

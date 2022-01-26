@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 @Service
 public class TalabatRestService {
@@ -88,13 +88,15 @@ public class TalabatRestService {
 
         try {
 
+            Date date = new Date();
+
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             MediaType mediaType = MediaType.parse("application/json");
             RequestBody body = RequestBody.create(mediaType, "{\r\n    \"global_vendor_codes\": [\r\n" +
                     "        \"" + branch +"\"\r\n    ],\r\n" +
-                    "    \"time_from\": \"2022-01-25T00:00:00+02:00\",\r\n" +
-                    "    \"time_to\": \"2022-01-25T23:59:59+02:00\"\r\n}");
+                    "    \"time_from\": \""+ getDate() +"T00:00:00+02:00\",\r\n" +
+                    "    \"time_to\": \""+ getDate() +"T23:59:59+02:00\"\r\n}");
 
             Request request = new Request.Builder()
                     .url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders")
@@ -155,8 +157,8 @@ public class TalabatRestService {
                     "        \"HF_EG;510701\",\r\n" +
                     "        \"HF_EG;625008\",\r\n" +
                     "        \"HF_EG;611425\"\r\n    ],\r\n" +
-                    "    \"time_from\": \"2022-01-25T00:00:00+02:00\",\r\n" +
-                    "    \"time_to\": \"2022-01-25T23:59:59+02:00\"\r\n}");
+                    "    \"time_from\": \""+ getDate() +"T00:00:00+02:00\",\r\n" +
+                    "    \"time_to\": \""+ getDate() +"T23:59:59+02:00\"\r\n}");
             Request request = new Request.Builder()
                     .url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders")
                     .method("POST", body)
@@ -238,5 +240,12 @@ public class TalabatRestService {
         }
 
         return response;
+    }
+
+    public String getDate(){
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        return sdf.format(date);
     }
 }

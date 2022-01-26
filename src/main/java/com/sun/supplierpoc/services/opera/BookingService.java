@@ -20,6 +20,7 @@ import com.sun.supplierpoc.services.SyncJobService;
 import okhttp3.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -62,6 +63,9 @@ public class BookingService {
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
+
+    @Autowired
+    private DBProcessor dbProcessor;
 
     Conversions conversions = new Conversions();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +175,9 @@ public class BookingService {
         /* Payment Info */
         if(nights == 0)
             nights = 1;
+
+            /* Get reservation packages - Query from OPERA DB */
+        dbProcessor.getReservationPackage("24153");
 
         basicRoomRate = reservationRow.totalRoomRate/nights;
 

@@ -20,6 +20,7 @@ import com.sun.supplierpoc.services.SyncJobService;
 import okhttp3.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -63,9 +64,12 @@ public class BookingService {
     @Autowired
     private SyncJobDataService syncJobDataService;
 
+    @Autowired
+    private DBProcessor dbProcessor;
+
     Conversions conversions = new Conversions();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account){
+    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account, boolean newFlag){
         HashMap<String, Object> data = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -172,16 +176,20 @@ public class BookingService {
         if(nights == 0)
             nights = 1;
 
+            /* Get reservation packages - Query from OPERA DB */
+        dbProcessor.getReservationPackage("24153");
+
         basicRoomRate = reservationRow.totalRoomRate/nights;
 
         serviceCharge = (reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100;
         municipalityTax = (reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100;
         vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
 
-        grandTotal = reservationRow.totalRoomRate + vat + municipalityTax;
+        grandTotal = (reservationRow.totalRoomRate + vat + municipalityTax) - reservationRow.discount;
         data.put("dailyRoomRate", basicRoomRate);
         data.put("totalRoomRate", reservationRow.totalRoomRate);
 
+        data.put("discount", reservationRow.discount);
         data.put("vat", vat);
         data.put("municipalityTax", municipalityTax);
         data.put("grandTotal", grandTotal);

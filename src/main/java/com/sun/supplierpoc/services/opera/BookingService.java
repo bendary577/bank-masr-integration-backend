@@ -105,6 +105,7 @@ public class BookingService {
         ArrayList<BookingType> nationalities = generalSettings.getNationalities();
         ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
         ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
+        ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
 
         Date updateDate = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
@@ -116,6 +117,9 @@ public class BookingService {
         data.put("allotedRoomNo", reservationRow.roomNo);
         data.put("noOfRooms", reservationRow.noOfRooms);
         data.put("noOfGuest", reservationRow.children + reservationRow.adults);
+
+        bookingType = conversions.checkBookingTypeExistence(transactionTypes, reservationRow.reservationStatus);
+        data.put("transactionTypeId", bookingType.getTypeId());
 
         bookingType = conversions.checkBookingTypeExistence(roomTypes, reservationRow.roomType);
         data.put("roomType", bookingType.getTypeId());
@@ -197,9 +201,9 @@ public class BookingService {
 
         basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/(nights-1));
 
-        serviceCharge = (reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100;
-        municipalityTax = (reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100;
-        vat = ((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
+        serviceCharge = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100);
+        municipalityTax = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100);
+        vat = conversions.roundUpDouble(((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100);
 //        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
 
         serviceCharge = conversions.roundUpDouble(serviceCharge + totalPackageServiceCharges);
@@ -207,7 +211,7 @@ public class BookingService {
         vat = conversions.roundUpDouble(vat + totalPackageVat);
         reservationRow.totalRoomRate = conversions.roundUpDouble(reservationRow.totalRoomRate + totalPackageAmount);
 
-        grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax + serviceCharge)
+        grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax)
                 - reservationRow.discount);
 
         data.put("dailyRoomRate", basicRoomRate);
@@ -217,7 +221,12 @@ public class BookingService {
         data.put("municipalityTax", municipalityTax);
         data.put("grandTotal", grandTotal);
 
-        data.put("cuFlag", 1); // NEW
+        if(newFlag){
+            data.put("transactionId", "");
+            data.put("cuFlag", 1); // NEW
+        }else {
+            data.put("cuFlag", 2); // Update
+        }
 
         SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), "", syncJobType.getId());
         return syncJobData;

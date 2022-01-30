@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.opera.booking;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 

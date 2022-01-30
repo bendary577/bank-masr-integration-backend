@@ -784,7 +784,7 @@ public class NewBookingExcelHelper {
         return generate;
     }
 
-    private void calculatePackageTax(Package aPackage) {
+    public void calculatePackageTax(Package aPackage) {
         double amount = aPackage.price;
 
         for (Generate generate : aPackage.generates) {

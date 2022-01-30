@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.Package;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.models.opera.booking.ReservationRow;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -83,6 +84,12 @@ public class BookingService {
         double vat = 0;
         double municipalityTax = 0;
         double serviceCharge = 0;
+
+        double totalPackageAmount = 0;
+        double totalPackageVat = 0;
+        double totalPackageMunicipality = 0;
+        double totalPackageServiceCharges = 0;
+
         double grandTotal = 0;
         int nights = 0;
 
@@ -176,19 +183,35 @@ public class BookingService {
         if(nights == 0)
             nights = 1;
 
-            /* Get reservation packages - Query from OPERA DB */
-        dbProcessor.getReservationPackage("24153");
+        /* Get reservation packages - Query from OPERA DB */
+        ArrayList<Package> packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
+                reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
 
-        basicRoomRate = reservationRow.totalRoomRate/nights;
+        for (Package pkg: packages){
+            // Calculate totals
+            totalPackageAmount += pkg.price;
+            totalPackageServiceCharges += pkg.serviceCharge;
+            totalPackageMunicipality += pkg.municipalityTax;
+            totalPackageVat += pkg.vat;
+        }
+
+        basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/(nights-1));
 
         serviceCharge = (reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100;
         municipalityTax = (reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100;
-        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
+        vat = ((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
+//        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
 
-        grandTotal = (reservationRow.totalRoomRate + vat + municipalityTax) - reservationRow.discount;
+        serviceCharge = conversions.roundUpDouble(serviceCharge + totalPackageServiceCharges);
+        municipalityTax = conversions.roundUpDouble(municipalityTax + totalPackageMunicipality);
+        vat = conversions.roundUpDouble(vat + totalPackageVat);
+        reservationRow.totalRoomRate = conversions.roundUpDouble(reservationRow.totalRoomRate + totalPackageAmount);
+
+        grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax + serviceCharge)
+                - reservationRow.discount);
+
         data.put("dailyRoomRate", basicRoomRate);
         data.put("totalRoomRate", reservationRow.totalRoomRate);
-
         data.put("discount", reservationRow.discount);
         data.put("vat", vat);
         data.put("municipalityTax", municipalityTax);

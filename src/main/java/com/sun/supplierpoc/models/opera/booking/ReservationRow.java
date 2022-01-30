@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.opera.booking;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 public class ReservationRow {
@@ -10,6 +11,7 @@ public class ReservationRow {
     public String checkInTime = "";
     public String checkOutTime = "";
 
+    public String reservNameId = "";
     public String reservationStatus = "";
 
     public int nights = 0;
@@ -39,4 +41,6 @@ public class ReservationRow {
 
     public int cancelReason = 0;
     public int cancelWithCharges = 2;
+
+    public ArrayList<Package> packages = new ArrayList<>();
 }

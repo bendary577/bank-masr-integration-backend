@@ -370,6 +370,18 @@ public class Conversions {
         return false;
     }
 
+    public boolean checkPackageExistence(ArrayList<Package> packages, String name, String source, Date consumptionDate){
+        for (Package pkg : packages) {
+            if (pkg.packageName.toLowerCase().equals(name.toLowerCase())
+                    && pkg.source.toLowerCase().equals(source.toLowerCase())
+                    && pkg.consumptionDate.compareTo(consumptionDate) == 0
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public String checkRoomRentType(Date arrivalDate, Date departureDate){
         long diff = departureDate.getTime() - arrivalDate.getTime();
         long numberOfDays = TimeUnit.DAYS.convert(diff, TimeUnit.MILLISECONDS);

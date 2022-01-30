@@ -114,6 +114,7 @@ public class BookingController {
                         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     message = "Could not fetch occupancy Updates.";
                     response.setMessage(message);
                     response.setStatus(false);

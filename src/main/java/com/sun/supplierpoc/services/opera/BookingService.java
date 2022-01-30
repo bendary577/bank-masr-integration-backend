@@ -106,6 +106,11 @@ public class BookingService {
         ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
         ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
         ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
+        ArrayList<String> neglectedRoomTypes = syncJobType.getConfiguration().bookingConfiguration.neglectedRoomTypes;
+
+        /* Check Room Type - Skip neglected room types */
+        if (neglectedRoomTypes.contains(reservationRow.roomType))
+            return null;
 
         Date updateDate = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");

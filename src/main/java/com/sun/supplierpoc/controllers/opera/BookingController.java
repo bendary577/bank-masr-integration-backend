@@ -106,13 +106,17 @@ public class BookingController {
                 try {
                     /* Prepare Sync Object */
                     SyncJobData syncJobData = bookingService.createBookingNewObject(reservation, account, newFlag);
-
-                    response = bookingService.fetchNewBookingFromReport(invokerUser.getId(), account, syncJobData);
-                    if(response.isStatus()){
-                        return ResponseEntity.status(HttpStatus.OK).body(response);
-                    }else {
-                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                    if(syncJobData != null){
+                        response = bookingService.fetchNewBookingFromReport(invokerUser.getId(), account, syncJobData);
+                        if(response.isStatus()){
+                            return ResponseEntity.status(HttpStatus.OK).body(response);
+                        }else {
+                            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+                        }
                     }
+                    response.setMessage("Neglected reservation");
+                    response.setStatus(true);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
                 } catch (Exception e) {
                     e.printStackTrace();
                     message = "Could not fetch occupancy Updates.";

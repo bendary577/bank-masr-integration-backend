@@ -226,11 +226,29 @@ public class BookingService {
         data.put("municipalityTax", municipalityTax);
         data.put("grandTotal", grandTotal);
 
-        if(newFlag){
-            data.put("transactionId", "");
-            data.put("cuFlag", 1); // NEW
-        }else {
-            data.put("cuFlag", 2); // Update
+        data.put("transactionId", "");
+        data.put("cuFlag", 1); // NEW
+
+        if(!newFlag){
+            // check if it was new booking or update
+            ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(reservationRow.bookingNo,
+                    syncJobType.getId());
+            if (list.size() > 0 && !list.get(0).getData().get("transactionId").equals("")){
+                data.put("transactionId", (String) list.get(0).getData().get("transactionId"));
+
+                boolean found = false;
+                for (SyncJobData obj : list) {
+                    if((int) data.get("transactionTypeId") == (int) obj.getData().get("transactionTypeId") &&
+                            obj.getStatus().equals(Constants.SUCCESS)){
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (found){
+                    data.put("cuFlag", 2); // Update
+                }
+            }
         }
 
         SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), "", syncJobType.getId());

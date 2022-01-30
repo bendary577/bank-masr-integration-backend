@@ -16,6 +16,7 @@ import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.FeatureService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import com.sun.supplierpoc.services.opera.BookingService;
+import com.sun.supplierpoc.services.opera.CancelBookingService;
 import com.sun.supplierpoc.services.opera.OccupancyService;
 import com.systemsunion.ssc.client.ComponentException;
 import com.systemsunion.ssc.client.SoapFaultException;
@@ -68,6 +69,8 @@ public class ScheduledTasks {
     private AppUserService appUserService;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private CancelBookingService cancelBookingService;
     @Autowired
     private OccupancyService occupancyService;
     @Autowired
@@ -246,7 +249,7 @@ public class ScheduledTasks {
                 } else if (syncJobType.getName().equals(Constants.NEW_BOOKING_REPORT)) {
                     bookingService.fetchNewBookingFromReport("Automated User", account, null);
                 } else if (syncJobType.getName().equals(Constants.CANCEL_BOOKING_REPORT)) {
-                    bookingService.fetchCancelBookingFromReport("Automated User", account);
+                    cancelBookingService.fetchCancelBookingFromReport("Automated User", account);
                 } else if (syncJobType.getName().equals(Constants.OCCUPANCY_UPDATE_REPORT)) {
                     occupancyService.fetchOccupancyFromReport("Automated User", account, null);
                 } else if (syncJobType.getName().equals(Constants.EXPENSES_DETAILS_REPORT)) {

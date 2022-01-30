@@ -48,6 +48,8 @@ public class OccupancyService {
     @Autowired
     BookingService bookingService;
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     public SyncJobData createOccupancyObject(String roomsAvailable, String roomsOccupied,
                                              String roomsOnMaintenance, String roomsBooked){
         HashMap<String, Object> data = new HashMap<>();

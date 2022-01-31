@@ -3,6 +3,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.components.NewBookingExcelHelper;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
+import com.sun.supplierpoc.models.opera.booking.ExpenseItem;
 import com.sun.supplierpoc.models.opera.booking.Generate;
 import com.sun.supplierpoc.models.opera.booking.Package;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,7 @@ public class DBProcessor {
     public JdbcTemplate createConnection() {
 
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-
+//        192.168.1.18
         dataSource.setUrl("jdbc:oracle:thin:@192.168.1.18:1521/opera");
         dataSource.setUsername("opera");
         dataSource.setPassword("opera");
@@ -139,6 +140,47 @@ public class DBProcessor {
             }
         }
         return packages;
+    }
+
+    public List<Map<String, Object>> getReservationExpenses(String bookingNumber){
+        JdbcTemplate template = createConnection();
+
+        List<Map<String, Object>> rows;
+        ArrayList<ExpenseItem> items = new ArrayList<>();
+
+        String selectQuery =
+                        "SELECT " +
+                        "   reservation_name.confirmation_no as booking_no, " +
+                        "   reservation_name.payment_method, " +
+                        "   financial_transactions.room, " +
+                        "   financial_transactions.net_amount, " +
+                        "   financial_transactions.org_posted_amount, " +
+                        "   financial_transactions.trx_code, " +
+                        "   trx$_codes.description, " +
+                        "   financial_transactions.tc_group, " +
+                        "   financial_transactions.tax_elements, " +
+                        "   financial_transactions.trx_date  " +
+                        "FROM " +
+                        "   reservation_name  " +
+                        "   INNER JOIN " +
+                        "      financial_transactions  " +
+                        "      on financial_transactions.resv_name_id = reservation_name.resv_name_id  " +
+                        "   INNER JOIN " +
+                        "      trx$_codes  " +
+                        "      on financial_transactions.trx_code = trx$_codes.trx_code  " +
+                        "WHERE " +
+                        "financial_transactions.net_amount IS NOT NULL  " +
+                        "AND financial_transactions.room IS NOT NULL " +
+                        "AND reservation_name.confirmation_no = '" + bookingNumber + "'  " +
+                        "AND reservation_name.resv_status = 'CHECKED OUT'  " +
+                        "ORDER BY " +
+                        "   reservation_name.confirmation_no, financial_transactions.business_date, " +
+                        "         financial_transactions.org_posted_amount, " +
+                        "         financial_transactions.net_amount DESC";
+
+        rows = template.queryForList(selectQuery);
+
+        return rows;
     }
 
 }

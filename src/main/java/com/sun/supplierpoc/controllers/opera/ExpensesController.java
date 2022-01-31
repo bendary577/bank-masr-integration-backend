@@ -24,6 +24,12 @@ public class ExpensesController {
     @Autowired
     ExpensesService expensesService;
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @RequestMapping("/opera/test")
+    public void testExpenses(){
+//        expensesService.fetchExpensesDetailsFromDB("18400");
+    }
 
     @RequestMapping("/fetchExpensesDetails")
     @CrossOrigin(origins = "*")

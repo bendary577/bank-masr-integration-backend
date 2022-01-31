@@ -11,6 +11,7 @@ import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.services.ImageService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.opera.BookingService;
+import com.sun.supplierpoc.services.opera.ExpensesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,8 @@ public class BookingController {
     private AccountRepo accountRepo;
     @Autowired
     private BookingService bookingService;
+    @Autowired
+    private ExpensesService expensesService;
     @Autowired
     private ImageService imageService;
     @Autowired
@@ -103,11 +106,19 @@ public class BookingController {
                 Account account = accountOptional.get();
 
                 try {
+//                    if(reservation.reservationStatus.equals("CHECKED OUT")){
+//                        expensesService.fetchExpensesDetailsFromDB(reservation.bookingNo, invokerUser.getId(), account);
+//                    }
+
                     /* Prepare Sync Object */
                     SyncJobData syncJobData = bookingService.createBookingNewObject(reservation, account);
                     if(syncJobData != null){
                         response = bookingService.fetchNewBookingFromReport(invokerUser.getId(), account, syncJobData);
                         if(response.isStatus()){
+                            /* Get reservation expenses in case of checkout */
+                            if(reservation.reservationStatus.equals("")){
+                                expensesService.fetchExpensesDetailsFromDB(reservation.bookingNo, invokerUser.getId(), account);
+                            }
                             return ResponseEntity.status(HttpStatus.OK).body(response);
                         }else {
                             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

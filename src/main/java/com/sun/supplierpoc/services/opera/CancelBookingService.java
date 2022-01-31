@@ -11,6 +11,10 @@ import com.sun.supplierpoc.controllers.opera.MinistryOfTourismResponse;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
+import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.Package;
+import com.sun.supplierpoc.models.opera.booking.RateCode;
+import com.sun.supplierpoc.models.opera.booking.ReservationRow;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -24,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.FileInputStream;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,7 +61,137 @@ public class CancelBookingService {
     @Autowired
     BookingService bookingService;
 
+    @Autowired
+    private DBProcessor dbProcessor;
+
+    Conversions conversions = new Conversions();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public SyncJobData createCancelBookingObject(ReservationRow reservationRow, Account account){
+        HashMap<String, Object> data = new HashMap<>();
+
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
+        SyncJobType cancelSyncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
+
+        String typeName;
+        String tempDate;
+        BookingType bookingType;
+
+        double basicRoomRate = 0;
+        double vat = 0;
+        double municipalityTax = 0;
+        double serviceCharge = 0;
+
+        double totalPackageAmount = 0;
+        double totalPackageVat = 0;
+        double totalPackageMunicipality = 0;
+        double totalPackageServiceCharges = 0;
+
+        double grandTotal = 0;
+        int nights = 0;
+
+        RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = cancelSyncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = cancelSyncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = cancelSyncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
+
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> cancelReasons = generalSettings.getCancelReasons();
+
+        Date updateDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        Date checkIn = null;
+        Date checkOut = null;
+
+        /* Reservation */
+        data.put("bookingNo", reservationRow.bookingNo);
+
+        /* Guest Info - Use Mapping Tables */
+        bookingType = conversions.checkBookingTypeExistence(paymentTypes, reservationRow.paymentType);
+        data.put("paymentType", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(cancelReasons, reservationRow.cancelReason);
+        data.put("cancelReason", bookingType.getTypeId());
+
+        try {
+            if (!reservationRow.checkInDate.equals("")) {
+                try {
+                    checkIn = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.checkInDate);
+                } catch (ParseException e) { // 03-DEC-20
+                    checkIn = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.checkInDate);
+                }
+            }
+        } catch (Exception e) {
+            checkIn = null;
+        }
+
+        if (checkIn != null && checkOut != null) {
+            nights = conversions.getNights(checkIn, checkOut);
+            data.put("roomRentType", conversions.checkRoomRentType(checkIn, checkOut));
+        }
+
+        data.put("totalDurationDays", nights);
+
+        /* Payment Info */
+        if(nights == 0)
+            nights = 1;
+
+        /* Get reservation packages - Query from OPERA DB */
+        ArrayList<Package> packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
+                reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
+
+        for (Package pkg: packages){
+            // Calculate totals
+            totalPackageAmount += pkg.price;
+            totalPackageServiceCharges += pkg.serviceCharge;
+            totalPackageMunicipality += pkg.municipalityTax;
+            totalPackageVat += pkg.vat;
+        }
+
+        basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/(nights-1));
+
+        serviceCharge = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100);
+        municipalityTax = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100);
+        vat = conversions.roundUpDouble(((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100);
+//        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
+
+        serviceCharge = conversions.roundUpDouble(serviceCharge + totalPackageServiceCharges);
+        municipalityTax = conversions.roundUpDouble(municipalityTax + totalPackageMunicipality);
+        vat = conversions.roundUpDouble(vat + totalPackageVat);
+        reservationRow.totalRoomRate = conversions.roundUpDouble(reservationRow.totalRoomRate + totalPackageAmount);
+
+        grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax)
+                - reservationRow.discount);
+
+        data.put("dailyRoomRate", basicRoomRate);
+        data.put("totalRoomRate", reservationRow.totalRoomRate);
+        data.put("discount", reservationRow.discount);
+        data.put("vat", vat);
+        data.put("municipalityTax", municipalityTax);
+        data.put("grandTotal", grandTotal);
+
+        data.put("transactionId", "");
+        data.put("cuFlag", 1); // NEW
+
+        // check if there is booking before cancel it
+        ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(reservationRow.bookingNo,
+                syncJobType.getId());
+        if (list.size() > 0 && !list.get(0).getData().get("transactionId").equals("")){
+            data.put("transactionId", (String) list.get(0).getData().get("transactionId"));
+
+            boolean found = false;
+            list = syncJobDataService.getDataByBookingNoAndSyncType(reservationRow.bookingNo,
+                    cancelSyncJobType.getId());
+            // law fi cancel request abl kada w success
+            if (list.size() > 0){
+                data.put("cuFlag", 2); // Update cancel booking
+            }
+        }
+
+        SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), "", cancelSyncJobType.getId());
+        return syncJobData;
+    }
 
     public Response fetchCancelBookingFromReport(String userId, Account account) {
         String message = "";

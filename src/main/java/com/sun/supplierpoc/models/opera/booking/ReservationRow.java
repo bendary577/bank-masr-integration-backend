@@ -39,7 +39,7 @@ public class ReservationRow {
 
     public Double grandTotal = 0.0;
 
-    public int cancelReason = 0;
+    public String cancelReason = "";
     public int cancelWithCharges = 2;
 
     public ArrayList<Package> packages = new ArrayList<>();

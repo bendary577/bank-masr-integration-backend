@@ -308,7 +308,7 @@ public class AppUserService {
                 applicationUser.setGeneric(true);
 
                 /* save expiry date 2022-01-06T14:28 */
-                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm");
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
                 Date expiry = null;
                 try {
                     expiry = fileDateFormat.parse(expiryDate);
@@ -472,7 +472,7 @@ public class AppUserService {
                 }
 
                 /* save expiry date 2022-01-06T14:28 */
-                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-mm-dd'T'HH:mm");
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm");
                 Date expiry = null;
                 try {
                     expiry = fileDateFormat.parse(expiryDate);

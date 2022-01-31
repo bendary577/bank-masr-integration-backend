@@ -53,7 +53,7 @@ public class CancelBookingController {
 
                 try {
                     /* Prepare Sync Object */
-                    SyncJobData syncJobData = null;
+                    SyncJobData syncJobData = cancelBookingService.createCancelBookingObject(reservation, account);
 
                     if(syncJobData != null){
                         response = cancelBookingService.fetchCancelBookingFromReport(invokerUser.getId(), account);

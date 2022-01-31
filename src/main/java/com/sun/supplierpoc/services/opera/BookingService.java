@@ -70,7 +70,7 @@ public class BookingService {
 
     Conversions conversions = new Conversions();
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account, boolean newFlag){
+    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account){
         HashMap<String, Object> data = new HashMap<>();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -145,7 +145,7 @@ public class BookingService {
         bookingType = conversions.checkBookingTypeExistence(paymentTypes, reservationRow.paymentType);
         data.put("paymentType", bookingType.getTypeId());
 
-        data.put("dateOfBirth", bookingType.getTypeId());
+//        data.put("dateOfBirth", bookingType.getTypeId());
 
         /* Reservation Dates */
         data.put("checkInTime", "140000");
@@ -229,25 +229,24 @@ public class BookingService {
         data.put("transactionId", "");
         data.put("cuFlag", 1); // NEW
 
-        if(!newFlag){
-            // check if it was new booking or update
-            ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(reservationRow.bookingNo,
-                    syncJobType.getId());
-            if (list.size() > 0 && !list.get(0).getData().get("transactionId").equals("")){
-                data.put("transactionId", (String) list.get(0).getData().get("transactionId"));
+        // check if it was new booking or update
+        ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(reservationRow.bookingNo,
+                syncJobType.getId());
 
-                boolean found = false;
-                for (SyncJobData obj : list) {
-                    if((int) data.get("transactionTypeId") == (int) obj.getData().get("transactionTypeId") &&
-                            obj.getStatus().equals(Constants.SUCCESS)){
-                        found = true;
-                        break;
-                    }
-                }
+        if (list.size() > 0 && !list.get(0).getData().get("transactionId").equals("")){
+            data.put("transactionId", (String) list.get(0).getData().get("transactionId"));
 
-                if (found){
-                    data.put("cuFlag", 2); // Update
+            boolean found = false;
+            for (SyncJobData obj : list) {
+                if((int) data.get("transactionTypeId") == (int) obj.getData().get("transactionTypeId") &&
+                        obj.getStatus().equals(Constants.SUCCESS)){
+                    found = true;
+                    break;
                 }
+            }
+
+            if (found){
+                data.put("cuFlag", 2); // Update
             }
         }
 

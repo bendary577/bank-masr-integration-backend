@@ -89,7 +89,6 @@ public class BookingController {
     @PostMapping("/opera/newBooking")
     public ResponseEntity newBooking(
             @RequestBody ReservationRow reservation,
-            @RequestParam(value = "newFlag") boolean newFlag,
             @RequestHeader("Authorization") String authorization
     ) {
         String message = "";
@@ -105,7 +104,7 @@ public class BookingController {
 
                 try {
                     /* Prepare Sync Object */
-                    SyncJobData syncJobData = bookingService.createBookingNewObject(reservation, account, newFlag);
+                    SyncJobData syncJobData = bookingService.createBookingNewObject(reservation, account);
                     if(syncJobData != null){
                         response = bookingService.fetchNewBookingFromReport(invokerUser.getId(), account, syncJobData);
                         if(response.isStatus()){

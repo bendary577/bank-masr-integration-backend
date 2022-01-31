@@ -371,13 +371,9 @@ public class BookingService {
             json.put("gender", String.valueOf(data.get("gender")));
             json.put("checkInTime", String.valueOf(data.get("checkInTime")));
             json.put("checkOutTime", String.valueOf(data.get("checkOutTime")));
-//            json.put("customerType", String.valueOf(data.get("customerType")));
-            json.put("customerType", "1");
-
+            json.put("customerType", String.valueOf(data.get("customerType")));
             json.put("noOfGuest", String.valueOf(data.get("noOfGuest")));
-//            json.put("roomType", String.valueOf(data.get("roomType")));
-            json.put("roomType", "2");
-
+            json.put("roomType", String.valueOf(data.get("roomType")));
             json.put("purposeOfVisit", String.valueOf(data.get("purposeOfVisit")));
             if(!String.valueOf(data.get("dateOfBirth")).equals(""))
                 json.put("dateOfBirth", String.valueOf(data.get("dateOfBirth")));

@@ -208,15 +208,20 @@ public class BookingService {
             nights = 1;
 
         /* Get reservation packages - Query from OPERA DB */
-        ArrayList<Package> packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
-                reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
+        ArrayList<Package> packages = new ArrayList<>();
+        try {
+            packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
+                    reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
 
-        for (Package pkg: packages){
-            // Calculate totals
-            totalPackageAmount += pkg.price;
-            totalPackageServiceCharges += pkg.serviceCharge;
-            totalPackageMunicipality += pkg.municipalityTax;
-            totalPackageVat += pkg.vat;
+            for (Package pkg: packages){
+                // Calculate totals
+                totalPackageAmount += pkg.price;
+                totalPackageServiceCharges += pkg.serviceCharge;
+                totalPackageMunicipality += pkg.municipalityTax;
+                totalPackageVat += pkg.vat;
+            }
+        }catch (Exception e){
+            System.out.println("Can not connect to OPERA DB.");
         }
 
         basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/nights);

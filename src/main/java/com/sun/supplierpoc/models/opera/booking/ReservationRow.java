@@ -10,6 +10,7 @@ public class ReservationRow {
     public String checkOutDate ;
     public String checkInTime = "";
     public String checkOutTime = "";
+    public String cancellationDate = "";
 
     public String reservNameId = "";
     public String reservationStatus = "";
@@ -40,7 +41,7 @@ public class ReservationRow {
     public Double grandTotal = 0.0;
 
     public String cancelReason = "";
-    public int cancelWithCharges = 2;
+    public int cancelWithCharges = 0;
 
     public ArrayList<Package> packages = new ArrayList<>();
 }

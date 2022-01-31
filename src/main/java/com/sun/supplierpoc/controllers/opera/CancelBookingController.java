@@ -56,7 +56,7 @@ public class CancelBookingController {
                     SyncJobData syncJobData = cancelBookingService.createCancelBookingObject(reservation, account);
 
                     if(syncJobData != null){
-                        response = cancelBookingService.fetchCancelBookingFromReport(invokerUser.getId(), account);
+                        response = cancelBookingService.fetchCancelBookingFromReport(invokerUser.getId(), account, syncJobData);
                         if(response.isStatus()){
                             return ResponseEntity.status(HttpStatus.OK).body(response);
                         }else {
@@ -106,7 +106,7 @@ public class CancelBookingController {
             Account account = accountOptional.get();
 
             try {
-                response = cancelBookingService.fetchCancelBookingFromReport(user.getId(), account);
+                response = cancelBookingService.fetchCancelBookingFromReport(user.getId(), account, null);
 
                 if(response.isStatus()){
                     return ResponseEntity.status(HttpStatus.OK).body(response);

@@ -116,6 +116,7 @@ public class BookingService {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
         Date checkIn = null;
         Date checkOut = null;
+        Date birthDate = null;
 
         /* Reservation */
         data.put("bookingNo", reservationRow.bookingNo);
@@ -145,7 +146,21 @@ public class BookingService {
         bookingType = conversions.checkBookingTypeExistence(paymentTypes, reservationRow.paymentType);
         data.put("paymentType", bookingType.getTypeId());
 
-//        data.put("dateOfBirth", bookingType.getTypeId());
+        try {
+            if (!reservationRow.dateOfBirth.equals("")) {
+                try {
+                    birthDate = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.dateOfBirth);
+                } catch (ParseException e) { // 03-DEC-20
+                    birthDate = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.dateOfBirth);
+                }
+                data.put("dateOfBirth", dateFormat.format(birthDate));
+            }else{
+                data.put("dateOfBirth", "");
+            }
+        } catch (Exception e) {
+            birthDate = null;
+            data.put("dateOfBirth", "");
+        }
 
         /* Reservation Dates */
         data.put("checkInTime", "140000");
@@ -204,7 +219,7 @@ public class BookingService {
             totalPackageVat += pkg.vat;
         }
 
-        basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/(nights-1));
+        basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/nights);
 
         serviceCharge = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100);
         municipalityTax = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100);
@@ -356,9 +371,13 @@ public class BookingService {
             json.put("gender", String.valueOf(data.get("gender")));
             json.put("checkInTime", String.valueOf(data.get("checkInTime")));
             json.put("checkOutTime", String.valueOf(data.get("checkOutTime")));
-            json.put("customerType", String.valueOf(data.get("customerType")));
+//            json.put("customerType", String.valueOf(data.get("customerType")));
+            json.put("customerType", "1");
+
             json.put("noOfGuest", String.valueOf(data.get("noOfGuest")));
-            json.put("roomType", String.valueOf(data.get("roomType")));
+//            json.put("roomType", String.valueOf(data.get("roomType")));
+            json.put("roomType", "2");
+
             json.put("purposeOfVisit", String.valueOf(data.get("purposeOfVisit")));
             if(!String.valueOf(data.get("dateOfBirth")).equals(""))
                 json.put("dateOfBirth", String.valueOf(data.get("dateOfBirth")));

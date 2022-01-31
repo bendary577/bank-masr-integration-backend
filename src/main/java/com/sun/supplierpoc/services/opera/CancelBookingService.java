@@ -77,6 +77,7 @@ public class CancelBookingService {
         String tempDate;
         BookingType bookingType;
 
+        double chargeableDays = 0;
         double basicRoomRate = 0;
         double vat = 0;
         double municipalityTax = 0;
@@ -137,33 +138,45 @@ public class CancelBookingService {
         if(nights == 0)
             nights = 1;
 
-        /* Get reservation packages - Query from OPERA DB */
-        ArrayList<Package> packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
-                reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
+        if(reservationRow.cancelWithCharges == 0){ // NO
+            chargeableDays = 0;
+            basicRoomRate = 0;
+            reservationRow.totalRoomRate = 0;
+            reservationRow.discount = 0.0;
+            vat = 0;
+            municipalityTax = 0;
+            grandTotal = 0;
+        }else{
+            /* Get reservation packages - Query from OPERA DB */
+            ArrayList<Package> packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
+                    reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
 
-        for (Package pkg: packages){
-            // Calculate totals
-            totalPackageAmount += pkg.price;
-            totalPackageServiceCharges += pkg.serviceCharge;
-            totalPackageMunicipality += pkg.municipalityTax;
-            totalPackageVat += pkg.vat;
-        }
+            for (Package pkg: packages){
+                // Calculate totals
+                totalPackageAmount += pkg.price;
+                totalPackageServiceCharges += pkg.serviceCharge;
+                totalPackageMunicipality += pkg.municipalityTax;
+                totalPackageVat += pkg.vat;
+            }
 
-        basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/(nights-1));
+            basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/(nights-1));
 
-        serviceCharge = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100);
-        municipalityTax = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100);
-        vat = conversions.roundUpDouble(((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100);
+            serviceCharge = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100);
+            municipalityTax = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100);
+            vat = conversions.roundUpDouble(((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100);
 //        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
 
-        serviceCharge = conversions.roundUpDouble(serviceCharge + totalPackageServiceCharges);
-        municipalityTax = conversions.roundUpDouble(municipalityTax + totalPackageMunicipality);
-        vat = conversions.roundUpDouble(vat + totalPackageVat);
-        reservationRow.totalRoomRate = conversions.roundUpDouble(reservationRow.totalRoomRate + totalPackageAmount);
+            serviceCharge = conversions.roundUpDouble(serviceCharge + totalPackageServiceCharges);
+            municipalityTax = conversions.roundUpDouble(municipalityTax + totalPackageMunicipality);
+            vat = conversions.roundUpDouble(vat + totalPackageVat);
+            reservationRow.totalRoomRate = conversions.roundUpDouble(reservationRow.totalRoomRate + totalPackageAmount);
 
-        grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax)
-                - reservationRow.discount);
+            grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax)
+                    - reservationRow.discount);
+        }
 
+        data.put("cancelWithCharges", reservationRow.cancelWithCharges);
+        data.put("chargeableDays", chargeableDays);
         data.put("dailyRoomRate", basicRoomRate);
         data.put("totalRoomRate", reservationRow.totalRoomRate);
         data.put("discount", reservationRow.discount);
@@ -193,7 +206,7 @@ public class CancelBookingService {
         return syncJobData;
     }
 
-    public Response fetchCancelBookingFromReport(String userId, Account account) {
+    public Response fetchCancelBookingFromReport(String userId, Account account, SyncJobData syncJobData) {
         String message = "";
         Response response = new Response();
         Response cancelBookingResponse;
@@ -221,24 +234,29 @@ public class CancelBookingService {
         }
 
         try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
+            List<SyncJobData> syncJobDataList = new ArrayList<>();
+            if(syncJobData != null){
+                syncJobData.setSyncJobId(syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }else{
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+                String currentDate = fileDateFormat.format(new Date());
 
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/CancelBooking/" + fileName;
-            String localFilePath = account.getName() + "/CancelBooking/";
+                String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+                String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/CancelBooking/" + fileName;
+                String localFilePath = account.getName() + "/CancelBooking/";
 
-            FileInputStream input = bookingService.downloadFile(fileName, filePath, localFilePath);
+                FileInputStream input = bookingService.downloadFile(fileName, filePath, localFilePath);
 
-            List<SyncJobData> syncJobData = new ArrayList<>();
-            if(bookingConfiguration.fileExtension.equals("xlsx"))
-                syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
-                        syncJobType, newBookingSyncType, input);
-            else if(bookingConfiguration.fileExtension.equals("xml"))
-                syncJobData = cancelBookingExcelHelper.getCancelBookingFromXML(syncJob, generalSettings,
-                        syncJobType, newBookingSyncType, localFilePath + fileName);
+                if(bookingConfiguration.fileExtension.equals("xlsx"))
+                    syncJobDataList = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
+                            syncJobType, newBookingSyncType, input);
+                else if(bookingConfiguration.fileExtension.equals("xml"))
+                    syncJobDataList = cancelBookingExcelHelper.getCancelBookingFromXML(syncJob, generalSettings,
+                            syncJobType, newBookingSyncType, localFilePath + fileName);
+            }
 
-            for (SyncJobData syncData : syncJobData) {
+            for (SyncJobData syncData : syncJobDataList) {
                 cancelBookingResponse = sendCancelBooking(syncData, bookingConfiguration);
 
                 if(cancelBookingResponse.isStatus()){
@@ -247,7 +265,7 @@ public class CancelBookingService {
                     syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, cancelBookingResponse.getMessage());
                 }
             }
-            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), "Sync cancel booking successfully.", Constants.SUCCESS);
+            syncJobService.saveSyncJobStatus(syncJob, syncJobDataList.size(), "Sync cancel booking successfully.", Constants.SUCCESS);
 
             message = "Sync cancel booking successfully.";
             response.setStatus(true);

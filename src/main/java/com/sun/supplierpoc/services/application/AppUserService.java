@@ -374,7 +374,8 @@ public class AppUserService {
                 return response;
             }
 
-        } else {
+        }
+        else {
             Optional<ApplicationUser> userOptional = userRepo.findById(userId);
 
             if (userOptional.isPresent()) {
@@ -401,12 +402,22 @@ public class AppUserService {
                     email = "";
                 }
 
+                /* Check if card code is valid */
+                ApplicationUser oldUser = userRepo.findByCodeAndAccountIdAndDeleted(cardCode, account.getId(), false);
+                if(oldUser != null && !applicationUser.getId().equals(oldUser.getId())){
+                    response.put("message", "Card code already used, Please enter a different card code.");
+                    response.put("success", false);
+                    return response;
+                }
+                applicationUser.setCode(cardCode);
+
                 String accountLogo;
                 if(account.getImageUrl() != null && account.getImageUrl().equals("") ) {
                     accountLogo = account.getImageUrl();
                 }else{
                     accountLogo = Constants.ACCOUNT_IMAGE_URL;
                 }
+
                 String mailSubj = generalSettings.getMailSub();
                 String QRPath = "QRCodes/" + applicationUser.getCode() + ".png";
                 applicationUser.setEmail(email);
@@ -425,7 +436,8 @@ public class AppUserService {
                         return response;
                     }
 
-                } else {
+                }
+                else {
                     if (!accompaniedGuestsJson.equals("")) {
                         ObjectMapper objectMapper = new ObjectMapper();
                         List<AccompaniedGuests> accompaniedGuests = null;

@@ -313,7 +313,7 @@ public class AppUserController {
 
     @PostMapping("/walletSystem/checkGuestBalance")
     public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
-                                               @RequestParam("guestCode") String guestCode) {
+                                               @RequestBody String guestCode) {
         HashMap response = new HashMap();
         try {
             InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);

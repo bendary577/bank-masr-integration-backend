@@ -9,11 +9,11 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
 
-//@Document(collation = "transaction")
 public class Transactions {
-
     @Id
     private String id;
+    private String status;
+    private String reason;
     @NotNull(message="Code can't be empty.")
     @NotBlank(message="Code can't be empty.")
     private String code;
@@ -27,14 +27,19 @@ public class Transactions {
     private String revenueCentreName;
     private String employeeId;
     private String checkNumber;
+    @DBRef
     private Group group;
     private ApplicationUser user;
     @NotNull(message="Total Payment can't be empty.")
     private double totalPayment;
+    private double partialPayment;
     private double discountRate;
     private double afterDiscount;
     private int pointsRedeemed;
     private int pointsReward;
+    private String accountId;
+    private String voucherId;
+    private double totalAmount;
 
     public String getId() {
         return id;
@@ -42,6 +47,14 @@ public class Transactions {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Date getTransactionDate() {
@@ -74,6 +87,14 @@ public class Transactions {
 
     public void setTotalPayment(double totalPayment) {
         this.totalPayment = totalPayment;
+    }
+
+    public double getPartialPayment() {
+        return partialPayment;
+    }
+
+    public void setPartialPayment(double partialPayment) {
+        this.partialPayment = partialPayment;
     }
 
     public double getDiscountRate() {
@@ -170,6 +191,38 @@ public class Transactions {
 
     public void setTransactionTypeName(String transactionTypeName) {
         this.transactionTypeName = transactionTypeName;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
+
+    public String getVoucherId() {
+        return voucherId;
+    }
+
+    public void setVoucherId(String voucherId) {
+        this.voucherId = voucherId;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
+
+    public double getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(double totalAmount) {
+        this.totalAmount = totalAmount;
     }
 }
 

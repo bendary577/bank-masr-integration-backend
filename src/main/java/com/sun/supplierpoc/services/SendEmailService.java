@@ -206,33 +206,39 @@ public class SendEmailService {
                     "<div style='box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2); margin-left: 7%; margin-right: 7%;padding-left: 5%;"+
                             "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
                     "<br>";
-            mailContent +=
-                    "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
-                            "   src='" + logoPath + "'>" + "<br> <br> \n";
-            mailContent +=
-                    "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
-                            "   src='" + mailSubj + "'>" + "<br>\n";
+
+            if(!logoPath.equals("")){
+                mailContent +=
+                        "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
+                                "   src='" + logoPath + "'>" + "<br> <br> \n";
+            }
+
+            if(mailSubj != null && !mailSubj.equals("")){
+                mailContent +=
+                        "<img style=\"width:60%; height: 60%; margin-left: 10px;\"" +
+                                "   src='" + mailSubj + "'>" + "<br>\n";
+            }
+
             mailContent +=
 
                     "<p style='text-align:left'>" +
                             "   Dear  " + user.getName() + ",<br><br>" +
-                            "As a privileged guest, benefit from the most rewarding <br>" + "" +
-                            "advantages with great discounts on laundry services or <br>" +
-                            "food and beverages at participating outlets.<br>" + "</p>" +
+                            "</p>";
+            mailContent += account.getEmailConfig().getEmailHeader();
+
+            mailContent +=
                             "<p style=\"text-align: center ;font-weight: bold; margin-button : 10%\"> SCAN QR CODE <br> TO REDEEM OFFER</p>" +
                             "<img src='"+qrCodePath+"' style=\"display: block;margin-left: auto; margin-right: auto;\">" +
-                            "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" + "<br>" +
-                            "<p style='text-align:left'>" +
-                            "<span style='text-align:left; font-weight: bold;'> " + "PARTICIPATING OUTLETS:" + "</span> <br>" +
-                            "SANKOFA RESTAURANT | ONE2ONE BAR | POOL BAR & BBQ" +
-                            "<br> <br>" +
-                            "CONTACT US: +233 302 611 000 / hotel.accra@movenpick.com" +
-                            "</p>" +
-                            "<br>" +
-                            "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
-                                "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
-                            "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
-                            "</div>"+ "</div>";
+                            "<p style='text-align:center; font-weight: bold;'>" + " CODE : " + user.getCode() + "</p>" + "<br>";
+
+
+            mailContent += account.getEmailConfig().getEmailFooter();
+            mailContent +=
+//                    "<div style=\"margin-left: 50%; margin-bottom: 5%; color: #ffffff;  "+
+//                    "text-align: center;font-weight: bold; backGround-color : #ae0a3b; width : 40%; height : 25% \">" +
+//                    "<a style=\"color: #ffffff; text-decoration: none;\" href='https://www.movenpick.com' >VISIT WEBSITE </a>" +
+//                    "</div>"+
+                            "</div>";
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);

@@ -14,22 +14,29 @@ public class ApplicationUser implements Serializable {
     private String id;
     private String accountId;
     private String name;
+    private String code; // must be unique value
+
     private int top;
+    private String mobile;
     private String email;
     private String logoUrl;
     private Group group;
-    private Date creationDate;
-    private String code;
-    private Date lastUpdate;
-    private boolean deleted;
-    private Wallet wallet;
-    private String mobile;
-    private double expire;
+
+    /* Entry System Fields */
     private boolean expired;
     private boolean suspended;
     private boolean generic;
-    private int points = 0;
+    private Wallet wallet;
     private List<AccompaniedGuests> accompaniedGuests;
+
+    /* Reward Points System Fields */
+    private int points = 0;
+
+    private Date expiryDate;
+    private Date birthDate;
+    private Date creationDate;
+    private Date lastUpdate;
+    private boolean deleted;
 
     public String getId() {
         return id;
@@ -143,14 +150,6 @@ public class ApplicationUser implements Serializable {
         this.accompaniedGuests = accompaniedGuests;
     }
 
-    public double getExpire() {
-        return expire;
-    }
-
-    public void setExpire(double expire) {
-        this.expire = expire;
-    }
-
     public boolean isGeneric() {
         return generic;
     }
@@ -181,5 +180,21 @@ public class ApplicationUser implements Serializable {
 
     public void setPoints(int points) {
         this.points = points;
+    }
+
+    public Date getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Date expiryDate) {
+        this.expiryDate = expiryDate;
+    }
+
+    public Date getBirthDate() {
+        return birthDate;
+    }
+
+    public void setBirthDate(Date birthDate) {
+        this.birthDate = birthDate;
     }
 }

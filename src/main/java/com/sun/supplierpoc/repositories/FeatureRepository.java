@@ -10,6 +10,8 @@ import java.util.List;
 public interface FeatureRepository extends MongoRepository<Feature, String> {
 
     boolean existsByName(String name);
+    boolean existsByReference(String reference);
 
+    Feature findByReference(String featureRef);
     List<Feature> findAllByIdIn(List<String> featureIds);
 }

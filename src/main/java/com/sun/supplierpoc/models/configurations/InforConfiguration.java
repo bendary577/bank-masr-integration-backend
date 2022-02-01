@@ -6,4 +6,8 @@ public class InforConfiguration {
     public String currencyCode = "";
     public String postingType = "";
     public String suspenseAccount = "";
+
+    public String taxAccountCode= "";
+    public String taxAccountReference= "";
+    public String noTaxAccountReference= "";
 }

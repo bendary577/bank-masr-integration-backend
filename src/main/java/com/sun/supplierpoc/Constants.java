@@ -17,6 +17,7 @@ public class Constants {
 
     public static String INVALID_LOCATION = "Invalid location";
     public static String INVALID_USER = "Invalid user.";
+    public static String INVALID_ACCOUNT = "Invalid Account Id, Please provide valid id.";
     public static String NOT_ELIGIBLE_ACCOUNT = "This account is not eligible for this action.";
     public static String NOT_ELIGIBLE_USER = "This user is not eligible for this action.";
     public static String ACCOUNT_NOT_EXIST = "This account is not exist.";
@@ -51,6 +52,12 @@ public class Constants {
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
 
+    ///////////////////////////////////////// Transaction Status//////////////////////////////////////////////////////
+    public static String PAID_TRANSACTION = "Paid Transaction";
+    public static String PARTIAL_PAYMENT = "Partial Payment";
+    public static String UNPAID_TRANSACTION = "Unpaid Transaction";
+    public static String INSUFFICIENT_AMOUNT = "Unpaid Transaction - Insufficient Amount";
+
     ///////////////////////////////////////// Operation Types///////////////////////////////////////////////////////////
     public static String CREATE_CHECK = "Create Check";
     public static String OPERA_PAYMENT = "Opera Payment";
@@ -66,10 +73,16 @@ public class Constants {
 
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
-    public static String USE_WALLET = "Wallet";
-    public static String REWARD_POINTS = "Reward Points";
-    public static String POINTS_REDEMPTION = "Points Redemption";
+    public static final String VALID_VOUCHER = "Valid Voucher";
+    public static final String INVALID_VOUCHER = "Invalid Voucher";
+    public static final String CONSUMED = "Consumed";
 
+
+    public static String USE_WALLET = "Wallet";
+    // Guest pay product to get more points
+    public static String REWARD_POINTS = "Reward Points";
+    // Guest use points to get products
+    public static String POINTS_REDEMPTION = "Points Redemption";
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
@@ -97,6 +110,9 @@ public class Constants {
     public static String FTP_METHOD = "ftp";
     public static String SUN_SSC_METHOD = "sun";
     public static String OTHER_METHOD = "other";
+
+    //////////////////////////////////////////////// Sync Per ///////////////////////////////////////////////////////////////
+    public static String MAJOR_GROUP = "majorGroup";
 
     ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 
@@ -149,6 +165,12 @@ public class Constants {
     public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=15";
 
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
+
+    // Items_Group_link
+    public static String OHRA_ITEMS_GROUP_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
+
+    // Items Links
+    public static String OHRA_ITEMS_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/Items/OverviewItem.aspx";
 
     // Daily Detail >> Discount
     public static String DISCOUNT_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=13";
@@ -208,6 +230,9 @@ public class Constants {
     // SALES LINKS
     // Reports >> Tenders Media >> Payments bye Tender Types
     public static String MICROS_TENDERS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
+   // Approved Invoices
+   public static String MICROS_APPROVED_INVOICES = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
+
 
     // Reports >> Taxes >> Daily Taxes by Tax Type
     public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
@@ -229,6 +254,10 @@ public class Constants {
     public static String MICROS_MAJOR_GROUPS_LINK = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/MasterData/MajorGroups/OverviewMajorGroup.aspx";
 
     public static String MICROS_WATE_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100267";
+
+    // CONSUMPTION LINKS >> Inventory Cost of Sales
+    public static String MICROS_CONSUMPTION_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100067";
+
     ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";
@@ -243,24 +272,10 @@ public class Constants {
     public static String LAST_YEAR_YTD = "Last Year YTD";
     public static String FINANCIAL_PERIOD_TO_DATE = "Financial Period to Date";
     public static String FINANCIAL_WEEK_TO_DATE = "Financial Week to Date";
-
+    public static String POWER_SELECT="Power Select";
     //////////////////////////////////////////////// AMAZON PAYMENT /////////////////////////////////////////////////////
 
     public static final String SIGNATURE_PHRASE = "68D2fyokjF9UCt2x45V7SD(@";
-
-    ///////////////////////////////////////////////// Basic Roles ////////////////////////////////////////////////////
-    public static final String ADD_ROLE = "add_role";
-    public static final String ADD_USER_ROLE = "add_user_role";
-    public static final String ADD_USER_FEATURE = "add_user_feature";
-    public static final String ADD_FEATURE = "add_feature";
-    public static  final String CHARGE_WALLET = "charge_wallet";
-    public static  final String DEDUCT_WALLET = "deduct_wallet";
-    public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
-    public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";
-
-    ///////////////////////////////////////////////// Basic Features ////////////////////////////////////////////////////
-    public static final String CUSTOM_REPORT = "generate_custom_report";
-
 
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";

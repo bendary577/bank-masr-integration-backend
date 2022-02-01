@@ -77,7 +77,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().antMatchers("/opera/*");
         web.ignoring().antMatchers("/CreateOrder");
-        web.ignoring().antMatchers("/Simphony/*");
+        web.ignoring().antMatchers("/Simphony/**");
         web.ignoring().antMatchers("/zeal/**");
         web.ignoring().antMatchers("/addAccount");
         web.ignoring().antMatchers("/opera/**");
@@ -85,8 +85,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/amazon/**");
         web.ignoring().antMatchers("/paymentTest");
         web.ignoring().antMatchers("/role/test/**");
+        web.ignoring().antMatchers("/feature/test/**");
         web.ignoring().antMatchers("/rewardPoints/**");
+        web.ignoring().antMatchers("/walletSystem/**");
         web.ignoring().antMatchers("/test/**");
+        web.ignoring().antMatchers("/simphonyLoyalty/voucherTransactions/createVoucherTrans");
     }
 /* @Override
     protected void configure(HttpSecurity http) throws Exception {

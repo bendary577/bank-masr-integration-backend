@@ -111,6 +111,7 @@ public class WastageV2Service {
                     System.out.println("Waiting");
                 }
 
+
                 // Filter Report
                 Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
                         null,"", driver);
@@ -132,7 +133,8 @@ public class WastageV2Service {
                 driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
                 /* Wait until table loaded */
                 try {
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tableContainer")));
+                    WebDriverWait newWait = new WebDriverWait(driver, 10);
+                    newWait.until(ExpectedConditions.visibilityOfElementLocated(By.id("tableContainer_")));
                 } catch (Exception e) {
                     System.out.println("Waiting");
                 }

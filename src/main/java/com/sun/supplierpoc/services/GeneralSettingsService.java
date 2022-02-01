@@ -88,7 +88,7 @@ public class GeneralSettingsService {
 
                         ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
                         driver.switchTo().window(tabs2.get(1));
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+                    //    wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
                         driver.get(Constants.MICROS_OVER_GROUPS_LINK);
                     }else {
                         throw new Exception();

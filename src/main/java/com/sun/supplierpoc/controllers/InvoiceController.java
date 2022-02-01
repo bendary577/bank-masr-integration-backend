@@ -13,6 +13,7 @@ import com.sun.supplierpoc.models.configurations.Item;
 import com.sun.supplierpoc.models.configurations.ItemGroup;
 import com.sun.supplierpoc.models.configurations.OverGroup;
 import com.sun.supplierpoc.repositories.*;
+import com.sun.supplierpoc.seleniumMethods.MicrosFeatures;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.soapModels.Supplier;
@@ -20,6 +21,8 @@ import com.systemsunion.security.IAuthenticationVoucher;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +53,6 @@ public class InvoiceController {
     private AccountRepo accountRepo;
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
     @Autowired
     private InvoiceService invoiceService;
     @Autowired
@@ -62,6 +64,8 @@ public class InvoiceController {
 
     public Conversions conversions = new Conversions();
     public SetupEnvironment setupEnvironment = new SetupEnvironment();
+    MicrosFeatures microsFeatures = new MicrosFeatures();
+
 
     public InvoiceController() {}
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -89,6 +93,7 @@ public class InvoiceController {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
 
     }
+
     public HashMap<String, Object> getApprovedInvoices(String userId, Account account) {
         HashMap<String, Object> response = new HashMap<>();
 
@@ -105,7 +110,7 @@ public class InvoiceController {
 
         String timePeriod = invoiceSyncJobType.getConfiguration().timePeriod;
         String fromDate = invoiceSyncJobType.getConfiguration().fromDate;
-        String toDate = fromDate;
+        String toDate  = invoiceSyncJobType.getConfiguration().toDate;
 
         ArrayList<OverGroup> overGroups ;
         if (!invoiceSyncJobType.getConfiguration().uniqueOverGroupMapping){
@@ -317,6 +322,7 @@ public class InvoiceController {
         DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
         DateFormat monthFormat = new SimpleDateFormat("MM");
 
+
         int tryCount = 2;
 
         /*
@@ -382,6 +388,7 @@ public class InvoiceController {
                     startDate = dateFormat.format(calendar.getTime());
                     syncJobType.getConfiguration().fromDate = startDate;
                     syncJobType.getConfiguration().toDate = startDate;
+                    endDate=startDate;
                     syncJobTypeRepo.save(syncJobType);
                 }else{
                     tryCount = tryCount;
@@ -475,16 +482,52 @@ public class InvoiceController {
 
         try
         {
-            if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)){
-                driver.quit();
+            if(account.getMicrosVersion().equals("version1")) {
+                if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
+                    driver.quit();
 
-                response.put("status", Constants.FAILED);
-                response.put("message", "Invalid username and password.");
-                response.put("costCenters", costCenters);
-                return response;
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("costCenters", costCenters);
+                    return response;
+                }
+
+                driver.get(Constants.COST_CENTERS_LINK);
             }
+            else {
+                if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+                    driver.quit();
+                    response.put("status", Constants.FAILED);
+                    response.put("message", "Invalid username and password.");
+                    response.put("costCenters", costCenters);
+                    return response;
+                }
 
-            driver.get(Constants.COST_CENTERS_LINK);
+                try{
+                    WebDriverWait wait = new WebDriverWait(driver, 30);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("drawerToggleButton")));
+                    wait.until(ExpectedConditions.elementToBeClickable(By.id("drawerToggleButton")));
+                    driver.findElement(By.id("drawerToggleButton")).click();
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
+                    driver.findElement(By.partialLinkText("Inventory Management")).click();
+                    List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
+                    if(elements.size() >= 2){
+                        driver.findElements(By.partialLinkText("Inventory Management")).get(1).click();
+
+                        ArrayList<String> tabs2 = new ArrayList<String> (driver.getWindowHandles());
+                        driver.switchTo().window(tabs2.get(1));
+
+                    //    wait.until(ExpectedConditions.visibilityOfElementLocated(By.name("_ctl32")));
+
+                        driver.get(Constants.MICROS_INVENTORY_BASE_LINK+"/InventoryManagement/MasterData/CostCenters/OverviewCC.aspx");
+                    }else {
+                        throw new Exception();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             driver.findElement(By.name("filterPanel_btnRefresh")).click();
 

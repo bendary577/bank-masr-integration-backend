@@ -1,9 +1,13 @@
 package com.sun.supplierpoc.models.simphony.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MenuItemResponse {
-    private int id;
+    private Long id;
     private String firstName;
     private String secondName;
     private String availability;
@@ -15,11 +19,11 @@ public class MenuItemResponse {
     private double priceLarge;
     private String imageUrl;
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

@@ -28,7 +28,7 @@ public class SimphonyCheck implements Serializable {
 
     private int revenueCenterId;
 
-    private int cashierNumber;
+    private String cashierNumber;
 
     private String tips;
 
@@ -107,11 +107,11 @@ public class SimphonyCheck implements Serializable {
         this.revenueCenterId = revenueCenterId;
     }
 
-    public int getCashierNumber() {
+    public String getCashierNumber() {
         return cashierNumber;
     }
 
-    public void setCashierNumber(int cashierNumber) {
+    public void setCashierNumber(String cashierNumber) {
         this.cashierNumber = cashierNumber;
     }
 

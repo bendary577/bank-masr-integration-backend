@@ -313,7 +313,7 @@ public class AppUserController {
 
     @PostMapping("/walletSystem/checkGuestBalance")
     public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
-                                               @RequestParam("guestCode") String guestCode) {
+                                               @RequestBody String guestCode) {
         HashMap response = new HashMap();
         try {
             InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
@@ -335,10 +335,12 @@ public class AppUserController {
 
             if (account != null) {
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, account.getId());
-                double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+
                 if (applicationUser != null) {
+                    double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+                    guestBalance = conversions.roundUpDouble(guestBalance);
                     response.put("isSuccess", true);
-                    response.put("balance", guestBalance);
+                    response.put("balance", String.valueOf(guestBalance));
                     response.put("message", "");
                 } else {
                     response.put("isSuccess", false);
@@ -358,7 +360,7 @@ public class AppUserController {
 
             response.put("isSuccess", false);
             response.put("balance", 0);
-            response.put("message", "");
+            response.put("message", "This user is not a member of wallet system.");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }

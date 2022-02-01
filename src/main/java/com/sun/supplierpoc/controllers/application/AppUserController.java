@@ -335,10 +335,11 @@ public class AppUserController {
 
             if (account != null) {
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, account.getId());
-                double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+
                 if (applicationUser != null) {
+                    double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
                     response.put("isSuccess", true);
-                    response.put("balance", guestBalance);
+                    response.put("balance", String.valueOf(guestBalance));
                     response.put("message", "");
                 } else {
                     response.put("isSuccess", false);
@@ -358,7 +359,7 @@ public class AppUserController {
 
             response.put("isSuccess", false);
             response.put("balance", 0);
-            response.put("message", "");
+            response.put("message", "This user is not a member of wallet system.");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }

@@ -338,6 +338,7 @@ public class AppUserController {
 
                 if (applicationUser != null) {
                     double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+                    guestBalance = conversions.roundUpDouble(guestBalance);
                     response.put("isSuccess", true);
                     response.put("balance", String.valueOf(guestBalance));
                     response.put("message", "");

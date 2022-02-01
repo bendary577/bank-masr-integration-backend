@@ -182,12 +182,12 @@ public class ActivityService {
                         user.setWallet(wallet);
 
                         if(rest == transaction.getAfterDiscount()){
-                            response.put("rest", transaction.getAfterDiscount());
+                            response.put("rest", conversions.roundUpDouble(transaction.getAfterDiscount()));
                             transaction.setStatus(Constants.INSUFFICIENT_AMOUNT);
                             response.put("message", "Guest has no balance to spend at this revenue center.");
                         }else if(rest != 0){
                             transaction.setStatus(Constants.PARTIAL_PAYMENT);
-                            response.put("message", "Payment added succefully.");
+                            response.put("message", "Payment added successfully.");
                         }else if(rest == 0){
                             transaction.setStatus(Constants.PAID_TRANSACTION);
                             response.put("message", "Check paid successfully.");
@@ -195,9 +195,9 @@ public class ActivityService {
                             transaction.setStatus(Constants.PAID_TRANSACTION);
                         }
 
-                        response.put("rest", rest);
-                        response.put("newBalance", newBalance);
-                        response.put("paidAmount", paidAmount);
+                        response.put("rest", conversions.roundUpDouble(rest));
+                        response.put("newBalance", conversions.roundUpDouble(newBalance));
+                        response.put("paidAmount", conversions.roundUpDouble(paidAmount));
                     }
                     else{
                         transaction.setDiscountRate(0.0);

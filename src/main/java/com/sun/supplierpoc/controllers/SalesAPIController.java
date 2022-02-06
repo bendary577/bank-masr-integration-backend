@@ -13,10 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -57,13 +54,14 @@ public class SalesAPIController {
     @RequestMapping("/getPOSSales")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity<Response> getPOSSalesRequest(Principal principal) throws ParseException, IOException {
+    public ResponseEntity<Response> getPOSSalesRequest(Principal principal,
+                                                       @RequestParam("endpoint") String endpoint) throws ParseException, IOException {
         Response response = new Response();
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-            response = syncPOSSalesInDayRange(user.getId(), account);
+            response = syncPOSSalesInDayRange(user.getId(), account, endpoint);
             if (!response.isStatus()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             } else {
@@ -79,9 +77,16 @@ public class SalesAPIController {
     }
 
 
-    public Response syncPOSSalesInDayRange(String userId, Account account) throws ParseException, IOException {
+    public Response syncPOSSalesInDayRange(String userId, Account account, String endpoint) throws ParseException, IOException {
         Response response = new Response();
-        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES_API_Daily, account.getId(), false);
+
+        SyncJobType syncJobType;
+
+        if(endpoint.equals("Daily")) {
+            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES_API_Daily, account.getId(), false);
+        }else{
+            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES_API_Monthly, account.getId(), false);
+        }
 
         DateFormat dateFormat = new SimpleDateFormat("yyy-MM-dd");
         DateFormat fileDateFormat = new SimpleDateFormat("MMyyy");
@@ -105,7 +110,7 @@ public class SalesAPIController {
                 syncJobType.getConfiguration().toDate = startDate;
                 syncJobTypeRepo.save(syncJobType);
 
-                response = getPOSSales(userId, account);
+                response = getPOSSales(userId, account, endpoint);
 
                 if (response.isStatus() || tryCount == 0) {
                     tryCount = 2;
@@ -141,7 +146,7 @@ public class SalesAPIController {
                 syncJobType.getConfiguration().toDate = startDate;
                 syncJobTypeRepo.save(syncJobType);
 
-                response = getPOSSales(userId, account);
+                response = getPOSSales(userId, account, endpoint);
                 if (response.isStatus()) {
                     calendar.add(Calendar.DATE, +1);
                     numDays--;
@@ -176,17 +181,23 @@ public class SalesAPIController {
                 syncJobTypeRepo.save(syncJobType);
             }
 
-            response = getPOSSales(userId, account);
+            response = getPOSSales(userId, account, endpoint);
         }
         return response;
     }
 
-    private Response getPOSSales(String userId, Account account) {
+    private Response getPOSSales(String userId, Account account, String endpoint) {
         Response response = new Response();
         SyncJob syncJob = null;
         try {
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES_API_Daily, account.getId(), false);
+            SyncJobType syncJobType;
+
+            if(endpoint.equals("Daily")) {
+                syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES_API_Daily, account.getId(), false);
+            }else{
+                syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.SALES_API_Monthly, account.getId(), false);
+            }
 
             SalesAPIConfig configuration = syncJobType.getConfiguration().salesAPIConfig;
             ArrayList<SalesAPIStatistics> statistics = configuration.statistics;
@@ -229,9 +240,6 @@ public class SalesAPIController {
                     salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account);
                 } else {
                     salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account);
-
-//                            salesV2Services.getSalesData(syncJobType, locations,
-//                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
                 }
 
                 if (salesResponse.isStatus()) {
@@ -244,7 +252,11 @@ public class SalesAPIController {
                         ArrayList<JournalBatch> journalBatches = salesResponse.getJournalBatches();
 
                         for(JournalBatch journalBatch : journalBatches) {
-                            response = syncSalesWebService.syncSalesDailyAPI(journalBatch.getSalesAPIStatistics(), configuration);
+                            if(configuration.apiEndpoint.equals("dailysales")) {
+                                response = syncSalesWebService.syncSalesDailyAPI(journalBatch.getSalesAPIStatistics(), configuration);
+                            }else{
+                                response = syncSalesWebService.syncSalesMonthlyAPI(journalBatch.getSalesAPIStatistics(), configuration);
+                            }
                         }
 
                         if (response.isStatus()) {

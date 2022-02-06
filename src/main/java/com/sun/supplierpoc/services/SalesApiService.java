@@ -138,13 +138,18 @@ public class SalesApiService {
     private Response getSalesStatistics(String businessDate, String fromDate, String toDate, CostCenter location,
                                         ArrayList<SalesAPIStatistics> salesStatistics, WebDriver driver) {
         Response response = new Response();
-        SalesAPIStatistics salesAPIStatistics = conversions.checkSalesAPIStatisticsExistence(location.locationName, salesStatistics);
+        SalesAPIStatistics salesAPIStatistics;
+        if(!location.locationName.equals("")){
+             salesAPIStatistics = conversions.checkSalesAPIStatisticsExistence(location.locationName, salesStatistics);
+        }else{
+            salesAPIStatistics = salesStatistics.get(0);
+        }
 
         salesAPIStatistics.dateFrom = fromDate;
         salesAPIStatistics.dateTo = toDate;
 
         if(!salesAPIStatistics.checked){
-            response.setStatus(true);
+            response.setStatus(false);
             response.setMessage("Not Configured");
             return response;
         }
@@ -153,7 +158,7 @@ public class SalesApiService {
         if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
-            driver.get(Constants.SALES_SUMMARY_LINK);
+//            driver.get(Constants.SALES_SUMMARY_LINK);
 
             WebElement statTable = driver.findElement(By.xpath("/html/body/div[6]/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));

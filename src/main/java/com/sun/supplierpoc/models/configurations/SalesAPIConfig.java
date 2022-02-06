@@ -6,6 +6,8 @@ public class SalesAPIConfig {
 
     public String apiKey  = "";
 
+    public String apiEndpoint = "";
+
     public ArrayList<SalesAPIStatistics> statistics = new ArrayList<>();
 
 }

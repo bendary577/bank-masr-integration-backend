@@ -78,6 +78,8 @@ public class ScheduledTasks {
     private ExpensesService expensesService;
     @Autowired
     private FeatureService featureService;
+    @Autowired
+    private SalesAPIController salesAPIController;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -257,6 +259,10 @@ public class ScheduledTasks {
                     occupancyService.fetchOccupancyFromReport("Automated User", account, null);
                 } else if (syncJobType.getName().equals(Constants.EXPENSES_DETAILS_REPORT)) {
                     expensesService.fetchExpensesDetailsFromReport("Automated User", account);
+                } else if (syncJobType.getName().equals(Constants.SALES_API_Daily)) {
+                    salesAPIController.syncPOSSalesInDayRange("Automated User", account, "Daily");
+                } else if (syncJobType.getName().equals(Constants.SALES_API_Monthly)) {
+                    salesAPIController.syncPOSSalesInDayRange("Automated User", account, "monthly");
                 }
 
             }

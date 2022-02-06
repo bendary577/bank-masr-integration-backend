@@ -46,6 +46,7 @@ public class Configuration implements Serializable {
     public InforConfiguration inforConfiguration = new InforConfiguration();
 
     public SalesConfiguration salesConfiguration = new SalesConfiguration();
+    public SalesAPIConfig salesAPIConfig = new SalesAPIConfig();
     public SupplierConfiguration supplierConfiguration = new SupplierConfiguration();
     public InvoiceConfiguration invoiceConfiguration = new InvoiceConfiguration();
     public WastageConfiguration wastageConfiguration = new WastageConfiguration();
@@ -332,5 +333,13 @@ public class Configuration implements Serializable {
 
     public void setBookingConfiguration(BookingConfiguration bookingConfiguration) {
         this.bookingConfiguration = bookingConfiguration;
+    }
+
+    public SalesAPIConfig getSalesAPIConfig() {
+        return salesAPIConfig;
+    }
+
+    public void setSalesAPIConfig(SalesAPIConfig salesAPIConfig) {
+        this.salesAPIConfig = salesAPIConfig;
     }
 }

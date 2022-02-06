@@ -48,6 +48,8 @@ public class Constants {
     public static String CONSUMPTION = "Consumption";
     public static String COST_OF_GOODS = "Cost of Goods";
     public static String SALES = "POS Sales";
+    public static String SALES_API_Daily = "POS Sales API Daily";
+    public static String SALES_API_Monthly = "POS Sales API Monthly";
     public static String WASTAGE = "Wastage";
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
@@ -116,7 +118,8 @@ public class Constants {
 
     ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 
-        public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+    public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+    public static String OHRA_GCS_LINK  = "http://217.165.206.147";
     public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
     public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
 
@@ -165,6 +168,8 @@ public class Constants {
     public static String OVER_GROUP_GROSS_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=15";
 
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
+
+    public static String SYSTEM_SALES_REPORT_LINK_GCS = OHRA_GCS_LINK + "/finengine/reportAction.do?method=run&reportID=1136";
 
     // Items_Group_link
     public static String OHRA_ITEMS_GROUP_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";

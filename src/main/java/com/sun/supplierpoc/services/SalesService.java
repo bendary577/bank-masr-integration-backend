@@ -7,7 +7,6 @@ import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
-import com.sun.supplierpoc.seleniumMethods.SetupEnvironment;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;

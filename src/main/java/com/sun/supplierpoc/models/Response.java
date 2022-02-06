@@ -25,6 +25,7 @@ public class Response<T> {
     private ArrayList<DbMenuItemDefinition> menuItems = new ArrayList<>();
     private ArrayList<DbMenuItemClass> menuItemClasses = new ArrayList<>();
     private SalesStatistics salesStatistics = new SalesStatistics();
+    private SalesAPIStatistics salesAPIStatistics = new SalesAPIStatistics();
     private ArrayList<JournalBatch> journalBatches = new ArrayList<>();
 
 
@@ -217,5 +218,13 @@ public class Response<T> {
 
     public void setSimphonyPaymentRes(SimphonyPaymentRes simphonyPaymentRes) {
         this.simphonyPaymentRes = simphonyPaymentRes;
+    }
+
+    public SalesAPIStatistics getSalesAPIStatistics() {
+        return salesAPIStatistics;
+    }
+
+    public void setSalesAPIStatistics(SalesAPIStatistics salesAPIStatistics) {
+        this.salesAPIStatistics = salesAPIStatistics;
     }
 }

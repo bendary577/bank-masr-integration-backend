@@ -149,6 +149,15 @@ public class Conversions {
         return new SalesStatistics();
     }
 
+    public SalesAPIStatistics checkSalesAPIStatisticsExistence(String location, ArrayList<SalesAPIStatistics> salesAPIStatistics){
+        for (SalesAPIStatistics tempSalesAPIStatistics : salesAPIStatistics) {
+            if (tempSalesAPIStatistics.location.toLowerCase().equals(location.toLowerCase())) {
+                return tempSalesAPIStatistics;
+            }
+        }
+        return new SalesAPIStatistics();
+    }
+
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
         for (ItemGroup itemGroup : itemGroups) {
             if (itemGroup.getItemGroup().toLowerCase().equals(itemGroupName.toLowerCase())) {

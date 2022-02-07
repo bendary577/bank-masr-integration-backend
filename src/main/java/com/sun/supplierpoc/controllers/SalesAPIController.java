@@ -179,6 +179,19 @@ public class SalesAPIController {
 
                 syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
                 syncJobTypeRepo.save(syncJobType);
+            }else if (syncJobType.getConfiguration().timePeriod.equals(Constants.LAST_MONTH)) {
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.setTime(new Date());
+                calendar.set(2022, Calendar.MONTH -2 , 1);
+                syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
+
+                calendar.setTime(new Date());
+                calendar.set(2022, Calendar.MONTH -1 , 1);
+                calendar.add(Calendar.DATE, -1);
+                syncJobType.getConfiguration().toDate = dateFormat.format(calendar.getTime());
+
+                syncJobTypeRepo.save(syncJobType);
             }
 
             response = getPOSSales(userId, account, endpoint);

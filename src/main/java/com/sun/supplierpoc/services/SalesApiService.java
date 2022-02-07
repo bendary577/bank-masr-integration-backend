@@ -13,6 +13,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -33,9 +34,9 @@ public class SalesApiService {
     @Autowired
     SyncJobDataService syncJobDataService;
 
-    private Conversions conversions = new Conversions();
+    private final Conversions conversions = new Conversions();
 
-    private SetupEnvironment setupEnvironment = new SetupEnvironment();
+    private final SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCentersLocation,
                                  ArrayList<SalesAPIStatistics> statistics, Account account) {
@@ -74,23 +75,23 @@ public class SalesApiService {
 
                 Alert al = driver.switchTo().alert();
                 al.accept();
-            } catch (Exception Ex) { }
+            } catch (Exception Ex) {
+            }
 
-            if (costCentersLocation.size() > 0){
+            if (costCentersLocation.size() > 0) {
                 for (CostCenter costCenter : costCentersLocation) {
-                    if(costCenter.checked){
+                    if (costCenter.checked) {
                         callSalesFunction(statistics, timePeriod, fromDate, toDate, costCenter,
                                 journalBatches, driver, response);
-                        if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)){
+                        if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)) {
                             return response;
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 callSalesFunction(statistics, timePeriod, fromDate, toDate, new CostCenter(),
                         journalBatches, driver, response);
-                if (!response.isStatus()){
+                if (!response.isStatus()) {
                     return response;
                 }
             }
@@ -113,13 +114,13 @@ public class SalesApiService {
 
     private void callSalesFunction(ArrayList<SalesAPIStatistics> salesAPIStatistics, String timePeriod, String fromDate, String toDate,
                                    CostCenter costCenter, ArrayList<JournalBatch> journalBatches, WebDriver driver,
-                                   Response response){
+                                   Response response) {
 
         JournalBatch journalBatch = new JournalBatch();
 
         // Get statistics
         Response statisticsResponse = new Response();
-        if (salesAPIStatistics.size() > 0){
+        if (salesAPIStatistics.size() > 0) {
             statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, salesAPIStatistics, driver);
             if (checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
         }
@@ -139,48 +140,61 @@ public class SalesApiService {
                                         ArrayList<SalesAPIStatistics> salesStatistics, WebDriver driver) {
         Response response = new Response();
         SalesAPIStatistics salesAPIStatistics;
-        if(!location.locationName.equals("")){
-             salesAPIStatistics = conversions.checkSalesAPIStatisticsExistence(location.locationName, salesStatistics);
-        }else{
+        if (!location.locationName.equals("")) {
+            salesAPIStatistics = conversions.checkSalesAPIStatisticsExistence(location.locationName, salesStatistics);
+        } else {
             salesAPIStatistics = salesStatistics.get(0);
         }
 
         salesAPIStatistics.dateFrom = fromDate;
         salesAPIStatistics.dateTo = toDate;
 
-        if(!salesAPIStatistics.checked){
+        if (!salesAPIStatistics.checked) {
             response.setStatus(false);
             response.setMessage("Not Configured");
             return response;
         }
 
         driver.get(Constants.SYSTEM_SALES_REPORT_LINK_GCS);
-        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) return response;
 
         try {
-//            driver.get(Constants.SALES_SUMMARY_LINK);
+            WebDriverWait wait = new WebDriverWait(driver, 2);
+            wait.until(ExpectedConditions.alertIsPresent());
+        }catch(Exception e){
+            LoggerFactory.getLogger("Sales").info("No Alert");
+        }
 
-            WebElement statTable = driver.findElement(By.xpath("/html/body/div[6]/table"));
+        if (setupEnvironment.runReport(businessDate, fromDate, toDate, location, new RevenueCenter(), driver, response)) {
+            return response;
+        }
+
+        try {
+
+            driver.get(Constants.SALES_SUMMARY_API_LINK);
+
+            try {
+                WebDriverWait wait = new WebDriverWait(driver, 2);
+                wait.until(ExpectedConditions.alertIsPresent());
+            }catch(Exception e){
+                LoggerFactory.getLogger("Sales").info("No Alert");
+            }
+
+            WebElement statTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[2]/table"));
             List<WebElement> rows = statTable.findElements(By.tagName("tr"));
 
-            if (rows.size() < 1){
-                response.setStatus(true);
-                response.setMessage("There is no statistics info in this location");
-                return response;
+            if (rows.size() < 1) {return response;
             }
-            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
-            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 1);
-            salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(columns.indexOf("checks")));
+            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 2);
+            salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(1));
 
             WebElement netTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
             List<WebElement> netRows = netTable.findElements(By.tagName("tr"));
 
-            if (rows.size() < 1){
+            if (rows.size() < 1) {
                 response.setStatus(true);
                 response.setMessage("There is no statistics info in this location");
                 return response;
             }
-            columns = setupEnvironment.getTableColumns(netRows, false, 0);
             statisticValues = setupEnvironment.getTableColumns(netRows, false, 7);
 
             salesAPIStatistics.NetSales = conversions.filterString(statisticValues.get(2));
@@ -201,9 +215,9 @@ public class SalesApiService {
             response.setMessage(reportResponse.getMessage());
             response.setStatus(false);
 
-            if(reportResponse.getMessage().equals(Constants.INVALID_BUSINESS_DATE)){
+            if (reportResponse.getMessage().equals(Constants.INVALID_BUSINESS_DATE)) {
                 driver.quit();
-            } else if(reportResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
+            } else if (reportResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)) {
                 driver.quit();
             } else return !reportResponse.getMessage().equals(Constants.INVALID_REVENUE_CENTER);
             return true;
@@ -212,17 +226,17 @@ public class SalesApiService {
     }
 
     public ArrayList<JournalBatch> saveSalesJournalBatchesData(Response salesResponse, SyncJob syncJob,
-                                                               Configuration configuration , Account account) {
+                                                               Configuration configuration, Account account) {
         ArrayList<JournalBatch> addedJournalBatches = new ArrayList<>();
 
         ArrayList<JournalBatch> journalBatches = salesResponse.getJournalBatches();
         for (JournalBatch journalBatch : journalBatches) {
 
             // Statistics
-            if(journalBatch.getSalesAPIStatistics().checked){
+            if (journalBatch.getSalesAPIStatistics().checked) {
                 HashMap<String, Object> statisticsData = new HashMap<>();
 
-                SalesAPIStatistics salesAPIStatistics = journalBatch.getSalesAPIStatistics();;
+                SalesAPIStatistics salesAPIStatistics = journalBatch.getSalesAPIStatistics();
 
                 statisticsData.put("location", salesAPIStatistics.location);
                 statisticsData.put("leaseCode", salesAPIStatistics.leaseCode);
@@ -247,7 +261,7 @@ public class SalesApiService {
     }
 
 
-    public void updateJournalBatchStatus(JournalBatch journalBatch, HashMap<String, Object> response){
+    public void updateJournalBatchStatus(JournalBatch journalBatch, HashMap<String, Object> response) {
         SyncJobData salesDifferentData = journalBatch.getSalesDifferentData();
         ArrayList<SyncJobData> salesTaxData = journalBatch.getSalesTaxData();
         ArrayList<SyncJobData> salesTenderData = journalBatch.getSalesTenderData();
@@ -256,11 +270,10 @@ public class SalesApiService {
         String reason = "";
         String status = "";
 
-        if ((Boolean) response.get("status")){
+        if ((Boolean) response.get("status")) {
             status = Constants.SUCCESS;
             reason = "";
-        }
-        else {
+        } else {
             status = Constants.FAILED;
             reason = (String) response.get("message");
         }

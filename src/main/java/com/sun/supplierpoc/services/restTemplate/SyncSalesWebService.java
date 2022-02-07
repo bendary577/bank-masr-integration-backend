@@ -66,7 +66,7 @@ public class SyncSalesWebService {
 
         Response response = new Response();
         String message = "";
-        String url = "https://apidev.emaar.com/etenantsales/dailysales";
+        String url = "https://apidev.emaar.com/etenantsales/casualsales";
         try {
             OkHttpClient client = new OkHttpClient();
 
@@ -76,8 +76,10 @@ public class SyncSalesWebService {
                             "{\n    \"SalesInfo\": [\n " +
                             "     {\n        \"UnitNo\": \"" + salesAPIStatistics.unitNo +"\",\n " +
                             "       \"LeaseCode\": \""+salesAPIStatistics.leaseCode+"\",\n " +
-                            "       \"SalesDate\": \""+salesAPIStatistics.dateFrom+"\",\n " +
+                            "       \"SalesDateFrom\": \""+salesAPIStatistics.dateFrom+"\",\n " +
+                            "       \"SalesDateTo\": \""+salesAPIStatistics.dateTo+"\",\n " +
                             "       \"TransactionCount\": "+salesAPIStatistics.NoChecks+",\n  " +
+                            "       \"Remarks\": Remarks,\n  " +
                             "      \"NetSales\": "+salesAPIStatistics.NetSales+"\n      }\n    ]\n  }\n}");
             Request request = new Request.Builder()
                     .url(url)

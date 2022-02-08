@@ -184,7 +184,7 @@ public class SalesApiService {
 
             if (rows.size() < 1) {return response;
             }
-            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 2);
+            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 3);
             salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(1));
 
             WebElement netTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));

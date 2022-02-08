@@ -1,14 +1,14 @@
 package com.sun.supplierpoc.services.restTemplate;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
-import com.sun.supplierpoc.models.talabat.Order;
-import com.sun.supplierpoc.models.talabat.TalabatOrder;
-import com.sun.supplierpoc.models.talabat.Token;
+import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
+import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
+import com.sun.supplierpoc.models.talabat.login.Token;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.*;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -193,7 +193,7 @@ public class TalabatRestService {
         return response;
     }
 
-    public Response getOrderById(Order order, Token token) {
+    public Response getOrderById(RestOrder order, Token token) {
 
         Response response = new Response();
         String message = "";
@@ -217,10 +217,13 @@ public class TalabatRestService {
             okhttp3.Response orderResponse = client.newCall(request).execute();
 
             if (orderResponse.code() == 200){
-                Gson gson = new Gson();
 
-                HashMap talabatOrders = gson.fromJson(orderResponse.body().string(),
-                        HashMap.class);
+                Gson gson = new GsonBuilder()
+                        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                        .create();
+
+                TalabatOrder talabatOrders = gson.fromJson(orderResponse.body().string(),
+                        TalabatOrder.class);
 
 
                 response.setStatus(true);
@@ -248,4 +251,7 @@ public class TalabatRestService {
         sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
         return sdf.format(date);
     }
+
+
+
 }

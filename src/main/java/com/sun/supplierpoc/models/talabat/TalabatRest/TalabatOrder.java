@@ -1,0 +1,47 @@
+package com.sun.supplierpoc.models.talabat.TalabatRest;
+
+import java.util.List;
+
+public class TalabatOrder extends com.sun.supplierpoc.models.Order {
+
+    List<RestOrder> orders;
+
+    private Order order;
+
+    private List<OrderStatus> orderStatuses;
+
+    private List<Object> previousVersions;
+
+    public void setOrders(List<RestOrder> orders) {
+        this.orders = orders;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public List<OrderStatus> getOrderStatuses() {
+        return orderStatuses;
+    }
+
+    public void setOrderStatuses(List<OrderStatus> orderStatuses) {
+        this.orderStatuses = orderStatuses;
+    }
+
+    public List<Object> getPreviousVersions() {
+        return previousVersions;
+    }
+
+    public void setPreviousVersions(List<Object> previousVersions) {
+        this.previousVersions = previousVersions;
+    }
+
+    public List<RestOrder> getOrders() {
+        return orders;
+    }
+
+}

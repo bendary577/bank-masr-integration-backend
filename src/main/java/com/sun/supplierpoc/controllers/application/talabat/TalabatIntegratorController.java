@@ -1,14 +1,17 @@
 package com.sun.supplierpoc.controllers.application.talabat;
 
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.talabat.Order;
-import com.sun.supplierpoc.models.talabat.TalabatOrder;
-import com.sun.supplierpoc.models.talabat.Token;
+
+import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
+import com.sun.supplierpoc.models.talabat.login.Token;
+import com.sun.supplierpoc.services.TalabatIntegratorService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/talabat")
@@ -16,6 +19,9 @@ public class TalabatIntegratorController {
 
     @Autowired
     private TalabatRestService talabatRestService;
+
+    @Autowired
+    private TalabatIntegratorService talabatIntegratorService;
 
     @GetMapping
     public ResponseEntity<?> login(){
@@ -42,11 +48,13 @@ public class TalabatIntegratorController {
 
         Response response = talabatRestService.getOrders(token);
 
+        talabatIntegratorService.sendReceivedOrders( (List<RestOrder>) response.getData() )
+
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/order")
-    public ResponseEntity<?> getOrderById(@RequestBody Order order){
+    public ResponseEntity<?> getOrderById(@RequestBody RestOrder order){
 
         Response response = talabatRestService.loginRequest();
 
@@ -54,4 +62,5 @@ public class TalabatIntegratorController {
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
 }

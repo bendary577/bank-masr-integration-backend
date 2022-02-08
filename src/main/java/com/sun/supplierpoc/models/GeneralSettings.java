@@ -7,6 +7,9 @@ import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
+import com.sun.supplierpoc.models.talabat.BranchMapping;
+import com.sun.supplierpoc.models.talabat.ComboMapping;
+import com.sun.supplierpoc.models.talabat.ProductsMapping;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
@@ -41,6 +44,9 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
+    private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
+    private ArrayList<ComboMapping> comboMappings = new ArrayList<>();
+    private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
 
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
@@ -91,7 +97,6 @@ public class GeneralSettings {
     public void setItemGroups(ArrayList<ItemGroup> itemGroups) {
         this.itemGroups = itemGroups;
     }
-
 
     public ArrayList<MajorGroup> getMajorGroups() {
         return majorGroups;

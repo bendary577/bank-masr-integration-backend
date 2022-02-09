@@ -1,22 +1,19 @@
 package com.sun.supplierpoc.models.talabat.foodics;
 
-import com.sun.supplierpoc.models.talabat.foodics.*;
-
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 
-public class FoodIcsOrder {
+public class FoodicsOrder {
 
     private Integer guests;
     private Integer type;
     private String branchId;
     private Integer discountType;
     private String discountId;
-    private Integer discountAmount;
+    private Double discountAmount;
     private String kitchenNotes;
-    private String dueAt;
+    private Date dueAt;
     private String tableId;
     private String customerNotes;
     private String driverId;
@@ -72,11 +69,11 @@ public class FoodIcsOrder {
         this.discountId = discountId;
     }
 
-    public Integer getDiscountAmount() {
+    public Double getDiscountAmount() {
         return discountAmount;
     }
 
-    public void setDiscountAmount(Integer discountAmount) {
+    public void setDiscountAmount(Double discountAmount) {
         this.discountAmount = discountAmount;
     }
 
@@ -88,11 +85,11 @@ public class FoodIcsOrder {
         this.kitchenNotes = kitchenNotes;
     }
 
-    public String getDueAt() {
+    public Date getDueAt() {
         return dueAt;
     }
 
-    public void setDueAt(String dueAt) {
+    public void setDueAt(Date dueAt) {
         this.dueAt = dueAt;
     }
 

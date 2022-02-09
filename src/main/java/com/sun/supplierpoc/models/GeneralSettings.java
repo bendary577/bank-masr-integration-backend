@@ -8,7 +8,7 @@ import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.models.talabat.BranchMapping;
-import com.sun.supplierpoc.models.talabat.ComboMapping;
+import com.sun.supplierpoc.models.talabat.DiscountMapping;
 import com.sun.supplierpoc.models.talabat.ProductsMapping;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
@@ -45,8 +45,8 @@ public class GeneralSettings {
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
-    private ArrayList<ComboMapping> comboMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
+    private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
 
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
@@ -322,6 +322,30 @@ public class GeneralSettings {
 
     public void setBirthdayGift(BirthdayGift birthdayGift) {
         this.birthdayGift = birthdayGift;
+    }
+
+    public ArrayList<ProductsMapping> getProductsMappings() {
+        return productsMappings;
+    }
+
+    public void setProductsMappings(ArrayList<ProductsMapping> productsMappings) {
+        this.productsMappings = productsMappings;
+    }
+
+    public ArrayList<BranchMapping> getBranchMappings() {
+        return branchMappings;
+    }
+
+    public void setBranchMappings(ArrayList<BranchMapping> branchMappings) {
+        this.branchMappings = branchMappings;
+    }
+
+    public ArrayList<DiscountMapping> getDiscountMappings() {
+        return discountMappings;
+    }
+
+    public void setDiscountMappings(ArrayList<DiscountMapping> discountMappings) {
+        this.discountMappings = discountMappings;
     }
 }
 

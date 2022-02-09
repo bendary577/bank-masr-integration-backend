@@ -2,24 +2,24 @@ package com.sun.supplierpoc.models.talabat.TalabatRest;
 
 public class Payment {
 
-    private String total;
-    private String discount;
+    private Double total;
+    private Double discount;
     private String voucher;
     private String minimumOrderValueFee;
 
-    public String getTotal() {
+    public Double getTotal() {
         return total;
     }
 
-    public void setTotal(String total) {
+    public void setTotal(Double total) {
         this.total = total;
     }
 
-    public String getDiscount() {
+    public Double getDiscount() {
         return discount;
     }
 
-    public void setDiscount(String discount) {
+    public void setDiscount(Double discount) {
         this.discount = discount;
     }
 

@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models.talabat.TalabatRest;
 
 
+import java.util.Date;
 import java.util.List;
 
 public class Order {
@@ -9,7 +10,7 @@ public class Order {
     private String orderId;
     private String globalVendorCode;
     private String vendorName;
-    private String orderTimestamp;
+    private Date orderTimestamp;
     private String total;
     private String isBillable;
     private Payment payment;
@@ -50,11 +51,11 @@ public class Order {
         this.vendorName = vendorName;
     }
 
-    public String getOrderTimestamp() {
+    public Date getOrderTimestamp() {
         return orderTimestamp;
     }
 
-    public void setOrderTimestamp(String orderTimestamp) {
+    public void setOrderTimestamp(Date orderTimestamp) {
         this.orderTimestamp = orderTimestamp;
     }
 

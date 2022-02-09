@@ -5,6 +5,7 @@ public class ProductsMapping {
     private String name;
     private String foodIcsProductId;
     private String talabatProductId;
+    private String type;
 
     public String getName() {
         return name;
@@ -28,5 +29,13 @@ public class ProductsMapping {
 
     public void setTalabatProductId(String talabatProductId) {
         this.talabatProductId = talabatProductId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

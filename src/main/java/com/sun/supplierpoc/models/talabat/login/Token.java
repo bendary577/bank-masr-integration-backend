@@ -8,6 +8,8 @@ public class Token {
     public String role;
     public String accessToken;
     public AccessTokenContent accessTokenContent;
+    public boolean status;
+    public String message;
 
     public String getRefreshToken() {
         return refreshToken;
@@ -55,5 +57,21 @@ public class Token {
 
     public void setAccessTokenContent(AccessTokenContent accessTokenContent) {
         this.accessTokenContent = accessTokenContent;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

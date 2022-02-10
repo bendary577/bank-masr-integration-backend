@@ -12,6 +12,10 @@ public class TalabatOrder extends com.sun.supplierpoc.models.Order {
 
     private List<Object> previousVersions;
 
+    private boolean status;
+
+    private String message;
+
     public void setOrders(List<RestOrder> orders) {
         this.orders = orders;
     }
@@ -42,6 +46,22 @@ public class TalabatOrder extends com.sun.supplierpoc.models.Order {
 
     public List<RestOrder> getOrders() {
         return orders;
+    }
+
+    public boolean getStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
 }

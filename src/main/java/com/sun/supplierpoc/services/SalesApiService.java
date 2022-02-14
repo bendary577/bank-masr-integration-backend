@@ -17,10 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SalesApiService {
@@ -39,7 +37,7 @@ public class SalesApiService {
     private final SetupEnvironment setupEnvironment = new SetupEnvironment();
 
     public Response getSalesData(SyncJobType salesSyncJobType, ArrayList<CostCenter> costCentersLocation,
-                                 ArrayList<SalesAPIStatistics> statistics, Account account) {
+                                 ArrayList<SalesAPIStatistics> statistics, Account account, List<OrderTypeChannels> orderTypeChannels) {
 
         Response response = new Response();
         ArrayList<JournalBatch> journalBatches = new ArrayList<>();
@@ -82,7 +80,7 @@ public class SalesApiService {
                 for (CostCenter costCenter : costCentersLocation) {
                     if (costCenter.checked) {
                         callSalesFunction(statistics, timePeriod, fromDate, toDate, costCenter,
-                                journalBatches, driver, response);
+                                journalBatches, driver, response, orderTypeChannels);
                         if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)) {
                             return response;
                         }
@@ -90,7 +88,7 @@ public class SalesApiService {
                 }
             } else {
                 callSalesFunction(statistics, timePeriod, fromDate, toDate, new CostCenter(),
-                        journalBatches, driver, response);
+                        journalBatches, driver, response, orderTypeChannels);
                 if (!response.isStatus()) {
                     return response;
                 }
@@ -114,14 +112,14 @@ public class SalesApiService {
 
     private void callSalesFunction(ArrayList<SalesAPIStatistics> salesAPIStatistics, String timePeriod, String fromDate, String toDate,
                                    CostCenter costCenter, ArrayList<JournalBatch> journalBatches, WebDriver driver,
-                                   Response response) {
+                                   Response response, List<OrderTypeChannels> orderTypeChannels) {
 
         JournalBatch journalBatch = new JournalBatch();
 
         // Get statistics
         Response statisticsResponse = new Response();
         if (salesAPIStatistics.size() > 0) {
-            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, salesAPIStatistics, driver);
+            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, salesAPIStatistics, driver, orderTypeChannels);
             if (checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
         }
 
@@ -137,7 +135,7 @@ public class SalesApiService {
     }
 
     private Response getSalesStatistics(String businessDate, String fromDate, String toDate, CostCenter location,
-                                        ArrayList<SalesAPIStatistics> salesStatistics, WebDriver driver) {
+                                        ArrayList<SalesAPIStatistics> salesStatistics, WebDriver driver, List<OrderTypeChannels> orderTypeChannels) {
         Response response = new Response();
         SalesAPIStatistics salesAPIStatistics;
         if (!location.locationName.equals("")) {
@@ -187,17 +185,59 @@ public class SalesApiService {
             ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 2);
             salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(1));
 
-            WebElement netTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
-            List<WebElement> netRows = netTable.findElements(By.tagName("tr"));
+            statTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
+            rows = statTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1) {
                 response.setStatus(true);
                 response.setMessage("There is no statistics info in this location");
                 return response;
             }
-            statisticValues = setupEnvironment.getTableColumns(netRows, false, 7);
+            statisticValues = setupEnvironment.getTableColumns(rows, false, 5);
 
             salesAPIStatistics.NetSales = conversions.filterString(statisticValues.get(2));
+
+            statTable = driver.findElement(By.xpath("/html/body/div[6]/table"));
+
+            rows = statTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 1) {
+                response.setStatus(false);
+                response.setMessage("There is no statistics info in this location");
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, false, 0);
+
+            for(int i = 2; i < rows.size(); i++) {
+                statisticValues = setupEnvironment.getTableColumns(rows, false, i);
+                String OrderType = conversions.filterString(statisticValues.get(columns.indexOf("order_type")));
+
+                OrderTypeChannels orderTypeChannel = orderTypeChannels.stream().
+                        filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
+                        .stream().findFirst().orElse(null);
+
+                if (orderTypeChannel == null) {
+
+                    response.setStatus(true);
+                    response.setMessage("Please Configure Channel With Order type " + OrderType);
+                    return response;
+
+                }
+
+                Double netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
+
+                Double previousNetSales = Double.parseDouble(orderTypeChannels.stream().
+                        filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
+                        .stream().findFirst().get().getNetSales());
+
+                orderTypeChannels.stream().
+                        filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
+                        .stream().findFirst().get().setNetSales(String.valueOf(netSales + previousNetSales));
+
+            }
+
+            salesAPIStatistics.setOrderTypeChannels(orderTypeChannels);
 
             response.setStatus(true);
             response.setMessage("");

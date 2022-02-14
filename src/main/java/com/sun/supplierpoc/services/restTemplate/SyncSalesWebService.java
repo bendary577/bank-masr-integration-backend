@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services.restTemplate;
 import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.configurations.OrderTypeChannels;
 import com.sun.supplierpoc.models.configurations.SalesAPIConfig;
 import com.sun.supplierpoc.models.configurations.SalesAPIStatistics;
 import okhttp3.*;
@@ -18,16 +19,32 @@ public class SyncSalesWebService {
         String url = "https://apidev.emaar.com/etenantsales/dailysales";
         try {
             OkHttpClient client = new OkHttpClient();
-
             MediaType mediaType = MediaType.parse("application/json");
+
+            String fandBSplit = "";
+            int index = 1 ;
+            for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
+                if(orderTypeChannels.isChecked()) {
+                    if (index != salesAPIStatistics.orderTypeChannels.size()) {
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
+                    } else {
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                    }
+                }
+                index += 1;
+            }
+
             RequestBody body = RequestBody.create(mediaType,
-                    "{\n  \"SalesDataCollection\": " +
-                            "{\n    \"SalesInfo\": [\n " +
-                            "     {\n        \"UnitNo\": \"" + salesAPIStatistics.unitNo +"\",\n " +
-                            "       \"LeaseCode\": \""+salesAPIStatistics.leaseCode+"\",\n " +
-                            "       \"SalesDate\": \""+salesAPIStatistics.dateFrom+"\",\n " +
-                            "       \"TransactionCount\": "+salesAPIStatistics.NoChecks+",\n  " +
-                            "      \"NetSales\": "+salesAPIStatistics.NetSales+"\n      }\n    ]\n  }\n}");
+                    "{\"SalesDataCollection\": " +
+                            "{\"SalesInfo\":[" +
+                            "{\"UnitNo\":\"" + salesAPIStatistics.unitNo +"\"," +
+                            "\"LeaseCode\":\""+salesAPIStatistics.leaseCode+"\"," +
+                            "\"SalesDate\": \""+salesAPIStatistics.dateFrom+"\"," +
+                            "\"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
+                            "\"NetSales\": "+salesAPIStatistics.NetSales+"," +
+                            "\"FandBSplit\": [" +
+                            "{" + fandBSplit +
+                            "}]}]}}");
             Request request = new Request.Builder()
                     .url(url)
                     .post(body)
@@ -40,8 +57,12 @@ public class SyncSalesWebService {
             if (salesResponse.code() == 200){
                 Gson gson = new Gson();
 
-                HashMap salesAPI = gson.fromJson(salesResponse.body().string(),
+                HashMap<String, String> salesAPI = gson.fromJson(salesResponse.body().string(),
                         HashMap.class);
+
+                if(Integer.parseInt(salesAPI.get("Code")) != 200) {
+
+                }
 
                 response.setStatus(true);
                 response.setData(salesAPI);

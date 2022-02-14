@@ -41,7 +41,7 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
-
+    private ArrayList<OrderType> orderTypes = new ArrayList<>();
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
 
@@ -317,6 +317,14 @@ public class GeneralSettings {
 
     public void setBirthdayGift(BirthdayGift birthdayGift) {
         this.birthdayGift = birthdayGift;
+    }
+
+    public ArrayList<OrderType> getOrderTypes() {
+        return orderTypes;
+    }
+
+    public void setOrderTypes(ArrayList<OrderType> orderTypes) {
+        this.orderTypes = orderTypes;
     }
 }
 

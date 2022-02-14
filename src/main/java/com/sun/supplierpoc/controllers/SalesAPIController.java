@@ -214,6 +214,7 @@ public class SalesAPIController {
 
             SalesAPIConfig configuration = syncJobType.getConfiguration().salesAPIConfig;
             ArrayList<SalesAPIStatistics> statistics = configuration.statistics;
+            List<OrderTypeChannels> orderTypeChannels = configuration.orderTypeChannels;
             ArrayList<CostCenter> locations = generalSettings.getLocations();
 
             String timePeriod = syncJobType.getConfiguration().timePeriod;
@@ -238,6 +239,12 @@ public class SalesAPIController {
                 }
             }
 
+            if(orderTypeChannels == null || orderTypeChannels.size() == 0) {
+                response.setMessage("Order Type Channels Not Configured.");
+                response.setStatus(false);
+                return response;
+            }
+
             //////////////////////////////////////// End Validation ////////////////////////////////////////////////////////
 
             ArrayList<JournalBatch> addedSalesBatches = new ArrayList<>();
@@ -250,9 +257,9 @@ public class SalesAPIController {
             try {
                 Response salesResponse;
                 if (account.getMicrosVersion().equals("version1")) {
-                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account);
+                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, orderTypeChannels);
                 } else {
-                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account);
+                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, orderTypeChannels);
                 }
 
                 if (salesResponse.isStatus()) {
@@ -323,6 +330,33 @@ public class SalesAPIController {
             response.setMessage(message);
         }
         return response;
+    }
+
+    @RequestMapping("/addOrderTypeChannel")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity<Response> addOrderTypeChannel(@RequestBody ArrayList<OrderTypeChannels> orderTypeChannels,
+                                                        @RequestParam(name = "syncJobTypeId") String syncJobTypeId,
+                                                        Principal principal) {
+        Response response = new Response();
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+        if (accountOptional.isPresent()) {
+            SyncJobType syncJobType = syncJobTypeRepo.findByIdAndDeleted(syncJobTypeId, false);
+            if (syncJobType != null) {
+                syncJobType.getConfiguration().salesAPIConfig.orderTypeChannels = orderTypeChannels;
+                syncJobTypeRepo.save(syncJobType);
+
+                response.setStatus(true);
+                response.setMessage("Update Order Type Channel successfully.");
+            } else {
+                response.setStatus(false);
+                response.setMessage("Failed to update Order Type Channel.");
+
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 }

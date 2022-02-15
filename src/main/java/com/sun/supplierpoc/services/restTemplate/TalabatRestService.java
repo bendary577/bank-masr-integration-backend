@@ -4,7 +4,12 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
+import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
+import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
+import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsLoginBody;
@@ -19,10 +24,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -137,7 +141,6 @@ public class TalabatRestService {
     public TalabatOrder getOrderById(RestOrder order, Token token) {
 
         TalabatOrder talabatOrders = new TalabatOrder();
-        String message = "";
 
         try {
 
@@ -145,7 +148,6 @@ public class TalabatRestService {
             Request request = new Request.Builder().url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/" + order.getGlobal_vendor_code() + "/orders/" + order.getOrder_id() + "?order_timestamp=" + order.getOrder_timestamp()).method("GET", null).addHeader("Authorization", "Bearer " + token.getAccessToken()).build();
 
             okhttp3.Response orderResponse = client.newCall(request).execute();
-
 
             Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
@@ -162,45 +164,46 @@ public class TalabatRestService {
         return talabatOrders;
     }
 
-    public FoodicsLoginBody LoginToFoodics() {
+//    public FoodicsLoginBody LoginToFoodics() {
+//
+//        FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
+//        String url = "https://api-sandbox.foodics.com/oauth/token";
+//        try {
+//
+//            Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+//            String jsonRequest = gson.toJson(foodicsLoginBody);
+//
+//            OkHttpClient client = new OkHttpClient().newBuilder().build();
+//            MediaType mediaType = MediaType.parse("Application/json");
+//            RequestBody body = RequestBody.create(mediaType, jsonRequest);
+//
+//            Request request = new Request.Builder().url(url).method("POST", body).
+//                    addHeader("Content-Type", "Application/json").build();
+//
+//            okhttp3.Response foodicsLoginResponse = client.newCall(request).execute();
+//
+//            foodicsLoginBody = gson.fromJson(foodicsLoginResponse.body().string(), FoodicsLoginBody.class);
+//
+//            if (foodicsLoginResponse.code() == 200) {
+//                foodicsLoginBody.setStatus(true);
+//
+//            } else {
+//                foodicsLoginBody.setStatus(false);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            foodicsLoginBody.setMessage( e.getMessage() );
+//            foodicsLoginBody.setStatus(false);
+//        }
+//
+//        return foodicsLoginBody;
+//    }
 
-        FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
-        String url = "https://api-sandbox.foodics.com/oauth/token";
-        try {
+    public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, FoodicsLoginBody token, GeneralSettings generalSettings,
+                                           FoodicsAccount foodicsAccount) {
 
-            Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-            String jsonRequest = gson.toJson(foodicsLoginBody);
-
-            OkHttpClient client = new OkHttpClient().newBuilder().build();
-            MediaType mediaType = MediaType.parse("Application/json");
-            RequestBody body = RequestBody.create(mediaType, jsonRequest);
-
-            Request request = new Request.Builder().url(url).method("POST", body).
-                    addHeader("Content-Type", "Application/json").build();
-
-            okhttp3.Response foodicsLoginResponse = client.newCall(request).execute();
-
-            foodicsLoginBody = gson.fromJson(foodicsLoginResponse.body().string(), FoodicsLoginBody.class);
-
-            if (foodicsLoginResponse.code() == 200) {
-                foodicsLoginBody.setStatus(true);
-
-            } else {
-                foodicsLoginBody.setStatus(false);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            foodicsLoginBody.setMessage( e.getMessage() );
-            foodicsLoginBody.setStatus(false);
-        }
-
-        return foodicsLoginBody;
-    }
-
-    public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, FoodicsLoginBody token) {
-
-        FoodicsOrder talabatOrders = new FoodicsOrder();
+        FoodicsOrder foodicsOrder = new FoodicsOrder();
         String url = "https://api-sandbox.foodics.com/v5/orders";
         try {
 
@@ -213,45 +216,40 @@ public class TalabatRestService {
 
             RequestBody body = RequestBody.create(mediaType, jsonOrder);
             Request request = new Request.Builder().url(url).method("POST", body).
-                    addHeader("Authorization", token.getTokenType() + " " + token.getAccessToken()).
+                    addHeader("Authorization", "Bearer " + foodicsAccount.getToken()).
                     addHeader("Content-Type", "application/json").
                     addHeader("Accept", "application/json").build();
 
             okhttp3.Response foodicsResponse = client.newCall(request).execute();
 
+            foodicsOrder = gson.fromJson(foodicsResponse.body().string(), FoodicsOrder.class);
 
-            gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+            if (foodicsResponse.code() == 200) {
+                foodicsOrder.setStatus(true);
 
-            talabatOrders = gson.fromJson(foodicsResponse.body().string(), FoodicsOrder.class);
-
-
-            talabatOrders.setStatus(foodicsResponse.code() == 200);
+            } else {
+                foodicsOrder.setStatus(false);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            message = e.getMessage();
-            response.setStatus(false);
-            response.setMessage(message);
+            foodicsOrder.setMessage( e.getMessage() );
+            foodicsOrder.setStatus(false);
         }
 
-        return response;
+        return foodicsOrder;
     }
-
-    public String getDate(){
-        Date date = new Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
-        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
-        return sdf.format(date);
-    }
-
 
     public Response fetchProducts(Account account) {
 
-        OkHttpClient client = new OkHttpClient();
-
+        Response foodicsProductsResponse = new Response();
         String url = "http://api-sandbox.foodics.com/v5/products";
 
-        String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjExMjdjNWQ3MDgzMTdiYzNlOTgzZWYzNWFlZWI3Y2RlYzg5YTE0" +
+        try {
+
+            OkHttpClient client = new OkHttpClient();
+
+            String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjExMjdjNWQ3MDgzMTdiYzNlOTgzZWYzNWFlZWI3Y2RlYzg5YTE0" +
                 "NGQzZjdiNzlmNzgyZTFmNDdkMzQ0YmIwZTYyN2M3MGM1MzBmOWYyMWIxIn0.eyJhdWQiOiI5NTkwZTZkZS0yNWRiLTRkZDM" +
                 "tOGU0NS0zOTBkM2U2NzE2N2QiLCJqdGkiOiIxMTI3YzVkNzA4MzE3YmMzZTk4M2VmMzVhZWViN2NkZWM4OWExNDRkM2Y3Yjc5Zj" +
                 "c4MmUxZjQ3ZDM0NGJiMGU2MjdjNzBjNTMwZjlmMjFiMSIsImlhdCI6MTY0NDgzNzUxMywibmJmIjoxNjQ0ODM3NTEzLCJleHAiOjE4MD" +
@@ -268,35 +266,40 @@ public class TalabatRestService {
                 .url(url).get()
                 .addHeader("authorization", "Bearer " + token)
                 .addHeader("cache-control", "no-cache")
-//                .addHeader("postman-token", "1b6e5077-4c4c-98fc-3d0a-061b34579579")
                 .build();
 
-        try {
             okhttp3.Response response = client.newCall(request).execute();
 
-            if (response.code() == 200){
 
                 Gson gson = new GsonBuilder()
                         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                         .create();
 
-                TalabatOrder talabatOrders = gson.fromJson(orderResponse.body().string(),
-                        TalabatOrder.class);
+                foodicsProductsResponse = gson.fromJson(response.body().string(),
+                        Response.class);
 
 
-                response.setStatus(true);
-                response.setData(talabatOrders);
+            if (response.code() == 200){
+                foodicsProductsResponse.setFoodicsProducts((List<FoodicsProduct>) foodicsProductsResponse.getData());
+                foodicsProductsResponse.setStatus(true);
+                foodicsProductsResponse.setData(null);
 
             }else {
-                message = orderResponse.message();
-                response.setStatus(false);
-                response.setMessage(message);
+                foodicsProductsResponse.setStatus(false);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return new FoodicsProduct();
+        return foodicsProductsResponse;
+    }
+
+
+    public String getDate(){
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        return sdf.format(date);
     }
 
 }

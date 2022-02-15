@@ -1,18 +1,23 @@
 package com.sun.supplierpoc.controllers.application.talabat;
 
+import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 
+import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
 import com.sun.supplierpoc.models.talabat.login.Token;
+import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.TalabatIntegratorService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.security.Principal;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/talabat")
@@ -111,7 +116,6 @@ public class TalabatIntegratorController {
             response.setStatus(false);
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
-
     }
 
 }

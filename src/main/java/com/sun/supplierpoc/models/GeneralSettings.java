@@ -44,9 +44,7 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
-    private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
-    private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
-    private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
+    private TalabatConfiguration talabatConfiguration = new TalabatConfiguration();
 
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
@@ -324,28 +322,12 @@ public class GeneralSettings {
         this.birthdayGift = birthdayGift;
     }
 
-    public ArrayList<ProductsMapping> getProductsMappings() {
-        return productsMappings;
+    public TalabatConfiguration getTalabatConfiguration() {
+        return talabatConfiguration;
     }
 
-    public void setProductsMappings(ArrayList<ProductsMapping> productsMappings) {
-        this.productsMappings = productsMappings;
-    }
-
-    public ArrayList<BranchMapping> getBranchMappings() {
-        return branchMappings;
-    }
-
-    public void setBranchMappings(ArrayList<BranchMapping> branchMappings) {
-        this.branchMappings = branchMappings;
-    }
-
-    public ArrayList<DiscountMapping> getDiscountMappings() {
-        return discountMappings;
-    }
-
-    public void setDiscountMappings(ArrayList<DiscountMapping> discountMappings) {
-        this.discountMappings = discountMappings;
+    public void setTalabatConfiguration(TalabatConfiguration talabatConfiguration) {
+        this.talabatConfiguration = talabatConfiguration;
     }
 }
 

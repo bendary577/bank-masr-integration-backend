@@ -39,7 +39,7 @@ public class TalabatIntegratorService {
 
             response = talabatRestService.getOrderById(restOrder, (Token) response.getData());
 
-            FoodicsOrder order = parseOrderParametersToFoodics( (TalabatOrder) response.getData());
+//            FoodicsOrder order = parseOrderParametersToFoodics( (TalabatOrder) response.getData());
 
         }
 
@@ -81,12 +81,13 @@ public class TalabatIntegratorService {
         foodicsOrder.setDueAt(parsedOrder.getOrderTimestamp());
         foodicsOrder.setTableId("1");
         foodicsOrder.setCustomerNotes("");
-        foodicsOrder.setDriverId(parsedOrder.getDelivery().toString());
-        foodicsOrder.setCustomerAddressId(parsedOrder.getDelivery().getAddressText());
+//        foodicsOrder.setDriverId(parsedOrder.getDelivery().toString());
+//        foodicsOrder.setCustomerAddressId(parsedOrder.getDelivery().getAddressText());
         foodicsOrder.setCustomerAddressId(parsedOrder.getDelivery().getAddressText());
         foodicsOrder.setCustomerId(parsedOrder.getDelivery().getAddressText());
-        foodicsOrder.setDe
+//        foodicsOrder.setDe
 
+        return foodicsOrder;
 
     }
 }

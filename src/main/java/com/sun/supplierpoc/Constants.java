@@ -200,6 +200,8 @@ public class Constants {
     // More Reports >> Summary >> System Sales Summary
     public static String SALES_SUMMARY_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
 
+    public static String SALES_SUMMARY_API_LINK = OHRA_GCS_LINK + "/finengine/reportRunAction.do?rptroot=1136&reportID=EAME_SystemSalesSummary_VAT&method=run";
+
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
     public static String APPROVED_INVOICE = "Approved Invoice";
     public static String ACCOUNT_PAYABLE = "Account Payable";

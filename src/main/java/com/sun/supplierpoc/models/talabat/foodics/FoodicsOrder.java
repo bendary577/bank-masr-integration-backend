@@ -28,6 +28,8 @@ public class FoodicsOrder {
     private Double subtotalPrice;
     private Double roundingAmount;
     private Double totalPrice;
+    private boolean status  ;
+    private String message;
 
     public Integer getGuests() {
         return guests;
@@ -203,5 +205,21 @@ public class FoodicsOrder {
 
     public void setPayments(List<Payment> payments) {
         this.payments = payments;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public void setStatus(boolean status) {
+        this.status = status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 }

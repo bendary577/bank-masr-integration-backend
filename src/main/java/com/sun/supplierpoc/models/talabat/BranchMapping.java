@@ -2,9 +2,9 @@ package com.sun.supplierpoc.models.talabat;
 
 public class BranchMapping {
 
-    private String name;
-    private String foodIcsBranchId;
-    private String talabatBranchId;
+    private String name = "";
+    private String foodIcsBranchId = "";
+    private String talabatBranchId = "";
 
     public String getName() {
         return name;

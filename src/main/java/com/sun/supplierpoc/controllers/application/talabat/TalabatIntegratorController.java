@@ -1,27 +1,18 @@
 package com.sun.supplierpoc.controllers.application.talabat;
 
-import com.sun.supplierpoc.Constants;
-import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 
-import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
 import com.sun.supplierpoc.models.talabat.login.Token;
-import com.sun.supplierpoc.models.talabat.response.FoodicsProductsResponse;
-import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.TalabatIntegratorService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/talabat")
@@ -37,43 +28,55 @@ public class TalabatIntegratorController {
     private AccountService accountService;
 
     @GetMapping
-    public ResponseEntity<?> login(){
+    public ResponseEntity<?> SyncTalabatOrders(Principal principal){
 
-        Response response = talabatRestService.loginRequest();
+        Response response = new Response();
 
-        response = talabatRestService.getOrders((Token) response.getData());
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        if(accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response = talabatIntegratorService.sendReceivedOrders(account);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else{
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
     }
 
     @GetMapping("branch")
     public ResponseEntity<?> getBranchOrders(@RequestParam("branch") String branch){
 
-        Response response = talabatRestService.loginRequest();
+//        Response response = talabatRestService.loginRequest(new A);
 
-        response = talabatRestService.getOrders((Token) response.getData(), branch);
+//        response = talabatRestService.getOrders((Token) response.getData(), branch);
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>("response", HttpStatus.OK);
     }
 
     @PostMapping("/orders")
     public ResponseEntity<?> getOrders(@RequestBody Token token){
 
-        Response response = talabatRestService.getOrders(token);
+//        Response response = talabatRestService.getOrders(token);
 
-        talabatIntegratorService.sendReceivedOrders( (TalabatOrder) response.getData() );
+//        talabatIntegratorService.sendReceivedOrders( (TalabatOrder) response.getData() );
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>("response", HttpStatus.OK);
     }
 
     @PostMapping("/order")
     public ResponseEntity<?> getOrderById(@RequestBody RestOrder order){
 
-        Response response = talabatRestService.loginRequest();
+//        Response response = talabatRestService.loginRequest(new Account());
 
-        response = talabatRestService.getOrderById(order, (Token) response.getData());
+//        response = talabatRestService.getOrderById(order, (Token) response.getData());
 
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return new ResponseEntity<>("", HttpStatus.OK);
     }
 
     @GetMapping("/fetchFoodicsProduct")

@@ -4,6 +4,7 @@ public class AccountCredential {
     private String account = "";
     private String username = "";
     private String password = "";
+    private String email = "";
     private String company = "";
     private String link = "";
     private String host = "";
@@ -66,5 +67,13 @@ public class AccountCredential {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

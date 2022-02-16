@@ -6,7 +6,7 @@ public class Product {
 
     private String productId;
     private Integer quantity;
-    private Integer unitPrice;
+    private Double unitPrice;
     private Integer discountAmount;
     private String discountId;
     private Integer discountType;
@@ -33,11 +33,11 @@ public class Product {
         this.quantity = quantity;
     }
 
-    public Integer getUnitPrice() {
+    public Double getUnitPrice() {
         return unitPrice;
     }
 
-    public void setUnitPrice(Integer unitPrice) {
+    public void setUnitPrice(Double unitPrice) {
         this.unitPrice = unitPrice;
     }
 

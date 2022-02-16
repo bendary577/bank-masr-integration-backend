@@ -6,7 +6,7 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
 import com.sun.supplierpoc.models.talabat.BranchMapping;
-import com.sun.supplierpoc.models.talabat.DiscountMapping;
+import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import com.sun.supplierpoc.models.talabat.ProductsMapping;
 import com.sun.supplierpoc.models.talabat.TalabatRest.Item;
 import com.sun.supplierpoc.models.talabat.TalabatRest.Order;
@@ -16,6 +16,8 @@ import com.sun.supplierpoc.models.talabat.foodics.*;
 import com.sun.supplierpoc.models.talabat.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
+import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
+import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +37,13 @@ public class TalabatIntegratorService {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
 
-    public Response sendReceivedOrders(Account account) {
+    @Autowired
+    private FoodicsProductRepo foodicsProductRepo;
+
+    @Autowired
+    private FoodicsOrderRepo foodicsOrderRepo;
+
+    public Response syncFoodicsOrders(Account account) {
 
         Response response = new Response();
 
@@ -54,11 +62,70 @@ public class TalabatIntegratorService {
                 response.setMessage("Sync Talabat Orders Successfully");
                 response.setData(talabatOrder);
 
-//                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
-//                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
-//                        .collect(Collectors.toList());
+            } else {
+                response.setStatus(false);
+                response.setMessage("Login To Talabat Failed Due To : " + talabatOrder.getMessage());
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
+        }
 
-                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
+        return response;
+    }
+
+    public Response syncFoodicsBranchOrders(Account account, String branch) {
+
+        Response response = new Response();
+
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+
+        Token token = talabatRestService.talabatLoginRequest(account);
+
+        if (token != null && token.isStatus()) {
+
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branch);
+
+            if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
+
+                response.setMessage("Sync Talabat Orders Successfully");
+                response.setData(talabatOrder);
+
+            } else {
+                response.setStatus(false);
+                response.setMessage("Login To Talabat Failed Due To : " + talabatOrder.getMessage());
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
+        }
+
+        return response;
+    }
+
+    public Response sendReceivedOrders(Account account) {
+
+        Response response = new Response();
+
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+
+        Token token = talabatRestService.talabatLoginRequest(account);
+
+        if (token != null && token.isStatus()) {
+
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+
+            if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
+
+                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
+                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
+                        .collect(Collectors.toList());
+
+//                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
                 try {
                     List<TalabatOrder> talabatOrderList = new ArrayList<>();
                     TalabatOrder talabatOrderDetails = new TalabatOrder();
@@ -71,22 +138,26 @@ public class TalabatIntegratorService {
 
                         FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatOrderDetails, generalSettings);
 
-                        foodicsOrder = talabatRestService.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
-
                         if (foodicsOrder != null) {
-//                        talabatOrderList.add(talabatOrderDetails);
+                            talabatOrderList.add(talabatOrderDetails);
+                        }else{
+
                         }
-
+                        foodicsOrder = talabatRestService.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
                         talabatOrderDetails.setOrders(List.of(restOrder));
-
                         talabatOrderList.add(talabatOrderDetails);
                     }
 
                     if (talabatOrderList.size() > 0) {
                         orderRepo.saveAll(talabatOrderList);
+                        response.setMessage("Send Talabat Orders Successfully");
+                        response.setData(talabatOrderList.get(0));
+                    }else {
+                        response.setMessage("Send Talabat Orders Successfully");
+                        response.setData(new TalabatOrder());
                     }
                 } catch (Exception e) {
-
+                    e.printStackTrace();
                 }
             } else {
                 response.setStatus(false);
@@ -105,16 +176,19 @@ public class TalabatIntegratorService {
         Order parsedOrder = talabatOrder.getOrder();
         FoodicsOrder foodicsOrder = new FoodicsOrder();
 
+        try {
+
+
 //        foodicsOrder.setGuests(1);
-        foodicsOrder.setType(1);
+            foodicsOrder.setType(1);
 
 //        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
 //                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
 //                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
 
-        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().get(0);
+            BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().get(0);
 
-        foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
+            foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
 
 //        foodicsOrder.setSubtotalPrice(parsedOrder.getPayment().getTotal());
 //        foodicsOrder.setRoundingAmount(0.14);
@@ -158,21 +232,21 @@ public class TalabatIntegratorService {
 //
 //        foodicsOrder.setCharges(charges);
 
-        ProductsMapping productsMapping = new ProductsMapping();
-        List<Product> products = new ArrayList<>();
-        Product product = new Product();
+            ProductsMapping productsMapping = new ProductsMapping();
+            List<Product> products = new ArrayList<>();
+            Product product = new Product();
 
-        for (Item item : parsedOrder.getItems()) {
+            for (Item item : parsedOrder.getItems()) {
 
 //            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
 //                    filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
 //                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
-            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().get(0);
+                productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().get(0);
 
-            if(productsMapping != null) {
+                if (productsMapping != null) {
 
-                product = new Product();
+                    product = new Product();
 
 //                Option option;
 //                List<Option> options;
@@ -181,18 +255,101 @@ public class TalabatIntegratorService {
 //                options.add(option);
 //                product.setOptions(options);
 
-                product.setProductId(productsMapping.getFoodIcsProductId());
-                product.setQuantity(item.getQuantity());
-                product.setUnitPrice(Integer.parseInt(item.getUnitPrice()));
+                    product.setProductId(productsMapping.getFoodIcsProductId());
+                    product.setQuantity(item.getQuantity());
+                    product.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
 
-                products.add(product);
+                    products.add(product);
 
+                }else{
+                    return null;
+                }
             }
-        }
+
+            foodicsOrder.setProducts(products);
+
 
 //        foodicsOrder.setProducts(products);
 //        foodicsOrder.setCombos(new ArrayList<Combo>());
 
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return foodicsOrder;
+    }
+
+    public Response getOrderDtails(Account account, RestOrder order) {
+
+        Response response = new Response();
+
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+
+        Token token = talabatRestService.talabatLoginRequest(account);
+
+        if (token != null && token.isStatus()) {
+
+            TalabatOrder talabatOrderDetails = talabatRestService.getOrderById(order, token);
+            response.setData(talabatOrderDetails);
+            response.setStatus(true);
+            response.setMessage("Success");
+        } else {
+            response.setStatus(false);
+            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
+        }
+
+        return response;
+    }
+
+    public Response fetchProducts(Account account) {
+
+        Response response = new Response();
+
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+
+        response = talabatRestService.fetchProducts(generalSettings, foodicsAccount);
+
+        ArrayList<FoodicsProduct> foodicsProducts = response.getFoodicsProducts();
+
+        try {
+
+            foodicsProductRepo.saveAll(foodicsProducts);
+        }catch(Exception e){
+            response.setMessage("Can't save foodics product.");
+            response.setStatus(false);
+        }
+
+        return response;
+    }
+
+    public FoodicsProduct updateFoodicsProdu(Account account, FoodicsProduct foodicsProduct) {
+
+        Response response = new Response();
+
+        try {
+            foodicsProductRepo.save(foodicsProduct);
+        }catch(Exception e){
+            response.setMessage("Can't save foodics product.");
+            response.setStatus(false);
+        }
+
+        return foodicsProduct;
+    }
+
+    public FoodicsOrder updateFoodicsOrder(Account account, FoodicsOrder foodicsOrder) {
+
+        HashMap<String, Object> response = new HashMap<>();
+
+//        if(foodicsOrderRepo.existsById(foodicsOrder.getI)
+        try {
+            foodicsOrderRepo.save(foodicsOrder);
+        }catch(Exception e){
+//            response.setMessage("Can't save foodics order.");
+//            response.setStatus(false);
+        }
 
         return foodicsOrder;
     }

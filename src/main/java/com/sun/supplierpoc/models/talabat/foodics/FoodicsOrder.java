@@ -1,11 +1,17 @@
 package com.sun.supplierpoc.models.talabat.foodics;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.Date;
 import java.util.List;
 
 
+@Document
 public class FoodicsOrder {
 
+    @Id
+    private String id;
     private Integer guests;
     private Integer type;
     private String branchId;

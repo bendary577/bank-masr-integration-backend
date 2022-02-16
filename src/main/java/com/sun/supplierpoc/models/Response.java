@@ -43,7 +43,7 @@ public class Response<T> {
     private ArrayList<OperationData> addedOperationData = new ArrayList<>();
 
     private List<WebElement> rows = new ArrayList<>();
-    private List<FoodicsProduct> foodicsProducts = new ArrayList<>();
+    private ArrayList<FoodicsProduct> foodicsProducts = new ArrayList<>();
 
     private SimphonyPaymentRes simphonyPaymentRes;
     public Response() {
@@ -230,11 +230,11 @@ public class Response<T> {
         this.salesAPIStatistics = salesAPIStatistics;
     }
 
-    public List<FoodicsProduct> getFoodicsProducts() {
+    public ArrayList<FoodicsProduct> getFoodicsProducts() {
         return foodicsProducts;
     }
 
-    public void setFoodicsProducts(List<FoodicsProduct> foodicsProducts) {
+    public void setFoodicsProducts(ArrayList<FoodicsProduct> foodicsProducts) {
         this.foodicsProducts = foodicsProducts;
     }
 }

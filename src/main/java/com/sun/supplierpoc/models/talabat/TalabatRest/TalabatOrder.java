@@ -1,10 +1,11 @@
 package com.sun.supplierpoc.models.talabat.TalabatRest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class TalabatOrder extends com.sun.supplierpoc.models.Order {
 
-    List<RestOrder> orders;
+    List<RestOrder> orders = new ArrayList<>();
 
     private Order order;
 

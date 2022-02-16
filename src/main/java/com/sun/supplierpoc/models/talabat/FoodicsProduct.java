@@ -1,10 +1,14 @@
 package com.sun.supplierpoc.models.talabat;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
 import java.util.List;
 
+@Document
 public class FoodicsProduct {
 
-    private List<Object> ingredients = null;
+    @Id
     private String id;
     private String sku;
     private Object barcode;
@@ -28,6 +32,7 @@ public class FoodicsProduct {
     private Object deletedAt;
     private boolean status;
     private String message;
+    private List<Object> ingredients = null;
 
     public List<Object> getIngredients() {
         return ingredients;

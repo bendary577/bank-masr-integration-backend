@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services.restTemplate;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -9,6 +10,7 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
+import com.sun.supplierpoc.models.talabat.FoodicProductResponse;
 import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
@@ -25,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -209,7 +212,7 @@ public class TalabatRestService {
 
             OkHttpClient client = new OkHttpClient().newBuilder().build();
 
-            Gson gson = new Gson();
+            Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
             String jsonOrder = gson.toJson(order);
 
             MediaType mediaType = MediaType.parse("application/json");
@@ -222,7 +225,8 @@ public class TalabatRestService {
 
             okhttp3.Response foodicsResponse = client.newCall(request).execute();
 
-            foodicsOrder = gson.fromJson(foodicsResponse.body().string(), FoodicsOrder.class);
+//            foodicsOrder = gson.fromJson(foodicsResponse.body().string(), FoodicsOrder.class);
+            HashMap<String, String> hashMap = gson.fromJson(foodicsResponse.body().string(), HashMap.class);
 
             if (foodicsResponse.code() == 200) {
                 foodicsOrder.setStatus(true);
@@ -233,69 +237,50 @@ public class TalabatRestService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            foodicsOrder.setMessage( e.getMessage() );
+            foodicsOrder.setMessage(e.getMessage());
             foodicsOrder.setStatus(false);
         }
 
         return foodicsOrder;
     }
 
-    public Response fetchProducts(Account account) {
-
-        Response foodicsProductsResponse = new Response();
-        String url = "http://api-sandbox.foodics.com/v5/products";
-
+    public Response fetchProducts(GeneralSettings generalSettings, FoodicsAccount foodicsAccount) {
+        Response response = new Response();
+        String url = "https://api-sandbox.foodics.com/v5/products";
         try {
-
-            OkHttpClient client = new OkHttpClient();
-
-            String token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjExMjdjNWQ3MDgzMTdiYzNlOTgzZWYzNWFlZWI3Y2RlYzg5YTE0" +
-                "NGQzZjdiNzlmNzgyZTFmNDdkMzQ0YmIwZTYyN2M3MGM1MzBmOWYyMWIxIn0.eyJhdWQiOiI5NTkwZTZkZS0yNWRiLTRkZDM" +
-                "tOGU0NS0zOTBkM2U2NzE2N2QiLCJqdGkiOiIxMTI3YzVkNzA4MzE3YmMzZTk4M2VmMzVhZWViN2NkZWM4OWExNDRkM2Y3Yjc5Zj" +
-                "c4MmUxZjQ3ZDM0NGJiMGU2MjdjNzBjNTMwZjlmMjFiMSIsImlhdCI6MTY0NDgzNzUxMywibmJmIjoxNjQ0ODM3NTEzLCJleHAiOjE4MD" +
-                "I2MDM5MTMsInN1YiI6Ijk1OTBlNTdlLTU3NDgtNGU2Yi1hOThmLWYzMmQwMzFkNjdkZCIsInNjb3BlcyI6W10sImJ1c2luZXNzIjoiOT" +
-                "U5MGU1N2UtNjYzZS00MWZiLWE4MWUtOTA3ZGUxNmVmMmU1IiwicmVmZXJlbmNlIjoiMTM5NzA0In0.gD5Bkcq1PrIayZwXBaNBX0n2yxA1ayN8t9xc3T3" +
-                "gDACl5YH4ii38Kvdr7o3PFcZqiqZyE2ag3ucMEHXmD0SxOon0Iq25m-Il8acE1YHH_iOS0YezRqdI-2X1JwYfFmFzfSxw8PFT6_ixBUYLPD3l97YTD5l1KA0-4fD" +
-                "nrJVx3x4905iuViOkV6w1Z_3PLfDGdiIVnYvHGFXrmGeX7S4Ts2wUM1TbLfi7WRqARKl4jZdDWf4xLwgKMd7l2whcMgN-2xXBuSpdVIVmHphbha_JqIIm4YA" +
-                "6cFTpqFxPJGqNSNFYlxUv8G3KitY2sqitKl9EJalTEOS3FUGJEaL5xN-W83TDPHjdjWfTOsKOQRvEx8vs3Joqp4TT6smBGHkZSs1Ox2tqT8-X2Y4uEXmjeDi4zwWzvzi" +
-                "zgvBDApnCdtE8kwQo9qkbEN2MG7GO7OCfMVk-VFazEKxnmX1eWdf_0Z4_yHUhrxNSiEsfRLc80RRoEecoco2HbUHnAC2jl00au2U6gQCXQIYm0qZ4fnd8aEzAtYb1BNj03bo0Z-9YoyRQ1V9JiXt" +
-                "f43xq0fIMZjUejUxahVGdaa5Zf5qQUvaWJ3X2sIQIRLwvAkJmx8ecXFpOU-VSM0JtYSfwadZJY-y76wBlC61QQpuXIfr3oTgWg5fLZhnF9iLKQoa4P54epSX-EaU";
-
-
-        Request request = new Request.Builder()
-                .url(url).get()
-                .addHeader("authorization", "Bearer " + token)
-                .addHeader("cache-control", "no-cache")
-                .build();
-
-            okhttp3.Response response = client.newCall(request).execute();
-
-
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            Request request = new Request.Builder()
+                    .url("https://api-sandbox.foodics.com/v5/products")
+                    .method("GET", null)
+                    .addHeader("Authorization", "Bearer " + foodicsAccount.getToken())
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build();
+            okhttp3.Response getProductsResponse = client.newCall(request).execute();
+            if (getProductsResponse.code() == 200) {
                 Gson gson = new GsonBuilder()
                         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                         .create();
+                FoodicProductResponse foodicsProductsResponse1 = gson.fromJson(getProductsResponse.body().string(),
+                        FoodicProductResponse.class);
 
-                foodicsProductsResponse = gson.fromJson(response.body().string(),
-                        Response.class);
-
-
-            if (response.code() == 200){
-                foodicsProductsResponse.setFoodicsProducts((List<FoodicsProduct>) foodicsProductsResponse.getData());
-                foodicsProductsResponse.setStatus(true);
-                foodicsProductsResponse.setData(null);
-
-            }else {
-                foodicsProductsResponse.setStatus(false);
+                response.setFoodicsProducts(foodicsProductsResponse1.getData());
+                response.setStatus(true);
+                return response;
+            } else {
+                response.setMessage("Can't fetch products data.");
+                response.setStatus(false);
+                return response;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            response.setMessage("Can't fetch products data due to error: " + e.getMessage());
+            response.setStatus(false);
+            return response;
         }
-
-        return foodicsProductsResponse;
     }
 
 
-    public String getDate(){
+    public String getDate() {
         Date date = new Date();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
         sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));

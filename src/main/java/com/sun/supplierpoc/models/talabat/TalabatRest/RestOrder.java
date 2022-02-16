@@ -1,8 +1,6 @@
-package com.sun.supplierpoc.models.talabat;
+package com.sun.supplierpoc.models.talabat.TalabatRest;
 
-import java.util.Date;
-
-public class Order {
+public class RestOrder {
     public String identifier;
     public String order_id;
     public String global_vendor_code;

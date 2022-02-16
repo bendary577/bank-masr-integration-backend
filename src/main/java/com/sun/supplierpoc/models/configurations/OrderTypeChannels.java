@@ -1,6 +1,6 @@
 package com.sun.supplierpoc.models.configurations;
 
-public class OrderTypeChannels {
+public class OrderTypeChannels implements Cloneable{
 
     private boolean checked;
     private String orderType;
@@ -37,5 +37,16 @@ public class OrderTypeChannels {
 
     public void setNetSales(String netSales) {
         this.netSales = netSales;
+    }
+
+    @Override
+    public OrderTypeChannels clone() {
+        try {
+            OrderTypeChannels clone = (OrderTypeChannels) super.clone();
+            // TODO: copy mutable state here, so the clone can't change the internals of the original
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new AssertionError();
+        }
     }
 }

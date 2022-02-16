@@ -60,10 +60,6 @@ public class SyncSalesWebService {
                 HashMap<String, String> salesAPI = gson.fromJson(salesResponse.body().string(),
                         HashMap.class);
 
-                if(Integer.parseInt(salesAPI.get("Code")) != 200) {
-
-                }
-
                 response.setStatus(true);
                 response.setData(salesAPI);
 

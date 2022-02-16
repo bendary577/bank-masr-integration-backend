@@ -88,6 +88,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/walletSystem/**");
         web.ignoring().antMatchers("/test/**");
         web.ignoring().antMatchers("/simphonyLoyalty/voucherTransactions/createVoucherTrans");
+        web.ignoring().antMatchers("/foodics/**");
     }
 /* @Override
     protected void configure(HttpSecurity http) throws Exception {

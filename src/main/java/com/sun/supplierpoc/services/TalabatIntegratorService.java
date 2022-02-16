@@ -54,10 +54,11 @@ public class TalabatIntegratorService {
                 response.setMessage("Sync Talabat Orders Successfully");
                 response.setData(talabatOrder);
 
-                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
-                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
-                        .collect(Collectors.toList());
+//                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
+//                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
+//                        .collect(Collectors.toList());
 
+                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
                 try {
                     List<TalabatOrder> talabatOrderList = new ArrayList<>();
                     TalabatOrder talabatOrderDetails = new TalabatOrder();
@@ -107,9 +108,11 @@ public class TalabatIntegratorService {
 //        foodicsOrder.setGuests(1);
         foodicsOrder.setType(1);
 
-        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
-                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
-                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
+//        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
+//                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
+//                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
+
+        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().get(0);
 
         foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
 
@@ -161,9 +164,11 @@ public class TalabatIntegratorService {
 
         for (Item item : parsedOrder.getItems()) {
 
-            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
-                    filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
-                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
+//            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
+//                    filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
+//                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
+
+            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().get(0);
 
             if(productsMapping != null) {
 

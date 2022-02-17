@@ -140,7 +140,7 @@ public class TalabatIntegratorService {
 
                         if (foodicsOrder != null) {
                             talabatOrderList.add(talabatOrderDetails);
-                        }else{
+                        } else {
 
                         }
                         foodicsOrder = talabatRestService.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
@@ -152,7 +152,7 @@ public class TalabatIntegratorService {
                         orderRepo.saveAll(talabatOrderList);
                         response.setMessage("Send Talabat Orders Successfully");
                         response.setData(talabatOrderList.get(0));
-                    }else {
+                    } else {
                         response.setMessage("Send Talabat Orders Successfully");
                         response.setData(new TalabatOrder());
                     }
@@ -233,8 +233,8 @@ public class TalabatIntegratorService {
 //        foodicsOrder.setCharges(charges);
 
             ProductsMapping productsMapping = new ProductsMapping();
-            List<Product> products = new ArrayList<>();
-            Product product = new Product();
+            List<FoodicsProduct> products = new ArrayList<>();
+            FoodicsProduct product = new FoodicsProduct();
 
             for (Item item : parsedOrder.getItems()) {
 
@@ -246,7 +246,7 @@ public class TalabatIntegratorService {
 
                 if (productsMapping != null) {
 
-                    product = new Product();
+                    product = new FoodicsProduct();
 
 //                Option option;
 //                List<Option> options;
@@ -261,7 +261,7 @@ public class TalabatIntegratorService {
 
                     products.add(product);
 
-                }else{
+                } else {
                     return null;
                 }
             }
@@ -272,7 +272,7 @@ public class TalabatIntegratorService {
 //        foodicsOrder.setProducts(products);
 //        foodicsOrder.setCombos(new ArrayList<Combo>());
 
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return foodicsOrder;
@@ -312,12 +312,11 @@ public class TalabatIntegratorService {
 
         response = talabatRestService.fetchProducts(generalSettings, foodicsAccount);
 
-        ArrayList<FoodicsProduct> foodicsProducts = response.getFoodicsProducts();
+        ArrayList<Product> foodicsProducts = response.getFoodicsProducts();
 
         try {
-
-            foodicsProductRepo.saveAll(foodicsProducts);
-        }catch(Exception e){
+//            foodicsProductRepo.saveAll(foodicsProducts);
+        } catch (Exception e) {
             response.setMessage("Can't save foodics product.");
             response.setStatus(false);
         }
@@ -325,13 +324,13 @@ public class TalabatIntegratorService {
         return response;
     }
 
-    public FoodicsProduct updateFoodicsProdu(Account account, FoodicsProduct foodicsProduct) {
+    public Product updateFoodicsProdu(Account account, Product foodicsProduct) {
 
         Response response = new Response();
 
         try {
-            foodicsProductRepo.save(foodicsProduct);
-        }catch(Exception e){
+//            foodicsProductRepo.save(foodicsProduct);
+        } catch (Exception e) {
             response.setMessage("Can't save foodics product.");
             response.setStatus(false);
         }
@@ -343,14 +342,64 @@ public class TalabatIntegratorService {
 
         HashMap<String, Object> response = new HashMap<>();
 
-//        if(foodicsOrderRepo.existsById(foodicsOrder.getI)
         try {
-            foodicsOrderRepo.save(foodicsOrder);
-        }catch(Exception e){
-//            response.setMessage("Can't save foodics order.");
-//            response.setStatus(false);
-        }
 
+            if (foodicsOrderRepo.existsById(foodicsOrder.getId())) {
+
+                foodicsOrderRepo.save(foodicsOrder);
+                String delivery_status = "";
+                switch (foodicsOrder.getDelivery_status()) {
+                    case 1:
+                        delivery_status = "sent to kitchen";
+                        break;
+                    case 2:
+                        delivery_status = "ready";
+                        break;
+                    case 3:
+                        delivery_status = "assigned";
+                        break;
+                    case 4:
+                        delivery_status = "en route";
+                        break;
+                    case 5:
+                        delivery_status = "delivered";
+                        break;
+                    case 6:
+                        delivery_status = "closed";
+                        break;
+                }
+
+                String status = "";
+                switch (foodicsOrder.getStatus()) {
+                    case 1:
+                        delivery_status = "Pending";
+                        break;
+                    case 2:
+                        delivery_status = "Active";
+                        break;
+                    case 3:
+                        delivery_status = "Declined";
+                        break;
+                    case 4:
+                        delivery_status = "Closed";
+                        break;
+                    case 5:
+                        delivery_status = "Returned";
+                        break;
+                    case 6:
+                        delivery_status = "Void";
+                        break;
+                }
+
+            } else {
+                response.put("message", "Order dosen't exist.");
+                response.put("status", false);
+            }
+
+        } catch (Exception e) {
+            response.put("message", "Can't save foodics order.");
+            response.put("status", false);
+        }
         return foodicsOrder;
     }
 }

@@ -6,6 +6,7 @@ import java.util.Map;
 public class Tag {
 
     private String id;
+    public Pivot pivot;
 
     public String getId() {
         return id;

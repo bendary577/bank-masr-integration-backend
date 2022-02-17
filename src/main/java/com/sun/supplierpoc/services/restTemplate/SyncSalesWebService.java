@@ -104,20 +104,18 @@ public class SyncSalesWebService {
             RequestBody body = RequestBody.create(mediaType,
                     "{\"SalesDataCollection\": " +
                             "{\"SalesInfo\": [" +
-                            "{\"UnitNo\":\""  + salesAPIStatistics.unitNo  +"," +
-                            "\"LeaseCode\":\"" +salesAPIStatistics.leaseCode +"," +
-                            "\"SalesDateFrom\":\"" +salesAPIStatistics.dateFrom +"," +
-                            "\"SalesDateTo\":\"" +salesAPIStatistics.dateTo +"," +
-                            "\"TransactionCount\":" +salesAPIStatistics.NoChecks +"," +
-                            "\"Remarks\": Remarks,\"" +
-                            "\"NetSales\": "+salesAPIStatistics.NetSales+"," +
+                            "{\"UnitNo\": \"" + salesAPIStatistics.unitNo +"\"," +
+                            "\"LeaseCode\": \""+salesAPIStatistics.leaseCode+"\"," +
+                            "\"SalesDateFrom\": \""+salesAPIStatistics.dateFrom+"\"," +
+                            "\"SalesDateTo\": \""+salesAPIStatistics.dateTo+"\"," +
+                            " \"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
+                            "\"TotalSales\": "+salesAPIStatistics.NetSales+"," +
+                            "\"Remarks\": \"Remarks\"," +
                             "\"FandBSplit\": [" +
                             "{" + fandBSplit +
                             "}]}]}}");
 
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
+            Request request = new Request.Builder().url(url).post(body)
                     .addHeader("content-type", "application/json")
                     .addHeader("x-apikey", salesAPIConfig.apiKey)
                     .addHeader("cache-control", "no-cache")

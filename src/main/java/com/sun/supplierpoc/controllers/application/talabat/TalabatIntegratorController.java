@@ -2,20 +2,13 @@ package com.sun.supplierpoc.controllers.application.talabat;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
 
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
-import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.FoodicsProduct;
-import com.sun.supplierpoc.models.Order;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
-import com.sun.supplierpoc.models.talabat.login.Token;
-import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
-import com.sun.supplierpoc.repositories.InvokerUserRepo;
+import com.sun.supplierpoc.models.talabat.foodics.Product;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.TalabatIntegratorService;
@@ -181,7 +174,7 @@ public class TalabatIntegratorController {
     @RequestMapping("/foodics/webhook/products")
     public ResponseEntity<?> updateFoodicsRequest(@RequestHeader("Authorization") String authorization,
                                                   @RequestParam("productId") String productId,
-                                                  @RequestBody HashMap foodicsProduct) {
+                                                  @RequestBody Product foodicsProduct) {
 
         HashMap<String, Object> response = new HashMap<>();
 
@@ -190,10 +183,10 @@ public class TalabatIntegratorController {
 
         if (account != null) {
 
-//            FoodicsProduct foodicsProduct1 = talabatIntegratorService.updateFoodicsProdu(account, foodicsProduct);
+            Product foodicsProduct1 = talabatIntegratorService.updateFoodicsProdu(account, foodicsProduct);
 
             response.put("data", foodicsProduct);
-            response.put("message", "Product Saved Successfully.");
+            response.put("message", "Product information was successfully updated.");
             response.put("status", "Success");
             return new ResponseEntity<>(response, HttpStatus.OK);
 
@@ -207,7 +200,7 @@ public class TalabatIntegratorController {
     @RequestMapping("/foodics/webhook/orders")
     public ResponseEntity<?> updateFetchorder(@RequestHeader("Authorization") String authorization,
                                            @RequestParam("orderId") String orderId,
-                                           @RequestBody HashMap foodicsOrder) {
+                                           @RequestBody FoodicsOrder foodicsOrder) {
 
         HashMap<String, Object> response = new HashMap<>();
 
@@ -216,10 +209,10 @@ public class TalabatIntegratorController {
 
         if (account != null) {
 
-//            FoodicsOrder foodicsOrder1 = talabatIntegratorService.updateFoodicsOrder(account, foodicsOrder);
+            FoodicsOrder foodicsOrder1 = talabatIntegratorService.updateFoodicsOrder(account, foodicsOrder);
 
             response.put("data", foodicsOrder);
-            response.put("message", "Order Saved Successfully.");
+            response.put("message", "Order information was successfully updated.");
             response.put("status", "Success");
             return new ResponseEntity<>(response, HttpStatus.OK);
 

@@ -1,8 +1,6 @@
 package com.sun.supplierpoc.models.talabat.foodics;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Combo {
 

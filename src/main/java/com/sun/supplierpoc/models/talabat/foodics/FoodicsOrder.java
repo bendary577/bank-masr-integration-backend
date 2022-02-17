@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.talabat.foodics;
 
+import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -27,15 +28,25 @@ public class FoodicsOrder {
     private String customerId;
     private Meta meta;
     private List<Charge> charges = null;
-    private List<Product> products = null;
+    private List<FoodicsProduct> products = null;
     private List<Combo> combos = null;
     private List<Tag> tags = null;
     private List<Payment> payments = null;
     private Double subtotalPrice;
     private Double roundingAmount;
     private Double totalPrice;
-    private boolean status  ;
+    private int status;
+    private boolean callStatus;
+    private int delivery_status;
     private String message;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public Integer getGuests() {
         return guests;
@@ -181,11 +192,11 @@ public class FoodicsOrder {
         this.meta = meta;
     }
 
-    public List<Product> getProducts() {
+    public List<FoodicsProduct> getProducts() {
         return products;
     }
 
-    public void setProducts(List<Product> products) {
+    public void setProducts(List<FoodicsProduct> products) {
         this.products = products;
     }
 
@@ -213,11 +224,11 @@ public class FoodicsOrder {
         this.payments = payments;
     }
 
-    public boolean isStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(boolean status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 
@@ -227,5 +238,21 @@ public class FoodicsOrder {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public int getDelivery_status() {
+        return delivery_status;
+    }
+
+    public void setDelivery_status(int delivery_status) {
+        this.delivery_status = delivery_status;
+    }
+
+    public boolean isCallStatus() {
+        return callStatus;
+    }
+
+    public void setCallStatus(boolean callStatus) {
+        this.callStatus = callStatus;
     }
 }

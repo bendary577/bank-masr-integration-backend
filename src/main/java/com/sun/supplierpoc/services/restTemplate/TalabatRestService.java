@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.services.restTemplate;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -8,10 +7,8 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
-import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
 import com.sun.supplierpoc.models.talabat.FoodicProductResponse;
-import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsLoginBody;
@@ -27,7 +24,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -229,16 +225,16 @@ public class TalabatRestService {
             HashMap<String, String> hashMap = gson.fromJson(foodicsResponse.body().string(), HashMap.class);
 
             if (foodicsResponse.code() == 200) {
-                foodicsOrder.setStatus(true);
+                foodicsOrder.setCallStatus(true);
 
             } else {
-                foodicsOrder.setStatus(false);
+                foodicsOrder.setCallStatus(false);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
             foodicsOrder.setMessage(e.getMessage());
-            foodicsOrder.setStatus(false);
+            foodicsOrder.setCallStatus(false);
         }
 
         return foodicsOrder;

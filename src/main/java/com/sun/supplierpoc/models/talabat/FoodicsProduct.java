@@ -5,12 +5,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
-@Document
 public class FoodicsProduct {
 
-    @Id
     private String id;
     private String sku;
+    private String productId;
+    private int quantity;
+    private Double unitPrice;
+
     private Object barcode;
     private String name;
     private Object nameLocalized;
@@ -248,5 +250,29 @@ public class FoodicsProduct {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public Double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(Double unitPrice) {
+        this.unitPrice = unitPrice;
     }
 }

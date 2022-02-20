@@ -30,7 +30,10 @@ public class Account implements Serializable {
     private String clientId;
     private String currency;
     private boolean deleted;
+
+    /* Entry System Config */
     private AccountEmailConfig emailConfig;
+    private PrintRecieptConfig printReceiptConfig;
 
     @DBRef
     private List<Feature> features = new ArrayList<>();
@@ -145,6 +148,14 @@ public class Account implements Serializable {
 
     public void setEmailConfig(AccountEmailConfig emailConfig) {
         this.emailConfig = emailConfig;
+    }
+
+    public PrintRecieptConfig getPrintReceiptConfig() {
+        return printReceiptConfig;
+    }
+
+    public void setPrintReceiptConfig(PrintRecieptConfig printReceiptConfig) {
+        this.printReceiptConfig = printReceiptConfig;
     }
 
     public List<Feature> getFeatures() {

@@ -204,12 +204,15 @@ public class AppUserService {
         HashMap response = new HashMap();
 
         Group group;
+        Optional<Group> groupOptional = null;
         ApplicationUser applicationUser = new ApplicationUser();
 
         if (addFlag) {
 
-            Optional<Group> groupOptional = groupRepo.findById(groupId);
-            if (groupOptional.isPresent()) {
+            if(groupId != null)
+                groupOptional = groupRepo.findById(groupId);
+
+            if (groupOptional != null && groupOptional.isPresent()) {
                 group = groupOptional.get();
                 applicationUser.setGroup(group);
             } else {
@@ -269,6 +272,7 @@ public class AppUserService {
                     if (emailService.sendMimeMail(QrPath, accountLogo, mailSubj, account.getName(), applicationUser, account)) {
                         userRepo.save(applicationUser);
                         response.put("message", "User added successfully.");
+                        response.put("data", applicationUser);
                         response.put("success", true);
                         return response;
                     } else {
@@ -370,6 +374,7 @@ public class AppUserService {
 
 
                 response.put("message", "User added successfully.");
+                response.put("data", applicationUser);
                 response.put("success", true);
                 return response;
             }
@@ -382,7 +387,7 @@ public class AppUserService {
 
                 applicationUser = userOptional.get();
 
-                Optional<Group> groupOptional = groupRepo.findById(groupId);
+                groupOptional = groupRepo.findById(groupId);
                 if (groupOptional.isPresent()) {
                     group = groupOptional.get();
                     applicationUser.setGroup(group);

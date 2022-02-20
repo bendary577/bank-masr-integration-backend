@@ -29,7 +29,7 @@ public class SyncSalesWebService {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
                     } else {
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
                     }
                 }
@@ -98,7 +98,7 @@ public class SyncSalesWebService {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
                     } else {
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() +  ",";
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
                     }
                 }

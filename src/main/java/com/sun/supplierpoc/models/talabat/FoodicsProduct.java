@@ -32,7 +32,7 @@ public class FoodicsProduct {
     private String createdAt;
     private String updatedAt;
     private Object deletedAt;
-    private boolean status;
+    private int status;
     private String message;
     private List<Object> ingredients = null;
 
@@ -236,11 +236,11 @@ public class FoodicsProduct {
         isReady = ready;
     }
 
-    public boolean isStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(boolean status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 

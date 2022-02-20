@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Optional;
 
 @RestController
@@ -137,7 +138,7 @@ public class TalabatIntegratorController {
         return new ResponseEntity<>("", HttpStatus.OK);
     }
 
-    @GetMapping("/foodics/fetchFoodicsProduct")
+    @GetMapping("/foodicsFetchProducts")
     public ResponseEntity<?> fetchProducts(Principal principal) {
 
         Response response = new Response();
@@ -173,52 +174,53 @@ public class TalabatIntegratorController {
 
     @RequestMapping("/foodics/webhook/products")
     public ResponseEntity<?> updateFoodicsRequest(@RequestHeader("Authorization") String authorization,
-                                                  @RequestParam("productId") String productId,
                                                   @RequestBody Product foodicsProduct) {
 
-        HashMap<String, Object> response = new HashMap<>();
+        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
 
         InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+
         Account account = accountService.getAccount(invokerUser.getAccountId());
 
         if (account != null) {
 
-            Product foodicsProduct1 = talabatIntegratorService.updateFoodicsProdu(account, foodicsProduct);
+            response = talabatIntegratorService.updateFoodicsProduct(account, foodicsProduct);
 
-            response.put("data", foodicsProduct);
-            response.put("message", "Product information was successfully updated.");
-            response.put("status", "Success");
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            if (response.get("status").equals("success")) {
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
 
         } else {
             response.put("message", Constants.INVALID_USER);
-            response.put("status", "Faild");
+            response.put("status", "failed");
             return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
         }
     }
 
     @RequestMapping("/foodics/webhook/orders")
-    public ResponseEntity<?> updateFetchorder(@RequestHeader("Authorization") String authorization,
-                                           @RequestParam("orderId") String orderId,
-                                           @RequestBody FoodicsOrder foodicsOrder) {
+    public ResponseEntity<?> updateFetchOrder(@RequestHeader("Authorization") String authorization,
+                                              @RequestBody FoodicsOrder foodicsOrder) {
 
-        HashMap<String, Object> response = new HashMap<>();
+        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
 
         InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
         Account account = accountService.getAccount(invokerUser.getAccountId());
 
         if (account != null) {
 
-            FoodicsOrder foodicsOrder1 = talabatIntegratorService.updateFoodicsOrder(account, foodicsOrder);
+            response = talabatIntegratorService.updateFoodicsOrder(account, foodicsOrder);
 
-            response.put("data", foodicsOrder);
-            response.put("message", "Order information was successfully updated.");
-            response.put("status", "Success");
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            if (response.get("status").equals("success")) {
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            }
 
         } else {
             response.put("message", Constants.INVALID_USER);
-            response.put("status", "Faild");
+            response.put("status", "failed");
             return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
         }
     }

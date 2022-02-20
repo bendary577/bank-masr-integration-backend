@@ -1,6 +1,6 @@
 package com.sun.supplierpoc.repositories.applications;
 
-import org.apache.commons.math3.stat.descriptive.summary.Product;
+import com.sun.supplierpoc.models.talabat.foodics.Product;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

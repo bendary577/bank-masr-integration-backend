@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
 import com.sun.supplierpoc.models.talabat.FoodicProductResponse;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
+import com.sun.supplierpoc.models.talabat.foodics.CreateOrderRequest;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsLoginBody;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
 import com.sun.supplierpoc.models.talabat.login.Token;
@@ -222,9 +223,10 @@ public class TalabatRestService {
             okhttp3.Response foodicsResponse = client.newCall(request).execute();
 
 //            foodicsOrder = gson.fromJson(foodicsResponse.body().string(), FoodicsOrder.class);
-            HashMap<String, String> hashMap = gson.fromJson(foodicsResponse.body().string(), HashMap.class);
+            CreateOrderRequest createOrderRequest = gson.fromJson(foodicsResponse.body().string(), CreateOrderRequest.class);
 
             if (foodicsResponse.code() == 200) {
+                foodicsOrder = createOrderRequest.getData();
                 foodicsOrder.setCallStatus(true);
 
             } else {
@@ -254,12 +256,8 @@ public class TalabatRestService {
                     .build();
             okhttp3.Response getProductsResponse = client.newCall(request).execute();
             if (getProductsResponse.code() == 200) {
-                Gson gson = new GsonBuilder()
-                        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                        .create();
-                FoodicProductResponse foodicsProductsResponse1 = gson.fromJson(getProductsResponse.body().string(),
-                        FoodicProductResponse.class);
-
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+                FoodicProductResponse foodicsProductsResponse1 = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
                 response.setFoodicsProducts(foodicsProductsResponse1.getData());
                 response.setStatus(true);
                 return response;

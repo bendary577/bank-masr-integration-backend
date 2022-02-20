@@ -185,7 +185,7 @@ public class SalesApiService {
             if (rows.size() < 1) {
                 return response;
             }
-            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 3);
+            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 2);
             salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(1));
 
             statTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
@@ -233,7 +233,7 @@ public class SalesApiService {
                 }
 
                 Double netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
-                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.get(columns.indexOf("checks."))));
+                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.get(columns.indexOf("checks"))));
 
                 orderTypeChannels.stream().
                         filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())

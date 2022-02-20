@@ -1,16 +1,18 @@
 package com.sun.supplierpoc.models.talabat;
 
+import com.sun.supplierpoc.models.talabat.foodics.Product;
+
 import java.util.ArrayList;
 
 public class FoodicProductResponse {
 
-    private ArrayList<FoodicsProduct> data;
+    private ArrayList<Product> data;
 
-    public ArrayList<FoodicsProduct> getData() {
+    public ArrayList<Product> getData() {
         return data;
     }
 
-    public void setData(ArrayList<FoodicsProduct> data) {
+    public void setData(ArrayList<Product> data) {
         this.data = data;
     }
 }

@@ -1,9 +1,11 @@
 package com.sun.supplierpoc.models.talabat.foodics;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.List;
 
@@ -12,6 +14,7 @@ import java.util.List;
 public class FoodicsOrder {
 
     @Id
+    @NotNull(message = "ID can't be null.")
     private String id;
     private Integer guests;
     private Integer type;
@@ -35,9 +38,10 @@ public class FoodicsOrder {
     private Double subtotalPrice;
     private Double roundingAmount;
     private Double totalPrice;
-    private int status;
+    @JsonProperty("order_status")
+    private int status = 1;
     private boolean callStatus;
-    private int delivery_status;
+    private int delivery_status = 1;
     private String message;
 
     public String getId() {

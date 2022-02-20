@@ -40,6 +40,7 @@ public class AuthorizationResourceConfiguration  extends
                 .antMatchers("/test/**").authenticated()
                 .antMatchers("/Simphony/**").authenticated()
                 .antMatchers("/simphonyLoyalty/voucherTransactions/createVoucherTrans").authenticated()
+                .antMatchers("/foodics/**").authenticated()
                 .and().exceptionHandling().accessDeniedHandler(new OAuth2AccessDeniedHandler());
     }
 

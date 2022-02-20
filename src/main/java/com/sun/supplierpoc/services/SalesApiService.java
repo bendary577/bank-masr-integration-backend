@@ -80,7 +80,7 @@ public class SalesApiService {
                 for (CostCenter costCenter : costCentersLocation) {
                     if (costCenter.checked) {
                         callSalesFunction(statistics, timePeriod, fromDate, toDate, costCenter,
-                                journalBatches, driver, endpoint,response, orderTypeChannels);
+                                journalBatches, driver, endpoint, response, orderTypeChannels);
                         if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)) {
                             return response;
                         }
@@ -88,7 +88,7 @@ public class SalesApiService {
                 }
             } else {
                 callSalesFunction(statistics, timePeriod, fromDate, toDate, new CostCenter(),
-                        journalBatches, driver, endpoint , response, orderTypeChannels);
+                        journalBatches, driver, endpoint, response, orderTypeChannels);
                 if (!response.isStatus()) {
                     return response;
                 }
@@ -185,7 +185,7 @@ public class SalesApiService {
             if (rows.size() < 1) {
                 return response;
             }
-            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 2);
+            ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 3);
             salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(1));
 
             statTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
@@ -200,9 +200,9 @@ public class SalesApiService {
 
             salesAPIStatistics.NetSales = conversions.filterString(statisticValues.get(2));
 
-            if(endPoint.equals("Daily")) {
+            if (endPoint.equals("Daily")) {
                 statTable = driver.findElement(By.xpath("/html/body/div[6]/table"));
-            }else{
+            } else {
                 statTable = driver.findElement(By.xpath("/html/body/div[4]/table"));
             }
             rows = statTable.findElements(By.tagName("tr"));
@@ -218,7 +218,7 @@ public class SalesApiService {
             List<OrderTypeChannels> orderTypeChannels = new ArrayList<>();
             tempOrderTypeChannels.stream().forEach(o -> orderTypeChannels.add(o.clone()));
 
-        for (int i = 2; i < rows.size(); i++) {
+            for (int i = 2; i < rows.size(); i++) {
                 statisticValues = setupEnvironment.getTableColumns(rows, false, i);
                 String OrderType = conversions.filterString(statisticValues.get(columns.indexOf("order_type")));
 
@@ -233,19 +233,17 @@ public class SalesApiService {
                 }
 
                 Double netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
-//                orderTypeChannel.setNetSales(String.valueOf(netSales));
-//                orderTypeChannels.add(orderTypeChannel);
-            orderTypeChannels.stream().
+                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.get(columns.indexOf("checks."))));
+
+                orderTypeChannels.stream().
                         filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
-                        .stream().findFirst().get().setNetSales(String.valueOf(netSales ));
+                        .stream().findFirst().get().setNetSales(String.valueOf(netSales));
+
+                orderTypeChannels.stream().
+                        filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
+                        .stream().findFirst().get().setCheckCount(String.valueOf(checkPerType));
 
             }
-
-//            for (OrderTypeChannels orderTypeChannels1 : tempOrderTypeChannels) {
-//                if (orderTypeChannels1.getNetSales().equals("0") && acc) {
-//                    orderTypeChannels.add(orderTypeChannels1);
-//                }
-//            }
 
             salesAPIStatistics.setOrderTypeChannels(orderTypeChannels);
 

@@ -85,7 +85,10 @@ public class SetupEnvironment {
             ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
             AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
 
+            System.out.println("First Comment");
             driver.get(url);
+            System.out.println("Second Comment");
+
             try {
                 Alert al = driver.switchTo().alert();
                 al.accept();

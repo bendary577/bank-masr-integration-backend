@@ -4,6 +4,7 @@ import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.simphony.DbMenuItemClass;
 import com.sun.supplierpoc.models.simphony.DbMenuItemDefinition;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentRes;
+import com.sun.supplierpoc.models.talabat.foodics.Product;
 import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class Response<T> {
     private ArrayList<OperationData> addedOperationData = new ArrayList<>();
 
     private List<WebElement> rows = new ArrayList<>();
+    private ArrayList<Product> foodicsProducts = new ArrayList<>();
 
     private SimphonyPaymentRes simphonyPaymentRes;
     public Response() {
@@ -226,5 +228,13 @@ public class Response<T> {
 
     public void setSalesAPIStatistics(SalesAPIStatistics salesAPIStatistics) {
         this.salesAPIStatistics = salesAPIStatistics;
+    }
+
+    public ArrayList<Product> getFoodicsProducts() {
+        return foodicsProducts;
+    }
+
+    public void setFoodicsProducts(ArrayList<Product> foodicsProducts) {
+        this.foodicsProducts = foodicsProducts;
     }
 }

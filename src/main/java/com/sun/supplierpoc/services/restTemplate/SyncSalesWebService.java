@@ -27,8 +27,10 @@ public class SyncSalesWebService {
                 if(orderTypeChannels.isChecked()) {
                     if (index != salesAPIStatistics.orderTypeChannels.size()) {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
                     } else {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
                     }
                 }
                 index += 1;
@@ -86,21 +88,38 @@ public class SyncSalesWebService {
         String url = "https://apidev.emaar.com/etenantsales/casualsales";
         try {
             OkHttpClient client = new OkHttpClient();
-
             MediaType mediaType = MediaType.parse("application/json");
+
+            String fandBSplit = "";
+            int index = 1 ;
+            for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
+                if(orderTypeChannels.isChecked()) {
+                    if (index != salesAPIStatistics.orderTypeChannels.size()) {
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
+                    } else {
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
+                    }
+                }
+                index += 1;
+            }
+
             RequestBody body = RequestBody.create(mediaType,
-                    "{\n  \"SalesDataCollection\": " +
-                            "{\n    \"SalesInfo\": [\n " +
-                            "     {\n        \"UnitNo\": \"" + salesAPIStatistics.unitNo +"\",\n " +
-                            "       \"LeaseCode\": \""+salesAPIStatistics.leaseCode+"\",\n " +
-                            "       \"SalesDateFrom\": \""+salesAPIStatistics.dateFrom+"\",\n " +
-                            "       \"SalesDateTo\": \""+salesAPIStatistics.dateTo+"\",\n " +
-                            "       \"TransactionCount\": "+salesAPIStatistics.NoChecks+",\n  " +
-                            "       \"Remarks\": Remarks,\n  " +
-                            "      \"NetSales\": "+salesAPIStatistics.NetSales+"\n      }\n    ]\n  }\n}");
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
+                    "{\"SalesDataCollection\": " +
+                            "{\"SalesInfo\": [" +
+                            "{\"UnitNo\": \"" + salesAPIStatistics.unitNo +"\"," +
+                            "\"LeaseCode\": \""+salesAPIStatistics.leaseCode+"\"," +
+                            "\"SalesDateFrom\": \""+salesAPIStatistics.dateFrom+"\"," +
+                            "\"SalesDateTo\": \""+salesAPIStatistics.dateTo+"\"," +
+                            " \"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
+                            "\"TotalSales\": "+salesAPIStatistics.NetSales+"," +
+                            "\"Remarks\": \"Remarks\"," +
+                            "\"FandBSplit\": [" +
+                            "{" + fandBSplit +
+                            "}]}]}}");
+
+            Request request = new Request.Builder().url(url).post(body)
                     .addHeader("content-type", "application/json")
                     .addHeader("x-apikey", salesAPIConfig.apiKey)
                     .addHeader("cache-control", "no-cache")

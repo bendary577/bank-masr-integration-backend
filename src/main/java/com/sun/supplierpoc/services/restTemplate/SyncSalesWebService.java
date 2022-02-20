@@ -27,8 +27,10 @@ public class SyncSalesWebService {
                 if(orderTypeChannels.isChecked()) {
                     if (index != salesAPIStatistics.orderTypeChannels.size()) {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
                     } else {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
                     }
                 }
                 index += 1;
@@ -94,8 +96,10 @@ public class SyncSalesWebService {
                 if(orderTypeChannels.isChecked()) {
                     if (index != salesAPIStatistics.orderTypeChannels.size()) {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
                     } else {
                         fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales();
+                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
                     }
                 }
                 index += 1;

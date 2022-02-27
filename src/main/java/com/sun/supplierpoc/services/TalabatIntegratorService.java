@@ -5,9 +5,7 @@ import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.BranchMapping;
-import com.sun.supplierpoc.models.talabat.FoodicsProduct;
-import com.sun.supplierpoc.models.talabat.ProductsMapping;
+import com.sun.supplierpoc.models.talabat.*;
 import com.sun.supplierpoc.models.talabat.TalabatRest.Item;
 import com.sun.supplierpoc.models.talabat.TalabatRest.Order;
 import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
@@ -146,7 +144,7 @@ public class TalabatIntegratorService {
                         foodicsOrder = talabatRestService.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
                         talabatOrderDetails.setOrders(List.of(restOrder));
 
-                        if(foodicsOrder.isCallStatus()) {
+                        if (foodicsOrder.isCallStatus()) {
                             talabatOrderList.add(talabatOrderDetails);
                             foodicsOrderRepo.save(foodicsOrder);
                         }
@@ -185,13 +183,15 @@ public class TalabatIntegratorService {
 
 
 //        foodicsOrder.setGuests(1);
-            foodicsOrder.setType(1);
+            foodicsOrder.setType(3);
+
 
 //        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
 //                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
 //                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
 
-            BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().get(0);
+            BranchMapping branchMapping = generalSettings.getTalabatConfiguration().
+                    getBranchMappings().get(0);
 
             foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
 
@@ -213,9 +213,16 @@ public class TalabatIntegratorService {
 //        foodicsOrder.setTableId("1");
 //        foodicsOrder.setCustomerNotes("");
 //        foodicsOrder.setDriverId(parsedOrder.getDelivery().toString());
-//        foodicsOrder.setCustomerAddressId(parsedOrder.getDelivery().getAddressText());
-//        foodicsOrder.setCustomerAddressId(parsedOrder.getDelivery().getAddressText());
-//        foodicsOrder.setCustomerId(parsedOrder.getDelivery().getAddressText());
+
+            CustomerMapping customerMapping = generalSettings.getTalabatConfiguration().
+                    getCustomerMappings().get(0);
+
+            foodicsOrder.setCustomerId("9598f397-2a95-4314-b239-213327b6b422");
+
+            AddressMapping addressMapping = generalSettings.getTalabatConfiguration().
+                    getAddressMappings().get(0);
+
+            foodicsOrder.setCustomerAddressId("");
 
 //        Meta meta = new Meta();
 //        meta.setExternalNumber("120153");

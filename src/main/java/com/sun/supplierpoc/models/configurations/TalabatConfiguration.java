@@ -1,9 +1,7 @@
 package com.sun.supplierpoc.models.configurations;
 
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.BranchMapping;
-import com.sun.supplierpoc.models.talabat.DiscountMapping;
-import com.sun.supplierpoc.models.talabat.ProductsMapping;
+import com.sun.supplierpoc.models.talabat.*;
 
 import java.util.ArrayList;
 
@@ -12,6 +10,8 @@ public class TalabatConfiguration {
     private FoodicsAccount foodicsAccount = new FoodicsAccount();
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
+    private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();
+    private ArrayList<AddressMapping> addressMappings = new ArrayList<>();
     private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
 
     public FoodicsAccount getFoodicsAccount() {
@@ -36,6 +36,22 @@ public class TalabatConfiguration {
 
     public void setBranchMappings(ArrayList<BranchMapping> branchMappings) {
         this.branchMappings = branchMappings;
+    }
+
+    public ArrayList<CustomerMapping> getCustomerMappings() {
+        return customerMappings;
+    }
+
+    public void setCustomerMappings(ArrayList<CustomerMapping> customerMappings) {
+        this.customerMappings = customerMappings;
+    }
+
+    public ArrayList<AddressMapping> getAddressMappings() {
+        return addressMappings;
+    }
+
+    public void setAddressMappings(ArrayList<AddressMapping> addressMappings) {
+        this.addressMappings = addressMappings;
     }
 
     public ArrayList<DiscountMapping> getDiscountMappings() {

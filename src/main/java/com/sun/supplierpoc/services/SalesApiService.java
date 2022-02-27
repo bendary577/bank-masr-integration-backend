@@ -232,8 +232,10 @@ public class SalesApiService {
                     return response;
                 }
 
-                Double netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
-                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.get(columns.indexOf("checks"))));
+                Double netSales = Double.parseDouble(conversions.filterString(statisticValues.
+                        get(columns.indexOf("gross_sales_after_disc."))));
+                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
+                        get(columns.indexOf("checks"))));
 
                 orderTypeChannels.stream().
                         filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())

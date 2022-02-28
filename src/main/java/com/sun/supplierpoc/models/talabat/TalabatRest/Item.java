@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.talabat.TalabatRest;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Item {
@@ -10,6 +11,16 @@ public class Item {
     private String unitPrice;
     private String parentName;
     private List<Object> options = null;
+    public int amount;
+    public String category;
+    public String menuNumber;
+    public String comment;
+    public double price;
+    public double total;
+    public ArrayList<Modifier> modifiers;
+    public String productId;
+    public boolean modifiable;
+    public String type;
 
     public String getId() {
         return id;
@@ -57,5 +68,85 @@ public class Item {
 
     public void setOptions(List<Object> options) {
         this.options = options;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public String getMenuNumber() {
+        return menuNumber;
+    }
+
+    public void setMenuNumber(String menuNumber) {
+        this.menuNumber = menuNumber;
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public double getTotal() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total = total;
+    }
+
+    public ArrayList<Modifier> getModifiers() {
+        return modifiers;
+    }
+
+    public void setModifiers(ArrayList<Modifier> modifiers) {
+        this.modifiers = modifiers;
+    }
+
+    public String getProductId() {
+        return productId;
+    }
+
+    public void setProductId(String productId) {
+        this.productId = productId;
+    }
+
+    public boolean isModifiable() {
+        return modifiable;
+    }
+
+    public void setModifiable(boolean modifiable) {
+        this.modifiable = modifiable;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 }

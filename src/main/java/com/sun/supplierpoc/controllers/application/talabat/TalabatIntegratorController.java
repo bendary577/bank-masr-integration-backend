@@ -82,6 +82,28 @@ public class TalabatIntegratorController {
         }
     }
 
+    @GetMapping("/talabat/testTalabatAdmin")
+    public ResponseEntity<?> testTalabatAdmin(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response = talabatIntegratorService.testTalabatRest(account);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
     @GetMapping("/talabat/branch")
     public ResponseEntity<?> getBranchOrders(Principal principal,
                                              @RequestParam("branch") String branch) {

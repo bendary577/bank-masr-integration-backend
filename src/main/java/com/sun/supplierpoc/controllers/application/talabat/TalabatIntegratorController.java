@@ -127,16 +127,6 @@ public class TalabatIntegratorController {
         }
     }
 
-    @PostMapping("/talabat/orders")
-    public ResponseEntity<?> getOrderById(@RequestBody RestOrder order) {
-
-//        Response response = talabatRestService.loginRequest(new Account());
-
-//        response = talabatRestService.getOrderById(order, (Token) response.getData());
-
-        return new ResponseEntity<>("", HttpStatus.OK);
-    }
-
     @GetMapping("/foodicsFetchProducts")
     public ResponseEntity<?> fetchProducts(Principal principal) {
 

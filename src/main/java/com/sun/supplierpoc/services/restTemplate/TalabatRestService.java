@@ -34,7 +34,6 @@ public class TalabatRestService {
 
     Logger logger = LoggerFactory.getLogger(CallRestService.class);
 
-
     public Token talabatLoginRequest(Account account) {
 
         Token token = new Token();
@@ -92,7 +91,9 @@ public class TalabatRestService {
             MediaType mediaType = MediaType.parse("application/json");
             RequestBody body = RequestBody.create(mediaType, "{\r\n    \"global_vendor_codes\": [\r\n" + "        \"" + branch + "\"\r\n    ],\r\n" + "    \"time_from\": \"" + getDate() + "T00:00:00+02:00\",\r\n" + "    \"time_to\": \"" + getDate() + "T23:59:59+02:00\"\r\n}");
 
-            Request request = new Request.Builder().url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders").method("POST", body).addHeader("Authorization", "Bearer " + token.getAccessToken()).addHeader("Content-Type", "application/json").build();
+            Request request = new Request.Builder().url("https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders")
+                    .method("POST", body).addHeader("Authorization", "Bearer " + token.getAccessToken())
+                    .addHeader("Content-Type", "application/json").build();
             okhttp3.Response orderResponse = client.newCall(request).execute();
 
             Gson gson = new Gson();
@@ -164,42 +165,6 @@ public class TalabatRestService {
         return talabatOrders;
     }
 
-//    public FoodicsLoginBody LoginToFoodics() {
-//
-//        FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
-//        String url = "https://api-sandbox.foodics.com/oauth/token";
-//        try {
-//
-//            Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-//            String jsonRequest = gson.toJson(foodicsLoginBody);
-//
-//            OkHttpClient client = new OkHttpClient().newBuilder().build();
-//            MediaType mediaType = MediaType.parse("Application/json");
-//            RequestBody body = RequestBody.create(mediaType, jsonRequest);
-//
-//            Request request = new Request.Builder().url(url).method("POST", body).
-//                    addHeader("Content-Type", "Application/json").build();
-//
-//            okhttp3.Response foodicsLoginResponse = client.newCall(request).execute();
-//
-//            foodicsLoginBody = gson.fromJson(foodicsLoginResponse.body().string(), FoodicsLoginBody.class);
-//
-//            if (foodicsLoginResponse.code() == 200) {
-//                foodicsLoginBody.setStatus(true);
-//
-//            } else {
-//                foodicsLoginBody.setStatus(false);
-//            }
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            foodicsLoginBody.setMessage( e.getMessage() );
-//            foodicsLoginBody.setStatus(false);
-//        }
-//
-//        return foodicsLoginBody;
-//    }
-
     public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, FoodicsLoginBody token, GeneralSettings generalSettings,
                                            FoodicsAccount foodicsAccount) {
 
@@ -222,7 +187,6 @@ public class TalabatRestService {
 
             okhttp3.Response foodicsResponse = client.newCall(request).execute();
 
-//            foodicsOrder = gson.fromJson(foodicsResponse.body().string(), FoodicsOrder.class);
             CreateOrderRequest createOrderRequest = gson.fromJson(foodicsResponse.body().string(), CreateOrderRequest.class);
 
             if (foodicsResponse.code() == 200) {

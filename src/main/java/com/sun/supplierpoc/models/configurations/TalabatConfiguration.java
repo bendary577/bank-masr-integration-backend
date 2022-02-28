@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public class TalabatConfiguration {
 
     private FoodicsAccount foodicsAccount = new FoodicsAccount();
+    private ArrayList<TalabatAdminAccount> talabatAdminAccount = new ArrayList<>();
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
     private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();
@@ -60,5 +61,13 @@ public class TalabatConfiguration {
 
     public void setDiscountMappings(ArrayList<DiscountMapping> discountMappings) {
         this.discountMappings = discountMappings;
+    }
+
+    public ArrayList<TalabatAdminAccount> getTalabatAdminAccount() {
+        return talabatAdminAccount;
+    }
+
+    public void setTalabatAdminAccount(ArrayList<TalabatAdminAccount> talabatAdminAccount) {
+        this.talabatAdminAccount = talabatAdminAccount;
     }
 }

@@ -184,7 +184,7 @@ public class TalabatIntegratorService {
 
 //        foodicsOrder.setGuests(1);
             foodicsOrder.setType(3);
-
+//            foodicsOrder
 
 //        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
 //                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
@@ -214,15 +214,15 @@ public class TalabatIntegratorService {
 //        foodicsOrder.setCustomerNotes("");
 //        foodicsOrder.setDriverId(parsedOrder.getDelivery().toString());
 
-            CustomerMapping customerMapping = generalSettings.getTalabatConfiguration().
-                    getCustomerMappings().get(0);
-
-            foodicsOrder.setCustomerId("9598f397-2a95-4314-b239-213327b6b422");
-
-            AddressMapping addressMapping = generalSettings.getTalabatConfiguration().
-                    getAddressMappings().get(0);
-
-            foodicsOrder.setCustomerAddressId("");
+//            CustomerMapping customerMapping = generalSettings.getTalabatConfiguration().
+//                    getCustomerMappings().get(0);
+//
+//            foodicsOrder.setCustomerId("9598f397-2a95-4314-b239-213327b6b422");
+//
+//            AddressMapping addressMapping = generalSettings.getTalabatConfiguration().
+//                    getAddressMappings().get(0);
+//
+//            foodicsOrder.setCustomerAddressId("");
 
 //        Meta meta = new Meta();
 //        meta.setExternalNumber("120153");

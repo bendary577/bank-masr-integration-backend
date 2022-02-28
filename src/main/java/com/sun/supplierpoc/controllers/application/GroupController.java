@@ -185,7 +185,9 @@ public class GroupController {
                         }
                     }
 
-                    SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, Integer.parseInt(discountId));
+                    SimphonyDiscount simphonyDiscount = new SimphonyDiscount();
+                    if(discountId != null)
+                        simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, Integer.parseInt(discountId));
 
                     group.setName(name);
                     group.setDescription(description);
@@ -245,7 +247,9 @@ public class GroupController {
                             group.setParentGroupId(parentGroup.getId());
                         }
 
-                        SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, Integer.parseInt(discountId));
+                        SimphonyDiscount simphonyDiscount = new SimphonyDiscount();
+                        if(discountId != null)
+                            simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, Integer.parseInt(discountId));
 
                         group.setName(name);
                         group.setDescription(description);

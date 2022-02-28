@@ -56,18 +56,16 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class MenuItemService {
     @Autowired
     private SyncJobDataRepo syncJobDataRepo;
 
-    public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter,
-                                                                      String simphonyServerIP, int startIndex, int maxCount) {
+    public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter, String simphonyServerIP,
+                                                                      int startIndex, int maxCount, boolean isGeneralOptionalCond) {
+
         com.sun.supplierpoc.models.Response response = new com.sun.supplierpoc.models.Response();
         Client client = ClientBuilder.newClient();
         JAXBContext jaxbContext;
@@ -578,13 +576,25 @@ public class MenuItemService {
         return itemResponse;
     }
 
-    public ArrayList<MenuItemResponse> simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData) {
+    public LinkedHashMap simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData, boolean isGeneralOptionalCond) {
+        LinkedHashMap response = new LinkedHashMap();
         ArrayList<MenuItemResponse> menuItemResponses = new ArrayList<>();
 
+        List<CondimentResponse> optionalCondiments = new ArrayList<>();
+
         for (SyncJobData syncJobData : menuItemsData) {
+
+                if(isGeneralOptionalCond && syncJobData.getMenuItemResponse().getOptionalCondiments().size() > 0){
+                    optionalCondiments = syncJobData.getMenuItemResponse().getOptionalCondiments();
+                    syncJobData.getMenuItemResponse().setOptionalCondiments(new ArrayList<>());
+                }
+
                 menuItemResponses.add(syncJobData.getMenuItemResponse());
         }
-        return menuItemResponses;
+
+        response.put("menuItems", menuItemResponses);
+        response.put("optionalCondiments", optionalCondiments);
+        return response;
     }
 
     private PostTransactionEx2 buildCheckObject(SimphonyLocation location) {

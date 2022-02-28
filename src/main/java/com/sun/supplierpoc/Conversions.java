@@ -149,6 +149,15 @@ public class Conversions {
         return new SalesStatistics();
     }
 
+    public SalesAPIStatistics checkSalesAPIStatisticsExistence(String location, ArrayList<SalesAPIStatistics> salesAPIStatistics){
+        for (SalesAPIStatistics tempSalesAPIStatistics : salesAPIStatistics) {
+            if (tempSalesAPIStatistics.location.toLowerCase().equals(location.toLowerCase())) {
+                return tempSalesAPIStatistics;
+            }
+        }
+        return new SalesAPIStatistics();
+    }
+
     public ItemGroup checkItemGroupExistence(ArrayList<ItemGroup> itemGroups, String itemGroupName){
         for (ItemGroup itemGroup : itemGroups) {
             if (itemGroup.getItemGroup().toLowerCase().equals(itemGroupName.toLowerCase())) {
@@ -364,6 +373,18 @@ public class Conversions {
     public boolean checkPackageExistence(ArrayList<Package> packages, String name, String source){
         for (Package pkg : packages) {
             if (pkg.packageName.toLowerCase().equals(name.toLowerCase()) && pkg.source.toLowerCase().equals(source.toLowerCase())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean checkPackageExistence(ArrayList<Package> packages, String name, String source, Date consumptionDate){
+        for (Package pkg : packages) {
+            if (pkg.packageName.toLowerCase().equals(name.toLowerCase())
+                    && pkg.source.toLowerCase().equals(source.toLowerCase())
+                    && pkg.consumptionDate.compareTo(consumptionDate) == 0
+            ) {
                 return true;
             }
         }

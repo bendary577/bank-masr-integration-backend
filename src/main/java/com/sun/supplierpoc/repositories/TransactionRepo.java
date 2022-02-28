@@ -4,6 +4,7 @@ import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.Transactions;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
+import com.sun.supplierpoc.models.voucher.VoucherTransaction;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -71,4 +72,10 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
 
     List<Transactions> findAllByGroupIdAndTransactionTypeInAndTransactionDateBetweenOrderByTransactionDateDesc(String id, List<TransactionType> transactionTypes, Date start, Date end);
 
+    List<Transactions> findByVoucherIdAndCodeAndAccountId(String voucherId, String code, String id, Pageable paging);
+    int countToTalAmountByVoucherIdAndCodeAndAccountId(String s, String voucherId, String id);
+    int countAllByVoucherIdAndCodeAndAccountId(String s, String voucherId, String id);
+    @Query(value = "{'transactions': {toTalAmount}, 'voucherId': ?0, 'accountId': ?1, 'status': ?2}", count = true)
+    double countToTalAmountByVoucherIdAndAccountIdAndStatus(String voucherId, String id, String success);
+    int countAllByVoucherIdAndCodeAndAccountIdAndStatus(String s, String voucherId, String id, String failed);
 }

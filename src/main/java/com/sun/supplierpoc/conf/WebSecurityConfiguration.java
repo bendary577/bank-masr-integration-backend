@@ -68,9 +68,7 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests (). antMatchers ("/ oauth / token", "/ oauth / authorize **", "/ publishes"). permitAll ();
-
+        http.authorizeRequests (). antMatchers ("/ oauth / token", "/ oauth / authorize **", "/ publishes"). permitAll ();
         http.requestMatchers().and().authorizeRequests().antMatchers("/**").access("hasRole('ADMIN')");
     }
     @Override
@@ -89,6 +87,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/rewardPoints/**");
         web.ignoring().antMatchers("/walletSystem/**");
         web.ignoring().antMatchers("/test/**");
+        web.ignoring().antMatchers("/simphonyLoyalty/voucherTransactions/createVoucherTrans");
+        web.ignoring().antMatchers("/foodics/**");
     }
 /* @Override
     protected void configure(HttpSecurity http) throws Exception {

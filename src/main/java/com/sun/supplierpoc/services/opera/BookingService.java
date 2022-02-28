@@ -2,11 +2,16 @@ package com.sun.supplierpoc.services.opera;
 
 import com.google.gson.Gson;
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.components.*;
 import com.sun.supplierpoc.controllers.opera.MinistryOfTourismResponse;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.BookingConfiguration;
+import com.sun.supplierpoc.models.opera.booking.BookingType;
+import com.sun.supplierpoc.models.opera.booking.Package;
+import com.sun.supplierpoc.models.opera.booking.RateCode;
+import com.sun.supplierpoc.models.opera.booking.ReservationRow;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import com.sun.supplierpoc.repositories.SyncJobRepo;
@@ -16,11 +21,13 @@ import com.sun.supplierpoc.services.SyncJobService;
 import okhttp3.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,24 +52,226 @@ public class BookingService {
     ExcelHelper excelHelper;
 
     @Autowired
-    ExpensesXMLHelper expensesXMLHelper;
-
-    @Autowired
     NewBookingExcelHelper bookingExcelHelper;
 
     @Autowired
     CancelBookingExcelHelper cancelBookingExcelHelper;
 
     @Autowired
-    OccupancyXMLHelper occupancyXMLHelper;
-    @Autowired
     private SyncJobService syncJobService;
     @Autowired
     private SyncJobDataService syncJobDataService;
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    @Autowired
+    private DBProcessor dbProcessor;
 
-    public Response fetchNewBookingFromReport(String userId, Account account) {
+    Conversions conversions = new Conversions();
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    public SyncJobData createBookingNewObject(ReservationRow reservationRow, Account account){
+        HashMap<String, Object> data = new HashMap<>();
+
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
+
+        String typeName;
+        String tempDate;
+        BookingType bookingType;
+
+        double basicRoomRate = 0;
+        double vat = 0;
+        double municipalityTax = 0;
+        double serviceCharge = 0;
+
+        double totalPackageAmount = 0;
+        double totalPackageVat = 0;
+        double totalPackageMunicipality = 0;
+        double totalPackageServiceCharges = 0;
+
+        double grandTotal = 0;
+        int nights = 0;
+
+        RateCode rateCode = new RateCode();
+        rateCode.serviceChargeRate = syncJobType.getConfiguration().bookingConfiguration.serviceChargeRate;
+        rateCode.municipalityTaxRate = syncJobType.getConfiguration().bookingConfiguration.municipalityTaxRate;
+        rateCode.vatRate = syncJobType.getConfiguration().bookingConfiguration.vatRate;
+        rateCode.basicPackageValue = 0;
+
+        ArrayList<BookingType> paymentTypes = generalSettings.getPaymentTypes();
+        ArrayList<BookingType> roomTypes = generalSettings.getRoomTypes();
+        ArrayList<BookingType> genders = generalSettings.getGenders();
+        ArrayList<BookingType> nationalities = generalSettings.getNationalities();
+        ArrayList<BookingType> purposeOfVisit = generalSettings.getPurposeOfVisit();
+        ArrayList<BookingType> customerTypes = generalSettings.getCustomerTypes();
+        ArrayList<BookingType> transactionTypes = generalSettings.getTransactionTypes();
+        ArrayList<String> neglectedRoomTypes = syncJobType.getConfiguration().bookingConfiguration.neglectedRoomTypes;
+
+        /* Check Room Type - Skip neglected room types */
+        if (neglectedRoomTypes.contains(reservationRow.roomType))
+            return null;
+
+        Date updateDate = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
+        Date checkIn = null;
+        Date checkOut = null;
+        Date birthDate = null;
+
+        /* Reservation */
+        data.put("bookingNo", reservationRow.bookingNo);
+        data.put("allotedRoomNo", reservationRow.roomNo);
+        data.put("noOfRooms", reservationRow.noOfRooms);
+        data.put("noOfGuest", reservationRow.children + reservationRow.adults);
+
+        bookingType = conversions.checkBookingTypeExistence(transactionTypes, reservationRow.reservationStatus);
+        data.put("transactionTypeId", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(roomTypes, reservationRow.roomType);
+        data.put("roomType", bookingType.getTypeId());
+
+        /* Guest Info - Use Mapping Tables */
+        bookingType = conversions.checkBookingTypeExistence(genders, reservationRow.gender);
+        data.put("gender", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(customerTypes, reservationRow.customerType);
+        data.put("customerType", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(nationalities, reservationRow.nationalityCode);
+        data.put("nationalityCode", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(purposeOfVisit, reservationRow.purposeOfVisit);
+        data.put("purposeOfVisit", bookingType.getTypeId());
+
+        bookingType = conversions.checkBookingTypeExistence(paymentTypes, reservationRow.paymentType);
+        data.put("paymentType", bookingType.getTypeId());
+
+        try {
+            if (!reservationRow.dateOfBirth.equals("")) {
+                try {
+                    birthDate = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.dateOfBirth);
+                } catch (ParseException e) { // 03-DEC-20
+                    birthDate = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.dateOfBirth);
+                }
+                data.put("dateOfBirth", dateFormat.format(birthDate));
+            }else{
+                data.put("dateOfBirth", "");
+            }
+        } catch (Exception e) {
+            birthDate = null;
+            data.put("dateOfBirth", "");
+        }
+
+        /* Reservation Dates */
+        data.put("checkInTime", "140000");
+        data.put("checkOutTime", "120000");
+
+        try {
+            if (!reservationRow.checkInDate.equals("")) {
+                try {
+                    checkIn = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.checkInDate);
+                } catch (ParseException e) { // 03-DEC-20
+                    checkIn = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.checkInDate);
+                }
+            }
+        } catch (Exception e) {
+            checkIn = null;
+        }
+
+        try {
+            if (!reservationRow.checkOutDate.equals("")) {
+                try {
+                    checkOut = new SimpleDateFormat("dd.MM.yy").parse(reservationRow.checkOutDate);
+                } catch (ParseException e) { // 03-DEC-20
+                    checkOut = new SimpleDateFormat("dd-MMMM-yy").parse(reservationRow.checkOutDate);
+                }
+            }
+        } catch (Exception e) {
+            checkOut = null;
+        }
+
+        if (checkIn != null)
+            data.put("checkInDate", dateFormat.format(checkIn));
+        if (checkOut != null)
+            data.put("checkOutDate", dateFormat.format(checkOut));
+
+
+        if (checkIn != null && checkOut != null) {
+            nights = conversions.getNights(checkIn, checkOut);
+            data.put("roomRentType", conversions.checkRoomRentType(checkIn, checkOut));
+        }
+
+        data.put("totalDurationDays", nights);
+
+        /* Payment Info */
+        if(nights == 0)
+            nights = 1;
+
+        /* Get reservation packages - Query from OPERA DB */
+        ArrayList<Package> packages = new ArrayList<>();
+        try {
+            packages = dbProcessor.getReservationPackage(reservationRow.reservNameId,
+                    reservationRow.adults, reservationRow.children, reservationRow.noOfRooms);
+
+            for (Package pkg: packages){
+                // Calculate totals
+                totalPackageAmount += pkg.price;
+                totalPackageServiceCharges += pkg.serviceCharge;
+                totalPackageMunicipality += pkg.municipalityTax;
+                totalPackageVat += pkg.vat;
+            }
+        }catch (Exception e){
+            System.out.println("Can not connect to OPERA DB.");
+        }
+
+        basicRoomRate = conversions.roundUpDouble((reservationRow.totalRoomRate + totalPackageAmount)/nights);
+
+        serviceCharge = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.serviceChargeRate) / 100);
+        municipalityTax = conversions.roundUpDouble((reservationRow.totalRoomRate * rateCode.municipalityTaxRate) / 100);
+        vat = conversions.roundUpDouble(((serviceCharge + reservationRow.totalRoomRate) * rateCode.vatRate) / 100);
+//        vat = ((municipalityTax + reservationRow.totalRoomRate) * rateCode.vatRate) / 100;
+
+        serviceCharge = conversions.roundUpDouble(serviceCharge + totalPackageServiceCharges);
+        municipalityTax = conversions.roundUpDouble(municipalityTax + totalPackageMunicipality);
+        vat = conversions.roundUpDouble(vat + totalPackageVat);
+        reservationRow.totalRoomRate = conversions.roundUpDouble(reservationRow.totalRoomRate + totalPackageAmount);
+
+        grandTotal = conversions.roundUpDouble((reservationRow.totalRoomRate + vat + municipalityTax)
+                - reservationRow.discount);
+
+        data.put("dailyRoomRate", basicRoomRate);
+        data.put("totalRoomRate", reservationRow.totalRoomRate);
+        data.put("discount", reservationRow.discount);
+        data.put("vat", vat);
+        data.put("municipalityTax", municipalityTax);
+        data.put("grandTotal", grandTotal);
+
+        data.put("transactionId", "");
+        data.put("cuFlag", 1); // NEW
+
+        // check if it was new booking or update
+        ArrayList<SyncJobData> list = syncJobDataService.getDataByBookingNoAndSyncType(reservationRow.bookingNo,
+                syncJobType.getId());
+
+        if (list.size() > 0 && !list.get(0).getData().get("transactionId").equals("")){
+            data.put("transactionId", (String) list.get(0).getData().get("transactionId"));
+
+            boolean found = false;
+            for (SyncJobData obj : list) {
+                if((int) data.get("transactionTypeId") == (int) obj.getData().get("transactionTypeId") &&
+                        obj.getStatus().equals(Constants.SUCCESS)){
+                    found = true;
+                    break;
+                }
+            }
+
+            if (found){
+                data.put("cuFlag", 2); // Update
+            }
+        }
+
+        SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), "", syncJobType.getId());
+        return syncJobData;
+    }
+
+    public Response fetchNewBookingFromReport(String userId, Account account, SyncJobData syncJobData) {
         String message = "";
         Response response = new Response();
         Response createBookingResponse;
@@ -89,24 +298,27 @@ public class BookingService {
         }
 
         try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
+            List<SyncJobData> syncJobDataList = new ArrayList<>();
+            if(syncJobData != null){
+                syncJobData.setSyncJobId(syncJob.getId());
+                syncJobDataList.add(syncJobData);
+            }else{
+                DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
+                String currentDate = fileDateFormat.format(new Date());
 
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-//            fileName = "Booking20211212.xml";
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Booking/" + fileName;
-            String localFilePath = account.getName() + "/Booking/";
+                String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
+                String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Booking/" + fileName;
+                String localFilePath = account.getName() + "/Booking/";
 
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
+                FileInputStream input = downloadFile(fileName, filePath, localFilePath);
 
-            List<SyncJobData> syncJobData = new ArrayList<>();
-            if(bookingConfiguration.fileExtension.toLowerCase().equals("xlsx"))
-                syncJobData = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
-            else if(bookingConfiguration.fileExtension.toLowerCase().equals("xml"))
-                syncJobData = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
+                if(bookingConfiguration.fileExtension.toLowerCase().equals("xlsx"))
+                    syncJobDataList = bookingExcelHelper.getNewBookingFromExcel(syncJob, generalSettings, syncJobType, input);
+                else if(bookingConfiguration.fileExtension.toLowerCase().equals("xml"))
+                    syncJobDataList = bookingExcelHelper.getNewBookingFromXML(syncJob, generalSettings, syncJobType, localFilePath + fileName);
+            }
 
-
-            for (SyncJobData syncData : syncJobData) {
+            for (SyncJobData syncData : syncJobDataList) {
                 createBookingResponse = sendNewBooking(syncData, bookingConfiguration);
                 if(createBookingResponse.isStatus()){
                     HashMap<String, Object> data = syncData.getData();
@@ -117,7 +329,7 @@ public class BookingService {
                     syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, createBookingResponse.getMessage());
                 }
             }
-            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), "Sync new booking successfully.", Constants.SUCCESS);
+            syncJobService.saveSyncJobStatus(syncJob, syncJobDataList.size(), "Sync new booking successfully.", Constants.SUCCESS);
 
             response.setStatus(true);
             response.setMessage(message);
@@ -332,599 +544,7 @@ public class BookingService {
         return message;
     }
 
-    public Response fetchCancelBookingFromReport(String userId, Account account) {
-        String message = "";
-        Response response = new Response();
-        Response cancelBookingResponse;
-
-        SyncJob syncJob;
-        SyncJobType syncJobType;
-        SyncJobType newBookingSyncType;
-        GeneralSettings generalSettings;
-        BookingConfiguration bookingConfiguration;
-        try {
-            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.CANCEL_BOOKING_REPORT, account.getId(), false);
-            newBookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
-            bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
-
-
-            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
-                    userId, account.getId(), syncJobType.getId(), 0);
-            syncJobRepo.save(syncJob);
-        } catch (Exception e) {
-            message = "Failed to establish a connection with the database.";
-            response.setMessage(message);
-            response.setStatus(false);
-            return response;
-        }
-
-        try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
-
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/CancelBooking/" + fileName;
-            String localFilePath = account.getName() + "/CancelBooking/";
-
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
-
-            List<SyncJobData> syncJobData = new ArrayList<>();
-            if(bookingConfiguration.fileExtension.equals("xlsx"))
-                syncJobData = cancelBookingExcelHelper.getCancelBookingFromExcel(syncJob, generalSettings,
-                        syncJobType, newBookingSyncType, input);
-            else if(bookingConfiguration.fileExtension.equals("xml"))
-                syncJobData = cancelBookingExcelHelper.getCancelBookingFromXML(syncJob, generalSettings,
-                        syncJobType, newBookingSyncType, localFilePath + fileName);
-
-            for (SyncJobData syncData : syncJobData) {
-                cancelBookingResponse = sendCancelBooking(syncData, bookingConfiguration);
-
-                if(cancelBookingResponse.isStatus()){
-                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
-                }else {
-                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, cancelBookingResponse.getMessage());
-                }
-            }
-            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), "Sync cancel booking successfully.", Constants.SUCCESS);
-
-            message = "Sync cancel booking successfully.";
-            response.setStatus(true);
-            response.setMessage(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            syncJob.setStatus(Constants.FAILED);
-            syncJob.setReason(e.getMessage());
-            syncJob.setEndDate(new Date(System.currentTimeMillis()));
-            syncJobRepo.save(syncJob);
-
-            message = "Failed to sync cancel booking.";
-            response.setMessage(message);
-            response.setStatus(false);
-        }
-
-        return response;
-    }
-
-    private Response sendCancelBooking(SyncJobData syncJobData, BookingConfiguration bookingConfiguration){
-        String message = "";
-        Response response = new Response();
-        try {
-            OkHttpClient client = new OkHttpClient();
-            String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
-
-            HashMap<String, Object> data = syncJobData.getData();
-
-            JSONObject json = new JSONObject();
-            json.put("transactionId", String.valueOf(data.get("transactionId")));
-            json.put("cancelReason", String.valueOf(data.get("cancelReason")));
-            json.put("cancelWithCharges", String.valueOf(data.get("cancelWithCharges")));
-            json.put("chargeableDays", String.valueOf(data.get("chargeableDays")));
-            json.put("roomRentType", String.valueOf(data.get("roomRentType")));
-            json.put("dailyRoomRate", String.valueOf(data.get("dailyRoomRate")));
-            json.put("totalRoomRate", String.valueOf(data.get("totalRoomRate")));
-            json.put("vat", String.valueOf(data.get("vat")));
-            json.put("municipalityTax", String.valueOf(data.get("municipalityTax")));
-            json.put("discount", String.valueOf(data.get("discount")));
-            json.put("grandTotal", String.valueOf(data.get("grandTotal")));
-            json.put("paymentType", String.valueOf(data.get("paymentType")));
-            json.put("cuFlag", String.valueOf(data.get("cuFlag")));
-            json.put("channel", bookingConfiguration.getChannel());
-
-            String body = json.toString();
-
-            MediaType mediaType = MediaType.parse("application/json");
-            RequestBody requestBody = RequestBody.create(mediaType, body);
-
-            Request request = new Request.Builder()
-                    .url(bookingConfiguration.getUrl())
-                    .post(requestBody)
-                    .addHeader("X-Gateway-APIKey", bookingConfiguration.getGatewayKey())
-                    .addHeader("content-type", "application/json")
-                    .addHeader("Authorization", credential)
-                    .build();
-
-            okhttp3.Response bookingResponse = client.newCall(request).execute();
-            if (bookingResponse.code() == 200){
-                Gson gson = new Gson();
-                MinistryOfTourismResponse entity = gson.fromJson(bookingResponse.body().string(), MinistryOfTourismResponse.class);
-
-                if(entity.getErrorCode().contains("0")){
-                    message = "Create new booking successfully.";
-                    response.setStatus(true);
-                    response.setMessage(message);
-                }else{
-                    /* Parse Error */
-                    message = parseCancelBookingErrorMessage(entity.getErrorCode());
-                    response.setStatus(false);
-                    response.setMessage(message);
-                }
-            }else {
-                message = bookingResponse.message();
-                response.setStatus(false);
-                response.setMessage(message);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            message = e.getMessage();
-            response.setStatus(false);
-            response.setMessage(message);
-        }
-
-        return response;
-    }
-
-    private String parseCancelBookingErrorMessage(List<String> errorCodes){
-        String message = "";
-        String code = errorCodes.get(0);
-        switch (code) {
-            case "1":
-                message = "Invalid Transaction ID or this Transaction ID not found in MT database.";
-                break;
-            case "2":
-                message = "Invalid Cancel Reason.";
-                break;
-            case "3":
-                message = "Invalid Cancel With Charges.";
-                break;
-            case "4":
-                message = "Invalid Chargeable Days.";
-                break;
-            case "5":
-                message = "Invalid Room Rent Type.";
-                break;
-            case "6":
-                message = "Invalid Daily Room Rate.";
-                break;
-            case "7":
-                message = "Invalid Total Room Rate.";
-                break;
-            case "8":
-                message = "Invalid VAT.";
-                break;
-            case "9":
-                message = "Invalid Municipality Tax.";
-                break;
-            case "10":
-                message = "Invalid Discount.";
-                break;
-            case "11":
-                message = "Invalid Grand Total.";
-                break;
-            case "12":
-                message = "Invalid User Id or UserId not found.";
-                break;
-            case "13":
-                message = "Invalid Payment Type value.";
-                break;
-            case "14":
-                message = "This operation is allowed only before Check In.";
-                break;
-            case "15":
-                message = "Invalid CU Flag. The value must be 1 or 2.";
-                break;
-            case "16":
-                message = "This transaction is already cancelled.";
-                break;
-
-            case "100":
-                message = "Invalid Credentials. Authentication failed.";
-                break;
-            case "101":
-                message = "Internal Server Error. Please try again later.";
-                break;
-        }
-
-        return message;
-    }
-
-    public Response fetchOccupancyFromReport(String userId, Account account) {
-        String message = "";
-        Response response = new Response();
-
-        SyncJob syncJob;
-        SyncJobType syncJobType;
-        BookingConfiguration bookingConfiguration;
-        try {
-            syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.OCCUPANCY_UPDATE_REPORT, account.getId(), false);
-            bookingConfiguration = syncJobType.getConfiguration().bookingConfiguration;
-
-            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
-                    userId, account.getId(), syncJobType.getId(), 0);
-            syncJobRepo.save(syncJob);
-        } catch (Exception e) {
-            message = "Failed to establish a connection with the database.";
-            response.setMessage(message);
-            response.setStatus(false);
-            return response;
-        }
-
-        try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
-
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Occupancy/" + fileName;
-            String localFilePath = account.getName() + "/Occupancy/";
-
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
-            List<SyncJobData> syncJobData = new ArrayList<>();
-
-            if(bookingConfiguration.fileExtension.equals("xlsx")){
-                syncJobData = excelHelper.getOccupancyFromExcel(syncJob, input);
-            } else if(bookingConfiguration.fileExtension.equals("xml")) {
-                syncJobData = occupancyXMLHelper.getOccupancyFromXML(syncJob, localFilePath + fileName);
-            }
-
-            /* Send occupancy update */
-            response = sendOccupancyUpdates(syncJobData, bookingConfiguration);
-
-            if(response.isStatus()){
-                syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.SUCCESS, response.getMessage());
-            }else {
-                syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.FAILED);
-                syncJobDataService.updateSyncJobDataStatus(syncJobData.get(0), Constants.FAILED, response.getMessage());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            syncJobService.saveSyncJobStatus(syncJob, 0, e.getMessage(), Constants.FAILED);
-            message = "Failed to sync occupancy Updates.";
-            response.setMessage(message);
-            response.setStatus(false);
-        }
-
-        return response;
-    }
-
-    private Response sendOccupancyUpdates(List<SyncJobData> syncJobData, BookingConfiguration bookingConfiguration){
-        String message = "";
-        Response response = new Response();
-        try {
-            OkHttpClient client = new OkHttpClient();
-            String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
-
-            HashMap<String, Object> data = syncJobData.get(0).getData();
-
-            JSONObject json = new JSONObject();
-            json.put("updateDate", String.valueOf(data.get("updateDate")));
-            json.put("roomsOccupied", String.valueOf(data.get("roomsOccupied")));
-            json.put("roomsAvailable", String.valueOf(data.get("roomsAvailable")));
-            json.put("roomsBooked", String.valueOf(data.get("roomsBooked")));
-            json.put("roomsOnMaintenance", String.valueOf(data.get("roomsOnMaintenance")));
-            json.put("totalRooms", String.valueOf(data.get("totalRooms")));
-            json.put("channel", bookingConfiguration.getChannel());
-            String body = json.toString();
-
-            MediaType mediaType = MediaType.parse("application/json");
-            RequestBody requestBody = RequestBody.create(mediaType, body);
-
-            Request request = new Request.Builder()
-                    .url(bookingConfiguration.getUrl())
-                    .post(requestBody)
-                    .addHeader("X-Gateway-APIKey", bookingConfiguration.getGatewayKey())
-                    .addHeader("content-type", "application/json")
-                    .addHeader("Authorization", credential)
-                    .build();
-
-            okhttp3.Response occupancyUpdateResponse = client.newCall(request).execute();
-            if (occupancyUpdateResponse.code() == 200){
-                Gson gson = new Gson();
-                MinistryOfTourismResponse entity = gson.fromJson(occupancyUpdateResponse.body().string(), MinistryOfTourismResponse.class);
-
-                if(entity.getErrorCode().contains("0")){
-                    message = "Occupancy update send successfully.";
-                    response.setStatus(true);
-                    response.setMessage(message);
-                }else{
-                    /* Parse Error */
-                    message = parseOccupancyErrorMessage(entity.getErrorCode());
-                    response.setStatus(false);
-                    response.setMessage(message);
-                }
-            }else {
-                message = occupancyUpdateResponse.message();
-                response.setStatus(false);
-                response.setMessage(message);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            message = e.getMessage();
-            response.setStatus(false);
-            response.setMessage(message);
-        }
-
-        return response;
-    }
-
-    private String parseOccupancyErrorMessage(List<String> errorCodes){
-        String message = "";
-        String code = errorCodes.get(0);
-        switch (code) {
-            case "1":
-                message = "Invalid Update Date, It should be numeric in following format YYYYMMDD.";
-                break;
-            case "2":
-                message = "Invalid Rooms Occupied. It must be numeric only. It can contain 0.";
-                break;
-            case "3":
-                message = "Invalid Rooms Available. It must be numeric only. It can contain 0.";
-                break;
-            case "4":
-                message = "Invalid Rooms Booked. It must be numeric only. It can contain 0.";
-                break;
-            case "5":
-                message = "Invalid Rooms on Maintenance. It must be numeric only. It can contain 0.";
-                break;
-            case "6":
-                message = "Invalid UserId or User Id not found.";
-                break;
-            case "7":
-                message = "Invalid Transaction Id or TransactionId not found.";
-                break;
-            case "8":
-                message = "Invalid Day Closing value. It should be true or false.";
-                break;
-            case "9":
-                message = "Invalid Total Rooms value. It must be numeric only. It can contain 0.";
-                break;
-            case "10":
-                message = "Incorrect Total Rooms Value.";
-                break;
-            case "11":
-                message = "Invalid Total Adults value.";
-                break;
-            case "12":
-                message = "Invalid Total Children value.";
-                break;
-            case "13":
-                message = "Invalid Total Guests value.";
-                break;
-            case "14":
-                message = "Incorrect Total Guests value.";
-                break;
-            case "15":
-                message = "Total Guests is mandatory if day closing is true.";
-                break;
-            case "16":
-                message = "Invalid Total Revenue value.";
-                break;
-            case "17":
-                message = "Total Revenue is mandatory if day closing is true.";
-                break;
-            case "100":
-                message = "Invalid Credentials. Authentication failed.";
-                break;
-            case "101":
-                message = "Internal Server Error. Please try again later.";
-                break;
-        }
-
-        return message;
-    }
-
-    public Response fetchExpensesDetailsFromReport(String userId, Account account) {
-        String message = "";
-        Response response = new Response();
-        Response expenseResponse;
-
-        SyncJob syncJob;
-        BookingConfiguration bookingConfiguration;
-        SyncJobType expensesDetailsSyncType;
-        SyncJobType bookingSyncType;
-        GeneralSettings generalSettings;
-
-        try {
-            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-
-            bookingSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.NEW_BOOKING_REPORT, account.getId(), false);
-            expensesDetailsSyncType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.EXPENSES_DETAILS_REPORT, account.getId(), false);
-            bookingConfiguration = expensesDetailsSyncType.getConfiguration().bookingConfiguration;
-
-            syncJob = new SyncJob(Constants.RUNNING, "", new Date(System.currentTimeMillis()), null,
-                    userId, account.getId(), expensesDetailsSyncType.getId(), 0);
-            syncJobRepo.save(syncJob);
-
-        } catch (Exception e) {
-            message = "Failed to establish a connection with the database.";
-            response.setMessage(message);
-            response.setStatus(false);
-            return response;
-        }
-
-        try {
-            DateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd");
-            String currentDate = fileDateFormat.format(new Date());
-
-            String fileName = bookingConfiguration.fileBaseName + currentDate + '.' + bookingConfiguration.fileExtension;
-//            fileName = "SingleExpenses" + '.' + bookingConfiguration.fileExtension;
-//            fileName = "expensesperreserv2.xml";
-            String filePath = Constants.REPORTS_BUCKET_PATH + account.getName() + "/Expenses/" + fileName;
-            String localFilePath = account.getName() + "/Expenses/";
-
-            FileInputStream input = downloadFile(fileName, filePath, localFilePath);
-
-            List<SyncJobData> syncJobData = new ArrayList<>();
-            if(bookingConfiguration.fileExtension.equals("xlsx")){
-                syncJobData = excelHelper.getExpensesUpdateFromXLS(syncJob, input, generalSettings, bookingConfiguration);
-            } else if(bookingConfiguration.fileExtension.equals("xml")) {
-                syncJobData = expensesXMLHelper.getExpensesUpdateFromDB(syncJob, expensesDetailsSyncType,
-                        bookingSyncType, localFilePath + fileName, generalSettings, bookingConfiguration);
-            }
-
-            for (SyncJobData syncData : syncJobData) {
-                if(syncData.getData().get("roomNo").equals(-1)){
-                    syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, "Neglected Reservation");
-                }else{
-                    expenseResponse = sendExpensesDetailsUpdates(syncData, bookingConfiguration);
-
-                    if(expenseResponse.isStatus()){
-                        syncJobDataService.updateSyncJobDataStatus(syncData, Constants.SUCCESS, "");
-                    }else {
-                        syncJobDataService.updateSyncJobDataStatus(syncData, Constants.FAILED, expenseResponse.getMessage());
-                    }
-                }
-            }
-
-            syncJobService.saveSyncJobStatus(syncJob, syncJobData.size(), response.getMessage(), Constants.SUCCESS);
-
-            message = "Sync expenses details successfully.";
-            response.setStatus(true);
-            response.setMessage(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-
-            syncJobService.saveSyncJobStatus(syncJob, 0, response.getMessage(), Constants.FAILED);
-
-            message = "Failed to sync expenses details.";
-            response.setMessage(message);
-            response.setStatus(false);
-        }
-
-        return response;
-    }
-
-    private Response sendExpensesDetailsUpdates(SyncJobData syncJobData, BookingConfiguration bookingConfiguration){
-        String message = "";
-        Response response = new Response();
-        try {
-            OkHttpClient client = new OkHttpClient();
-            String credential = Credentials.basic(bookingConfiguration.getUsername(), bookingConfiguration.getPassword());
-
-            HashMap<String, Object> data = syncJobData.getData();
-
-            JSONObject json = new JSONObject();
-            json.put("transactionId", data.get("transactionId"));
-            json.put("channel", bookingConfiguration.getChannel());
-            json.put("expenseItems", data.get("items"));
-
-            String body = json.toString();
-
-            MediaType mediaType = MediaType.parse("application/json");
-            RequestBody requestBody = RequestBody.create(mediaType, body);
-
-            Request request = new Request.Builder()
-                    .url(bookingConfiguration.getUrl())
-                    .post(requestBody)
-                    .addHeader("X-Gateway-APIKey", bookingConfiguration.getGatewayKey())
-                    .addHeader("content-type", "application/json")
-                    .addHeader("Authorization", credential)
-                    .build();
-
-            okhttp3.Response expensesDetailsResponse = client.newCall(request).execute();
-            if (expensesDetailsResponse.code() == 200){
-                Gson gson = new Gson();
-                MinistryOfTourismResponse entity = gson.fromJson(expensesDetailsResponse.body().string(), MinistryOfTourismResponse.class);
-
-                if(entity.getErrorCode().contains("0")){
-                    message = "Expenses Details send successfully.";
-                    response.setStatus(true);
-                    response.setMessage(message);
-                }else{
-                    /* Parse Error */
-                    message = parseExpensesErrorMessage(entity.getErrorCode());
-                    response.setStatus(false);
-                    response.setMessage(message);
-                }
-            }else {
-                message = expensesDetailsResponse.message();
-                response.setStatus(false);
-                response.setMessage(message);
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            message = e.getMessage();
-            response.setStatus(false);
-            response.setMessage(message);
-        }
-
-        return response;
-    }
-
-    private String parseExpensesErrorMessage(List<String> errorCodes){
-        String message = "";
-        String code = errorCodes.get(0);
-        switch (code) {
-            case "1":
-                message = "Invalid Transaction ID or this Transaction ID not found in MT database.";
-                break;
-            case "2":
-                message = "Invalid Expense Date. It must be numeric in YYYYMMDD format Date must be Gregorian Only.";
-                break;
-            case "3":
-                message = "Invalid Item Number.";
-                break;
-            case "4":
-                message = "ItemNumber not found in MT Database.";
-                break;
-            case "5":
-                message = "Invalid Expense Type ID.";
-                break;
-            case "6":
-                message = "Invalid Unit Price. It must be numeric.";
-                break;
-            case "7":
-                message = "Invalid Discount. It must be numeric only If provided.";
-                break;
-            case "8":
-                message = "Invalid VAT. It must be numeric in Amount only. It can contain 0.";
-                break;
-            case "9":
-                message = "Invalid Municipality Tax. It must be numeric in Amount only. It can contain 0.";
-                break;
-            case "10":
-                message = "Invalid Grand Total. It must be numeric in Amount only.";
-                break;
-
-            case "12":
-                message = "Invalid Payment Type value.";
-                break;
-            case "13":
-                message = "No checkout data found for TransactionID. Please call this api once the checkout is done";
-                break;
-            case "14":
-                message = "Invalid CU Flag Value. It must be 1=Add, 2=Update.";
-                break;
-            case "15":
-                message = "Same Transaction ID already found with Item Number. Please send it with CUFlag =2 if you wish to update.";
-                break;
-
-            case "100":
-                message = "Invalid Credentials. Authentication failed.";
-                break;
-            case "101":
-                message = "Internal Server Error. Please try again later.";
-                break;
-        }
-
-        return message;
-    }
-
-    private FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
+    public FileInputStream downloadFile(String fileName, String filePath, String localFilePath) throws IOException {
         BufferedInputStream in = new BufferedInputStream(new URL(filePath).openStream());
 
         File file = new File(localFilePath + fileName);

@@ -1,7 +1,11 @@
 package com.sun.supplierpoc.models.simphony.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import org.codehaus.jackson.annotate.JsonProperty;
+
 import java.util.List;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class MenuItemResponse {
     private Long id;
     private String firstName;

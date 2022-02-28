@@ -48,6 +48,8 @@ public class Constants {
     public static String CONSUMPTION = "Consumption";
     public static String COST_OF_GOODS = "Cost of Goods";
     public static String SALES = "POS Sales";
+    public static String SALES_API_Daily = "POS Sales API Daily";
+    public static String SALES_API_Monthly = "POS Sales API Monthly";
     public static String WASTAGE = "Wastage";
     public static String BOOKED_PRODUCTION = "Booked Production";
     public static String MENU_ITEMS = "Menu Items";
@@ -73,10 +75,16 @@ public class Constants {
 
     ////////////////////////////////////////// Transaction Type //////////////////////////////////////////////////////
     public static String REDEEM_VOUCHER = "Redeem Voucher";
-    public static String USE_WALLET = "Wallet";
-    public static String REWARD_POINTS = "Reward Points";
-    public static String POINTS_REDEMPTION = "Points Redemption";
+    public static final String VALID_VOUCHER = "Valid Voucher";
+    public static final String INVALID_VOUCHER = "Invalid Voucher";
+    public static final String CONSUMED = "Consumed";
 
+
+    public static String USE_WALLET = "Wallet";
+    // Guest pay product to get more points
+    public static String REWARD_POINTS = "Reward Points";
+    // Guest use points to get products
+    public static String POINTS_REDEMPTION = "Points Redemption";
     ////////////////////////////////////////// Loyalty Source Type //////////////////////////////////////////////////////
     public static String PROJECT_NAME = "oracle-symphony-integrator";
     public static String BUCKET_NAME = "oracle-integrator-bucket";
@@ -105,9 +113,13 @@ public class Constants {
     public static String SUN_SSC_METHOD = "sun";
     public static String OTHER_METHOD = "other";
 
+    //////////////////////////////////////////////// Sync Per ///////////////////////////////////////////////////////////////
+    public static String MAJOR_GROUP = "majorGroup";
+
     ///////////////////////////////////////// Micros Version#1 Links ///////////////////////////////////////////////////
 
-        public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+    public static String OHRA_LINK  = "https://mte03-ohra-prod.hospitality.oracleindustry.com";
+    public static String OHRA_GCS_LINK  = "http://217.165.206.147";
     public static String OHIM_LINK = "https://mte3-ohim.oracleindustry.com";
     public static String OHIM_LOGIN_LINK = OHIM_LINK + "/InventoryManagement/FormLogin.aspx";
 
@@ -157,6 +169,8 @@ public class Constants {
 
     public static String SYSTEM_SALES_REPORT_LINK = OHRA_LINK + "/finengine/reportAction.do?method=run&reportID=1191";
 
+    public static String SYSTEM_SALES_REPORT_LINK_GCS = OHRA_GCS_LINK + "/finengine/reportAction.do?method=run&reportID=1136";
+
     // Items_Group_link
     public static String OHRA_ITEMS_GROUP_MAPPING = "https://mte4-ohra-ohim.oracleindustry.com/InventoryManagement/MasterData/ItemGroups/OverviewItemGroup.aspx";
 
@@ -185,6 +199,8 @@ public class Constants {
 
     // More Reports >> Summary >> System Sales Summary
     public static String SALES_SUMMARY_LINK = OHRA_LINK + "/finengine/reportRunAction.do?rptroot=1191&reportID=EAME_SystemSalesSummary_VAT&method=run";
+
+    public static String SALES_SUMMARY_API_LINK = OHRA_GCS_LINK + "/finengine/reportRunAction.do?rptroot=1136&reportID=EAME_SystemSalesSummary_VAT&method=run";
 
     ///////////////////////////////////////// Invoice Types ////////////////////////////////////////////////////////////
     public static String APPROVED_INVOICE = "Approved Invoice";

@@ -13,12 +13,15 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     ArrayList<ApplicationUser> findAll();
     ApplicationUser findByCode(String code);
     ApplicationUser findByCodeAndAccountIdAndDeleted(String code, String accountId, boolean deleted);
+    ApplicationUser findByCodeAndAccountIdAndDeletedAndSuspended(String code, String accountId, boolean deleted, boolean suspended);
+
     ApplicationUser findFirstByEmailAndAccountId(String email, String accountId);
 
 //    @Query(value = "SELECT * u from ApplicationUser ORDER BY u.top DESC LIMIT ?")
     List<ApplicationUser> findTop3ByAccountIdAndDeletedAndTopNotOrderByTopDesc(String accountId,boolean deleted, int top);
 
     ArrayList<ApplicationUser> findAllByAccountId(String accountId);
+    ArrayList<ApplicationUser> findAllByAccountIdAndDeleted(String accountId, boolean deleted);
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId);
 
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);

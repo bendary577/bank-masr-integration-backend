@@ -346,7 +346,7 @@ public class ExpensesXMLHelper {
         }
     }
 
-    private void saveExpenseObject(SyncJob syncJob, SyncJobType syncJobType, ExpenseObject expenseObject, List<SyncJobData> syncJobDataList) throws IllegalAccessException {
+    public void saveExpenseObject(SyncJob syncJob, SyncJobType syncJobType, ExpenseObject expenseObject, List<SyncJobData> syncJobDataList) throws IllegalAccessException {
         if (!expenseObject.bookingNo.equals("")) {
             HashMap<String, Object> data = new HashMap<>();
             Field[] allFields = expenseObject.getClass().getDeclaredFields();

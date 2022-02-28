@@ -91,6 +91,7 @@ public class MenuItemsController {
             //////////////////////////////////////// Validation ////////////////////////////////////////////////////////
             int startIndex = syncJobType.getConfiguration().menuItemConfiguration.startIndex;
             int maxCount = syncJobType.getConfiguration().menuItemConfiguration.maxCount;
+            boolean isGeneralOptionalCond = syncJobType.getConfiguration().menuItemConfiguration.generalOptionalCondiments;
 
             SimphonyLocation simphonyLocation = generalSettings.getSimphonyLocationsByID(revenueCenterID);
             if(simphonyLocation == null){
@@ -129,7 +130,7 @@ public class MenuItemsController {
             syncJobRepo.save(syncJob);
 
             response = this.menuItemService.GetConfigurationInfoEx(empNum, revenueCenterID, simphonyPosApiWeb,
-                    startIndex, maxCount);
+                                                                    startIndex, maxCount, isGeneralOptionalCond);
             if(response.isStatus()){
                 // Save menu items
                 ArrayList<SyncJobData> savedMenuItems = this.menuItemService.saveMenuItemData(response.getMenuItems(),
@@ -189,6 +190,8 @@ public class MenuItemsController {
 
                     SyncJobType syncJobType = syncJobTypeRepo.findByNameAndAccountIdAndDeleted(Constants.MENU_ITEMS, account.getId(), false);
 
+                    boolean isGeneralOptionalCond = syncJobType.getConfiguration().menuItemConfiguration.generalOptionalCondiments;
+
                     if (!invokerUser.getTypeId().contains(syncJobType.getId())){
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body("You don't have role to get menu items!");
                     }
@@ -212,7 +215,7 @@ public class MenuItemsController {
 
                     if (syncJob != null){
                         syncJobData = syncJobDataService.getSyncJobData(syncJob.getId());
-                        ArrayList<MenuItemResponse> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                        LinkedHashMap menuItems = menuItemService.simplifyMenuItemData(syncJobData, isGeneralOptionalCond);
                         return new ResponseEntity<>(menuItems, HttpStatus.OK);
                     }else{
                         // Sync menu items
@@ -220,7 +223,7 @@ public class MenuItemsController {
 
                         if(syncResponse.isStatus()){
                             syncJobData = syncResponse.getAddedSyncJobData();
-                            ArrayList<MenuItemResponse> menuItems = menuItemService.simplifyMenuItemData(syncJobData);
+                            LinkedHashMap menuItems = menuItemService.simplifyMenuItemData(syncJobData, isGeneralOptionalCond);
                             return new ResponseEntity<>(menuItems, HttpStatus.OK);
                         }else {
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(syncResponse.getMessage());

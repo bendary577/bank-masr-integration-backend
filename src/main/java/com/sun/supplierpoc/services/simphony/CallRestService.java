@@ -1,101 +1,126 @@
 package com.sun.supplierpoc.services.simphony;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.sun.supplierpoc.models.simphony.Message;
 import com.sun.supplierpoc.models.simphony.request.ZealLoyaltyRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealLoyaltyResponse;
 import com.sun.supplierpoc.models.simphony.request.ZealRedeemRequest;
 import com.sun.supplierpoc.models.simphony.response.ZealRedeemResponse;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 @Service
 public class CallRestService {
 
     Logger logger = LoggerFactory.getLogger(CallRestService.class);
+//
+//    @Autowired
+//    private final RestTemplate restTemplate;
 
-    @Autowired
-    private RestTemplate restTemplate;
-
-    public CallRestService(RestTemplateBuilder restTemplateBuilder) {
+//    public CallRestService(RestTemplateBuilder restTemplateBuilder) {
 //        this.restTemplate = restTemplateBuilder.build();
-    }
+//    }
 
     public ZealLoyaltyResponse zealPayment(ZealLoyaltyRequest zealPayment) {
-//        String url = "https://macros-pos-production.zeal-members.com/api/visit/scan";
-//
-//        List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
-////        interceptors.add(new HttpHeaderInterceptor("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1"));
-//        this.restTemplate.setInterceptors(interceptors);
-//        ZealLoyaltyResponse zealLoyaltyResponse = new ZealLoyaltyResponse();
-//        try{
-//            zealLoyaltyResponse =
-//                this.restTemplate.postForObject(url, zealPayment, ZealLoyaltyResponse.class);
-//        }catch(Exception e){
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            try {
-//                zealLoyaltyResponse = objectMapper.readValue(e.getMessage().substring(e.getMessage().indexOf("{"),
-//                        e.getMessage().indexOf("]")), new TypeReference<>() {  });
-//            } catch (JsonProcessingException jsonProcessingException) {
-//                jsonProcessingException.printStackTrace();
-//            }
-//        }
 
+        String url = "https://macros-pos-production.zeal-members.com/api/visit/scan";
 
         ZealLoyaltyResponse zealLoyaltyResponse = new ZealLoyaltyResponse();
-        if(zealPayment.getVisitId().equals("123456789123456789")) {
-            zealLoyaltyResponse = new ZealLoyaltyResponse("Paid Successfully", "111", true, true, "");
-        }else if(zealPayment.getVisitId().equals("987654321987654321")) {
-            zealLoyaltyResponse = new ZealLoyaltyResponse("Redeem added", "111", true, false, "");
-        }else if(zealPayment.getVisitId().equals("123456789987654321")) {
-            zealLoyaltyResponse = new ZealLoyaltyResponse("wrong id", "110", false, false, "");
-        }
 
+        try {
+            Gson gson = new Gson(); // Or use new GsonBuilder().create();
+            String json = gson.toJson(zealPayment); // serializes target to Json
+
+            OkHttpClient client = new OkHttpClient().newBuilder()
+                    .build();
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, json);
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .method("POST", body)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1")
+                    .build();
+            okhttp3.Response loginResponse = client.newCall(request).execute();
+
+
+                try {
+                    zealLoyaltyResponse = gson.fromJson(loginResponse.body().string(),
+                            ZealLoyaltyResponse.class);
+                } catch (Exception e) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        zealLoyaltyResponse = objectMapper.readValue(e.getMessage().substring(e.getMessage().indexOf("{"),
+                                e.getMessage().indexOf("]")), new TypeReference<>() {
+                        });
+                    } catch (JsonProcessingException jsonProcessingException) {
+                        jsonProcessingException.printStackTrace();
+                    }
+                }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            zealLoyaltyResponse.setStatus("Fail");
+            zealLoyaltyResponse.setMessage("Fail");
+        }
         return zealLoyaltyResponse;
     }
 
     public ZealRedeemResponse zealVoucher(ZealRedeemRequest zealRedeemRequest) {
-//        String url = "https://macros-pos-production.zeal-members.com/api/redeem/scan";
-//        List<ClientHttpRequestInterceptor> interceptors = new ArrayList<>();
-//
-////        interceptors.add(new HttpHeaderInterceptor("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1"));
-//        this.restTemplate.setInterceptors(interceptors);
-//
-//        ZealRedeemResponse zealRedeemResponse = new ZealRedeemResponse();
-//
-//        try{
-//            zealRedeemResponse =
-//                    this.restTemplate.postForObject(url, zealRedeemRequest, ZealRedeemResponse.class);
-//        }catch(Exception e){
-//            ObjectMapper objectMapper = new ObjectMapper();
-//            try {
-//                zealRedeemResponse = objectMapper.readValue(e.getMessage().substring(e.getMessage().indexOf("{"),
-//                        e.getMessage().indexOf("]")), new TypeReference<>() {  });
-//            } catch (JsonProcessingException jsonProcessingException) {
-//                jsonProcessingException.printStackTrace();
-//            }
-//        }
+
+
+        String url = "https://macros-pos-production.zeal-members.com/api/redeem/scan";
 
         ZealRedeemResponse zealRedeemResponse = new ZealRedeemResponse();
-        if(zealRedeemRequest.getUuid().equals("123456789123456789")) {
-            zealRedeemResponse = new ZealRedeemResponse(new Message("Coffee added."), 111,"201000001" , true);
-        }else if(zealRedeemRequest.getUuid().equals("987654321987654321")) {
-            zealRedeemResponse = new ZealRedeemResponse(new Message("Wrong code"), 110,"" , false);
-        }else if(zealRedeemRequest.getUuid().equals("12345678987654321")) {
-            zealRedeemResponse = new ZealRedeemResponse(new Message("Coffee added"), 111,"31532" , false);
-        }else if(zealRedeemRequest.getUuid().equals("123456789876543212")) {
-            zealRedeemResponse = new ZealRedeemResponse(new Message("Coffee added"), 111,"1022" , false);
-        }else if(zealRedeemRequest.getUuid().equals("1234567898765432123")) {
-            zealRedeemResponse = new ZealRedeemResponse(new Message("Coffee added"), 111,"25960" , false);
+
+        try {
+            Gson gson = new Gson(); // Or use new GsonBuilder().create();
+            String json = gson.toJson(zealRedeemRequest); // serializes target to Json
+
+            OkHttpClient client = new OkHttpClient().newBuilder()
+                    .build();
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, json);
+
+            Request request = new Request.Builder()
+                    .url(url)
+                    .method("POST", body)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("API-key", "xVOXeuZdwrpuNZsvx4G7Tul2dPLyYsy2iYhboWZFLGEY9O8lzwg5LzUmBeC8YiI1")
+                    .build();
+            okhttp3.Response loginResponse = client.newCall(request).execute();
+
+
+            if(loginResponse.code() == 200) {
+                zealRedeemResponse = gson.fromJson(loginResponse.body().string(),
+                        ZealRedeemResponse.class);
+            }else {
+
+                HashMap response = gson.fromJson(loginResponse.body().string(),
+                        HashMap.class);
+                zealRedeemResponse.setCode((int) Double.parseDouble(response.get("code").toString()));
+                zealRedeemResponse.setMessage(new Message(response.get("message").toString()));
+
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            zealRedeemResponse.setStatus(false);
+            zealRedeemResponse.setMessage(new Message(e.getMessage()));
         }
 
         return zealRedeemResponse;

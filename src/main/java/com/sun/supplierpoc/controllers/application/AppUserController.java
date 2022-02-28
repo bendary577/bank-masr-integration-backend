@@ -1,5 +1,8 @@
 package com.sun.supplierpoc.controllers.application;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.WriterException;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.Conversions;
@@ -8,6 +11,8 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
+import com.sun.supplierpoc.pdfExporters.QRCodePDFGenerator;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
@@ -24,6 +29,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
@@ -55,6 +61,8 @@ public class AppUserController {
     FeatureService featureService;
     @Autowired
     ActivityService activityService;
+    @Autowired
+    QRCodePDFGenerator qrCodePDFGenerator;
 
     private final Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -87,6 +95,13 @@ public class AppUserController {
 
                 ApplicationUser applicationUser = userRepo.findByCodeAndAccountIdAndDeleted(guestCode, user.getAccountId(), false);
                 if (applicationUser != null) {
+                    if(applicationUser.isSuspended()){
+                        response.put("isSuccess", false);
+                        response.put("points", 0);
+                        response.put("message", "This user has been suspended and is currently unable to benefit from the reward system.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
                     response.put("isSuccess", true);
                     response.put("points", applicationUser.getPoints());
                     response.put("message", "The total number of points a user has is" + applicationUser.getPoints() + ".");
@@ -140,8 +155,22 @@ public class AppUserController {
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
                 }
 
+                if(points <= 0){
+                    response.put("isSuccess", false);
+                    response.put("points", 0);
+                    response.put("message", "Kindly provide valid points.");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+                }
+
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, user.getAccountId());
                 if (applicationUser != null) {
+                    if(applicationUser.isSuspended()){
+                        response.put("isSuccess", false);
+                        response.put("points", 0);
+                        response.put("message", "This user has been suspended and is currently unable to benefit from the reward system.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+
                     applicationUser.setPoints(applicationUser.getPoints() + points);
                     userRepo.save(applicationUser);
 
@@ -171,13 +200,120 @@ public class AppUserController {
         }
     }
 
+    @RequestMapping("/addRewardPointsUser")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity addRewardPointsUser(@RequestPart(name = "user") String userJson,
+                                              @RequestPart(name = "image", required = false) MultipartFile image,
+                                              Principal principal) {
+        HashMap response = new HashMap();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (user != null) {
+            try {
+                ApplicationUser applicationUser;
+                try {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    applicationUser = objectMapper.readValue(userJson, new TypeReference<>() {});
+                } catch (JsonProcessingException e) {
+                    throw e;
+                }
+                Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+                if (!accountOptional.isPresent()) {
+                    response.put("message", Constants.INVALID_USER);
+                    return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+                }
+
+                Account account = accountOptional.get();
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                response = appUserService
+                        .addRewardPointsGuest(applicationUser, image,account, user, generalSettings);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.put("success", false);
+                response.put("message", "Invalid user.");
+            }
+
+            return new ResponseEntity(response, HttpStatus.OK);
+        }else{
+            response.put("success", false);
+            response.put("message", Constants.INVALID_USER);
+            return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @RequestMapping("/updateRewardPointsUser")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity updateRewardPointsUser(@RequestPart(name = "user") String userJson,
+                                              @RequestPart(name = "image", required = false) MultipartFile image,
+                                              Principal principal) {
+        HashMap response = new HashMap();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        if (user != null) {
+            try {
+                ApplicationUser applicationUser;
+                ObjectMapper objectMapper = new ObjectMapper();
+                applicationUser = objectMapper.readValue(userJson, new TypeReference<>() {});
+                Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+                if (accountOptional.isEmpty()) {
+                    response.put("message", Constants.INVALID_USER);
+                    return new ResponseEntity(Constants.INVALID_USER, HttpStatus.UNAUTHORIZED);
+                }
+
+                Account account = accountOptional.get();
+
+                response = appUserService.updateRewardPointsGuest(applicationUser, image, account);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.put("success", false);
+                response.put("message", "Invalid user.");
+            }
+
+            return new ResponseEntity(response, HttpStatus.OK);
+        }else{
+            response.put("success", false);
+            response.put("message", Constants.INVALID_USER);
+            return new ResponseEntity(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @PostMapping("/exportQRCodePDF")
+    public void exportQRCodePDF(@RequestBody ArrayList<ApplicationUser> users,
+                                 HttpServletResponse httpServletResponse,
+                                 Principal principal) throws IOException {
+
+        HashMap response = new HashMap();
+
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            qrCodePDFGenerator.generatePdfReport(account, users, httpServletResponse);
+
+            response.put("message", "Excel exported successfully.");
+            LoggerFactory.getLogger(TransactionController.class).info(response.get("message").toString());
+        }else{
+            response.put("message", "Failed to export excel, Plese try again.");
+        }
+    }
+
     /////////////////////////////////////////////////////// *END* //////////////////////////////////////////////////////
 
     ////////////////////////////////////////////////// Entry System ////////////////////////////////////////////////////
 
-    @GetMapping("/walletSystem/checkGuestBalance")
+    @PostMapping("/walletSystem/checkGuestBalance")
     public ResponseEntity<?> checkGuestBalance(@RequestHeader("Authorization") String authorization,
-                                               @RequestParam("guestCode") String guestCode) {
+                                               @RequestBody String guestCode) {
         HashMap response = new HashMap();
         try {
             InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
@@ -199,10 +335,12 @@ public class AppUserController {
 
             if (account != null) {
                 ApplicationUser applicationUser = appUserService.getAppUserByCode(guestCode, account.getId());
-                double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+
                 if (applicationUser != null) {
+                    double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
+                    guestBalance = conversions.roundUpDouble(guestBalance);
                     response.put("isSuccess", true);
-                    response.put("balance", guestBalance);
+                    response.put("balance", String.valueOf(guestBalance));
                     response.put("message", "");
                 } else {
                     response.put("isSuccess", false);
@@ -222,7 +360,7 @@ public class AppUserController {
 
             response.put("isSuccess", false);
             response.put("balance", 0);
-            response.put("message", "");
+            response.put("message", "This user is not a member of wallet system.");
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }
     }
@@ -278,7 +416,6 @@ public class AppUserController {
                                                    @RequestParam(name = "expiryDate", required = false) String expiryDate,
                                                    @RequestParam(name = "sendEmail", required = false) boolean sendEmail,
                                                    @RequestParam(name = "sendSMS", required = false) boolean sendSMS,
-                                                   @RequestParam(name = "points", required = false) int points,
                                                    @RequestPart(name = "accompaniedGuests", required = false) String accompaniedGuests,
                                                    Principal principal) {
 
@@ -298,7 +435,7 @@ public class AppUserController {
                     response = appUserService
                             .addUpdateGuest(user, addFlag, isGeneric, name, email, groupId, userId, sendEmail, sendSMS,
                                     image, account, generalSettings, accompaniedGuests, balance, cardCode,
-                                    expiryDate, mobile, points);
+                                    expiryDate, mobile);
 
                     if ((Boolean) response.get("success")) {
                         return ResponseEntity.status(HttpStatus.OK).body(response);

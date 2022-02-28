@@ -10,6 +10,7 @@ public class JournalBatch {
     private CostCenter location = new CostCenter();
     private double salesDifferent = 0.0;
     private SalesStatistics salesStatistics = new SalesStatistics();
+    private SalesAPIStatistics salesAPIStatistics = new SalesAPIStatistics();
 
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
@@ -204,5 +205,13 @@ public class JournalBatch {
 
     public void setConsumptionJournals(ArrayList<ConsumptionJournal> consumptionJournals) {
         this.consumptionJournals = consumptionJournals;
+    }
+
+    public SalesAPIStatistics getSalesAPIStatistics() {
+        return salesAPIStatistics;
+    }
+
+    public void setSalesAPIStatistics(SalesAPIStatistics salesAPIStatistics) {
+        this.salesAPIStatistics = salesAPIStatistics;
     }
 }

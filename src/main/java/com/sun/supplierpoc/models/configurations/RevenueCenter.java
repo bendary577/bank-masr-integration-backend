@@ -16,6 +16,10 @@ public class RevenueCenter {
     public RevenueCenter() {
     }
 
+    public RevenueCenter(boolean requireAnalysis) {
+        this.requireAnalysis = requireAnalysis;
+    }
+
     public RevenueCenter(boolean checked, String revenueCenter) {
         this.checked = checked;
         this.revenueCenter = revenueCenter;

@@ -11,6 +11,10 @@ import java.util.Optional;
 @Repository
 
 public interface OrderRepo extends MongoRepository<Order, String>{
+
     Optional<Order> findByIdAndDeleted(String orderId, boolean deleted);
+
     List<Order> findAll();
+
+    Optional<Order> findByFoodicsOrderId(String id);
 }

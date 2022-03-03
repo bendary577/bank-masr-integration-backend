@@ -222,7 +222,7 @@ public class SalesApiService {
                 statisticValues = setupEnvironment.getTableColumns(rows, false, i);
                 String OrderType = conversions.filterString(statisticValues.get(columns.indexOf("order_type")));
 
-                OrderTypeChannels orderTypeChannel = tempOrderTypeChannels.stream().
+                OrderTypeChannels orderTypeChannel = orderTypeChannels.stream().
                         filter(channel -> channel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
                         .stream().findFirst().orElse(null);
 
@@ -232,16 +232,20 @@ public class SalesApiService {
                     return response;
                 }
 
+                OrderTypeChannels finalOrderTypeChannel = orderTypeChannel;
+                List<OrderTypeChannels> RepeatedOrderTypeChannels = orderTypeChannels.stream().
+                        filter(channel -> channel.getChannel().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getChannel().toLowerCase())).collect(Collectors.toList());
+
+                if(RepeatedOrderTypeChannels.size() > 1){
+                    orderTypeChannel = RepeatedOrderTypeChannels.get(0);
+                }
+
                 Double netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
-                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.get(columns.indexOf("checks"))));
+                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
+                        get(columns.indexOf("checks"))));
 
-                orderTypeChannels.stream().
-                        filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
-                        .stream().findFirst().get().setNetSales(String.valueOf(netSales));
-
-                orderTypeChannels.stream().
-                        filter(tempChannel -> tempChannel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
-                        .stream().findFirst().get().setCheckCount(String.valueOf(checkPerType));
+                orderTypeChannel.setNetSales(String.valueOf(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales));
+                orderTypeChannel.setCheckCount(String.valueOf(Integer.parseInt(orderTypeChannel.getCheckCount()) +checkPerType));
 
             }
 

@@ -21,20 +21,7 @@ public class SyncSalesWebService {
             OkHttpClient client = new OkHttpClient();
             MediaType mediaType = MediaType.parse("application/json");
 
-            String fandBSplit = "";
-            int index = 1 ;
-            for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
-                if(orderTypeChannels.isChecked()) {
-                    if (index != salesAPIStatistics.orderTypeChannels.size()) {
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
-                    } else {
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
-                    }
-                }
-                index += 1;
-            }
+            String fandBSplit = getFundSplit(salesAPIStatistics);
 
             RequestBody body = RequestBody.create(mediaType,
                     "{\"SalesDataCollection\": " +
@@ -90,20 +77,7 @@ public class SyncSalesWebService {
             OkHttpClient client = new OkHttpClient();
             MediaType mediaType = MediaType.parse("application/json");
 
-            String fandBSplit = "";
-            int index = 1 ;
-            for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
-                if(orderTypeChannels.isChecked()) {
-                    if (index != salesAPIStatistics.orderTypeChannels.size()) {
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() + ",";
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount() + ",";
-                    } else {
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannel() + "\": " + orderTypeChannels.getNetSales() +  ",";
-                        fandBSplit = fandBSplit + "\" " + orderTypeChannels.getChannelCount() + "\": " + orderTypeChannels.getCheckCount();
-                    }
-                }
-                index += 1;
-            }
+            String fandBSplit = getFundSplit(salesAPIStatistics);
 
             RequestBody body = RequestBody.create(mediaType,
                     "{\"SalesDataCollection\": " +
@@ -149,5 +123,27 @@ public class SyncSalesWebService {
         }
 
         return response;
+    }
+
+    private String getFundSplit(SalesAPIStatistics salesAPIStatistics) {
+
+        String fandBSplit = "";
+        for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
+            if(orderTypeChannels.isChecked()) {
+                fandBSplit = fandBSplit + "\"" + orderTypeChannels.getChannel() + "\":" + orderTypeChannels.getNetSales() + ",";
+            }
+        }
+        int index = 1 ;
+        for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
+            if(orderTypeChannels.isChecked()) {
+                if (index != salesAPIStatistics.orderTypeChannels.size()) {
+                    fandBSplit = fandBSplit + "\"" + orderTypeChannels.getChannelCount() + "\":" + orderTypeChannels.getCheckCount() + ",";
+                } else {
+                    fandBSplit = fandBSplit + "\"" + orderTypeChannels.getChannelCount() + "\":" + orderTypeChannels.getCheckCount();
+                }
+            }
+            index += 1;
+        }
+        return fandBSplit;
     }
 }

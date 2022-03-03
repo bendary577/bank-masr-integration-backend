@@ -82,6 +82,7 @@ public class SalesApiService {
                         callSalesFunction(statistics, timePeriod, fromDate, toDate, costCenter,
                                 journalBatches, driver, endpoint, response, orderTypeChannels);
                         if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            driver.quit();
                             return response;
                         }
                     }

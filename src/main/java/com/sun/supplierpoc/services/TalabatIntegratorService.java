@@ -30,6 +30,9 @@ public class TalabatIntegratorService {
 
     @Autowired
     private TalabatRestService talabatRestService;
+    
+    @Autowired
+    private TalabatAdminWebService talabatAdminWebService;
 
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
@@ -40,8 +43,6 @@ public class TalabatIntegratorService {
     @Autowired
     private FoodicsOrderRepo foodicsOrderRepo;
 
-    @Autowired
-    private TalabatAdminWebService talabatAdminWebService;
 
     public Response syncFoodicsOrders(Account account) {
 
@@ -117,7 +118,7 @@ public class TalabatIntegratorService {
 
         if (token != null && token.isStatus()) {
 
-            TalabatAdminOrder talabatOrder = talabatAdminWebService.acceptService(token);
+            TalabatAdminOrder talabatOrder = talabatAdminWebService.acceptService(token, new RestOrder());
             //            if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 //
 //                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
@@ -191,22 +192,24 @@ public class TalabatIntegratorService {
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
-                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
-                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
-                        .collect(Collectors.toList());
+//                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
+//                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
+//                        .collect(Collectors.toList());
 
-//                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
+                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
                 try {
                     List<com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder> talabatOrderList = new ArrayList<>();
                     com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder talabatOrderDetails = new TalabatOrder();
 
                     FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
-                    //talabatRestService.LoginToFoodics();
 
                     for (RestOrder restOrder : receivedOrders) {
-                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
 
-                        FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatOrderDetails, generalSettings);
+//                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
+                        com.sun.supplierpoc.models.talabat.branchAdmin.Token token1 = talabatAdminWebService.talabatLoginRequest(account);
+                        TalabatAdminOrder talabatAdminOrder = talabatAdminWebService.acceptService(token1, restOrder);
+
+                        FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatAdminOrder, generalSettings);
 
                         if (foodicsOrder != null) {
                             talabatOrderList.add(talabatOrderDetails);
@@ -247,17 +250,22 @@ public class TalabatIntegratorService {
     }
 
 
-    private FoodicsOrder parseOrderParametersToFoodics(TalabatOrder talabatOrder, GeneralSettings generalSettings) {
+    private FoodicsOrder parseOrderParametersToFoodics(TalabatAdminOrder talabatOrder, GeneralSettings generalSettings) {
 
-        Order parsedOrder = talabatOrder.getOrder();
+//        Order parsedOrder = talabatOrder.getOrder();
         FoodicsOrder foodicsOrder = new FoodicsOrder();
 
         try {
 
-
-//        foodicsOrder.setGuests(1);
             foodicsOrder.setType(3);
-//            foodicsOrder
+            foodicsOrder.setCustomerAddressName(talabatOrder.getCustomer().getFirstName());
+            foodicsOrder.setCustomerName(talabatOrder.getCustomer().getFirstName());
+            foodicsOrder.setCustomerDialCode("966");
+            foodicsOrder.setCustomerPhone(talabatOrder.getCustomer().getPhone().replace("+", ""));
+            foodicsOrder.setCustomerAddressName("Work");
+            foodicsOrder.setCustomerAddressDescription(talabatOrder.getAddress().toString());
+            foodicsOrder.setCustomerAddressLatitude(String.valueOf(talabatOrder.getAddress().getLatitude()));
+            foodicsOrder.setCustomerAddressLongitude(String.valueOf(talabatOrder.getAddress().getLongitude()));
 
 //        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
 //                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
@@ -321,11 +329,11 @@ public class TalabatIntegratorService {
             List<FoodicsProduct> products = new ArrayList<>();
             FoodicsProduct product = new FoodicsProduct();
 
-            for (Item item : parsedOrder.getItems()) {
+            for (Item item : talabatOrder.getItems()) {
 
-//            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
-//                    filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
-//                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
+            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
+                    filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
+                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
                 productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().get(0);
 
@@ -333,16 +341,19 @@ public class TalabatIntegratorService {
 
                     product = new FoodicsProduct();
 
-//                Option option;
-//                List<Option> options;
-//                option = new Option();
-//                options = new ArrayList<>();
-//                options.add(option);
-//                product.setOptions(options);
+//                    Option option;
+//                    List<Option> options;
+//
+////                    for(Object option : item.getOptions())
+//                    option = new Option();
+//
+//                    options = new ArrayList<>();
+//                    options.add(option);
+//                    product.setOptions(options);
 
                     product.setProductId(productsMapping.getFoodIcsProductId());
-                    product.setQuantity(item.getQuantity());
-                    product.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
+                    product.setQuantity(item.getAmount());
+                    product.setUnitPrice(item.getPrice());
 
                     products.add(product);
 
@@ -359,6 +370,7 @@ public class TalabatIntegratorService {
 
         } catch (Exception e) {
             e.printStackTrace();
+
         }
         return foodicsOrder;
     }
@@ -457,6 +469,7 @@ public class TalabatIntegratorService {
                         break;
                     case 2:
                         delivery_status = "ready";
+                        talabatAdminWebService.updateOrderStatus(account, tempFoodicsOrder);
                         break;
                     case 3:
                         delivery_status = "assigned";

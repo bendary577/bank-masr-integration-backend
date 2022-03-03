@@ -77,7 +77,6 @@ public class TalabatRestService {
         return token;
     }
 
-
     public TalabatOrder getOrders(Token token, String branch) {
 
         TalabatOrder talabatOrders = new TalabatOrder();

@@ -462,6 +462,13 @@ public class Conversions {
         return Float.parseFloat(temp);
     }
 
+    public Double roundUpDoubleTowDigits(Double value){
+        DecimalFormat df = new DecimalFormat("###.##");
+        String temp = df.format(value);
+        temp = temp.toLowerCase().replaceAll(",", "");
+        return Double.parseDouble(temp);
+    }
+
     public float roundUpFloat1Digest(float value){
         DecimalFormat df = new DecimalFormat("###.#");
         String temp = df.format(value);

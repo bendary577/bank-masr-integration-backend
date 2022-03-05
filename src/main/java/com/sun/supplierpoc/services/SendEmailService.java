@@ -27,6 +27,7 @@ import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
 
@@ -117,6 +118,44 @@ public class SendEmailService {
 
                             " <span> Your report had failed to be exported. Please login and try again or contact support for further assistance.</span><br><br>" +
 
+                            " Thanks and Regards,<br>" +
+                            " Anyware Software<br>" +
+                            "</div>";
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses)  throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(email);
+            String mailSubject = "Emaar daily sales!";
+
+            String body = "";
+            for(HashMap response: responses){
+                body =  "Store Name : " + response.get("storeName")  + "<br>" +
+                        "Store Number : " + response.get("storeNum") + " <br>"  +
+                        "For Date : "  + response.get("date") + " <br>" +
+                        "Result : " + response.get("result") + " <br>" +
+                        "with request body " + response.get("requestBody")  + " <br> <br> <br>";
+            }
+            String mailContent =
+                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
+                            "<p style='text-align:left'>" +
+                            "Dears <br> <br>" +
+
+                            " <span> The daily sales of emaar has been sent with bellow data.</span><br><br>" +
+//                            body +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";

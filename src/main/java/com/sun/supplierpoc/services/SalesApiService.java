@@ -245,7 +245,7 @@ public class SalesApiService {
                 int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
                         get(columns.indexOf("checks"))));
 
-                orderTypeChannel.setNetSales(String.valueOf(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales));
+                orderTypeChannel.setNetSales(String.valueOf(conversions.roundUpDoubleTowDigits(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales)));
                 orderTypeChannel.setCheckCount(String.valueOf(Integer.parseInt(orderTypeChannel.getCheckCount()) +checkPerType));
 
             }

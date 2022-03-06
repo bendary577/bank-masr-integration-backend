@@ -58,6 +58,27 @@ public class SendEmailService {
         return mailSender;
     }
 
+    public JavaMailSender javaGMailSender(Account account)
+    {
+        AccountEmailConfig emailConfig = account.getEmailConfig();
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+//        mailSender.setHost(emailConfig.getHost());
+//        mailSender.setPort(emailConfig.getPort());
+//        mailSender.setUsername(emailConfig.getUsername());
+//        mailSender.setPassword(emailConfig.getPassword());
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("spring.mail.host", emailConfig.getHost());
+        props.put("spring.mail.port", emailConfig.getPort());
+        props.put("spring.mail.username", emailConfig.getUsername());
+        props.put("spring.mail.password", emailConfig.getPassword());
+        props.put("spring.mail.properties.mail.smtp.auth", "true");
+        props.put("spring.mail.properties.mail.smtp.connectiontimeout", "5000");
+        props.put("spring.mail.properties.mail.smtp.timeout","5000");
+        props.put("spring.mail.properties.mail.smtp.writetimeout", "5000");
+        props.put("spring.mail.properties.mail.smtp.starttls.enable", "true");
+        return mailSender;
+    }
+
     public boolean sendExportedSyncsMailMail(FileSystemResource f, Account account, User user, Date fromDate, Date toDate,
                                              List<CostCenter> stores, String email, List<SyncJobType> syncJobTypes)  throws MailException {
 
@@ -118,44 +139,6 @@ public class SendEmailService {
 
                             " <span> Your report had failed to be exported. Please login and try again or contact support for further assistance.</span><br><br>" +
 
-                            " Thanks and Regards,<br>" +
-                            " Anyware Software<br>" +
-                            "</div>";
-
-            messageHelper.setSubject(mailSubject);
-            messageHelper.setText(mailContent, true);
-            mailSender.send(mailMessage);
-            return true;
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses)  throws MailException {
-
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
-            messageHelper.setSentDate(new Date());
-            messageHelper.setTo(email);
-            String mailSubject = "Emaar daily sales!";
-
-            String body = "";
-            for(HashMap response: responses){
-                body =  "Store Name : " + response.get("storeName")  + "<br>" +
-                        "Store Number : " + response.get("storeNum") + " <br>"  +
-                        "For Date : "  + response.get("date") + " <br>" +
-                        "Result : " + response.get("result") + " <br>" +
-                        "with request body " + response.get("requestBody")  + " <br> <br> <br>";
-            }
-            String mailContent =
-                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                            "<p style='text-align:left'>" +
-                            "Dears <br> <br>" +
-
-                            " <span> The daily sales of emaar has been sent with bellow data.</span><br><br>" +
-//                            body +
                             " Thanks and Regards,<br>" +
                             " Anyware Software<br>" +
                             "</div>";
@@ -290,6 +273,49 @@ public class SendEmailService {
             return false;
         }
     }
+
+
+    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account){
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+//        MimeMessage mailMessage = javaGMailSender(account).createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(email);
+            String mailSubject = "Emaar daily sales!";
+
+            String body = "";
+            for(HashMap response: responses){
+                body = body + "Store Name : " + response.get("storeName")  + "<br>" +
+                        "Store Number : " + response.get("storeNum") + " <br>"  +
+                        "For Date : "  + response.get("date") + " <br>" +
+                        "Result : " + response.get("Result") + " <br>" +
+                        "with request body : " + response.get("requestBody")  + " <br> <br> <br>";
+            }
+            String mailContent =
+                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
+                            "<p style='text-align:left'>" +
+                            "Dears <br> <br>" +
+
+                            " <span> The daily sales of emaar has been sent with bellow data.</span><br><br>" +
+                            body +
+                            " Thanks and Regards,<br>" +
+                            " Anyware Software<br>" +
+                            "</div>";
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+//            javaGMailSender(account).send(mailMessage);
+            System.out.print("Sent");
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
     public boolean sendWelcomeEmail(String logoPath, String mailSubj, String accountName, ApplicationUser user, Account account) throws MailException {
 

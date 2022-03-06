@@ -63,6 +63,7 @@ public class SalesAPIController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
+//            emailService.sendEmaarMail("bassel.faisal.bs@gmail.com", responseData, account);
             response = syncPOSSalesInDayRange(user.getId(), account, endpoint);
             if (!response.isStatus()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -283,7 +284,7 @@ public class SalesAPIController {
                                 response = syncSalesWebService.syncSalesMonthlyAPI(journalBatch.getSalesAPIStatistics(), configuration, responseData);
                             }
                         }
-                        emailService.sendEmaarMail("bassel.faisal.bs@gmail.com", responseData);
+                        emailService.sendEmaarMail("bfaisal@entrepreware.com", responseData, account);
 
                         if (response.isStatus()) {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),

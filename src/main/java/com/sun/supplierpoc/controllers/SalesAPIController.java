@@ -48,6 +48,8 @@ public class SalesAPIController {
     private GoogleDriveService googleDriveService;
     @Autowired
     private SyncSalesWebService syncSalesWebService;
+    @Autowired
+    private SendEmailService emailService;
 
     public Conversions conversions = new Conversions();
 
@@ -61,6 +63,7 @@ public class SalesAPIController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
+//            emailService.sendEmaarMail("bassel.faisal.bs@gmail.com", responseData, account);
             response = syncPOSSalesInDayRange(user.getId(), account, endpoint);
             if (!response.isStatus()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
@@ -273,13 +276,15 @@ public class SalesAPIController {
 
                         ArrayList<JournalBatch> journalBatches = salesResponse.getJournalBatches();
 
+                        List<HashMap<String , String>> responseData = new ArrayList<>();
                         for(JournalBatch journalBatch : journalBatches) {
                             if(configuration.apiEndpoint.equals("dailysales")) {
-                                response = syncSalesWebService.syncSalesDailyAPI(journalBatch.getSalesAPIStatistics(), configuration);
+                                response = syncSalesWebService.syncSalesDailyAPI(journalBatch.getSalesAPIStatistics(), configuration, responseData);
                             }else{
-                                response = syncSalesWebService.syncSalesMonthlyAPI(journalBatch.getSalesAPIStatistics(), configuration);
+                                response = syncSalesWebService.syncSalesMonthlyAPI(journalBatch.getSalesAPIStatistics(), configuration, responseData);
                             }
                         }
+                        emailService.sendEmaarMail("bfaisal@entrepreware.com", responseData, account);
 
                         if (response.isStatus()) {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),

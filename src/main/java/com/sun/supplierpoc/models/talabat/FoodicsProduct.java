@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.talabat;
 
+import com.sun.supplierpoc.models.talabat.foodics.Option;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,7 +13,7 @@ public class FoodicsProduct {
     private String productId;
     private int quantity;
     private Double unitPrice;
-
+    private List<Option> options;
     private Object barcode;
     private String name;
     private Object nameLocalized;
@@ -274,5 +275,13 @@ public class FoodicsProduct {
 
     public void setUnitPrice(Double unitPrice) {
         this.unitPrice = unitPrice;
+    }
+
+    public List<Option> getOptions() {
+        return options;
+    }
+
+    public void setOptions(List<Option> options) {
+        this.options = options;
     }
 }

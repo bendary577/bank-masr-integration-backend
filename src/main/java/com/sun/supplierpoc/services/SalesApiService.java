@@ -82,6 +82,7 @@ public class SalesApiService {
                         callSalesFunction(statistics, timePeriod, fromDate, toDate, costCenter,
                                 journalBatches, driver, endpoint, response, orderTypeChannels);
                         if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            driver.quit();
                             return response;
                         }
                     }
@@ -244,7 +245,7 @@ public class SalesApiService {
                 int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
                         get(columns.indexOf("checks"))));
 
-                orderTypeChannel.setNetSales(String.valueOf(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales));
+                orderTypeChannel.setNetSales(String.valueOf(conversions.roundUpDoubleTowDigits(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales)));
                 orderTypeChannel.setCheckCount(String.valueOf(Integer.parseInt(orderTypeChannel.getCheckCount()) +checkPerType));
 
             }

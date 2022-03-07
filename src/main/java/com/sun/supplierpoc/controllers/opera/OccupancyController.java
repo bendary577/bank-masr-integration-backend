@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.controllers.opera;
 
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -115,5 +116,26 @@ public class OccupancyController {
         response.setStatus(false);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @PostMapping("/opera/testTrigger")
+    @CrossOrigin(origins = "*")
+    public String testTrigger(@RequestHeader("Authorization") String authorization, String body) {
+        String message = "";
+        Response response = new Response();
+
+        Conversions conversions = new Conversions();
+        final String[] values = conversions.convertBasicAuth(authorization);
+
+        if (values.length != 0) {
+            String username = values[0];
+            String password = values[1];
+        }
+
+
+        response.setStatus(true);
+        response.setMessage("test connection");
+//        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return "test message";
     }
 }

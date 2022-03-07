@@ -163,4 +163,17 @@ public class Address{
     public void setFormattedAddress(String formattedAddress) {
         this.formattedAddress = formattedAddress;
     }
+
+    @Override
+    public String toString() {
+        return "Address{" +
+                "customerAddressId='" + customerAddressId + '\'' +
+                ", street='" + street + '\'' +
+                ", zip='" + zip + '\'' +
+                ", city='" + city + '\'' +
+                ", area='" + area + '\'' +
+                ", block='" + block + '\'' +
+                ", floor='" + floor + '\'' +
+                '}';
+    }
 }

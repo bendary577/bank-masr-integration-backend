@@ -29,6 +29,13 @@ public class FoodicsOrder {
     private String driverId;
     private String customerAddressId;
     private String customerId;
+    private String customerName;
+    private String customerDialCode;
+    private String customerPhone;
+    private String customerAddressName;
+    private String customerAddressDescription;
+    private String customerAddressLongitude;
+    private String customerAddressLatitude;
     private Meta meta;
     private List<Charge> charges = null;
     private List<FoodicsProduct> products = null;
@@ -43,6 +50,7 @@ public class FoodicsOrder {
     private boolean callStatus;
     private int delivery_status = 1;
     private String message;
+    private Object errors;
 
     public String getId() {
         return id;
@@ -130,6 +138,62 @@ public class FoodicsOrder {
 
     public void setCustomerNotes(String customerNotes) {
         this.customerNotes = customerNotes;
+    }
+
+    public String getCustomerName() {
+        return customerName;
+    }
+
+    public void setCustomerName(String customerName) {
+        this.customerName = customerName;
+    }
+
+    public String getCustomerDialCode() {
+        return customerDialCode;
+    }
+
+    public void setCustomerDialCode(String customerDialCode) {
+        this.customerDialCode = customerDialCode;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
+    }
+
+    public String getCustomerAddressName() {
+        return customerAddressName;
+    }
+
+    public void setCustomerAddressName(String customerAddressName) {
+        this.customerAddressName = customerAddressName;
+    }
+
+    public String getCustomerAddressDescription() {
+        return customerAddressDescription;
+    }
+
+    public void setCustomerAddressDescription(String customerAddressDescription) {
+        this.customerAddressDescription = customerAddressDescription;
+    }
+
+    public String getCustomerAddressLongitude() {
+        return customerAddressLongitude;
+    }
+
+    public void setCustomerAddressLongitude(String customerAddressLongitude) {
+        this.customerAddressLongitude = customerAddressLongitude;
+    }
+
+    public String getCustomerAddressLatitude() {
+        return customerAddressLatitude;
+    }
+
+    public void setCustomerAddressLatitude(String customerAddressLatitude) {
+        this.customerAddressLatitude = customerAddressLatitude;
     }
 
     public String getDriverId() {
@@ -258,5 +322,13 @@ public class FoodicsOrder {
 
     public void setCallStatus(boolean callStatus) {
         this.callStatus = callStatus;
+    }
+
+    public Object getErrors() {
+        return errors;
+    }
+
+    public void setErrors(Object errors) {
+        this.errors = errors;
     }
 }

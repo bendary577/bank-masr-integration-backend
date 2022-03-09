@@ -1,4 +1,4 @@
-package com.sun.supplierpoc.controllers.onlineOrdering;
+package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
@@ -9,7 +9,7 @@ import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
 import com.sun.supplierpoc.models.talabat.foodics.Product;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
-import com.sun.supplierpoc.services.onlineOrdering.FoodicsIntegratorService;
+import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,11 +20,11 @@ import java.util.LinkedHashMap;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/foodics")
-public class FoodicsIntegratorController {
+@RequestMapping("/aggregator")
+public class AggregatorIntegratorController {
 
     @Autowired
-    private FoodicsIntegratorService foodicsIntegratorService;
+    private AggregatorIntegratorService aggregatorIntegratorService;
 
     @Autowired
     private AccountService accountService;
@@ -46,7 +46,7 @@ public class FoodicsIntegratorController {
 
                 Account account = accountOptional.get();
 
-                response = foodicsIntegratorService.fetchProducts(account);
+                response = aggregatorIntegratorService.fetchProducts(account);
 
                 if (response.isStatus()) {
                     return new ResponseEntity<>(response, HttpStatus.OK);
@@ -78,7 +78,7 @@ public class FoodicsIntegratorController {
 
         if (account != null) {
 
-            response = foodicsIntegratorService.updateFoodicsProduct(account, foodicsProduct);
+            response = aggregatorIntegratorService.updateFoodicsProduct(account, foodicsProduct);
 
             if (response.get("status").equals("success")) {
                 return new ResponseEntity<>(response, HttpStatus.OK);
@@ -104,7 +104,7 @@ public class FoodicsIntegratorController {
 
         if (account != null) {
 
-            response = foodicsIntegratorService.updateFoodicsOrder(account, foodicsOrder);
+            response = aggregatorIntegratorService.updateFoodicsOrder(account, foodicsOrder);
 
             if (response.get("status").equals("success")) {
                 return new ResponseEntity<>(response, HttpStatus.OK);

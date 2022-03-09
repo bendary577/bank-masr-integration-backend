@@ -5,7 +5,7 @@ import com.sun.supplierpoc.models.talabat.*;
 
 import java.util.ArrayList;
 
-public class TalabatConfiguration {
+public class AggregatorConfiguration {
 
     private FoodicsAccount foodicsAccount = new FoodicsAccount();
     private ArrayList<TalabatAdminAccount> talabatAdminAccounts = new ArrayList<>();

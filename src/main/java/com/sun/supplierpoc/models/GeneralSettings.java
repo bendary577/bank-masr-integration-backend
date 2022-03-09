@@ -7,9 +7,6 @@ import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
-import com.sun.supplierpoc.models.talabat.BranchMapping;
-import com.sun.supplierpoc.models.talabat.DiscountMapping;
-import com.sun.supplierpoc.models.talabat.ProductsMapping;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
@@ -44,7 +41,7 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
-    private TalabatConfiguration talabatConfiguration = new TalabatConfiguration();
+    private AggregatorConfiguration aggregatorConfiguration = new AggregatorConfiguration();
 
     private ArrayList<OrderType> orderTypes = new ArrayList<>();
     private SimphonyQuota simphonyQuota;
@@ -323,12 +320,12 @@ public class GeneralSettings {
         this.birthdayGift = birthdayGift;
     }
 
-    public TalabatConfiguration getTalabatConfiguration() {
-        return talabatConfiguration;
+    public AggregatorConfiguration getTalabatConfiguration() {
+        return aggregatorConfiguration;
     }
 
-    public void setTalabatConfiguration(TalabatConfiguration talabatConfiguration) {
-        this.talabatConfiguration = talabatConfiguration;
+    public void setTalabatConfiguration(AggregatorConfiguration aggregatorConfiguration) {
+        this.aggregatorConfiguration = aggregatorConfiguration;
     }
 
     public ArrayList<OrderType> getOrderTypes() {

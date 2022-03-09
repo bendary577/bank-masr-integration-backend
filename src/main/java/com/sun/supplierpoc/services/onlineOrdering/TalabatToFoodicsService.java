@@ -3,26 +3,29 @@ package com.sun.supplierpoc.services.onlineOrdering;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
+import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
+import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
 import com.sun.supplierpoc.models.talabat.BranchMapping;
 import com.sun.supplierpoc.models.talabat.FoodicsProduct;
 import com.sun.supplierpoc.models.talabat.ProductsMapping;
-import com.sun.supplierpoc.models.talabat.TalabatRest.Item;
-import com.sun.supplierpoc.models.talabat.TalabatRest.Order;
-import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder;
+import com.sun.supplierpoc.models.talabat.TalabatRest.*;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsLoginBody;
 import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
+import com.sun.supplierpoc.models.talabat.foodics.Product;
 import com.sun.supplierpoc.models.talabat.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
+import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
+import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
+import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,8 +51,8 @@ public class TalabatToFoodicsService {
         com.sun.supplierpoc.models.Order order = new com.sun.supplierpoc.models.Order();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 

@@ -514,7 +514,7 @@ public class SalesService {
                                 , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
 
                         if(taxIncluded)
-                            discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts_vat")).getText().strip());
+                            discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
                         else
                             discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
 
@@ -573,7 +573,7 @@ public class SalesService {
                                     , location, MGRevenueCenter, null, familyGroup.departmentCode);
 
                             if(taxIncluded)
-                                discountAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("discounts_vat")).getText().strip());
+                                discountAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("discounts")).getText().strip());
                             else
                                 discountAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("item_discounts")).getText().strip());
 
@@ -623,10 +623,14 @@ public class SalesService {
     private float getMajorGroupAmount(boolean taxIncluded, String grossDiscountSales, ArrayList<String> columns, List<WebElement> cols) {
         float majorGroupAmount;
         if(taxIncluded){
+            /* Need to sync sales amount after appling the discount amount */
             if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
                 majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_after_disc.")).getText().strip());
             }else {
-                majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_before_disc.")).getText().strip());
+                /* Need to sync sales amount before appling the discount amount */
+//                majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_before_disc.")).getText().strip());
+                majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_after_disc.")).getText().strip()) -
+                        conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
             }
         }else {
             if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){

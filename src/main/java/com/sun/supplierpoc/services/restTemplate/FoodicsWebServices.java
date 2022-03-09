@@ -1,0 +1,104 @@
+package com.sun.supplierpoc.services.restTemplate;
+
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
+import com.sun.supplierpoc.models.talabat.FoodicProductResponse;
+import com.sun.supplierpoc.models.talabat.foodics.CreateOrderRequest;
+import com.sun.supplierpoc.models.talabat.foodics.FoodicsLoginBody;
+import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
+import com.sun.supplierpoc.services.simphony.CallRestService;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+
+@Service
+public class FoodicsWebServices {
+
+    Logger logger = LoggerFactory.getLogger(CallRestService.class);
+
+    private static final String BASE_URL = "";
+
+    public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, FoodicsLoginBody token, GeneralSettings generalSettings,
+                                           FoodicsAccount foodicsAccount) {
+
+        FoodicsOrder foodicsOrder = new FoodicsOrder();
+        String url = "https://api-sandbox.foodics.com/v5/orders";
+        try {
+
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+
+            Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+            String jsonOrder = gson.toJson(order);
+
+            MediaType mediaType = MediaType.parse("application/json");
+
+            RequestBody body = RequestBody.create(mediaType, jsonOrder);
+            Request request = new Request.Builder().url(url).method("POST", body).
+                    addHeader("Authorization", "Bearer " + foodicsAccount.getToken()).
+                    addHeader("Content-Type", "application/json").
+                    addHeader("Accept", "application/json").build();
+
+            okhttp3.Response foodicsResponse = client.newCall(request).execute();
+
+            CreateOrderRequest createOrderRequest = gson.fromJson(foodicsResponse.body().string(), CreateOrderRequest.class);
+
+            if (foodicsResponse.code() == 200) {
+                foodicsOrder = createOrderRequest.getData();
+                foodicsOrder.setCallStatus(true);
+
+            } else {
+                foodicsOrder.setCallStatus(false);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            foodicsOrder.setMessage(e.getMessage());
+            foodicsOrder.setCallStatus(false);
+        }
+
+        return foodicsOrder;
+    }
+
+    public Response fetchProducts(GeneralSettings generalSettings, FoodicsAccount foodicsAccount) {
+        Response response = new Response();
+        String url = "https://api-sandbox.foodics.com/v5/products";
+        try {
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            Request request = new Request.Builder()
+                    .url("https://api-sandbox.foodics.com/v5/products")
+                    .method("GET", null)
+                    .addHeader("Authorization", "Bearer " + foodicsAccount.getToken())
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build();
+            okhttp3.Response getProductsResponse = client.newCall(request).execute();
+            if (getProductsResponse.code() == 200) {
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+                FoodicProductResponse foodicsProductsResponse1 = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
+                response.setFoodicsProducts(foodicsProductsResponse1.getData());
+                response.setStatus(true);
+                return response;
+            } else {
+                response.setMessage("Can't fetch products data.");
+                response.setStatus(false);
+                return response;
+            }
+        } catch (IOException e) {
+            response.setMessage("Can't fetch products data due to error: " + e.getMessage());
+            response.setStatus(false);
+            return response;
+        }
+    }
+
+
+}

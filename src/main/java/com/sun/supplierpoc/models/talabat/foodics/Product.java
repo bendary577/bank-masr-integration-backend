@@ -279,4 +279,6 @@ public class Product {
     public void setIngredients(ArrayList<Ingredient> ingredients) {
         this.ingredients = ingredients;
     }
+
+
 }

@@ -3,8 +3,8 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
-import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
 import com.sun.supplierpoc.models.talabat.*;
 import com.sun.supplierpoc.models.talabat.TalabatRest.*;
@@ -14,6 +14,7 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
 import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
+import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +31,7 @@ public class TalabatIntegratorService {
 
     @Autowired
     private TalabatRestService talabatRestService;
-    
+
     @Autowired
     private TalabatAdminWebService talabatAdminWebService;
 
@@ -43,13 +44,16 @@ public class TalabatIntegratorService {
     @Autowired
     private FoodicsOrderRepo foodicsOrderRepo;
 
+    @Autowired
+    private FoodicsWebServices foodicsWebServices;
+
 
     public Response syncFoodicsOrders(Account account) {
 
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
@@ -80,7 +84,7 @@ public class TalabatIntegratorService {
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
@@ -111,7 +115,7 @@ public class TalabatIntegratorService {
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         TalabatAdminAccount talabatAdminAccount = talabatConfiguration.getTalabatAdminAccounts().get(0);
 
         com.sun.supplierpoc.models.talabat.branchAdmin.Token token = talabatAdminWebService.talabatLoginRequest(account);
@@ -181,7 +185,7 @@ public class TalabatIntegratorService {
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
@@ -216,7 +220,7 @@ public class TalabatIntegratorService {
                         } else {
 
                         }
-                        foodicsOrder = talabatRestService.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
+                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
                         talabatOrderDetails.setOrders(List.of(restOrder));
 
                         if (foodicsOrder.isCallStatus()) {
@@ -380,7 +384,7 @@ public class TalabatIntegratorService {
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
@@ -404,10 +408,10 @@ public class TalabatIntegratorService {
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
+        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
 
-        response = talabatRestService.fetchProducts(generalSettings, foodicsAccount);
+        response = foodicsWebServices.fetchProducts(generalSettings, foodicsAccount);
 
         ArrayList<Product> foodicsProducts = response.getFoodicsProducts();
 

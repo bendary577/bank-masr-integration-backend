@@ -2,27 +2,29 @@ package com.sun.supplierpoc.services.onlineOrdering;
 
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.Order;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.configurations.TalabatConfiguration;
+import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
+import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
-import com.sun.supplierpoc.models.talabat.foodics.Product;
+import com.sun.supplierpoc.models.talabat.TalabatRest.*;
+import com.sun.supplierpoc.models.talabat.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
+import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
 import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
-import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
+import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
+import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 
 @Service
 public class FoodicsIntegratorService {
 
     @Autowired
-    private FoodicsWebServices foodicsWebServices;
+    private OrderRepo orderRepo;
+
+    @Autowired
+    private TalabatRestService talabatRestService;
 
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
@@ -31,134 +33,94 @@ public class FoodicsIntegratorService {
     private FoodicsProductRepo foodicsProductRepo;
 
     @Autowired
-    private OrderRepo orderRepo;
+    private FoodicsOrderRepo foodicsOrderRepo;
 
-    public Response fetchProducts(Account account) {
+    @Autowired
+    private TalabatAdminWebService talabatAdminWebService;
+
+    public Response syncFoodicsOrders(Account account) {
 
         Response response = new Response();
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        TalabatConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
 
-        response = foodicsWebServices.fetchProducts(generalSettings, foodicsAccount);
+        Token token = talabatRestService.talabatLoginRequest(account);
 
-        ArrayList<Product> foodicsProducts = response.getFoodicsProducts();
+        if (token != null && token.isStatus()) {
 
-        try {
-            foodicsProductRepo.saveAll(foodicsProducts);
-        } catch (Exception e) {
-            response.setMessage("Can't save foodics product.");
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+
+            if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
+
+                response.setMessage("Sync Talabat Orders Successfully");
+                response.setData(talabatOrder);
+
+            } else {
+                response.setStatus(false);
+                response.setMessage("Login To Talabat Failed Due To : " + talabatOrder.getMessage());
+            }
+        } else {
             response.setStatus(false);
+            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
         }
 
         return response;
     }
 
-    public LinkedHashMap updateFoodicsProduct(Account account, Product foodicsProduct) {
+    public Response syncFoodicsBranchOrders(Account account, String branch) {
 
-        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
+        Response response = new Response();
 
-        try {
-            Product product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
 
-            if (product != null) {
+        Token token = talabatRestService.talabatLoginRequest(account);
 
-                foodicsProductRepo.save(foodicsProduct);
+        if (token != null && token.isStatus()) {
 
-                response.put("message", "Product information was successfully updated.");
-                response.put("status", "success");
-                response.put("data", foodicsProduct);
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branch);
+
+            if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
+
+                response.setMessage("Sync Talabat Orders Successfully");
+                response.setData(talabatOrder);
 
             } else {
-
-                response.put("message", "Product Not Found.");
-                response.put("status", "failed");
-
+                response.setStatus(false);
+                response.setMessage("Login To Talabat Failed Due To : " + talabatOrder.getMessage());
             }
-        } catch (Exception e) {
-            response.put("message", "Can't save foodics product.");
-            response.put("status", "failed");
+        } else {
+            response.setStatus(false);
+            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
         }
 
         return response;
     }
 
-    public LinkedHashMap updateFoodicsOrder(Account account, FoodicsOrder tempFoodicsOrder) {
+    public Response getOrderDetails(Account account, RestOrder order) {
 
-        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
+        Response response = new Response();
 
-        try {
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
+        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
 
-            Order order = orderRepo.findByFoodicsOrderId(tempFoodicsOrder.getId()).orElse(null);
+        Token token = talabatRestService.talabatLoginRequest(account);
 
-            FoodicsOrder foodicsOrder = order.getFoodicsOrder();
+        if (token != null && token.isStatus()) {
 
-            String delivery_status = "";
-            String status = "";
-
-            if (foodicsOrder != null) {
-
-
-                switch (tempFoodicsOrder.getDelivery_status()) {
-                    case 1:
-                        delivery_status = "sent to kitchen";
-                        break;
-                    case 2:
-                        delivery_status = "ready";
-                        break;
-                    case 3:
-                        delivery_status = "assigned";
-                        break;
-                    case 4:
-                        delivery_status = "en route";
-                        break;
-                    case 5:
-                        delivery_status = "delivered";
-                        break;
-                    case 6:
-                        delivery_status = "closed";
-                        break;
-                }
-
-                switch (tempFoodicsOrder.getStatus()) {
-                    case 1:
-                        status = "Pending";
-                        break;
-                    case 2:
-                        status = "Active";
-                        break;
-                    case 3:
-                        status = "Declined";
-                        break;
-                    case 4:
-                        status = "Closed";
-                        break;
-                    case 5:
-                        status = "Returned";
-                        break;
-                    case 6:
-                        status = "Void";
-                        break;
-                }
-
-                order.setFoodicsOrder(foodicsOrder);
-
-                orderRepo.save(order);
-
-                response.put("message", "Order information was successfully updated.");
-                response.put("status", "success");
-                response.put("orderStatus", status);
-                response.put("deliveryStatus", delivery_status);
-            } else {
-                response.put("message", "Order Not Found.");
-                response.put("status", false);
-            }
-
-        } catch (Exception e) {
-            response.put("message", "Can't save foodics order.");
-            response.put("status", false);
+            TalabatOrder talabatOrderDetails = talabatRestService.getOrderById(order, token);
+            response.setData(talabatOrderDetails);
+            response.setStatus(true);
+            response.setMessage("Success");
+        } else {
+            response.setStatus(false);
+            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
         }
+
         return response;
     }
 

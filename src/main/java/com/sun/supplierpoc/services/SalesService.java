@@ -897,6 +897,7 @@ public class SalesService {
             float totalMajorGroupNet = 0;
 
             // Save majorGroup {Credit}
+            float majorGroupGrossTotal;
             ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
             for (Journal majorGroupJournal : majorGroupsGross) {
                 if (majorGroupJournal.getTotalCost() == 0)
@@ -904,7 +905,9 @@ public class SalesService {
 
                 saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
-                float majorGroupGrossTotal = conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost());
+                majorGroupGrossTotal = conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost());
+//                majorGroupGrossTotal = Math.abs(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost()));
+//                majorGroupGrossTotal = majorGroupJournal.getTotalCost();
                 totalMajorGroupNet += majorGroupGrossTotal;
             }
 
@@ -1097,6 +1100,7 @@ public class SalesService {
 
             float totalDr = totalTender;
             float totalCr;
+            // sales with discount amount
             if(configuration.salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)){
                 totalCr = totalMajorGroupNet + totalDiscount + totalTax + totalServiceCharge;
             }else
@@ -1423,6 +1427,15 @@ public class SalesService {
 
         majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
         majorGroupData.put("transactionDate", transactionDate);
+
+//        majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
+//        // Major Group account
+//        if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0
+//                && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
+//            majorGroupData.put("inventoryAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
+//        }else {
+//            majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
+//        }
 
         if(majorGroupJournal.getTotalCost() > 0){
             majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));

@@ -2,6 +2,7 @@ package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
@@ -13,8 +14,7 @@ import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
-import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
-import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
+import com.sun.supplierpoc.repositories.applications.ProductRepository;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
@@ -40,10 +40,7 @@ public class TalabatIntegratorService {
     private GeneralSettingsRepo generalSettingsRepo;
 
     @Autowired
-    private FoodicsProductRepo foodicsProductRepo;
-
-    @Autowired
-    private FoodicsOrderRepo foodicsOrderRepo;
+    private ProductRepository productRepository;
 
     @Autowired
     private FoodicsWebServices foodicsWebServices;
@@ -226,7 +223,7 @@ public class TalabatIntegratorService {
 
                         if (foodicsOrder.isCallStatus()) {
                             talabatOrderList.add(talabatOrderDetails);
-                            foodicsOrderRepo.save(foodicsOrder);
+//                            foodicsOrderRepo.save(foodicsOrder);
                         }
 
                     }
@@ -412,12 +409,11 @@ public class TalabatIntegratorService {
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccountData foodicsAccountData = talabatConfiguration.getFoodicsAccount();
 
-        response = foodicsWebServices.fetchProducts(generalSettings, foodicsAccountData);
-
-        ArrayList<FoodicsProduct> foodicsFoodicsProducts = response.getFoodicsProducts();
+        Product product = foodicsWebServices.fetchProducts(generalSettings, foodicsAccountData);
 
         try {
-            foodicsProductRepo.saveAll(foodicsFoodicsProducts);
+            productRepository.save(product);
+            response.setData(product);
         } catch (Exception e) {
             response.setMessage("Can't save foodics product.");
             response.setStatus(false);
@@ -429,13 +425,13 @@ public class TalabatIntegratorService {
     public LinkedHashMap updateFoodicsProduct(Account account, FoodicsProduct foodicsProduct) {
 
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-
+        Product product  = new Product();
         try {
-            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+//            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
 
             if (product != null) {
 
-                foodicsProductRepo.save(foodicsProduct);
+//                foodicsProductRepo.save(foodicsProduct);
 
                 response.put("message", "Product information was successfully updated.");
                 response.put("status", "success");
@@ -458,16 +454,16 @@ public class TalabatIntegratorService {
     public LinkedHashMap updateFoodicsOrder(Account account, FoodicsOrder tempFoodicsOrder) {
 
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-
+        Product product = new Product();
         try {
 
-            FoodicsOrder foodicsOrder = foodicsOrderRepo.findById(tempFoodicsOrder.getId()).orElse(null);
+//            FoodicsOrder foodicsOrder = foodicsOrderRepo.findById(tempFoodicsOrder.getId()).orElse(null);
             String delivery_status = "";
             String status = "";
 
-            if (foodicsOrder != null) {
+            if (product != null) {
 
-                foodicsOrderRepo.save(foodicsOrder);
+//                foodicsOrderRepo.save(foodicsOrder);
                 switch (tempFoodicsOrder.getDelivery_status()) {
                     case 1:
                         delivery_status = "sent to kitchen";

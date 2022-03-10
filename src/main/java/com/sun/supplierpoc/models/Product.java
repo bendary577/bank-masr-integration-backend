@@ -1,6 +1,8 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
+import com.sun.supplierpoc.models.simphony.SimphonyMenuItem;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.Date;
@@ -9,9 +11,14 @@ import java.util.List;
 @Document
 public class Product {
 
+    @Id
+    private String id;
+
     private String type;
 
     private List<FoodicsProduct> foodicsProducts;
+
+    private List<SimphonyMenuItem> simphonyMenuItems;
 
     private Date syncDate;
 

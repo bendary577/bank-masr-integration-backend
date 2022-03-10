@@ -9,8 +9,6 @@ import com.sun.supplierpoc.models.aggregtor.TalabatRest.*;
 import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
-import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
-import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
 import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +25,6 @@ public class FoodicsIntegratorService {
 
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
-
-    @Autowired
-    private FoodicsProductRepo foodicsProductRepo;
-
-    @Autowired
-    private FoodicsOrderRepo foodicsOrderRepo;
 
     @Autowired
     private TalabatAdminWebService talabatAdminWebService;

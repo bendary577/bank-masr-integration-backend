@@ -9,7 +9,8 @@ import java.util.List;
 public class AggregatorConfiguration {
 
     private FoodicsAccountData foodicsAccountData = new FoodicsAccountData();
-    private List<SimphonyAccount> simphonyAccountData = new ArrayList<>();
+    private SimphonyAccount simphonyAccount = new SimphonyAccount();
+    private List<SimphonyAccountData> simphonyAccountData = new ArrayList<>();
     private ArrayList<TalabatAdminAccount> talabatAdminAccounts = new ArrayList<>();
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
@@ -19,6 +20,22 @@ public class AggregatorConfiguration {
 
     public FoodicsAccountData getFoodicsAccount() {
         return foodicsAccountData;
+    }
+
+    public SimphonyAccount getSimphonyAccount() {
+        return simphonyAccount;
+    }
+
+    public void setSimphonyAccount(SimphonyAccount simphonyAccount) {
+        this.simphonyAccount = simphonyAccount;
+    }
+
+    public List<SimphonyAccountData> getSimphonyAccountData() {
+        return simphonyAccountData;
+    }
+
+    public void setSimphonyAccountData(List<SimphonyAccountData> simphonyAccountData) {
+        this.simphonyAccountData = simphonyAccountData;
     }
 
     public void setFoodicsAccount(FoodicsAccountData foodicsAccountData) {

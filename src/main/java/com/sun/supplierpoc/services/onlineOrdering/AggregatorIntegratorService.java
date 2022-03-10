@@ -18,7 +18,7 @@ import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
-import com.sun.supplierpoc.repositories.applications.FoodicsProductRepo;
+import com.sun.supplierpoc.repositories.applications.ProductRepository;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +39,7 @@ public class AggregatorIntegratorService {
     private GeneralSettingsRepo generalSettingsRepo;
 
     @Autowired
-    private FoodicsProductRepo foodicsProductRepo;
+    private ProductRepository productRepository;
 
     @Autowired
     private OrderRepo orderRepo;
@@ -124,47 +124,41 @@ public class AggregatorIntegratorService {
 
         Response response = new Response();
 
-        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        List<Aggregator> aggregators = generalSettings.getAggregators();
-        AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
-
-        for(Aggregator aggregator : aggregators){
-
-            if(aggregator.getName().equals(Constants.FOODICS)) {
-
-                FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
-                Product product = foodicsWebServices.fetchProducts(generalSettings, foodicsAccountData);
-
-            }else if(aggregator.getName().equals(Constants.SIMPHONY)){
-
-                SimphonyAccount simphonyAccount = aggregatorConfiguration.getS();
-
-
-            }
-        }
-
-        ArrayList<FoodicsProduct> foodicsFoodicsProducts = response.getFoodicsProducts();
-
         try {
-            foodicsProductRepo.saveAll(foodicsFoodicsProducts);
-        } catch (Exception e) {
-            response.setMessage("Can't save foodics product.");
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            List<Aggregator> aggregators = generalSettings.getAggregators();
+            AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
+
+            Product product = new Product();
+
+            for (Aggregator aggregator : aggregators) {
+                if (aggregator.getName().equals(Constants.FOODICS)) {
+                    FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
+                    product = foodicsWebServices.fetchProducts(generalSettings, foodicsAccountData);
+                } else if (aggregator.getName().equals(Constants.SIMPHONY)) {
+                    SimphonyAccount simphonyAccount = aggregatorConfiguration.getSimphonyAccount();
+                }
+            }
+            productRepository.save(product);
+            response.setData(product);
+        }catch (Exception e){
+            response.setMessage("Can't sync products due tue error: " + e.getMessage());
             response.setStatus(false);
         }
-
         return response;
     }
 
     public LinkedHashMap updateFoodicsProduct(Account account, FoodicsProduct foodicsProduct) {
 
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
+        Product product = new Product();
 
         try {
-            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+//            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
 
             if (product != null) {
 
-                foodicsProductRepo.save(foodicsProduct);
+//                foodicsProductRepo.save(foodicsProduct);
 
                 response.put("message", "Product information was successfully updated.");
                 response.put("status", "success");

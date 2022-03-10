@@ -6,7 +6,6 @@ public class SimphonyAccount {
         private String port;
         private String ip;
 
-
         public String getName() {
                 return name;
         }

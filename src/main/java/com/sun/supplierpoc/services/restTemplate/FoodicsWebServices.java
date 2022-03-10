@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services.restTemplate;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
@@ -71,7 +72,7 @@ public class FoodicsWebServices {
     }
 
     public Product fetchProducts(GeneralSettings generalSettings, FoodicsAccountData foodicsAccountData) {
-        Response response = new Response();
+        Product product = new Product();
         String url = "https://api-sandbox.foodics.com/v5/products";
         try {
             OkHttpClient client = new OkHttpClient().newBuilder().build();
@@ -84,19 +85,15 @@ public class FoodicsWebServices {
             okhttp3.Response getProductsResponse = client.newCall(request).execute();
             if (getProductsResponse.code() == 200) {
                 Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
-                FoodicProductResponse foodicsProductsResponse1 = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
-                response.setFoodicsProducts(foodicsProductsResponse1.getData());
-                response.setStatus(true);
-                return response;
+                FoodicProductResponse foodicsProductsResponse = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
+                product.setFoodicsProducts(foodicsProductsResponse.getData());
+                product.setType(Constants.FOODICS);
+                return product;
             } else {
-                response.setMessage("Can't fetch products data.");
-                response.setStatus(false);
-                return response;
+                return product;
             }
         } catch (IOException e) {
-            response.setMessage("Can't fetch products data due to error: " + e.getMessage());
-            response.setStatus(false);
-            return response;
+            return product;
         }
     }
 

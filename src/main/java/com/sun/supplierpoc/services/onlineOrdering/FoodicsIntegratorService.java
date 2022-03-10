@@ -3,11 +3,10 @@ package com.sun.supplierpoc.services.onlineOrdering;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
-import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.TalabatRest.*;
-import com.sun.supplierpoc.models.talabat.login.Token;
+import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.*;
+import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
@@ -44,7 +43,7 @@ public class FoodicsIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 
@@ -75,7 +74,7 @@ public class FoodicsIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 
@@ -106,7 +105,7 @@ public class FoodicsIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = aggregatorConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 

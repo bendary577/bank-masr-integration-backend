@@ -1,13 +1,15 @@
 package com.sun.supplierpoc.models.configurations;
 
-import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.*;
+import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
+import com.sun.supplierpoc.models.aggregtor.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class AggregatorConfiguration {
 
-    private FoodicsAccount foodicsAccount = new FoodicsAccount();
+    private FoodicsAccountData foodicsAccountData = new FoodicsAccountData();
+    private List<SimphonyAccount> simphonyAccountData = new ArrayList<>();
     private ArrayList<TalabatAdminAccount> talabatAdminAccounts = new ArrayList<>();
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
@@ -15,12 +17,12 @@ public class AggregatorConfiguration {
     private ArrayList<AddressMapping> addressMappings = new ArrayList<>();
     private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
 
-    public FoodicsAccount getFoodicsAccount() {
-        return foodicsAccount;
+    public FoodicsAccountData getFoodicsAccount() {
+        return foodicsAccountData;
     }
 
-    public void setFoodicsAccount(FoodicsAccount foodicsAccount) {
-        this.foodicsAccount = foodicsAccount;
+    public void setFoodicsAccount(FoodicsAccountData foodicsAccountData) {
+        this.foodicsAccountData = foodicsAccountData;
     }
 
     public ArrayList<ProductsMapping> getProductsMappings() {
@@ -69,5 +71,13 @@ public class AggregatorConfiguration {
 
     public void setTalabatAdminAccounts(ArrayList<TalabatAdminAccount> talabatAdminAccounts) {
         this.talabatAdminAccounts = talabatAdminAccounts;
+    }
+
+    public FoodicsAccountData getFoodicsAccountData() {
+        return foodicsAccountData;
+    }
+
+    public void setFoodicsAccountData(FoodicsAccountData foodicsAccountData) {
+        this.foodicsAccountData = foodicsAccountData;
     }
 }

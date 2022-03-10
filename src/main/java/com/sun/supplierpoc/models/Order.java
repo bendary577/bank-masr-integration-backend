@@ -1,14 +1,12 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.simphony.response.CondimentResponse;
-import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatAdminOrder;
-import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAdminOrder;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
 public class Order implements Serializable {

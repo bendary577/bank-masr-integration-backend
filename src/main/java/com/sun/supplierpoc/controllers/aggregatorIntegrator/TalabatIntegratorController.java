@@ -2,14 +2,9 @@ package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
-import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
-import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatAdminOrder;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.TalabatIntegratorService;
@@ -42,6 +37,7 @@ public class TalabatIntegratorController {
 
     @Autowired
     private FoodicsIntegratorService foodicsIntegratorService;
+
     @GetMapping
     public ResponseEntity<?> SyncTalabatOrders(Principal principal) {
 

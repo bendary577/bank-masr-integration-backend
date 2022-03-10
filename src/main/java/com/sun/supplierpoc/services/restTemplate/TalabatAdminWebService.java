@@ -3,10 +3,10 @@ package com.sun.supplierpoc.services.restTemplate;
 import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
-import com.sun.supplierpoc.models.talabat.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.talabat.TalabatRest.TalabatAdminOrder;
-import com.sun.supplierpoc.models.talabat.branchAdmin.Token;
-import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAdminOrder;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.Token;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -75,7 +75,7 @@ public class TalabatAdminWebService {
 
         TalabatAdminOrder talabatAdminOrder = new TalabatAdminOrder();
         String endPoint = "/api/1/deliveries";
-        
+
         try {
 
             OkHttpClient client = new OkHttpClient().newBuilder()

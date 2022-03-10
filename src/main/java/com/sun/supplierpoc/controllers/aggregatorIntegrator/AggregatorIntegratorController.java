@@ -3,10 +3,10 @@ package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
-import com.sun.supplierpoc.models.talabat.foodics.Product;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
@@ -66,9 +66,31 @@ public class AggregatorIntegratorController {
         }
     }
 
+    @GetMapping("/orders")
+    public ResponseEntity<?> sendTalabatOrders(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response = aggregatorIntegratorService.sendReceivedOrders(account);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
     @RequestMapping("/webhook/products")
     public ResponseEntity<?> updateFoodicsRequest(@RequestHeader("Authorization") String authorization,
-                                                  @RequestBody Product foodicsProduct) {
+                                                  @RequestBody FoodicsProduct foodicsProduct) {
 
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
 

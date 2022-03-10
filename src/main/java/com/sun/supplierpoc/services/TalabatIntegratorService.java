@@ -3,13 +3,14 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
-import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.*;
-import com.sun.supplierpoc.models.talabat.TalabatRest.*;
-import com.sun.supplierpoc.models.talabat.foodics.*;
-import com.sun.supplierpoc.models.talabat.login.Token;
+import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
+import com.sun.supplierpoc.models.aggregtor.*;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.*;
+import com.sun.supplierpoc.models.aggregtor.foodics.*;
+import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.repositories.applications.FoodicsOrderRepo;
@@ -54,7 +55,7 @@ public class TalabatIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 
@@ -85,7 +86,7 @@ public class TalabatIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 
@@ -118,7 +119,7 @@ public class TalabatIntegratorService {
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
         TalabatAdminAccount talabatAdminAccount = talabatConfiguration.getTalabatAdminAccounts().get(0);
 
-        com.sun.supplierpoc.models.talabat.branchAdmin.Token token = talabatAdminWebService.talabatLoginRequest(account);
+        com.sun.supplierpoc.models.aggregtor.branchAdmin.Token token = talabatAdminWebService.talabatLoginRequest(account);
 
         if (token != null && token.isStatus()) {
 
@@ -186,7 +187,7 @@ public class TalabatIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 
@@ -202,15 +203,15 @@ public class TalabatIntegratorService {
 
                 List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
                 try {
-                    List<com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder> talabatOrderList = new ArrayList<>();
-                    com.sun.supplierpoc.models.talabat.TalabatRest.TalabatOrder talabatOrderDetails = new TalabatOrder();
+                    List<com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatOrder> talabatOrderList = new ArrayList<>();
+                    com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatOrder talabatOrderDetails = new TalabatOrder();
 
                     FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
 
                     for (RestOrder restOrder : receivedOrders) {
 
 //                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
-                        com.sun.supplierpoc.models.talabat.branchAdmin.Token token1 = talabatAdminWebService.talabatLoginRequest(account);
+                        com.sun.supplierpoc.models.aggregtor.branchAdmin.Token token1 = talabatAdminWebService.talabatLoginRequest(account);
                         TalabatAdminOrder talabatAdminOrder = talabatAdminWebService.acceptService(token1, restOrder);
 
                         FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatAdminOrder, generalSettings);
@@ -220,7 +221,7 @@ public class TalabatIntegratorService {
                         } else {
 
                         }
-                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
+                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccountData);
                         talabatOrderDetails.setOrders(List.of(restOrder));
 
                         if (foodicsOrder.isCallStatus()) {
@@ -330,8 +331,8 @@ public class TalabatIntegratorService {
 //        foodicsOrder.setCharges(charges);
 
             ProductsMapping productsMapping = new ProductsMapping();
-            List<FoodicsProduct> products = new ArrayList<>();
-            FoodicsProduct product = new FoodicsProduct();
+            List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
+            FoodicsProductObject foodicsProductObject = new FoodicsProductObject();
 
             for (Item item : talabatOrder.getItems()) {
 
@@ -343,7 +344,7 @@ public class TalabatIntegratorService {
 
                 if (productsMapping != null) {
 
-                    product = new FoodicsProduct();
+                    foodicsProductObject = new FoodicsProductObject();
 
 //                    Option option;
 //                    List<Option> options;
@@ -355,18 +356,18 @@ public class TalabatIntegratorService {
 //                    options.add(option);
 //                    product.setOptions(options);
 
-                    product.setProductId(productsMapping.getFoodIcsProductId());
-                    product.setQuantity(item.getAmount());
-                    product.setUnitPrice(item.getPrice());
+                    foodicsProductObject.setProductId(productsMapping.getFoodIcsProductId());
+                    foodicsProductObject.setQuantity(item.getAmount());
+                    foodicsProductObject.setUnitPrice(item.getPrice());
 
-                    products.add(product);
+                    foodicsProductObjects.add(foodicsProductObject);
 
                 } else {
                     return null;
                 }
             }
 
-            foodicsOrder.setProducts(products);
+            foodicsOrder.setProducts(foodicsProductObjects);
 
 
 //        foodicsOrder.setProducts(products);
@@ -385,7 +386,7 @@ public class TalabatIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = talabatConfiguration.getFoodicsAccount();
 
         Token token = talabatRestService.talabatLoginRequest(account);
 
@@ -409,14 +410,14 @@ public class TalabatIntegratorService {
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        FoodicsAccount foodicsAccount = talabatConfiguration.getFoodicsAccount();
+        FoodicsAccountData foodicsAccountData = talabatConfiguration.getFoodicsAccount();
 
-        response = foodicsWebServices.fetchProducts(generalSettings, foodicsAccount);
+        response = foodicsWebServices.fetchProducts(generalSettings, foodicsAccountData);
 
-        ArrayList<Product> foodicsProducts = response.getFoodicsProducts();
+        ArrayList<FoodicsProduct> foodicsFoodicsProducts = response.getFoodicsProducts();
 
         try {
-            foodicsProductRepo.saveAll(foodicsProducts);
+            foodicsProductRepo.saveAll(foodicsFoodicsProducts);
         } catch (Exception e) {
             response.setMessage("Can't save foodics product.");
             response.setStatus(false);
@@ -425,12 +426,12 @@ public class TalabatIntegratorService {
         return response;
     }
 
-    public LinkedHashMap updateFoodicsProduct(Account account, Product foodicsProduct) {
+    public LinkedHashMap updateFoodicsProduct(Account account, FoodicsProduct foodicsProduct) {
 
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
 
         try {
-            Product product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
 
             if (product != null) {
 

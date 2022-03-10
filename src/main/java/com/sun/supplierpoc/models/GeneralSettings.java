@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.applications.BirthdayGift;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.applications.SimphonyQuota;
@@ -12,6 +13,7 @@ import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class GeneralSettings {
 
@@ -42,7 +44,7 @@ public class GeneralSettings {
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
     private AggregatorConfiguration aggregatorConfiguration = new AggregatorConfiguration();
-
+    private List<Aggregator> aggregators = new ArrayList<Aggregator>();
     private ArrayList<OrderType> orderTypes = new ArrayList<>();
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
@@ -334,6 +336,22 @@ public class GeneralSettings {
 
     public void setOrderTypes(ArrayList<OrderType> orderTypes) {
         this.orderTypes = orderTypes;
+    }
+
+    public AggregatorConfiguration getAggregatorConfiguration() {
+        return aggregatorConfiguration;
+    }
+
+    public void setAggregatorConfiguration(AggregatorConfiguration aggregatorConfiguration) {
+        this.aggregatorConfiguration = aggregatorConfiguration;
+    }
+
+    public List<Aggregator> getAggregators() {
+        return aggregators;
+    }
+
+    public void setAggregators(List<Aggregator> aggregators) {
+        this.aggregators = aggregators;
     }
 }
 

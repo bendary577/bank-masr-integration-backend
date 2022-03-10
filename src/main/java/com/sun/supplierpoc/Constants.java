@@ -265,7 +265,7 @@ public class Constants {
     // CONSUMPTION LINKS >> Inventory Cost of Sales
     public static String MICROS_CONSUMPTION_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100067";
 
-    ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Business Date /////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";
     public static String PAST_7_DAYES = "Past 7 Days";
@@ -287,6 +287,20 @@ public class Constants {
     //////////////////////////////////////////////////path for support //////////////////////////////////////////////////
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
     public static final String BASE_ZIP_PATH = "src/main/resources/";
+
+    ////////////////////////////////////////////////// Aggregator Statistics ////////////////////////////////////////////
+
+
+    ////////////////////////////////////////////////// Aggregator Vendor
+
+    public static final String FOODICS = "foodics";
+    public static final String SIMPHONY = "simphony";
+
+    ////////////////////////////////////////////////// Aggregator App
+
+    public static final String TALABAT = "talabat";
+    public static final String ELMENUS = "elmenus";
+
 
     public Constants() {}
 }

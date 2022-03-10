@@ -4,12 +4,13 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.supplierpoc.models.GeneralSettings;
+import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccount;
-import com.sun.supplierpoc.models.talabat.FoodicProductResponse;
-import com.sun.supplierpoc.models.talabat.foodics.CreateOrderRequest;
-import com.sun.supplierpoc.models.talabat.foodics.FoodicsLoginBody;
-import com.sun.supplierpoc.models.talabat.foodics.FoodicsOrder;
+import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
+import com.sun.supplierpoc.models.aggregtor.FoodicProductResponse;
+import com.sun.supplierpoc.models.aggregtor.foodics.CreateOrderRequest;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsLoginBody;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -29,7 +30,7 @@ public class FoodicsWebServices {
     private static final String BASE_URL = "";
 
     public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, FoodicsLoginBody token, GeneralSettings generalSettings,
-                                           FoodicsAccount foodicsAccount) {
+                                           FoodicsAccountData foodicsAccountData) {
 
         FoodicsOrder foodicsOrder = new FoodicsOrder();
         String url = "https://api-sandbox.foodics.com/v5/orders";
@@ -44,7 +45,7 @@ public class FoodicsWebServices {
 
             RequestBody body = RequestBody.create(mediaType, jsonOrder);
             Request request = new Request.Builder().url(url).method("POST", body).
-                    addHeader("Authorization", "Bearer " + foodicsAccount.getToken()).
+                    addHeader("Authorization", "Bearer " + foodicsAccountData.getToken()).
                     addHeader("Content-Type", "application/json").
                     addHeader("Accept", "application/json").build();
 
@@ -69,18 +70,17 @@ public class FoodicsWebServices {
         return foodicsOrder;
     }
 
-    public Response fetchProducts(GeneralSettings generalSettings, FoodicsAccount foodicsAccount) {
+    public Product fetchProducts(GeneralSettings generalSettings, FoodicsAccountData foodicsAccountData) {
         Response response = new Response();
         String url = "https://api-sandbox.foodics.com/v5/products";
         try {
             OkHttpClient client = new OkHttpClient().newBuilder().build();
             Request request = new Request.Builder()
-                    .url("https://api-sandbox.foodics.com/v5/products")
-                    .method("GET", null)
-                    .addHeader("Authorization", "Bearer " + foodicsAccount.getToken())
+                    .url(url).method("GET", null)
+                    .addHeader("Authorization", "Bearer " + foodicsAccountData.getToken())
                     .addHeader("Content-Type", "application/json")
-                    .addHeader("Accept", "application/json")
-                    .build();
+                    .addHeader("Accept", "application/json") .build();
+
             okhttp3.Response getProductsResponse = client.newCall(request).execute();
             if (getProductsResponse.code() == 200) {
                 Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();

@@ -278,7 +278,6 @@ public class SendEmailService {
     public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account){
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
-//        MimeMessage mailMessage = javaGMailSender(account).createMimeMessage();
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             messageHelper.setSentDate(new Date());
@@ -286,6 +285,8 @@ public class SendEmailService {
             String mailSubject = "Emaar daily sales!";
 
             String body = "";
+            String mailContent = "";
+
             for(HashMap response: responses){
                 body = body + "Store Name : " + response.get("storeName")  + "<br>" +
                         "Store Number : " + response.get("storeNum") + " <br>"  +
@@ -293,22 +294,34 @@ public class SendEmailService {
                         "Result : " + response.get("Result") + " <br>" +
                         "with request body : " + response.get("requestBody")  + " <br> <br> <br>";
             }
-            String mailContent =
-                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                            "<p style='text-align:left'>" +
-                            "Dears <br> <br>" +
+            if(responses.size() == 0){
+                mailContent =
+                        "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
+                                "<p style='text-align:left'>" +
+                                "Dears, <br> <br>" +
 
-                            " <span> The daily sales of emaar has been sent with bellow data.</span><br><br>" +
-                            body +
-                            " Thanks and Regards,<br>" +
-                            " Anyware Software<br>" +
-                            "</div>";
+                                " <span> " + account.getName() + "'s daily sales were not sent out on this day.</span><br><br>" +
+
+                                " Thanks and Regards,<br>" +
+                                " Anyware Software<br>" +
+                                "</div>";
+            }else{
+                mailContent =
+                        "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
+                                "<p style='text-align:left'>" +
+                                "Dears, <br> <br>" +
+
+                                " <span> The daily sales of " + account.getName() + " has been sent with bellow data.</span><br><br>" +
+                                body +
+                                " Thanks and Regards,<br>" +
+                                " Anyware Software<br>" +
+                                "</div>";
+            }
 
             messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
             mailSender.send(mailMessage);
-//            javaGMailSender(account).send(mailMessage);
-            System.out.print("Sent");
+
             return true;
         } catch (MessagingException e) {
             e.printStackTrace();

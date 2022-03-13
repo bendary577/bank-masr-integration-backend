@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.configurations.OrderTypeChannels;
 import com.sun.supplierpoc.models.configurations.SalesAPIConfig;
 import com.sun.supplierpoc.models.configurations.SalesAPIStatistics;
 import okhttp3.*;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -24,6 +25,16 @@ public class SyncSalesWebService {
             MediaType mediaType = MediaType.parse("application/json");
 
             String fandBSplit = getFundSplit(salesAPIStatistics);
+
+
+            JSONObject json = new JSONObject();
+            json.put("UnitNo", salesAPIStatistics.unitNo);
+            json.put("LeaseCode", salesAPIStatistics.leaseCode);
+            json.put("SalesDate", salesAPIStatistics.dateFrom);
+            json.put("TransactionCount", salesAPIStatistics.NoChecks);
+            json.put("NetSales", salesAPIStatistics.NetSales);
+
+//            String body = json.toString();
 
             requestBody = "{\"SalesDataCollection\": " + "{\"SalesInfo\":[" +
                     "{\"UnitNo\":\"" + salesAPIStatistics.unitNo +"\"," + "\"LeaseCode\":\""+salesAPIStatistics.leaseCode+"\"," +

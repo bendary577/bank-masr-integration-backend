@@ -275,14 +275,14 @@ public class SendEmailService {
     }
 
 
-    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account){
+    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account, SyncJobType syncJobType){
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(email);
-            String mailSubject = "Emaar daily sales!";
+            String mailSubject = "Emaar " + syncJobType.getName() + "!";
 
             String body = "";
             String mailContent = "";
@@ -290,7 +290,9 @@ public class SendEmailService {
             for(HashMap response: responses){
                 body = body + "Store Name : " + response.get("storeName")  + "<br>" +
                         "Store Number : " + response.get("storeNum") + " <br>"  +
-                        "For Date : "  + response.get("date") + " <br>" +
+                        "Start Date : "  + syncJobType.getConfiguration().getFromDate()+ " <br>" +
+                        "End Date : "  + syncJobType.getConfiguration().getToDate() + " <br>" +
+//                        "For Date : "  + response.get("date") + " <br>" +
                         "Result : " + response.get("Result") + " <br>" +
                         "with request body : " + response.get("requestBody")  + " <br> <br> <br>";
             }

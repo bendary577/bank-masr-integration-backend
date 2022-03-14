@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class SalesV2Services {
@@ -730,7 +731,7 @@ public class SalesV2Services {
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 29);
+            WebDriverWait wait = new WebDriverWait(driver, 30);
 
             // Open reports
             driver.get(Constants.MICROS_SALES_SUMMARY);
@@ -741,6 +742,16 @@ public class SalesV2Services {
                 System.out.println("No Alert");
             } catch (Exception e) {
                 System.out.println("Waiting");
+            }
+
+            // Wait until the report is completely loaded.
+            try{
+                wait = new WebDriverWait(driver, 60);
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage("There is no sales per major group found in this location");
+                return response;
             }
 
             // Filter Report
@@ -774,13 +785,13 @@ public class SalesV2Services {
             }
             // Fetch major groups table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7288_0']/table")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage("There is no sales per major group found in this location");
                 return response;
             }
-            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_7288_0']/table"));
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7032_0\"]/table"));
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -826,21 +837,28 @@ public class SalesV2Services {
                     MGRevenueCenter = conversions.checkRevenueCenterExistence(majorGroup.getRevenueCenters(), revenueCenter.getRevenueCenter());
                 }
 
-                if(taxIncluded) {
-                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
-                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
-                    } else {
-                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
-                    }
-                }else{
-                    /* Need to sync sales amount after appling the discount amount */
-                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
-                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
-                    } else {
-                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip())
-                                - conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
-                    }
+                /* Need to sync sales amount after appling the discount amount */
+                if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
+                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_discounts")).getText().strip());
+                } else {
+                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
                 }
+
+//                if(taxIncluded) {
+//                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
+//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_discounts")).getText().strip());
+//                    } else {
+//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
+//                    }
+//                }else{
+//                    /* Need to sync sales amount after appling the discount amount */
+//                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
+//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
+//                    } else {
+//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip())
+//                                - conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
+//                    }
+//                }
 
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
                         , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
@@ -921,6 +939,9 @@ public class SalesV2Services {
             WebElement expander = driver.findElement(By.id("row_expander_7097_0_0:0"));
             if(expander != null)
                 expander.click();
+
+            /* Wait until table be ready for reading */
+            TimeUnit.SECONDS.sleep(2);
             WebElement serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7097_0\"]/table"));
 
             List<WebElement> rows = serviceChargeTable.findElements(By.tagName("tr"));

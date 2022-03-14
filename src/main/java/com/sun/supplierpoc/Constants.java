@@ -231,7 +231,7 @@ public class Constants {
     public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
     public static String MICROS_REPORT_BASE_LINK = "https://mte4-ohra.oracleindustry.com/portal/";
     public static String MICROS_INVENTORY_BASE_LINK = "https://mte4-ohra-ohim.oracleindustry.com";
-    public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
+    public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=20";
     public static String MICROS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports";
 
     /* SALES LINKS */

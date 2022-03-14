@@ -118,7 +118,7 @@ public class MicrosFeatures {
                     driver.findElement(By.id("oj-select-choice-search_businessdates_select")).click();
 
                     // Filter by range
-                    WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div[2]/div/input"));
+                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
                     input.sendKeys(timePeriod);
                     Thread.sleep(500);
                     input.sendKeys(Keys.ARROW_DOWN);

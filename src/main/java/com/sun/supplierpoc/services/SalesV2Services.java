@@ -126,6 +126,16 @@ public class SalesV2Services {
             if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
         }
 
+        // Service Charges
+        boolean syncTotalServiceCharge = salesSyncJobType.getConfiguration().salesConfiguration.syncTotalServiceCharge;
+        String totalServiceChargeAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalServiceChargeAccount;
+
+        Response serviceChargeResponse = new Response();
+        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
+            serviceChargeResponse = getSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
+        }
 
         // Get tender
         Response tenderResponse = new Response();
@@ -187,7 +197,8 @@ public class SalesV2Services {
 
                 salesMajorGroupsGross.addAll(overGroupGrossResponse.getSalesMajorGroupGross());
             }
-        }else{
+        }
+        else{
             Response overGroupGrossResponse;
 
             overGroupGrossResponse = getSalesMajorGroups(taxIncluded, new RevenueCenter(), timePeriod, fromDate, toDate, costCenter,
@@ -213,6 +224,7 @@ public class SalesV2Services {
         journalBatch.setSalesTax(taxResponse.getSalesTax());
         journalBatch.setSalesDiscount(salesDiscounts);
         journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
+        journalBatch.setSalesServiceCharge(serviceChargeResponse.getSalesServiceCharge());
 
         // Calculate different
         journalBatch.setSalesDifferent(0.0);
@@ -387,7 +399,7 @@ public class SalesV2Services {
               }
 
                 try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_6316_0']/table")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7202_0']/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
@@ -395,7 +407,7 @@ public class SalesV2Services {
             }
 
 
-            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_6316_0']/table"));
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_7202_0']/table"));
 
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
@@ -504,13 +516,13 @@ public class SalesV2Services {
 
             // Fetch tenders table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_6312_0']/table")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7405_0\"]/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
                 return response;
             }
-            WebElement taxesTable = driver.findElement(By.xpath("//*[@id='standard_table_6312_0']/table"));
+            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7405_0\"]/table"));
             List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 3) {
@@ -538,7 +550,7 @@ public class SalesV2Services {
                     if (td.getText().equals("Total")) {
                         tax.setTax("Total Tax");
                         tax.setAccount(totalTaxAccount);
-                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip()));
+                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("all_tax_collected")).getText().strip()));
                         tax.setCostCenter(location);
                         salesTax.add(tax);
                         break;
@@ -762,13 +774,13 @@ public class SalesV2Services {
             }
             // Fetch major groups table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_5723_0']/table")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7288_0']/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage("There is no sales per major group found in this location");
                 return response;
             }
-            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_5723_0']/table"));
+            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_7288_0']/table"));
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -821,7 +833,7 @@ public class SalesV2Services {
                         majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
                     }
                 }else{
-
+                    /* Need to sync sales amount after appling the discount amount */
                     if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
                         majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                     } else {
@@ -846,4 +858,134 @@ public class SalesV2Services {
 
         return response;
     }
+
+    private Response getSalesServiceCharge(String businessDate, String fromDate, String toDate,
+                                   CostCenter location, boolean getSCTotalFlag, String totalSCAccount,
+                                           ArrayList<ServiceCharge> serviceCharges, WebDriver driver) {
+        Response response = new Response();
+        ServiceCharge serviceCharge;
+        ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
+
+        try {
+            WebDriverWait wait = new WebDriverWait(driver, 29);
+
+            // Open reports
+            driver.get(Constants.MICROS_SERVICE_CHARGE_REPORT);
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+                System.out.println("No Alert");
+            } catch (Exception e) {
+                System.out.println("Waiting");
+            }
+
+            // Filter Report
+            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
+                    null,"", driver);
+
+            if (!dateResponse.isStatus()){
+                response.setStatus(false);
+                response.setMessage(dateResponse.getMessage());
+                return response;
+            }
+
+            try {
+                wait = new WebDriverWait(driver, 5);
+                wait.until(ExpectedConditions.alertIsPresent());
+            } catch (Exception e) {
+            }
+
+            // Run
+            driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
+
+            // Validate Report Parameters
+            Response validateParameters= microsFeatures.checkReportParameters(driver,fromDate,toDate,businessDate, location.locationName);
+
+            if(!validateParameters.isStatus()){
+                response.setStatus(false);
+                response.setMessage(validateParameters.getMessage());
+                return response;
+            }
+
+            // Fetch service charges table
+            try{
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7097_0\"]/table")));
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+
+            /* view/expand service charge types */
+            WebElement expander = driver.findElement(By.id("row_expander_7097_0_0:0"));
+            if(expander != null)
+                expander.click();
+            WebElement serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7097_0\"]/table"));
+
+            List<WebElement> rows = serviceChargeTable.findElements(By.tagName("tr"));
+
+            if (rows.size() < 3) {
+                response.setStatus(true);
+                response.setMessage("There is no service charges entries in this location");
+                response.setSalesTax(new ArrayList<>());
+
+                return response;
+            }
+
+            ArrayList<String> columns = setupEnvironment.getTableColumns(rows, true, 0);
+
+            for (int i = 1; i < rows.size(); i++) {
+                WebElement row = rows.get(i);
+                List<WebElement> cols = row.findElements(By.tagName("td"));
+
+                if (cols.size() != columns.size()) {
+                    continue;
+                }
+
+                WebElement td = cols.get(columns.indexOf("service_charge_name"));
+                if(getSCTotalFlag){
+                    if (td.getText().equals("Total")) {
+
+                        float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("service_charges_amount")).getText().strip());
+                        serviceCharge = new ServiceCharge();
+                        serviceCharge.setServiceCharge("Total Service Charge");
+                        serviceCharge.setAccount(totalSCAccount);
+                        serviceCharge.setTotal(serviceChargeTotal);
+                        serviceCharge.setCostCenter(location);
+                        salesServiceCharges.add(serviceCharge);
+
+                        break;
+                    }
+                }else{
+                    serviceCharge = conversions.checkServiceChargeExistence(serviceCharges, td.getText(), location.locationName);
+                    if(!serviceCharge.isChecked()){
+                        continue;
+                    }
+
+                    float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("service_charges_amount")).getText().strip());
+                    serviceCharge.setTotal(serviceChargeTotal);
+                    serviceCharge.setCostCenter(location);
+                    salesServiceCharges.add(serviceCharge);
+                }
+            }
+
+            response.setStatus(true);
+            response.setMessage("");
+            response.setSalesServiceCharge(salesServiceCharges);
+            response.setEntries(new ArrayList<>());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            driver.quit();
+
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+            response.setEntries(new ArrayList<>());
+        }
+
+        return response;
+    }
+
+
 }

@@ -132,30 +132,30 @@ public class SalesV2Services {
         String totalServiceChargeAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalServiceChargeAccount;
 
         Response serviceChargeResponse = new Response();
-        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
-            serviceChargeResponse = getSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
-                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
-        }
+//        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
+//            serviceChargeResponse = getSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+//                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
+//        }
 
         // Get tender
         Response tenderResponse = new Response();
-        if(includedTenders.size() > 0){
-            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-                    costCenter, includedTenders, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
-        }
+//        if(includedTenders.size() > 0){
+//            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
+//                    costCenter, includedTenders, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+//        }
 
         // Get taxes
         boolean syncTotalTax = configuration.syncTotalTax;
         String totalTaxAccount = configuration.totalTaxAccount;
 
         Response taxResponse = new Response();
-        if(includedTax.size() > 0 || syncTotalTax){
-            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
-                    totalTaxAccount, includedTax, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
-        }
+//        if(includedTax.size() > 0 || syncTotalTax){
+//            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+//                    totalTaxAccount, includedTax, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
+//        }
 
         // Get discounts
         Response discountResponse;
@@ -163,12 +163,12 @@ public class SalesV2Services {
         String totalDiscountsAccount = configuration.totalDiscountsAccount;
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
-        if (includedDiscount.size() > 0 || syncTotalDiscounts){
-            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
-                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
-            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-        }
+//        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+//            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+//                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
+//            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+//        }
 
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;
@@ -735,10 +735,21 @@ public class SalesV2Services {
             WebDriverWait wait = new WebDriverWait(driver, 5);
 
             // Open reports
-            if(!driver.getCurrentUrl().equals(Constants.MICROS_SALES_SUMMARY))
+            if(!driver.getCurrentUrl().equals(Constants.MICROS_SALES_SUMMARY)){
                 driver.get(Constants.MICROS_SALES_SUMMARY);
 
-            // Wait until the report is completely loaded, or get no data flag
+                // Wait until loading appears
+                try{
+                    wait = new WebDriverWait(driver, 60);
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("progressCircle_7032")));
+                }catch (Exception e){
+                    response.setStatus(true);
+                    response.setMessage("There is no sales per major group found in this location");
+                    return response;
+                }
+            }
+
+            // Wait until loading disppears
             if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
                 try{
                     wait = new WebDriverWait(driver, 60);

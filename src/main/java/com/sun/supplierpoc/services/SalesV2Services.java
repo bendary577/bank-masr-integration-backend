@@ -730,6 +730,7 @@ public class SalesV2Services {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
+
         try {
             WebDriverWait wait = new WebDriverWait(driver, 30);
 
@@ -806,6 +807,7 @@ public class SalesV2Services {
             String majorGroupName = "";
 
             float majorGroupAmount;
+            float discountAmount;
 
             for (int i = 2; i < rows.size(); i++) {
                 WebElement row = rows.get(i);
@@ -844,29 +846,41 @@ public class SalesV2Services {
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
                 }
 
-//                if(taxIncluded) {
-//                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
-//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_discounts")).getText().strip());
-//                    } else {
-//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
-//                    }
-//                }else{
-//                    /* Need to sync sales amount after appling the discount amount */
-//                    if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
-//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
-//                    } else {
-//                        majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip())
-//                                - conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
-//                    }
-//                }
-
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
                         , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
+
+                /* Discount amount */
+                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discount_total")).getText().strip());
+
+                if (discountAmount != 0){
+                    Discount groupDiscount = new Discount();
+
+                    groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+                    if(majorGroupDiscount){
+                        groupDiscount.setAccount(majorGroup.getDiscountAccount());
+                    }else if (revenueCenterDiscount){
+                        groupDiscount.setAccount(MGRevenueCenter.getDiscountAccount());
+                    }
+
+                    Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
+                            majorGroup.getMajorGroup() + " Discount");
+
+                    int oldDiscountIndex = salesDiscount.indexOf(discountParent);
+                    if(oldDiscountIndex == -1){
+                        groupDiscount.setTotal(discountAmount);
+                        groupDiscount.setCostCenter(location);
+                        salesDiscount.add(groupDiscount);
+                    }else{
+                        salesDiscount.get(oldDiscountIndex).setTotal(discountAmount + discountParent.getTotal());
+                    }
+                }
+
             }
 
             response.setStatus(true);
             response.setMessage("");
             response.setSalesMajorGroupGross(majorGroupsGross);
+            response.setSalesDiscount(salesDiscount);
         } catch (Exception e) {
             driver.quit();
 

@@ -100,6 +100,11 @@ public class SyncJobDataService {
             data.put("analysisCodeT" + index, location.accountCode);
         }
 
+        if(location != null && !location.branchCode.equals("")){
+            index = configuration.branchAnalysisCode;
+            data.put("analysisCodeT" + index, location.branchCode);
+        }
+
         if(tender != null && !tender.getAnalysisCodeT5().equals("")){
             index = configuration.tenderAnalysisCode;
             data.put("analysisCodeT" + index, tender.getAnalysisCodeT5());

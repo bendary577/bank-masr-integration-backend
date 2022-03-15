@@ -176,12 +176,6 @@ public class MicrosFeatures {
                     driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
 
                     // Filter by range
-//                    try {
-//                        shortWait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input")));
-//                    } catch (Exception e) {
-//                        driver.findElement(By.id("oj-select-choice-search_rvc_select")).click();
-//                    }
-
                     WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){
@@ -193,6 +187,18 @@ public class MicrosFeatures {
                     Thread.sleep(500);
                     input.sendKeys(Keys.ARROW_DOWN);
                     input.sendKeys(Keys.ENTER);
+
+                    if(driver.findElements(By.xpath("/html/body/div[1]/div[2]/div/div/div[1]/div[1]")).size() > 0 ){
+                        WebElement checker = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div[1]/div[1]"));
+                        if(checker != null && checker.getText().strip().equals("No matches found")){
+                            driver.findElement(By.xpath("/html/body/div[1]/div[2]/oj-dialog/div[1]/oj-button/button")).click();
+                            response.setStatus(false);
+                            response.setMessage(Constants.INVALID_REVENUE_CENTER);
+                            response.setEntries(new ArrayList<>());
+                            return response;
+                        }
+                    }
+
                 } catch (Exception e) {
                     response.setStatus(false);
                     response.setMessage(Constants.INVALID_REVENUE_CENTER);

@@ -732,32 +732,27 @@ public class SalesV2Services {
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 30);
+            WebDriverWait wait = new WebDriverWait(driver, 5);
 
             // Open reports
-            driver.get(Constants.MICROS_SALES_SUMMARY);
+            if(!driver.getCurrentUrl().equals(Constants.MICROS_SALES_SUMMARY))
+                driver.get(Constants.MICROS_SALES_SUMMARY);
 
-            try {
-                wait = new WebDriverWait(driver, 10);
-                wait.until(ExpectedConditions.alertIsPresent());
-                System.out.println("No Alert");
-            } catch (Exception e) {
-                System.out.println("Waiting");
-            }
-
-            // Wait until the report is completely loaded.
-            try{
-                wait = new WebDriverWait(driver, 60);
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")));
-            }catch (Exception e){
-                response.setStatus(true);
-                response.setMessage("There is no sales per major group found in this location");
-                return response;
+            // Wait until the report is completely loaded, or get no data flag
+            if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
+                try{
+                    wait = new WebDriverWait(driver, 60);
+                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("progressCircle_7032")));
+                }catch (Exception e){
+                    response.setStatus(true);
+                    response.setMessage("There is no sales per major group found in this location");
+                    return response;
+                }
             }
 
             // Filter Report
-            Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                    revenueCenter.getRevenueCenter(),"", driver);
+             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
+                     revenueCenter.getRevenueCenter(),"", driver);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -784,7 +779,27 @@ public class SalesV2Services {
                 response.setMessage(validateParameters.getMessage());
                 return response;
             }
-            // Fetch major groups table
+
+            // Wait until the report is completely loaded, or get no data flag
+            if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
+                try{
+                    wait = new WebDriverWait(driver, 60);
+                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("progressCircle_7032")));
+                }catch (Exception e){
+                    response.setStatus(true);
+                    response.setMessage("There is no sales per major group found in this location");
+                    return response;
+                }
+            }
+
+            // Fetch major groups table - check no data flag
+
+            if(driver.findElements(By.xpath("//*[@id=\"report_web_component7032\"]/div[1]/div[2]/div")).size() > 0){
+                response.setStatus(true);
+                response.setMessage("There is no sales per major group found in this location");
+                return response;
+            }
+
             try{
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")));
             }catch (Exception e){
@@ -792,6 +807,13 @@ public class SalesV2Services {
                 response.setMessage("There is no sales per major group found in this location");
                 return response;
             }
+
+//            if(driver.findElements(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")).size() == 0){
+//                response.setStatus(true);
+//                response.setMessage("There is no sales per major group found in this location");
+//                return response;
+//            }
+
             WebElement tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7032_0\"]/table"));
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 

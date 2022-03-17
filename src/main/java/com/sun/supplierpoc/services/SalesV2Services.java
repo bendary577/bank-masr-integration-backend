@@ -132,30 +132,30 @@ public class SalesV2Services {
         String totalServiceChargeAccount = salesSyncJobType.getConfiguration().salesConfiguration.totalServiceChargeAccount;
 
         Response serviceChargeResponse = new Response();
-//        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
-//            serviceChargeResponse = getSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
-//                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
-//        }
+        if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
+            serviceChargeResponse = getSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
+        }
 
         // Get tender
         Response tenderResponse = new Response();
-//        if(includedTenders.size() > 0){
-//            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-//                    costCenter, includedTenders, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
-//        }
+        if(includedTenders.size() > 0){
+            tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
+                    costCenter, includedTenders, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
+        }
 
         // Get taxes
         boolean syncTotalTax = configuration.syncTotalTax;
         String totalTaxAccount = configuration.totalTaxAccount;
 
         Response taxResponse = new Response();
-//        if(includedTax.size() > 0 || syncTotalTax){
-//            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
-//                    totalTaxAccount, includedTax, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
-//        }
+        if(includedTax.size() > 0 || syncTotalTax){
+            taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
+                    totalTaxAccount, includedTax, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
+        }
 
         // Get discounts
         Response discountResponse;
@@ -163,12 +163,12 @@ public class SalesV2Services {
         String totalDiscountsAccount = configuration.totalDiscountsAccount;
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
-//        if (includedDiscount.size() > 0 || syncTotalDiscounts){
-//            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
-//                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
-//            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
-//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-//        }
+        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
+            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
 
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;
@@ -515,15 +515,15 @@ public class SalesV2Services {
                 return response;
             }
 
-            // Fetch tenders table
+            // Fetch tax table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7405_0\"]/table")));
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[3]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table")));
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
                 return response;
             }
-            WebElement taxesTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7405_0\"]/table"));
+            WebElement taxesTable = driver.findElement(By.xpath("/html/body/div[2]/section/div[1]/div[2]/div/div/div[2]/div/my-reports-cca/report-group-cca/div[1]/div[7]/oj-rna-report-cca[3]/div[1]/oj-rna-report-tile-cca/oj-module/oj-table/table"));
             List<WebElement> rows = taxesTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 3) {
@@ -551,7 +551,7 @@ public class SalesV2Services {
                     if (td.getText().equals("Total")) {
                         tax.setTax("Total Tax");
                         tax.setAccount(totalTaxAccount);
-                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("all_tax_collected")).getText().strip()));
+                        tax.setTotal(conversions.convertStringToFloat(cols.get(columns.indexOf("tax_collected")).getText().strip()));
                         tax.setCostCenter(location);
                         salesTax.add(tax);
                         break;

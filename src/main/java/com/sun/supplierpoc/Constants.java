@@ -241,7 +241,9 @@ public class Constants {
     public static String MICROS_SERVICE_CHARGE_REPORT = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=40";
 
     // Reports >> Taxes >> Daily Taxes by Tax Type
-    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
+
+    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=60#";
+//    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
 
     // Reports >> Discount >> Daily Discounts
     public static String MICROS_DISCOUNT_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100046";

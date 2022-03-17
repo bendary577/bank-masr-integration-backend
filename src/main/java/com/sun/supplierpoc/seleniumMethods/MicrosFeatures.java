@@ -278,7 +278,7 @@ public class MicrosFeatures {
             String modifiedFromDate = BusinessDateFormatV2.format(formatedFromDate);
             String modifiedToDate = BusinessDateFormatV2.format(formatedToDate);
             String modifiedBusinessDate = modifiedFromDate +" - "+ modifiedToDate;
-            if(!rangeDate.equals(modifiedBusinessDate)){
+            if(!rangeDate.equals(modifiedBusinessDate) && !rangeDate.equals(modifiedFromDate)){
                 response.setStatus(false);
                 response.setMessage(Constants.INVALID_BUSINESS_DATE);
                 return response;

@@ -31,6 +31,7 @@ public class GeneralSettings {
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private ArrayList<Supplier> suppliers = new ArrayList<>();
 
+    /* Opera Configurations */
     private ArrayList<BookingType> cancelReasons = new ArrayList<>();
     private ArrayList<BookingType> paymentTypes = new ArrayList<>();
     private ArrayList<BookingType> roomTypes = new ArrayList<>();
@@ -43,13 +44,16 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
+
+    /* Delivery Aggregators */
     private AggregatorConfiguration aggregatorConfiguration = new AggregatorConfiguration();
     private List<Aggregator> aggregators = new ArrayList<Aggregator>();
+
     private ArrayList<OrderType> orderTypes = new ArrayList<>();
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
 
-    /* Reword Points */
+    /* Reward Points */
     private float pointReward = 0; // percentage
     private float pointsRedemption = 0; // 1$ = ? points
     private BirthdayGift birthdayGift = new BirthdayGift();

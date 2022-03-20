@@ -4,18 +4,15 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProductObject;
+import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.aggregtor.ProductsMapping;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Item;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatOrder;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsLoginBody;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.SimphonyAccount;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.repositories.applications.ProductRepository;
@@ -70,11 +67,11 @@ public class AggregatorIntegratorService {
 
 //                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
                 try {
-                    List<com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatOrder> talabatOrderList = new ArrayList<>();
-                    com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatOrder talabatOrderDetails = new TalabatOrder();
+                    List<TalabatOrder> talabatOrderList = new ArrayList<>();
+                    TalabatOrder talabatOrderDetails = new TalabatOrder();
 
                     FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
-                    //talabatRestService.LoginToFoodics();
+//                    talabatRestService.LoginToFoodics();
 
                     for (RestOrder restOrder : receivedOrders) {
                         talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
@@ -184,21 +181,55 @@ public class AggregatorIntegratorService {
         FoodicsOrder foodicsOrder = new FoodicsOrder();
 
         try {
+            // Resturant Branch
+            BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
+                    filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
+                    .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
+            if(branchMapping != null)
+                foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
+            else
+                return null;
 
+            // Cutomer Details
+            foodicsOrder.setGuests(1);
 
-//        foodicsOrder.setGuests(1);
+            // Order Stataus
             foodicsOrder.setType(3);
-//            foodicsOrder
 
-//        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
-//                filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
-//                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
+            // Order Items
+            ProductsMapping productsMapping = new ProductsMapping();
+            List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
+            FoodicsProductObject foodicsProductObject = new FoodicsProductObject();
 
-            BranchMapping branchMapping = generalSettings.getTalabatConfiguration().
-                    getBranchMappings().get(0);
+            for (Item item : parsedOrder.getItems()) {
+                productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
+                        filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
+                        .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
-            foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
+                if (productsMapping != null) {
 
+                    foodicsProductObject = new FoodicsProductObject();
+
+                    Option option;
+                    List<Option> options;
+                    option = new Option();
+                    options = new ArrayList<>();
+                    options.add(option);
+                    foodicsProductObject.setOptions(options);
+
+                    foodicsProductObject.setProductId(productsMapping.getFoodIcsProductId());
+                    foodicsProductObject.setQuantity(item.getQuantity());
+                    foodicsProductObject.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
+
+                    foodicsProductObjects.add(foodicsProductObject);
+                } else {
+                    return null;
+                }
+            }
+
+            foodicsOrder.setProducts(foodicsProductObjects);
+
+            // Order
 //        foodicsOrder.setSubtotalPrice(parsedOrder.getPayment().getTotal());
 //        foodicsOrder.setRoundingAmount(0.14);
 //        foodicsOrder.setDiscountAmount(parsedOrder.getPayment().getDiscount());
@@ -247,43 +278,6 @@ public class AggregatorIntegratorService {
 //        charges.add(charge);
 //
 //        foodicsOrder.setCharges(charges);
-
-            ProductsMapping productsMapping = new ProductsMapping();
-            List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
-            FoodicsProductObject foodicsProductObject = new FoodicsProductObject();
-
-            for (Item item : parsedOrder.getItems()) {
-
-//            productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
-//                    filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
-//                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
-
-                productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().get(0);
-
-                if (productsMapping != null) {
-
-                    foodicsProductObject = new FoodicsProductObject();
-
-//                Option option;
-//                List<Option> options;
-//                option = new Option();
-//                options = new ArrayList<>();
-//                options.add(option);
-//                product.setOptions(options);
-
-                    foodicsProductObject.setProductId(productsMapping.getFoodIcsProductId());
-                    foodicsProductObject.setQuantity(item.getQuantity());
-                    foodicsProductObject.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
-
-                    foodicsProductObjects.add(foodicsProductObject);
-
-                } else {
-                    return null;
-                }
-            }
-
-            foodicsOrder.setProducts(foodicsProductObjects);
-
 
 //        foodicsOrder.setProducts(products);
 //        foodicsOrder.setCombos(new ArrayList<Combo>());

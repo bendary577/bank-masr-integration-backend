@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AggregatorConfiguration {
+    /* Applications */
+    private ArrayList<TalabatAdminAccount> talabatAdminAccounts = new ArrayList<>();
 
+    /* Systems */
     private FoodicsAccountData foodicsAccountData = new FoodicsAccountData();
     private SimphonyAccount simphonyAccount = new SimphonyAccount();
     private List<SimphonyAccountData> simphonyAccountData = new ArrayList<>();
-    private ArrayList<TalabatAdminAccount> talabatAdminAccounts = new ArrayList<>();
+
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
     private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();

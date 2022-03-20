@@ -462,7 +462,6 @@ public class AppUserService {
                         return response;
                     }
                     if (sendSMS && mobile != null && !mobile.equals("")) {
-                        LoggerFactory.getLogger("Bassel: ").info("Success");
                         try {
                             service.send(new SmsPojo("+2" + mobile, "Welcome to movenopick entry system."));
                         } catch (Exception e) {

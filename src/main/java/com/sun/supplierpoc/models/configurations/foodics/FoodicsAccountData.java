@@ -6,6 +6,9 @@ public class FoodicsAccountData {
     private String loginEmail;
     private String accountNumber;
     private String loginPassword;
+
+    /* API Credentials */
+    private String url;
     private String clientId;
     private String clientSecret;
     private String token;
@@ -40,6 +43,14 @@ public class FoodicsAccountData {
 
     public void setLoginPassword(String loginPassword) {
         this.loginPassword = loginPassword;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
     }
 
     public String getClientId() {

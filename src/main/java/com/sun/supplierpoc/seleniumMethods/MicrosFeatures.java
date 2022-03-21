@@ -179,6 +179,7 @@ public class MicrosFeatures {
                     WebElement input = driver.findElement(By.xpath("//*[@id=\"oj-listbox-drop\"]/div/div/input"));
 
                     if (revenueCenter == null || revenueCenter.equals("")){
+                        revenueCenter = "all";
                         input.sendKeys("all");
                     }else{
                         input.sendKeys(revenueCenter);
@@ -197,6 +198,15 @@ public class MicrosFeatures {
                             response.setEntries(new ArrayList<>());
                             return response;
                         }
+                    }
+
+                    // Check choosen value
+                    if(!revenueCenter.equalsIgnoreCase(driver.findElement(By.id("oj-select-choice-search_rvc_select")).getText())){
+                        driver.findElement(By.xpath("/html/body/div[1]/div[2]/oj-dialog/div[1]/oj-button/button")).click();
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_REVENUE_CENTER);
+                        response.setEntries(new ArrayList<>());
+                        return response;
                     }
 
                 } catch (Exception e) {

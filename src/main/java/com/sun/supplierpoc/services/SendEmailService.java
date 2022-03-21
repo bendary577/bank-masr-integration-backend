@@ -229,7 +229,7 @@ public class SendEmailService {
                             "transition: 0.3s; width: 85%; border:2px solid #ae0a3b;\n'>" +
                     "<br>";
 
-            if(!logoPath.equals("")){
+            if(logoPath != null && !logoPath.equals("")){
                 mailContent +=
                         "<img style=\"width:50%; height: 50%; margin-left: 10px;\"" +
                                 "   src='" + logoPath + "'>" + "<br> <br> \n";

@@ -83,15 +83,17 @@ public class AggregatorIntegratorService {
                         } else {
 
                         }
-                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccountData);
-                        talabatOrderDetails.setOrders(List.of(restOrder));
 
-                        if (foodicsOrder.isCallStatus()) {
-                            talabatOrderList.add(talabatOrderDetails);
-                            order.setFoodicsOrder(foodicsOrder);
-                            orderRepo.save(order);
+                        if(foodicsOrder != null){
+                            foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccountData);
+                            talabatOrderDetails.setOrders(List.of(restOrder));
+
+                            if (foodicsOrder.isCallStatus()) {
+                                talabatOrderList.add(talabatOrderDetails);
+                                order.setFoodicsOrder(foodicsOrder);
+                                orderRepo.save(order);
+                            }
                         }
-
                     }
 
                     if (talabatOrderList.size() > 0) {
@@ -206,25 +208,24 @@ public class AggregatorIntegratorService {
                         filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
                         .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
+                foodicsProductObject = new FoodicsProductObject();
+
+                Option option;
+                List<Option> options;
+                option = new Option();
+                options = new ArrayList<>();
+                options.add(option);
+                foodicsProductObject.setOptions(options);
+
                 if (productsMapping != null) {
-
-                    foodicsProductObject = new FoodicsProductObject();
-
-                    Option option;
-                    List<Option> options;
-                    option = new Option();
-                    options = new ArrayList<>();
-                    options.add(option);
-                    foodicsProductObject.setOptions(options);
-
                     foodicsProductObject.setProductId(productsMapping.getFoodIcsProductId());
-                    foodicsProductObject.setQuantity(item.getQuantity());
-                    foodicsProductObject.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
-
-                    foodicsProductObjects.add(foodicsProductObject);
                 } else {
-                    return null;
+                    foodicsProductObject.setProductId("9590e5a9-f20a-4f8f-beb3-14710c688a89");
                 }
+
+                foodicsProductObject.setQuantity(item.getQuantity());
+                foodicsProductObject.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
+                foodicsProductObjects.add(foodicsProductObject);
             }
 
             foodicsOrder.setProducts(foodicsProductObjects);

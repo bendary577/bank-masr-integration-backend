@@ -13,6 +13,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -101,7 +102,7 @@ public class TalabatRestService {
         return talabatOrders;
     }
 
-    public TalabatOrder getOrders(Token token) {
+    public TalabatOrder getOrders(Token token, ArrayList<String> branches) {
 
         TalabatOrder talabatOrders = new TalabatOrder();
         String url = "https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders";
@@ -109,7 +110,13 @@ public class TalabatRestService {
 
             OkHttpClient client = new OkHttpClient().newBuilder().build();
             MediaType mediaType = MediaType.parse("application/json");
-            RequestBody body = RequestBody.create(mediaType, "{\r\n    \"global_vendor_codes\":" + " [\r\n        \"HF_EG;644819\",\r\n " + "       \"HF_EG;512662\",\r\n" + "        \"HF_EG;510696\",\r\n" + "        \"HF_EG;510706\",\r\n" + "        \"HF_EG;510705\",\r\n" + "        \"HF_EG;514804\",\r\n" + "        \"HF_EG;514803\",\r\n" + "        \"HF_EG;510702\",\r\n" + "        \"HF_EG;512663\",\r\n" + "        \"HF_EG;510703\",\r\n" + "        \"HF_EG;510701\",\r\n" + "        \"HF_EG;625008\",\r\n" + "        \"HF_EG;611425\"\r\n    ],\r\n" + "    \"time_from\": \"" + getDate() + "T00:00:00+02:00\",\r\n" + "    \"time_to\": \"" + getDate() + "T23:59:59+02:00\"\r\n}");
+
+            JSONObject json = new JSONObject();
+            json.put("global_vendor_codes", branches);
+            json.put("time_from", getDate() + "T00:00:00+02:00");
+            json.put("time_to", getDate() + "T23:59:59+02:00");
+
+            RequestBody body = RequestBody.create(mediaType, json.toString());
             Request request = new Request.Builder().url(url).method("POST", body).addHeader("Authorization", "Bearer " + token.getAccessToken()).addHeader("Content-Type", "application/json").build();
 
             okhttp3.Response orderResponse = client.newCall(request).execute();
@@ -130,6 +137,9 @@ public class TalabatRestService {
         return talabatOrders;
     }
 
+    /*
+    * Get order detials (items, discount, deliery fees, amount)
+    * */
     public TalabatOrder getOrderById(RestOrder order, Token token) {
 
         TalabatOrder talabatOrders = new TalabatOrder();

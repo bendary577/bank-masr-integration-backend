@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.aggregtor.ProductsMapping;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Item;
@@ -17,6 +18,7 @@ import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.repositories.applications.ProductRepository;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
+import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -44,6 +46,9 @@ public class AggregatorIntegratorService {
     @Autowired
     private TalabatRestService talabatRestService;
 
+    @Autowired
+    private TalabatAdminWebService talabatAdminWebService;
+
     public Response sendReceivedOrders(Account account) {
 
         Response response = new Response();
@@ -53,51 +58,75 @@ public class AggregatorIntegratorService {
         AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
 
-        Token token = talabatRestService.talabatLoginRequest(account);
+        Token talabatToken = talabatRestService.talabatLoginRequest(account);
 
-        if (token != null && token.isStatus()) {
+        if (talabatToken != null && talabatToken.isStatus()) {
+            ArrayList<String> branches = new ArrayList<>();
+            for (BranchMapping branch : aggregatorConfiguration.getBranchMappings()) {
+                branches.add(branch.getTalabatBranchId());
+            }
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+            TalabatOrder talabatOrder = talabatRestService.getOrders(talabatToken, branches);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
                 List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
-                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
+                        .filter(restOrder -> restOrder.getOrder_status().equalsIgnoreCase("Unknown") ||
+                                restOrder.getOrder_status().equalsIgnoreCase("ACCEPTED") ||
+                                        restOrder.getOrder_status().equalsIgnoreCase("DELAYED"))
                         .collect(Collectors.toList());
 
-//                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
                 try {
                     List<TalabatOrder> talabatOrderList = new ArrayList<>();
                     TalabatOrder talabatOrderDetails = new TalabatOrder();
 
-                    FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
-//                    talabatRestService.LoginToFoodics();
 
                     for (RestOrder restOrder : receivedOrders) {
-                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
+                        // Get Items Only
+                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, talabatToken);
 
-                        FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatOrderDetails, generalSettings);
+                        // Login to talabat resturant branch
+                        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
+                                filter(branch -> branch.getTalabatBranchId().equals(restOrder.getGlobal_vendor_code()))
+                                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
+                        if(branchMapping == null)
+                           continue;
 
-                        if (foodicsOrder != null) {
-                            talabatOrderList.add(talabatOrderDetails);
-                        } else {
+                        com.sun.supplierpoc.models.aggregtor.branchAdmin.Token talabatAdminToken =
+                                talabatAdminWebService.talabatLoginRequest(account, branchMapping);
+                        // Get Customer Details
+                        TalabatAdminOrder talabatAdminOrder = talabatAdminWebService.getOrderDetails(talabatAdminToken, restOrder);
 
-                        }
+                        if(talabatAdminOrder.isStatus()){
+                            // Prepare foodics order
+                            FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatOrderDetails, talabatAdminOrder, generalSettings);
 
-                        if(foodicsOrder != null){
-                            foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccountData);
-                            talabatOrderDetails.setOrders(List.of(restOrder));
+                            if(foodicsOrder != null){
+                                foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, generalSettings, foodicsAccountData);
+                                talabatOrderDetails.setOrders(List.of(restOrder));
 
-                            if (foodicsOrder.isCallStatus()) {
+                                if (foodicsOrder.isCallStatus()) {
+                                    order.setOrderStatus(Constants.SUCCESS);
+                                }
+                                else {
+                                    order.setOrderStatus(Constants.FAILED);
+                                    order.setReason(foodicsOrder.getMessage());
+                                }
+
                                 talabatOrderList.add(talabatOrderDetails);
                                 order.setFoodicsOrder(foodicsOrder);
-                                orderRepo.save(order);
                             }
+                        }else{
+                            order.setOrderStatus(Constants.FAILED);
+                            order.setReason(talabatAdminOrder.getMessage());
                         }
+                        orderRepo.save(order);
+
+                        // To be removed after testing
+//                        break;
                     }
 
                     if (talabatOrderList.size() > 0) {
-                        orderRepo.saveAll(talabatOrderList);
                         response.setMessage("Send Talabat Orders Successfully");
                         response.setData(talabatOrderList.get(0));
                     } else {
@@ -113,7 +142,7 @@ public class AggregatorIntegratorService {
             }
         } else {
             response.setStatus(false);
-            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
+            response.setMessage("Login To Talabat Failed Due To : " + talabatToken.getMessage());
         }
 
         return response;
@@ -177,7 +206,8 @@ public class AggregatorIntegratorService {
         return response;
     }
 
-    private FoodicsOrder parseOrderParametersToFoodics(TalabatOrder talabatOrder, GeneralSettings generalSettings) {
+    private FoodicsOrder parseOrderParametersToFoodics(TalabatOrder talabatOrder, TalabatAdminOrder adminOrder,
+                                                       GeneralSettings generalSettings) {
 
         com.sun.supplierpoc.models.aggregtor.TalabatRest.Order parsedOrder = talabatOrder.getOrder();
         FoodicsOrder foodicsOrder = new FoodicsOrder();
@@ -185,7 +215,7 @@ public class AggregatorIntegratorService {
         try {
             // Resturant Branch
             BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
-                    filter(branch -> branch.getTalabatBranchId() == parsedOrder.getGlobalVendorCode())
+                    filter(branch -> branch.getTalabatBranchId().equals(parsedOrder.getGlobalVendorCode()))
                     .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
             if(branchMapping != null)
                 foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
@@ -197,6 +227,21 @@ public class AggregatorIntegratorService {
 
             // Order Stataus
             foodicsOrder.setType(3);
+            if(adminOrder.getCustomer() != null){
+                foodicsOrder.setCustomerAddressName(adminOrder.getCustomer().getFirstName());
+                foodicsOrder.setCustomerName(adminOrder.getCustomer().getFirstName());
+                foodicsOrder.setCustomerDialCode("966");
+                foodicsOrder.setCustomerPhone(adminOrder.getCustomer().getPhone().replace("+", ""));
+            }
+
+            if(adminOrder.getCustomer() != null){
+                foodicsOrder.setCustomerAddressName("Work");
+                foodicsOrder.setCustomerAddressDescription(adminOrder.getAddress().street
+                        + "-" + adminOrder.getAddress().city
+                        + "-" + adminOrder.getAddress().area);
+                foodicsOrder.setCustomerAddressLatitude(String.valueOf(adminOrder.getAddress().latitude));
+                foodicsOrder.setCustomerAddressLongitude(String.valueOf(adminOrder.getAddress().longitude));
+            }
 
             // Order Items
             ProductsMapping productsMapping = new ProductsMapping();

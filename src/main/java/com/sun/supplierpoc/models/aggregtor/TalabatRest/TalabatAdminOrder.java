@@ -19,29 +19,26 @@ public class TalabatAdminOrder {
     public boolean preorder;
     public boolean guaranteed;
     public Transport transport;
-    public Date seenAt;
     public Date deliverAt;
     public Date expiresAt;
     public Date promisedTime;
-    public Date acceptedAt;
     public Customer customer;
     public Address address;
     public Payment payment;
     public ArrayList<Item> items;
+    public ArrayList<Fee> fees;
     public ArrayList<Tax> taxes;
+    public CancelReason cancelReason;
     public boolean canVoid;
     public boolean canDelay;
     public boolean corporate;
     public String shortCode;
     public boolean preparationCompleted;
     public boolean preparationCompletionSupported;
-    public String accepter;
-    public String logisticsProviderId;
     public String vendorTimeZone;
     public String platformName;
     public boolean acknowledged;
     public String itemUnavailabilityHandling;
-    public Object vendorExtraParameters;
     private boolean status;
     private String message;
 
@@ -157,14 +154,6 @@ public class TalabatAdminOrder {
         this.transport = transport;
     }
 
-    public Date getSeenAt() {
-        return seenAt;
-    }
-
-    public void setSeenAt(Date seenAt) {
-        this.seenAt = seenAt;
-    }
-
     public Date getDeliverAt() {
         return deliverAt;
     }
@@ -187,14 +176,6 @@ public class TalabatAdminOrder {
 
     public void setPromisedTime(Date promisedTime) {
         this.promisedTime = promisedTime;
-    }
-
-    public Date getAcceptedAt() {
-        return acceptedAt;
-    }
-
-    public void setAcceptedAt(Date acceptedAt) {
-        this.acceptedAt = acceptedAt;
     }
 
     public Customer getCustomer() {
@@ -285,22 +266,6 @@ public class TalabatAdminOrder {
         this.preparationCompletionSupported = preparationCompletionSupported;
     }
 
-    public String getAccepter() {
-        return accepter;
-    }
-
-    public void setAccepter(String accepter) {
-        this.accepter = accepter;
-    }
-
-    public String getLogisticsProviderId() {
-        return logisticsProviderId;
-    }
-
-    public void setLogisticsProviderId(String logisticsProviderId) {
-        this.logisticsProviderId = logisticsProviderId;
-    }
-
     public String getVendorTimeZone() {
         return vendorTimeZone;
     }
@@ -333,14 +298,6 @@ public class TalabatAdminOrder {
         this.itemUnavailabilityHandling = itemUnavailabilityHandling;
     }
 
-    public Object getVendorExtraParameters() {
-        return vendorExtraParameters;
-    }
-
-    public void setVendorExtraParameters(Object vendorExtraParameters) {
-        this.vendorExtraParameters = vendorExtraParameters;
-    }
-
     public boolean isStatus() {
         return status;
     }
@@ -356,6 +313,4 @@ public class TalabatAdminOrder {
     public void setMessage(String message) {
         this.message = message;
     }
-
-
 }

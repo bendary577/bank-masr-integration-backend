@@ -54,7 +54,7 @@ public interface TransactionRepo extends MongoRepository<Transactions, String> {
     boolean existsByCheckNumberAndUser(String checkNumber, ApplicationUser user);
 
     boolean existsByCheckNumberAndRevenueCentreId(String checkNumber, int revenueCentreId);
-    boolean existsByCheckNumberAndRevenueCentreIdAndStatus(String checkNumber, int revenueCentreId, String status);
+    boolean existsByCheckNumberAndRevenueCentreIdAndStatusAndAccountId(String checkNumber, int revenueCentreId, String status, String accountId);
 
     List<Transactions> findAllByGroupIdAndTransactionTypeIdOrderByTransactionDateDesc(String groupId, String id);
 

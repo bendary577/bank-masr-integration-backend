@@ -6,7 +6,6 @@ import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
-import com.sun.supplierpoc.models.configurations.TalabatAdminAccount;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
 import com.sun.supplierpoc.models.aggregtor.*;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.*;
@@ -57,8 +56,12 @@ public class TalabatIntegratorService {
         Token token = talabatRestService.talabatLoginRequest(account);
 
         if (token != null && token.isStatus()) {
+            ArrayList<String> branches = new ArrayList<>();
+            for (BranchMapping branch : talabatConfiguration.getBranchMappings()) {
+                branches.add(branch.getTalabatBranchId());
+            }
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branches);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
@@ -108,76 +111,6 @@ public class TalabatIntegratorService {
         return response;
     }
 
-    public Response testTalabatRest(Account account) {
-
-        Response response = new Response();
-
-        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        AggregatorConfiguration talabatConfiguration = generalSettings.getTalabatConfiguration();
-        TalabatAdminAccount talabatAdminAccount = talabatConfiguration.getTalabatAdminAccounts().get(0);
-
-        com.sun.supplierpoc.models.aggregtor.branchAdmin.Token token = talabatAdminWebService.talabatLoginRequest(account);
-
-        if (token != null && token.isStatus()) {
-
-            TalabatAdminOrder talabatOrder = talabatAdminWebService.acceptService(token, new RestOrder());
-            //            if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
-//
-//                List<RestOrder> receivedOrders = talabatOrder.getOrders().stream()
-//                        .filter(restOrder -> restOrder.getOrder_status().equals("ACCEPTED"))
-//                        .collect(Collectors.toList());
-//
-////                List<RestOrder> receivedOrders = List.of(talabatOrder.getOrders().get(0));
-//                try {
-//                    List<TalabatOrder> talabatOrderList = new ArrayList<>();
-//                    TalabatOrder talabatOrderDetails = new TalabatOrder();
-//
-//                    FoodicsLoginBody foodicsLoginBody = new FoodicsLoginBody();
-//                    //talabatRestService.LoginToFoodics();
-//
-//                    for (RestOrder restOrder : receivedOrders) {
-//                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
-//
-//                        FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatOrderDetails, generalSettings);
-//
-//                        if (foodicsOrder != null) {
-//                            talabatOrderList.add(talabatOrderDetails);
-//                        } else {
-//
-//                        }
-//                        foodicsOrder = talabatRestService.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccount);
-//                        talabatOrderDetails.setOrders(List.of(restOrder));
-//
-//                        if (foodicsOrder.isCallStatus()) {
-//                            talabatOrderList.add(talabatOrderDetails);
-//                            foodicsOrderRepo.save(foodicsOrder);
-//                        }
-//
-//                    }
-//
-//                    if (talabatOrderList.size() > 0) {
-//                        orderRepo.saveAll(talabatOrderList);
-//                        response.setMessage("Send Talabat Orders Successfully");
-//                        response.setData(talabatOrderList.get(0));
-//                    } else {
-//                        response.setMessage("Send Talabat Orders Successfully");
-//                        response.setData(new TalabatOrder());
-//                    }
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            } else {
-//                response.setStatus(false);
-//                response.setMessage("Login To Talabat Failed Due To : " + talabatOrder.getMessage());
-//            }
-        } else {
-            response.setStatus(false);
-            response.setMessage("Login To Talabat Failed Due To : " + token.getMessage());
-        }
-
-        return response;
-    }
-
     public Response sendReceivedOrders(Account account) {
 
         Response response = new Response();
@@ -189,8 +122,12 @@ public class TalabatIntegratorService {
         Token token = talabatRestService.talabatLoginRequest(account);
 
         if (token != null && token.isStatus()) {
+            ArrayList<String> branches = new ArrayList<>();
+            for (BranchMapping branch : talabatConfiguration.getBranchMappings()) {
+                branches.add(branch.getTalabatBranchId());
+            }
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branches);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
@@ -208,7 +145,15 @@ public class TalabatIntegratorService {
                     for (RestOrder restOrder : receivedOrders) {
 
 //                        talabatOrderDetails = talabatRestService.getOrderById(restOrder, token);
-                        com.sun.supplierpoc.models.aggregtor.branchAdmin.Token token1 = talabatAdminWebService.talabatLoginRequest(account);
+                        // Login to talabat branch
+                        // Resturant Branch
+                        BranchMapping branchMapping = generalSettings.getTalabatConfiguration().getBranchMappings().stream().
+                                filter(branch -> branch.getTalabatBranchId().equals(restOrder.getGlobal_vendor_code()))
+                                .collect(Collectors.toList()).stream().findFirst().orElse(new BranchMapping());
+                        if(branchMapping == null)
+                            continue;
+
+                        com.sun.supplierpoc.models.aggregtor.branchAdmin.Token token1 = talabatAdminWebService.talabatLoginRequest(account, branchMapping);
                         TalabatAdminOrder talabatAdminOrder = talabatAdminWebService.acceptService(token1, restOrder);
 
                         FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatAdminOrder, generalSettings);
@@ -218,7 +163,7 @@ public class TalabatIntegratorService {
                         } else {
 
                         }
-                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccountData);
+                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, generalSettings, foodicsAccountData);
                         talabatOrderDetails.setOrders(List.of(restOrder));
 
                         if (foodicsOrder.isCallStatus()) {

@@ -30,25 +30,25 @@ public class FoodicsWebServices {
 
     private static final String BASE_URL = "";
 
-    public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, FoodicsLoginBody token, GeneralSettings generalSettings,
+    public FoodicsOrder sendOrderToFoodics(FoodicsOrder order, GeneralSettings generalSettings,
                                            FoodicsAccountData foodicsAccountData) {
 
-        FoodicsOrder foodicsOrder = new FoodicsOrder();
+        FoodicsOrder foodicsOrder = order;
         String url = "https://api-sandbox.foodics.com/v5/orders";
         try {
-
             OkHttpClient client = new OkHttpClient().newBuilder().build();
 
             Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
             String jsonOrder = gson.toJson(order);
 
             MediaType mediaType = MediaType.parse("application/json");
-
             RequestBody body = RequestBody.create(mediaType, jsonOrder);
-            Request request = new Request.Builder().url(url).method("POST", body).
-                    addHeader("Authorization", "Bearer " + foodicsAccountData.getToken()).
-                    addHeader("Content-Type", "application/json").
-                    addHeader("Accept", "application/json").build();
+            Request request = new Request.Builder()
+                    .url(url).method("POST", body)   .
+                    addHeader("Authorization", "Bearer " + foodicsAccountData.getToken())
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .build();
 
             okhttp3.Response foodicsResponse = client.newCall(request).execute();
 

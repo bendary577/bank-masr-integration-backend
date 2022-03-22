@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services.onlineOrdering;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.BranchMapping;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.*;
@@ -13,6 +14,8 @@ import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
 
 @Service
 public class FoodicsIntegratorService {
@@ -40,8 +43,12 @@ public class FoodicsIntegratorService {
         Token token = talabatRestService.talabatLoginRequest(account);
 
         if (token != null && token.isStatus()) {
+            ArrayList<String> branches = new ArrayList<>();
+            for (BranchMapping branch : aggregatorConfiguration.getBranchMappings()) {
+                branches.add(branch.getTalabatBranchId());
+            }
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branches);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 

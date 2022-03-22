@@ -5,8 +5,10 @@ import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.List;
 
 public class Order implements Serializable {
@@ -18,6 +20,11 @@ public class Order implements Serializable {
     private FoodicsOrder foodicsOrder;
     private RestOrder restOrder;
 
+    @DBRef
+    private Account account;
+    private Date creationDate;
+    private String orderStatus;
+    private String reason;
     private boolean deleted = false;
 
     public Order() {
@@ -77,6 +84,38 @@ public class Order implements Serializable {
 
     public void setRestOrder(RestOrder restOrder) {
         this.restOrder = restOrder;
+    }
+
+    public Account getAccount() {
+        return account;
+    }
+
+    public void setAccount(Account account) {
+        this.account = account;
+    }
+
+    public Date getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Date creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public String getOrderStatus() {
+        return orderStatus;
+    }
+
+    public void setOrderStatus(String orderStatus) {
+        this.orderStatus = orderStatus;
+    }
+
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 
     public boolean isDeleted() {

@@ -50,8 +50,12 @@ public class TalabatToFoodicsService {
         Token token = talabatRestService.talabatLoginRequest(account);
 
         if (token != null && token.isStatus()) {
+            ArrayList<String> branches = new ArrayList<>();
+            for (BranchMapping branch : aggregatorConfiguration.getBranchMappings()) {
+                branches.add(branch.getTalabatBranchId());
+            }
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token);
+            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branches);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
@@ -77,7 +81,7 @@ public class TalabatToFoodicsService {
                         } else {
 
                         }
-                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, foodicsLoginBody, generalSettings, foodicsAccountData);
+                        foodicsOrder = foodicsWebServices.sendOrderToFoodics(foodicsOrder, generalSettings, foodicsAccountData);
                         talabatOrderDetails.setOrders(List.of(restOrder));
 
                         if (foodicsOrder.isCallStatus()) {

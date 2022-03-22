@@ -3,8 +3,8 @@ package com.sun.supplierpoc.models.aggregtor.TalabatRest;
 public class Modifier{
     public int amount;
     public String name;
-    public int price;
-    public int total;
+    public float price;
+    public float total;
     public String productId;
     public boolean modifiable;
     public String type;
@@ -25,7 +25,7 @@ public class Modifier{
         this.name = name;
     }
 
-    public int getPrice() {
+    public float getPrice() {
         return price;
     }
 
@@ -33,7 +33,7 @@ public class Modifier{
         this.price = price;
     }
 
-    public int getTotal() {
+    public float getTotal() {
         return total;
     }
 

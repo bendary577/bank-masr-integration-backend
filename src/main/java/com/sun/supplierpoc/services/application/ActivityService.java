@@ -50,8 +50,8 @@ public class ActivityService {
                 response.put("message", "This user is deleted.");
             } else if(!user.getAccountId().equals(account.getId())){
                 response.put("message", "This user does not belong to this account loyalty program.");
-            } else if(transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatus(
-                    transaction.getCheckNumber(), transaction.getRevenueCentreId(), Constants.PAID_TRANSACTION)){
+            } else if(transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatusAndAccountId(
+                    transaction.getCheckNumber(), transaction.getRevenueCentreId(), Constants.PAID_TRANSACTION, account.getId())){
                 response.put("message", "Can't use code for the same check twice.");
             }
             else {

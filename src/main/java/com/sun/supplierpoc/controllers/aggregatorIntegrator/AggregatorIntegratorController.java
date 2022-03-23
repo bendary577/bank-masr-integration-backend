@@ -156,8 +156,6 @@ public class AggregatorIntegratorController {
 
             Account account = accountOptional.get();
 
-            response = aggregatorIntegratorService.sendTalabatOrdersToFoodics(account);
-
             response.setStatus(true);
             response.setMessage("");
             response.setData(orderRepo.findAll());

@@ -61,10 +61,10 @@ public class FoodicsWebServices {
                 foodicsOrder = createOrderRequest.getData();
                 foodicsOrder.setCallStatus(true);
             } else {
-                FoodicsFailedResponse failedResponse = gson.fromJson(foodicsResponse.body().string(), FoodicsFailedResponse.class);
+//                FoodicsFailedResponse failedResponse = gson.fromJson(foodicsResponse.body().string(), FoodicsFailedResponse.class);
 
                 foodicsOrder.setCallStatus(false);
-                foodicsOrder.setMessage(failedResponse.message);
+                foodicsOrder.setMessage(createOrderRequest.getMessage());
             }
 
         } catch (Exception e) {

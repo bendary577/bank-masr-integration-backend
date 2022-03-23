@@ -31,6 +31,9 @@ public class FoodicsOrder {
     private List<Charge> charges = null;
     private List<FoodicsProductObject> products = null;
 
+    private String check_number;
+    private String kitchen_notes;
+
     @JsonProperty("order_status")
     private int status = 1;
     private boolean callStatus;
@@ -152,6 +155,22 @@ public class FoodicsOrder {
 
     public int getStatus() {
         return status;
+    }
+
+    public String getCheck_number() {
+        return check_number;
+    }
+
+    public void setCheck_number(String check_number) {
+        this.check_number = check_number;
+    }
+
+    public String getKitchen_notes() {
+        return kitchen_notes;
+    }
+
+    public void setKitchen_notes(String kitchen_notes) {
+        this.kitchen_notes = kitchen_notes;
     }
 
     public void setStatus(int status) {

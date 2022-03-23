@@ -193,6 +193,8 @@ public class AggregatorIntegratorService {
         try {
             // Order Type 3 ==> Delivery
             foodicsOrder.setType(3);
+            foodicsOrder.setCheck_number(adminOrder.externalId);
+            foodicsOrder.setKitchen_notes(""); // To be added
 
             // Customer Details
             if(adminOrder.getCustomer() != null){
@@ -245,9 +247,22 @@ public class AggregatorIntegratorService {
                     for (Modifier modifier: item.getModifiers()) {
                         option = new Option();
 
-                        option.setModifier_option_id(""); // To be added
+                        option.setModifier_option_id("9598daea-07ad-418e-b769-8387e678c998"); // To be added
                         option.setQuantity(modifier.getAmount());
                         option.setUnit_price(modifier.getPrice());
+
+                        // Tax information
+                        Tax tax = new Tax();
+                        ArrayList<Tax> taxes = new ArrayList<>();
+
+                        tax = new Tax();
+
+                        tax.setId("9598c557-72ed-4076-8f01-181bb47a65bc"); // To be added
+                        tax.setAmount(0);
+                        tax.setRate(0); // To be added
+                        taxes.add(tax);
+
+                        option.setTaxes(taxes);
 
                         options.add(option);
                     }
@@ -275,12 +290,12 @@ public class AggregatorIntegratorService {
 
             // Charges
             List<Charge> charges = new ArrayList<>();
-            Charge charge = new Charge();
-
-            charge.setCharge_id(""); // To be added
-            charge.setAmount(0);
-            charge.setTaxes(taxes);
-            charges.add(charge);
+//            Charge charge = new Charge();
+//
+//            charge.setCharge_id(""); // To be added
+//            charge.setAmount(0);
+//            charge.setTaxes(taxes);
+//            charges.add(charge);
 
             foodicsOrder.setCharges(charges);
         } catch (Exception e) {

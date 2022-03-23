@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.services.onlineOrdering;
 
+import com.google.i18n.phonenumbers.PhoneNumberUtil;
+import com.google.i18n.phonenumbers.Phonenumber;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.Aggregator;
@@ -194,13 +196,16 @@ public class AggregatorIntegratorService {
 
             // Customer Details
             if(adminOrder.getCustomer() != null){
-                foodicsOrder.setCustomerName(adminOrder.getCustomer().getFirstName());
-                foodicsOrder.setCustomerDialCode("966");
-                foodicsOrder.setCustomerPhone(adminOrder.getCustomer().getPhone().replace("+", ""));
+                PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+                Phonenumber.PhoneNumber numberProto = phoneUtil.parse(adminOrder.getCustomer().getPhone(), "");
+
+                foodicsOrder.setCustomerName(adminOrder.getCustomer().getFirstName() + " " + adminOrder.getCustomer().getLastName());
+                foodicsOrder.setCustomerDialCode(String.valueOf(numberProto.getCountryCode()));
+                foodicsOrder.setCustomerPhone(String.valueOf(numberProto.getNationalNumber()));
             }
 
             if(adminOrder.getCustomer() != null){
-                foodicsOrder.setCustomerAddressName("Work"); // "Home/Work"
+                foodicsOrder.setCustomerAddressName("Home"); // "Home/Work"
                 foodicsOrder.setCustomerAddressDescription(adminOrder.getAddress().street
                         + "-" + adminOrder.getAddress().city
                         + "-" + adminOrder.getAddress().area);
@@ -228,26 +233,24 @@ public class AggregatorIntegratorService {
                 if (productsMapping != null)
                     foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
                 else
-                    foodicsProductObject.setProduct_id("9590e5a9-f20a-4f8f-beb3-14710c688a89");
+                    foodicsProductObject.setProduct_id("9597379c-a45c-4c9c-963b-27d383e34085");
 
-                if(item.getQuantity() == null)
-                    foodicsProductObject.setQuantity(0);
-                else
-                    foodicsProductObject.setQuantity(item.getQuantity());
-
-                foodicsProductObject.setUnit_price(Double.parseDouble(item.getUnitPrice()));
+                foodicsProductObject.setQuantity(item.getAmount());
+                foodicsProductObject.setUnit_price(item.getPrice());
 
                 // Options
                 Option option;
                 ArrayList<Option> options = new ArrayList<>();
-                for (Modifier modifier: item.getModifiers()) {
-                    option = new Option();
+                if(item.getModifiers() != null){
+                    for (Modifier modifier: item.getModifiers()) {
+                        option = new Option();
 
-                    option.setModifier_option_id(""); // To be added
-                    option.setQuantity(modifier.getAmount());
-                    option.setUnit_price(modifier.getPrice());
+                        option.setModifier_option_id(""); // To be added
+                        option.setQuantity(modifier.getAmount());
+                        option.setUnit_price(modifier.getPrice());
 
-                    options.add(option);
+                        options.add(option);
+                    }
                 }
                 foodicsProductObject.setOptions(options);
 

@@ -7,6 +7,8 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsFailedResponse;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
 import com.sun.supplierpoc.models.aggregtor.FoodicProductResponse;
 import com.sun.supplierpoc.models.aggregtor.foodics.CreateOrderRequest;
@@ -35,6 +37,7 @@ public class FoodicsWebServices {
 
         FoodicsOrder foodicsOrder = order;
         String url = "https://api-sandbox.foodics.com/v5/orders";
+
         try {
             OkHttpClient client = new OkHttpClient().newBuilder().build();
 
@@ -57,9 +60,11 @@ public class FoodicsWebServices {
             if (foodicsResponse.code() == 200) {
                 foodicsOrder = createOrderRequest.getData();
                 foodicsOrder.setCallStatus(true);
-
             } else {
+                FoodicsFailedResponse failedResponse = gson.fromJson(foodicsResponse.body().string(), FoodicsFailedResponse.class);
+
                 foodicsOrder.setCallStatus(false);
+                foodicsOrder.setMessage(failedResponse.message);
             }
 
         } catch (Exception e) {

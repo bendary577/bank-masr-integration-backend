@@ -1,9 +1,11 @@
 package com.sun.supplierpoc.models.aggregtor.TalabatRest;
 
+import com.sun.supplierpoc.models.AggregatorOrder;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class TalabatOrder extends com.sun.supplierpoc.models.Order {
+public class TalabatAggregatorOrder extends AggregatorOrder {
 
     List<RestOrder> orders = new ArrayList<>();
 

@@ -48,7 +48,7 @@ public class FoodicsIntegratorService {
                 branches.add(branch.getTalabatBranchId());
             }
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branches);
+            TalabatAggregatorOrder talabatOrder = talabatRestService.getOrders(token, branches);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
@@ -79,7 +79,7 @@ public class FoodicsIntegratorService {
 
         if (token != null && token.isStatus()) {
 
-            TalabatOrder talabatOrder = talabatRestService.getOrders(token, branch);
+            TalabatAggregatorOrder talabatOrder = talabatRestService.getOrders(token, branch);
 
             if (talabatOrder != null && talabatOrder.getStatus() && talabatOrder.getOrders() != null) {
 
@@ -110,7 +110,7 @@ public class FoodicsIntegratorService {
 
         if (token != null && token.isStatus()) {
 
-            TalabatOrder talabatOrderDetails = talabatRestService.getOrderById(order, token);
+            TalabatAggregatorOrder talabatOrderDetails = talabatRestService.getOrderById(order, token);
             response.setData(talabatOrderDetails);
             response.setStatus(true);
             response.setMessage("Success");

@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.models.aggregtor.branchAdmin;
 
-public class Token {
+/* Talabat resturant branch token*/
+public class TalabatAdminToken {
 
     private String token;
 

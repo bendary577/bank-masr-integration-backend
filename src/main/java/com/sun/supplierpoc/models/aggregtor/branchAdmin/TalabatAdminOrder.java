@@ -1,4 +1,6 @@
-package com.sun.supplierpoc.models.aggregtor.TalabatRest;
+package com.sun.supplierpoc.models.aggregtor.branchAdmin;
+
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.*;
 
 import java.util.ArrayList;
 import java.util.Date;

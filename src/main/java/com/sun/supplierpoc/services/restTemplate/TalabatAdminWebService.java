@@ -4,10 +4,10 @@ import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAdminOrder;
-import com.sun.supplierpoc.models.aggregtor.branchAdmin.Token;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,9 +30,9 @@ public class TalabatAdminWebService {
     private static final String BASE_URL = "https://crs.me.restaurant-partners.com";
 
     /* Get talabat branch token */
-    public Token talabatLoginRequest(Account account, BranchMapping branchMapping) {
+    public TalabatAdminToken talabatLoginRequest(Account account, BranchMapping branchMapping) {
 
-        Token token = new Token();
+        TalabatAdminToken talabatAdminToken = new TalabatAdminToken();
         String endPoint = "/api/1/auth/form";
         try {
 
@@ -38,9 +40,9 @@ public class TalabatAdminWebService {
                     collect(Collectors.toSet()).stream().findAny().orElse(null);
 
             if (credentials == null) {
-                token.setStatus(false);
-                token.setMessage("No credentials found");
-                return token;
+                talabatAdminToken.setStatus(false);
+                talabatAdminToken.setMessage("No credentials found");
+                return talabatAdminToken;
             }
 
             Gson gson = new Gson();
@@ -63,20 +65,20 @@ public class TalabatAdminWebService {
 
             gson = new Gson();
 
-            token = gson.fromJson(loginResponse.body().string(), Token.class);
+            talabatAdminToken = gson.fromJson(loginResponse.body().string(), TalabatAdminToken.class);
 
-            token.setStatus(loginResponse.code() == 200);
+            talabatAdminToken.setStatus(loginResponse.code() == 200);
 
         } catch (Exception e) {
             e.printStackTrace();
-            token.setMessage(e.getMessage());
-            token.setStatus(false);
+            talabatAdminToken.setMessage(e.getMessage());
+            talabatAdminToken.setStatus(false);
         }
 
-        return token;
+        return talabatAdminToken;
     }
 
-    public TalabatAdminOrder acceptService(Token token, RestOrder restOrder) {
+    public TalabatAdminOrder acceptService(TalabatAdminToken talabatAdminToken, RestOrder restOrder) {
 
         TalabatAdminOrder talabatAdminOrder = new TalabatAdminOrder();
         String endPoint = "/api/1/deliveries";
@@ -92,7 +94,7 @@ public class TalabatAdminWebService {
                     .method("PUT", body)
                     .addHeader("Content-Type", "application/json")
                     .addHeader("Authorization",
-                            "Bearer " + token.getToken()).build();
+                            "Bearer " + talabatAdminToken.getToken()).build();
 
             okhttp3.Response getOrderRequest = client.newCall(request).execute();
 
@@ -110,17 +112,19 @@ public class TalabatAdminWebService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            token.setMessage(e.getMessage());
-            token.setStatus(false);
+            talabatAdminToken.setMessage(e.getMessage());
+            talabatAdminToken.setStatus(false);
         }
 
         return talabatAdminOrder;
     }
 
-    /* Get specific order details
-    *  Customer info, Items
+    /*
+    * !!! Can not use it as we do not have order id
+    * Get specific order details
+    * Customer info, Items
     * */
-    public TalabatAdminOrder getOrderDetails(Token token, RestOrder restOrder) {
+    public TalabatAdminOrder getSingleOrderDetails(TalabatAdminToken talabatAdminToken, RestOrder restOrder) {
 
         TalabatAdminOrder talabatAdminOrder = new TalabatAdminOrder();
         String endPoint = "/api/1/deliveries";
@@ -130,10 +134,10 @@ public class TalabatAdminWebService {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + "/oma_" + restOrder.getIdentifier()) // "https://crs.me.restaurant-partners.com/api/1/deliveries/oma_fa3251f8-f8e0-5322-aef6-ad7617d91f65"
+                    .url(BASE_URL + endPoint + "/oma_" + restOrder.getIdentifier())
                     .method("GET", null)
                     .addHeader("Authorization",
-                            "Bearer " + token.getToken()).build();
+                            "Bearer " + talabatAdminToken.getToken()).build();
 
             okhttp3.Response orderResponse = client.newCall(request).execute();
 
@@ -151,20 +155,58 @@ public class TalabatAdminWebService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            token.setMessage(e.getMessage());
-            token.setStatus(false);
+            talabatAdminToken.setMessage(e.getMessage());
+            talabatAdminToken.setStatus(false);
         }
 
         return talabatAdminOrder;
+    }
+
+    /*
+     * Get all order details
+     * Customer info, Items
+     * */
+    public TalabatAdminOrder[] getAllOrderDetails(TalabatAdminToken talabatAdminToken) {
+        TalabatAdminOrder[] orders = new TalabatAdminOrder[0];
+        String endPoint = "/api/2/deliveries";
+        String parameters = "?from=" + getDate() + "T00:00:00Z" + "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&to="
+                + getDate() + "T23:59:59Z";
+        try {
+
+            OkHttpClient client = new OkHttpClient().newBuilder()
+                    .build();
+            Request request = new Request.Builder()
+                    .url(BASE_URL + endPoint + parameters)
+                    .method("GET", null)
+                    .addHeader("Authorization",
+                            "Bearer " + talabatAdminToken.getToken()).build();
+
+            okhttp3.Response orderResponse = client.newCall(request).execute();
+
+            Gson gson = new Gson();
+
+            if (orderResponse.code() == 200) {
+                orders = gson.fromJson(orderResponse.body().string(), TalabatAdminOrder[].class);
+            } else {
+                TalabatAdminFailedResponse failedResponse = gson.fromJson(orderResponse.body().string(), TalabatAdminFailedResponse.class);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            talabatAdminToken.setMessage(e.getMessage());
+            talabatAdminToken.setStatus(false);
+        }
+
+        return orders;
     }
 
     public TalabatAdminOrder updateOrderStatus(Account account, FoodicsOrder foodicsOrder) {
 
         TalabatAdminOrder talabatAdminOrder = new TalabatAdminOrder();
         String endPoint = "/api/1/deliveries";
-        Token token = new Token();
+        TalabatAdminToken talabatAdminToken = new TalabatAdminToken();
         try {
-            token = talabatLoginRequest(account, new BranchMapping());
+            talabatAdminToken = talabatLoginRequest(account, new BranchMapping());
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             MediaType mediaType = MediaType.parse("application/json");
@@ -173,7 +215,7 @@ public class TalabatAdminWebService {
                     .url(BASE_URL + endPoint + "oma_" + foodicsOrder.getId() +  "/preparation-completion")
                     .method("POST", body)
                     .addHeader("Content-Type", "application/json")
-                    .addHeader("Authorization", "Bearer " + token.getToken()).build();
+                    .addHeader("Authorization", "Bearer " + talabatAdminToken.getToken()).build();
 
             okhttp3.Response getOrderRequest = client.newCall(request).execute();
 
@@ -191,10 +233,17 @@ public class TalabatAdminWebService {
 
         } catch (Exception e) {
             e.printStackTrace();
-            token.setMessage(e.getMessage());
-            token.setStatus(false);
+            talabatAdminToken.setMessage(e.getMessage());
+            talabatAdminToken.setStatus(false);
         }
 
         return talabatAdminOrder;
+    }
+
+    public String getDate() {
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        sdf.setTimeZone(TimeZone.getTimeZone("America/New_York"));
+        return sdf.format(date);
     }
 }

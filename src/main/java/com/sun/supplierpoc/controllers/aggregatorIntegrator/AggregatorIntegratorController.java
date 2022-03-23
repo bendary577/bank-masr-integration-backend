@@ -78,7 +78,7 @@ public class AggregatorIntegratorController {
 
             Account account = accountOptional.get();
 
-            response = aggregatorIntegratorService.sendReceivedOrders(account);
+            response = aggregatorIntegratorService.sendTalabatOrdersToFoodics(account);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {

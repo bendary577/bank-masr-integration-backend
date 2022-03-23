@@ -1,7 +1,7 @@
 package com.sun.supplierpoc.models;
 
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAdminOrder;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
-public class Order implements Serializable {
+public class AggregatorOrder implements Serializable {
 
     @Id
     private ObjectId _id = ObjectId.get();
@@ -27,10 +27,10 @@ public class Order implements Serializable {
     private String reason;
     private boolean deleted = false;
 
-    public Order() {
+    public AggregatorOrder() {
     }
 
-    public Order(List<SingleOrder> orderMeals) {
+    public AggregatorOrder(List<SingleOrder> orderMeals) {
         this.orderMeals = orderMeals;
     }
 

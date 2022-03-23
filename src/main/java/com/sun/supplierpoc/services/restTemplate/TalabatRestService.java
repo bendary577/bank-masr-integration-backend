@@ -6,7 +6,7 @@ import com.google.gson.GsonBuilder;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
-import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatOrder;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAggregatorOrder;
 import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
@@ -70,9 +70,9 @@ public class TalabatRestService {
         return token;
     }
 
-    public TalabatOrder getOrders(Token token, String branch) {
+    public TalabatAggregatorOrder getOrders(Token token, String branch) {
 
-        TalabatOrder talabatOrders = new TalabatOrder();
+        TalabatAggregatorOrder talabatOrders = new TalabatAggregatorOrder();
         String message = "";
 
         try {
@@ -90,7 +90,7 @@ public class TalabatRestService {
 
             Gson gson = new Gson();
 
-            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatOrder.class);
+            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatAggregatorOrder.class);
 
             talabatOrders.setStatus(orderResponse.code() == 200);
 
@@ -102,9 +102,9 @@ public class TalabatRestService {
         return talabatOrders;
     }
 
-    public TalabatOrder getOrders(Token token, ArrayList<String> branches) {
+    public TalabatAggregatorOrder getOrders(Token token, ArrayList<String> branches) {
 
-        TalabatOrder talabatOrders = new TalabatOrder();
+        TalabatAggregatorOrder talabatOrders = new TalabatAggregatorOrder();
         String url = "https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders";
         try {
 
@@ -124,7 +124,45 @@ public class TalabatRestService {
 
             Gson gson = new Gson();
 
-            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatOrder.class);
+            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatAggregatorOrder.class);
+
+            talabatOrders.setStatus(orderResponse.code() == 200);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            talabatOrders.setMessage(e.getMessage());
+            talabatOrders.setStatus(false);
+        }
+
+        return talabatOrders;
+    }
+
+    public TalabatAggregatorOrder getOrdersbyBranch(Token token, String branch) {
+
+        TalabatAggregatorOrder talabatOrders = new TalabatAggregatorOrder();
+        String url = "https://os-backend.api.eu.prd.portal.restaurant/v1/vendors/orders";
+        try {
+
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            MediaType mediaType = MediaType.parse("application/json");
+
+            JSONObject json = new JSONObject();
+            ArrayList<String> branches = new ArrayList<>();
+            branches.add(branch);
+
+            json.put("global_vendor_codes", branches);
+            json.put("time_from", getDate() + "T00:00:00+02:00");
+            json.put("time_to", getDate() + "T23:59:59+02:00");
+
+            RequestBody body = RequestBody.create(mediaType, json.toString());
+            Request request = new Request.Builder().url(url).method("POST", body).addHeader("Authorization", "Bearer " + token.getAccessToken()).addHeader("Content-Type", "application/json").build();
+
+            okhttp3.Response orderResponse = client.newCall(request).execute();
+
+
+            Gson gson = new Gson();
+
+            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatAggregatorOrder.class);
 
             talabatOrders.setStatus(orderResponse.code() == 200);
 
@@ -140,9 +178,9 @@ public class TalabatRestService {
     /*
     * Get order detials (items, discount, deliery fees, amount)
     * */
-    public TalabatOrder getOrderById(RestOrder order, Token token) {
+    public TalabatAggregatorOrder getOrderById(RestOrder order, Token token) {
 
-        TalabatOrder talabatOrders = new TalabatOrder();
+        TalabatAggregatorOrder talabatOrders = new TalabatAggregatorOrder();
 
         try {
 
@@ -153,7 +191,7 @@ public class TalabatRestService {
 
             Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 
-            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatOrder.class);
+            talabatOrders = gson.fromJson(orderResponse.body().string(), TalabatAggregatorOrder.class);
 
             talabatOrders.setStatus(orderResponse.code() == 200);
 

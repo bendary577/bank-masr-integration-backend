@@ -1,10 +1,9 @@
 package com.sun.supplierpoc.models.aggregtor.foodics;
 
 public class Tax {
-
-    private String id;
-    private Integer rate;
-    private Double amount;
+    public String id;
+    public double amount;
+    public int rate;
 
     public String getId() {
         return id;
@@ -14,20 +13,19 @@ public class Tax {
         this.id = id;
     }
 
-    public Integer getRate() {
-        return rate;
-    }
-
-    public void setRate(Integer rate) {
-        this.rate = rate;
-    }
-
-    public Double getAmount() {
+    public double getAmount() {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(double amount) {
         this.amount = amount;
     }
 
+    public int getRate() {
+        return rate;
+    }
+
+    public void setRate(int rate) {
+        this.rate = rate;
+    }
 }

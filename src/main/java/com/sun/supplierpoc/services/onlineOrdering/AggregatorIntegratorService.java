@@ -4,6 +4,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.Fee;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
@@ -22,6 +23,7 @@ import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.sun.supplierpoc.models.aggregtor.TalabatRest.Modifier;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -187,20 +189,18 @@ public class AggregatorIntegratorService {
         FoodicsOrder foodicsOrder = new FoodicsOrder();
 
         try {
-            // Cutomer Details
-            foodicsOrder.setGuests(1);
-
-            // Order Stataus
+            // Order Type 3 ==> Delivery
             foodicsOrder.setType(3);
+
+            // Customer Details
             if(adminOrder.getCustomer() != null){
-                foodicsOrder.setCustomerAddressName(adminOrder.getCustomer().getFirstName());
                 foodicsOrder.setCustomerName(adminOrder.getCustomer().getFirstName());
                 foodicsOrder.setCustomerDialCode("966");
                 foodicsOrder.setCustomerPhone(adminOrder.getCustomer().getPhone().replace("+", ""));
             }
 
             if(adminOrder.getCustomer() != null){
-                foodicsOrder.setCustomerAddressName("Work");
+                foodicsOrder.setCustomerAddressName("Work"); // "Home/Work"
                 foodicsOrder.setCustomerAddressDescription(adminOrder.getAddress().street
                         + "-" + adminOrder.getAddress().city
                         + "-" + adminOrder.getAddress().area);
@@ -208,91 +208,78 @@ public class AggregatorIntegratorService {
                 foodicsOrder.setCustomerAddressLongitude(String.valueOf(adminOrder.getAddress().longitude));
             }
 
-            // Order Items
+            // Branch information
+            foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
+
+            // Order products
             ProductsMapping productsMapping = new ProductsMapping();
+
+            FoodicsProductObject foodicsProductObject;
             List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
-            FoodicsProductObject foodicsProductObject = new FoodicsProductObject();
 
             for (Item item : adminOrder.getItems()) {
+                foodicsProductObject = new FoodicsProductObject();
+
+                // Item information
                 productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
                         filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
                         .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
-                foodicsProductObject = new FoodicsProductObject();
+                if (productsMapping != null)
+                    foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
+                else
+                    foodicsProductObject.setProduct_id("9590e5a9-f20a-4f8f-beb3-14710c688a89");
 
+                if(item.getQuantity() == null)
+                    foodicsProductObject.setQuantity(0);
+                else
+                    foodicsProductObject.setQuantity(item.getQuantity());
+
+                foodicsProductObject.setUnit_price(Double.parseDouble(item.getUnitPrice()));
+
+                // Options
                 Option option;
-                List<Option> options;
-                option = new Option();
-                options = new ArrayList<>();
-                options.add(option);
+                ArrayList<Option> options = new ArrayList<>();
+                for (Modifier modifier: item.getModifiers()) {
+                    option = new Option();
+
+                    option.setModifier_option_id(""); // To be added
+                    option.setQuantity(modifier.getAmount());
+                    option.setUnit_price(modifier.getPrice());
+
+                    options.add(option);
+                }
                 foodicsProductObject.setOptions(options);
 
-                if (productsMapping != null) {
-                    foodicsProductObject.setProductId(productsMapping.getFoodIcsProductId());
-                } else {
-                    foodicsProductObject.setProductId("9590e5a9-f20a-4f8f-beb3-14710c688a89");
-                }
-
-                foodicsProductObject.setQuantity(item.getQuantity());
-                foodicsProductObject.setUnitPrice(Double.parseDouble(item.getUnitPrice()));
                 foodicsProductObjects.add(foodicsProductObject);
             }
-
             foodicsOrder.setProducts(foodicsProductObjects);
 
-            // Order
-//        foodicsOrder.setSubtotalPrice(parsedOrder.getPayment().getTotal());
-//        foodicsOrder.setRoundingAmount(0.14);
-//        foodicsOrder.setDiscountAmount(parsedOrder.getPayment().getDiscount());
-//        foodicsOrder.setTotalPrice(parsedOrder.getPayment().getTotal() - parsedOrder.getPayment().getDiscount());
+            // Tax information
+            Tax tax = new Tax();
+            ArrayList<Tax> taxes = new ArrayList<>();
+            for (Fee fee : adminOrder.fees) {
+                if(fee.value == 0)
+                    continue;
 
-//        double discountRate = (parsedOrder.getPayment().getDiscount() / parsedOrder.getPayment().getTotal()) * 100;
-//
-//        DiscountMapping discountMapping = generalSettings.getTalabatConfiguration().getDiscountMappings().stream().
-//                filter(discount -> discount.getDiscountRate() == discountRate)
-//                .collect(Collectors.toList()).stream().findFirst().orElse(new DiscountMapping());
-//
-//        foodicsOrder.setDiscountId(discountMapping.getDiscountId().toString());
-//
-//        foodicsOrder.setKitchenNotes(talabatOrder.getOrderStatuses().get(0).getSentToTransmissionDetails().getComment());
-//        foodicsOrder.setDueAt(parsedOrder.getOrderTimestamp());
-//        foodicsOrder.setTableId("1");
-//        foodicsOrder.setCustomerNotes("");
-//        foodicsOrder.setDriverId(parsedOrder.getDelivery().toString());
+                tax = new Tax();
 
-//            CustomerMapping customerMapping = generalSettings.getTalabatConfiguration().
-//                    getCustomerMappings().get(0);
-//
-//            foodicsOrder.setCustomerId("9598f397-2a95-4314-b239-213327b6b422");
-//
-//            AddressMapping addressMapping = generalSettings.getTalabatConfiguration().
-//                    getAddressMappings().get(0);
-//
-//            foodicsOrder.setCustomerAddressId("");
+                tax.setId(""); // To be added
+                tax.setAmount(fee.value);
+                tax.setRate(0); // To be added
+                taxes.add(tax);
+            }
 
-//        Meta meta = new Meta();
-//        meta.setExternalNumber("120153");
-//        foodicsOrder.setMeta(meta);
-//
-//        List<Charge> charges = new ArrayList<>();
-//        Charge charge = new Charge();
-//        charge.setAmount(0);
-//        charge.setTaxExclusiveAmount(0);
-//
-//        List<Tax> taxes = new ArrayList<>();
-//        Tax tax = new Tax();
-//        tax.setAmount(Double.parseDouble("0"));
-//        tax.setRate(Integer.parseInt("0"));
-//        taxes.add(tax);
-//
-//        charge.setTaxes(taxes);
-//        charges.add(charge);
-//
-//        foodicsOrder.setCharges(charges);
+            // Charges
+            List<Charge> charges = new ArrayList<>();
+            Charge charge = new Charge();
 
-//        foodicsOrder.setProducts(products);
-//        foodicsOrder.setCombos(new ArrayList<Combo>());
+            charge.setCharge_id(""); // To be added
+            charge.setAmount(0);
+            charge.setTaxes(taxes);
+            charges.add(charge);
 
+            foodicsOrder.setCharges(charges);
         } catch (Exception e) {
             e.printStackTrace();
         }

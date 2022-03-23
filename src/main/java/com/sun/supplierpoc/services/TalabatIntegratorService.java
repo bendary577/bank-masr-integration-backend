@@ -300,9 +300,9 @@ public class TalabatIntegratorService {
 //                    options.add(option);
 //                    product.setOptions(options);
 
-                    foodicsProductObject.setProductId(productsMapping.getFoodIcsProductId());
+                    foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
                     foodicsProductObject.setQuantity(item.getAmount());
-                    foodicsProductObject.setUnitPrice(item.getPrice());
+                    foodicsProductObject.setUnit_price(item.getPrice());
 
                     foodicsProductObjects.add(foodicsProductObject);
 

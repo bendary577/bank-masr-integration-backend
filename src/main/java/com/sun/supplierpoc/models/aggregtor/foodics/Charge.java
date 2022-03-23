@@ -1,44 +1,34 @@
 package com.sun.supplierpoc.models.aggregtor.foodics;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Charge {
+    public int amount;
+    public String charge_id;
+    public ArrayList<Tax> taxes;
 
-    private String chargeId;
-    private Integer amount;
-    private Integer taxExclusiveAmount;
-    private List<Tax> taxes = null;
-
-    public String getChargeId() {
-        return chargeId;
+    public String getCharge_id() {
+        return charge_id;
     }
 
-    public void setChargeId(String chargeId) {
-        this.chargeId = chargeId;
+    public void setCharge_id(String charge_id) {
+        this.charge_id = charge_id;
     }
 
     public Integer getAmount() {
         return amount;
     }
 
-    public void setAmount(Integer amount) {
+    public void setAmount(int amount) {
         this.amount = amount;
     }
 
-    public Integer getTaxExclusiveAmount() {
-        return taxExclusiveAmount;
-    }
-
-    public void setTaxExclusiveAmount(Integer taxExclusiveAmount) {
-        this.taxExclusiveAmount = taxExclusiveAmount;
-    }
-
-    public List<Tax> getTaxes() {
+    public ArrayList<Tax> getTaxes() {
         return taxes;
     }
 
-    public void setTaxes(List<Tax> taxes) {
+    public void setTaxes(ArrayList<Tax> taxes) {
         this.taxes = taxes;
     }
-
 }

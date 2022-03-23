@@ -1,55 +1,45 @@
 package com.sun.supplierpoc.models.aggregtor.foodics;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Option {
+    public String modifier_option_id;
+    public int quantity;
+    public double unit_price;
+    public ArrayList<Tax> taxes;
 
-    private String modifierOptionId;
-    private Integer quantity;
-    private Integer unitPrice;
-    private Integer totalPrice;
-    private List<Tax> taxes ;
-
-    public String getModifierOptionId() {
-        return modifierOptionId;
+    public String getModifier_option_id() {
+        return modifier_option_id;
     }
 
-    public void setModifierOptionId(String modifierOptionId) {
-        this.modifierOptionId = modifierOptionId;
+    public void setModifier_option_id(String modifier_option_id) {
+        this.modifier_option_id = modifier_option_id;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
-    public Integer getUnitPrice() {
-        return unitPrice;
+    public double getUnit_price() {
+        return unit_price;
     }
 
-    public void setUnitPrice(Integer unitPrice) {
-        this.unitPrice = unitPrice;
+    public void setUnit_price(double unit_price) {
+        this.unit_price = unit_price;
     }
 
-    public Integer getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(Integer totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public List<Tax> getTaxes() {
+    public ArrayList<Tax> getTaxes() {
         return taxes;
     }
 
-    public void setTaxes(List<Tax> taxes) {
+    public void setTaxes(ArrayList<Tax> taxes) {
         this.taxes = taxes;
     }
-
 }
 

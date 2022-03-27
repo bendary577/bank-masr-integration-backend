@@ -121,6 +121,46 @@ public class WalletController {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @PostMapping("/undoWalletAction")
+    public ResponseEntity<?> UndoWalletAction(@RequestParam("userId") String userId,
+                                              @RequestParam("check") String check,
+                                              Principal principal){
+
+        Response response = new Response();
+        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        if(authedUser != null){
+
+            Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
+
+            if(accountOptional.isPresent()) {
+                if (roleService.hasRole(authedUser, Roles.UNDO_WALLET_ACTION)) {
+
+                    response = walletService.undoWalletAction(authedUser, userId, check);
+
+                    if(response.isStatus()){
+                        return new ResponseEntity<>(response, HttpStatus.OK);
+                    }else{
+                        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                    }
+
+                }else{
+                    response.setStatus(false);
+                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
+                }
+            }else{
+                response.setStatus(false);
+                response.setMessage(Constants.NOT_ELIGIBLE_ACCOUNT);
+            }
+        }else{
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_USER);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @PostMapping("/exportWalletHistoryToExcel")
     public void exportWalletHistoryToExcel(@RequestParam(name = "userId") String userId,
                                            HttpServletResponse httpServletResponse,

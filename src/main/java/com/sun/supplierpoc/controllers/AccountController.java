@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.auth.OauthClientDetails;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.security.CustomClientDetailsService;
 import com.sun.supplierpoc.models.auth.User;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -444,5 +445,7 @@ public class AccountController {
     public ArrayList<Account> getAccounts() {
         return (ArrayList<Account>) accountRepo.findAll();
     }
+
+
 
 }

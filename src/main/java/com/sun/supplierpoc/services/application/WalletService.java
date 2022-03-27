@@ -81,7 +81,6 @@ public class WalletService {
         return response;
     }
 
-
     public Response deductWallet(User agent, String userId, double amount) {
 
         Response response = new Response();
@@ -151,4 +150,68 @@ public class WalletService {
         response.setStatus(false);
         return response;
     }
+
+    public Response undoWalletAction(User agent, String userId, String check) {
+
+        Response response = new Response();
+
+        Optional<ApplicationUser> applicationUserOptional = applicationUserRepo.findById(userId);
+        if(applicationUserOptional.isPresent()){
+
+            ApplicationUser applicationUser = applicationUserOptional.get();
+
+            try{
+                double lastBalance = 0;
+                for(Balance tempBalance : applicationUser.getWallet().getBalance()){
+                    lastBalance = lastBalance+ tempBalance.getAmount();
+                }
+                WalletHistory walletHistory = (WalletHistory) applicationUser.getWallet().getWalletHistory()
+                        .stream()
+                        .filter(walletHistoryRecord -> check.equals(walletHistoryRecord.getCheck()));
+                if(walletHistory.getOperation().equals(ActionType.CHARGE_WALLET)){
+                    walletHistory.setAmount(lastBalance-walletHistory.getAmount());
+                }else if(walletHistory.getOperation().equals(ActionType.DEDUCT_WALLET)){
+                    walletHistory.setAmount(lastBalance+walletHistory.getAmount());
+                }
+
+                applicationUser.getWallet().getWalletHistory().remove(walletHistory);
+                applicationUserRepo.save(applicationUser);
+
+                /* Create new user action */
+                Action action = new Action();
+                action.setUser(agent);
+                action.setApplicationUser(applicationUser);
+                action.setAccountId(agent.getAccountId());
+                action.setDate(new Date());
+                action.setAmount(0);
+                action.setActionType(ActionType.UNDO_WALLET_ACTION);
+
+                actionService.createUserAction(action);
+
+                /* Update agent action stats */
+                ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
+                if(actionStats == null){
+                    actionStats = new ActionStats(agent, 0, 0,0, agent.getAccountId());
+                    actionStatsService.createActionStats(actionStats);
+                }else {
+                    actionStats.setChargeAmount(actionStats.getChargeAmount() + 0);
+                    actionStatsService.createActionStats(actionStats);
+                }
+
+                response.setStatus(true);
+                response.setMessage("Wallet Action Reverted Successfully.");
+                response.setData(applicationUser);
+                return response;
+            }catch(Exception e) {
+                response.setStatus(false);
+                response.setMessage(e.getMessage());
+            }
+        }else{
+            response.setMessage("This guest doesn't exist.");
+        }
+        response.setStatus(false);
+        return response;
+    }
+
+
 }

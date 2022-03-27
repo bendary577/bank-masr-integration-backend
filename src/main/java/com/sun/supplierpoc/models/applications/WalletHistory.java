@@ -11,6 +11,8 @@ public class WalletHistory {
     private double amount;
     private double previousBalance;
     private double newBalance;
+    private String check;
+    private String employee;
     @DBRef
     private User user;
     private Date date;
@@ -25,6 +27,7 @@ public class WalletHistory {
         this.newBalance = newBalance;
         this.user = user;
         this.date = date;
+
     }
 
 //    public WalletHistory(String operation, double amount, double previousBalance, double newBalance, Date date) {
@@ -81,5 +84,21 @@ public class WalletHistory {
 
     public void setDate(Date date) {
         this.date = date;
+    }
+
+    public String getCheck() {
+        return check;
+    }
+
+    public void setCheck(String check) {
+        this.check = check;
+    }
+
+    public String getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(String employee) {
+        this.employee = employee;
     }
 }

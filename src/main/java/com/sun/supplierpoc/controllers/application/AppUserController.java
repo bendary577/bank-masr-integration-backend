@@ -21,6 +21,7 @@ import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.services.application.ActivityService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import io.jsonwebtoken.impl.Base64UrlCodec;
+import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -767,4 +768,57 @@ public class AppUserController {
 //            e.printStackTrace();
 //        }
 //    }
+
+
+    @RequestMapping("/forgetPasswordMail")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity forgetPasswordSetEmail(@RequestParam String email){
+        HashMap response = new HashMap();
+        try{
+            //validate email
+            if(!EmailValidator.getInstance().isValid(email)){
+                response.put("message", "please enter a valid mail formet.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+            //get email from db
+//            Optional<ApplicationUser> applicationUser = userRepo.findById(email);
+            if (true) {
+//                ApplicationUser appUser = applicationUser.get();
+                try {
+                    if (emailService.sendUpdatePasswordMail(email)){
+                        response.put("message", "Mail send successfully.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        response.put("message", "Invalid user email.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
+                } catch (Exception e) {
+                    LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                    response.put("message", "Invalid user email.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
+            } else {
+                response.put("message", "User not found.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
+    }
+
+    @RequestMapping("/newPassword")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public Account forgetPasswordNewPassword(Principal principal){
+        try{
+            User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> account = accountRepo.findByIdAndDeleted(user.getAccountId(), false);
+            return account.get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new Account();
+        }
+    }
 }

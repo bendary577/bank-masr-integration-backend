@@ -625,7 +625,7 @@ public class SalesService {
         if(taxIncluded){
             if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
                 majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_after_disc.")).getText().strip());
-            }else {
+            }else{
                 majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_before_disc.")).getText().strip());
             }
         }else {
@@ -756,6 +756,7 @@ public class SalesService {
                 }
 
                 WebElement td = cols.get(0);
+
                 if(getSCTotalFlag){
                     if (td.getText().equals("Total Service Charges:")) {
                         float serviceChargeTotal = conversions.convertStringToFloat(cols.get(columns.indexOf("total")).getText().strip());

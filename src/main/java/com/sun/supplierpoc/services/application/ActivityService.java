@@ -15,6 +15,7 @@ import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.DecimalFormat;
 import java.util.*;
 
 @Service
@@ -40,6 +41,7 @@ public class ActivityService {
                                      Account account, GeneralSettings generalSettings, RevenueCenter revenueCenter) {
 
         HashMap response = new HashMap();
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
 
         try {
             ApplicationUser user = userRepo.findByCodeAndAccountIdAndDeleted(transaction.getCode(), account.getId(), false);
@@ -89,7 +91,7 @@ public class ActivityService {
                         }
 
                         transaction.setDiscountRate(0.0);
-                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
                         transaction.setPointsRedeemed(points);
 
                         user.setPoints(user.getPoints() - points);
@@ -98,13 +100,12 @@ public class ActivityService {
                         int points = (int) Math.round((transaction.getTotalPayment() * generalSettings.getPointReward())/100);
 
                         transaction.setDiscountRate(0.0);
-                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
                         transaction.setPointsRedeemed(0);
                         transaction.setPointsReward(points);
                         user.setPoints(user.getPoints() + points);
                     }
                     else if(!transactionType.getName().equals(Constants.USE_WALLET)) {
-
                         // get discount rate using discount id
                         ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
                         SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
@@ -116,7 +117,7 @@ public class ActivityService {
                         double discount = simphonyDiscount.getDiscountRate();
                         double amountAfterDiscount = amount - (amount * (discount / 100));
                         transaction.setDiscountRate(discount);
-                        transaction.setAfterDiscount(amountAfterDiscount);
+                        transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(amountAfterDiscount)));
                         transaction.setStatus(Constants.PAID_TRANSACTION);
 
                         response.put("message", "Discount added successfully.");
@@ -137,7 +138,7 @@ public class ActivityService {
                         }
 
                         /* check if account has loyalty system */
-                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
 
                         Wallet wallet = user.getWallet();
                         double previousBalance = calculateBalance(wallet);
@@ -163,7 +164,7 @@ public class ActivityService {
                             }
                         }
                         paidAmount = transaction.getAfterDiscount() - rest;
-                        transaction.setPartialPayment(paidAmount);
+                        transaction.setPartialPayment(Double.parseDouble(decimalFormat.format(paidAmount)));
 
                         /* Remove zero balance/voucher */
                         List<Balance> newBalanceList = new ArrayList<>();
@@ -178,6 +179,8 @@ public class ActivityService {
                         newBalance = calculateBalance(wallet);
                         WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
                                 paidAmount, previousBalance, newBalance, null, new Date());
+                        walletHistory.setCheck(transaction.getCheckNumber());
+                        walletHistory.setEmployee(transaction.getEmployeeId());
                         wallet.getWalletHistory().add(walletHistory);
                         user.setWallet(wallet);
 
@@ -201,7 +204,7 @@ public class ActivityService {
                     }
                     else{
                         transaction.setDiscountRate(0.0);
-                        transaction.setAfterDiscount(transaction.getTotalPayment());
+                        transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
                     }
 
                     userRepo.save(user);

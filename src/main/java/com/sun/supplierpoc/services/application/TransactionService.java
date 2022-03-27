@@ -38,7 +38,6 @@ public class TransactionService {
 
     private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
 
-
     public int getTransactionByTypeCount(String from, String to, String groupId, Account account) {
         Date fromDate = null;
         Date toDate = null;
@@ -342,7 +341,6 @@ public class TransactionService {
         }
         return transactions;
     }
-
 
     public List<Transactions> getTransactionsByTimePaginated(List<TransactionType> transactionTypes, String time,
                                                     int pageNumber, int limit) {

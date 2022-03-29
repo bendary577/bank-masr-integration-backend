@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services.application;
 
+import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.applications.*;
 import com.sun.supplierpoc.models.auth.User;
@@ -8,8 +9,13 @@ import com.sun.supplierpoc.services.ActionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.text.DateFormat;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class WalletService {
@@ -22,6 +28,11 @@ public class WalletService {
 
     @Autowired
     private ActionStatsService actionStatsService;
+
+    @Autowired
+    private AppUserService appUserService;
+
+    private static final long MILLIS_IN_A_DAY = 1000 * 60 * 60 * 24;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +53,7 @@ public class WalletService {
                 applicationUser.getWallet().getBalance().add(balance);
                 WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() ,
                         lastBalance, (lastBalance + balance.getAmount()), agent, new Date());
+                walletHistory.setUniqueId(UUID.randomUUID().toString());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -113,6 +125,7 @@ public class WalletService {
 
                 WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount),
                         agent, new Date());
+                walletHistory.setUniqueId(UUID.randomUUID().toString());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -212,6 +225,74 @@ public class WalletService {
         response.setStatus(false);
         return response;
     }
+
+    public Response getWalletsRemainingTotal(Account account, String fromDate, String toDate) {
+
+        Response response = new Response();
+        DecimalFormat decimalFormat = new DecimalFormat("#0.00");
+
+        //get app users
+        ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountId(account.getId());
+
+        // total remaining
+        double totalRemaining = 0;
+
+        //loop on each user wallet
+        for (ApplicationUser applicationUser: applicationUsers) {
+            double totalWalletHistory = 0;
+            //loop on histories
+            for (WalletHistory walletHistory: applicationUser.getWallet().getWalletHistory()) {
+
+                //if action in time period(from, to) add histories amount
+                try {
+                    DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+                    if(fromDate.equals("")){
+                        fromDate = dateFormat.format(new Date());
+                    }else if(toDate.equals("")){
+                        toDate = dateFormat.format(new Date());
+                    }
+                    Date start = dateFormat.parse(fromDate);
+                    Date end =  dateFormat.parse(toDate);
+
+                    String walletDateString = walletHistory.getDate().toString().substring(0,10);
+                    Date walletHistoryDate = new SimpleDateFormat("yyyy-MM-dd").parse(walletDateString);
+
+                    if (walletHistoryDate.compareTo(start) < 0) {
+                        System.out.println("walletHistoryDate is before start");
+                        continue;
+                    } else if (walletHistoryDate.compareTo(end) > 0) {
+                        System.out.println("walletHistoryDate is after end");
+                        continue;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    System.out.println("exception");
+                }
+                if(walletHistory.getOperation().equals(ActionType.CHARGE_WALLET) || walletHistory.getOperation().equals(ActionType.ENTRANCE_AMOUNT)){
+                    totalWalletHistory += walletHistory.getAmount();
+                }else if(walletHistory.getOperation().equals(ActionType.DEDUCT_WALLET)){
+                    totalWalletHistory -= walletHistory.getAmount();
+                }
+                totalWalletHistory += walletHistory.getAmount();
+            }
+            totalRemaining += totalWalletHistory;
+        }
+
+        response.setStatus(true);
+        response.setMessage("users wallets remaining total returned successfully");
+        response.setData(Double.parseDouble(decimalFormat.format(totalRemaining)));
+
+        return response;
+    }
+
+//    private double getWalletRemainingTotalFrom(){}
+//
+//    private double getWalletRemainingTotalTo(){}
+//
+//    private double getWalletRemainingTotalFromTo(){}
+//
+//    private double getAllWalletRemainingTotal(){}
 
 
 }

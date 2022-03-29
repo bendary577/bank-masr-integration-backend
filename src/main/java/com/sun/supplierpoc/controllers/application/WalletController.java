@@ -161,6 +161,50 @@ public class WalletController {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @GetMapping("/getWalletsRemainingTotal")
+    public ResponseEntity<?> getWalletsRemainingTotal(
+                                                @RequestParam(name = "fromDate", required = false) String fromDate,
+                                                @RequestParam(name = "fromDate", required = false) String toDate,
+                                                Principal principal){
+
+        Response response = new Response();
+        User authedUser = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        if(authedUser != null){
+
+            Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
+
+            if(accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+
+//                if (roleService.hasRole(authedUser, Roles.UNDO_WALLET_ACTION)) {
+                if (true) {
+
+                    response = walletService.getWalletsRemainingTotal(account, fromDate, toDate);
+
+                    if(response.isStatus()){
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }else{
+                        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                    }
+
+                }else{
+                    response.setStatus(false);
+                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
+                }
+            }else{
+                response.setStatus(false);
+                response.setMessage(Constants.NOT_ELIGIBLE_ACCOUNT);
+            }
+        }else{
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_USER);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @PostMapping("/exportWalletHistoryToExcel")
     public void exportWalletHistoryToExcel(@RequestParam(name = "userId") String userId,
                                            HttpServletResponse httpServletResponse,

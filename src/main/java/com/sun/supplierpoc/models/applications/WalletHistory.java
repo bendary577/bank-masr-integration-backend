@@ -1,12 +1,13 @@
 package com.sun.supplierpoc.models.applications;
 
 import com.sun.supplierpoc.models.auth.User;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 
 import java.util.Date;
 
 public class WalletHistory {
-
+    private String uniqueId;
     private String operation;
     private double amount;
     private double previousBalance;
@@ -100,5 +101,13 @@ public class WalletHistory {
 
     public void setEmployee(String employee) {
         this.employee = employee;
+    }
+
+    public String getUniqueId() {
+        return uniqueId;
+    }
+
+    public void setUniqueId(String uniqueId) {
+        this.uniqueId = uniqueId;
     }
 }

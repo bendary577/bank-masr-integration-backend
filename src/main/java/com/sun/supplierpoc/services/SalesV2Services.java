@@ -889,11 +889,16 @@ public class SalesV2Services {
                     Discount groupDiscount = new Discount();
 
                     groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
-                    if(majorGroupDiscount){
+                    if(!MGRevenueCenter.getRevenueCenter().equals("") && !MGRevenueCenter.getDiscountAccount().equals("")){
+                        groupDiscount.setAccount(MGRevenueCenter.getDiscountAccount());
+                    }else {
+                        groupDiscount.setAccount(majorGroup.getDiscountAccount());
+                    }
+/*                    if(majorGroupDiscount){
                         groupDiscount.setAccount(majorGroup.getDiscountAccount());
                     }else if (revenueCenterDiscount){
                         groupDiscount.setAccount(MGRevenueCenter.getDiscountAccount());
-                    }
+                    }*/
 
                     Discount discountParent = conversions.checkDiscountExistence(salesDiscount,
                             majorGroup.getMajorGroup() + " Discount");

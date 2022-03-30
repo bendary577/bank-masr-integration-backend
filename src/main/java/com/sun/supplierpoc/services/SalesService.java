@@ -521,7 +521,11 @@ public class SalesService {
                         if (discountAmount != 0){
                             Discount groupDiscount = new Discount();
 
-                            groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+                            if(!revenueCenter.getRevenueCenterReference().equals(""))
+                                groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenterReference());
+                            else
+                                groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+
                             if(majorGroupDiscount){
                                 groupDiscount.setAccount(majorGroup.getDiscountAccount());
                             }else if (revenueCenterDiscount){
@@ -1480,8 +1484,12 @@ public class SalesService {
             syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
         }
 
-        if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals(""))
-            description += majorGroupJournal.getRevenueCenter().getRevenueCenter();
+        if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals("")){
+            if(!majorGroupJournal.getRevenueCenter().getRevenueCenterReference().equals(""))
+                description += majorGroupJournal.getRevenueCenter().getRevenueCenterReference();
+            else
+                description += majorGroupJournal.getRevenueCenter().getRevenueCenter();
+        }
 
         if (description.length() > 50) {
             description = description.substring(0, 50);

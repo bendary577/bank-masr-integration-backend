@@ -888,7 +888,12 @@ public class SalesV2Services {
                 if (discountAmount != 0){
                     Discount groupDiscount = new Discount();
 
-                    groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+                    if(!revenueCenter.getRevenueCenterReference().equals(""))
+                        groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenterReference());
+                    else
+                        groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+
+
                     if(!MGRevenueCenter.getRevenueCenter().equals("") && !MGRevenueCenter.getDiscountAccount().equals("")){
                         groupDiscount.setAccount(MGRevenueCenter.getDiscountAccount());
                     }else {

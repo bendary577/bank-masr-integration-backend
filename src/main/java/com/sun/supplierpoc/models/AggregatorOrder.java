@@ -20,6 +20,8 @@ public class AggregatorOrder implements Serializable {
     private FoodicsOrder foodicsOrder;
     private RestOrder restOrder;
 
+    private String aggregatorName;
+
     @DBRef
     private Account account;
     private Date creationDate;
@@ -84,6 +86,14 @@ public class AggregatorOrder implements Serializable {
 
     public void setRestOrder(RestOrder restOrder) {
         this.restOrder = restOrder;
+    }
+
+    public String getAggregatorName() {
+        return aggregatorName;
+    }
+
+    public void setAggregatorName(String aggregatorName) {
+        this.aggregatorName = aggregatorName;
     }
 
     public Account getAccount() {

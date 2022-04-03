@@ -7,6 +7,7 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsFailedResponse;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
@@ -92,7 +93,7 @@ public class FoodicsWebServices {
                 Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
                 FoodicProductResponse foodicsProductsResponse = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
                 product.setFoodicsProducts(foodicsProductsResponse.getData());
-                product.setType(Constants.FOODICS);
+                product.setType(AggregatorConstants.FOODICS);
                 return product;
             } else {
                 return product;

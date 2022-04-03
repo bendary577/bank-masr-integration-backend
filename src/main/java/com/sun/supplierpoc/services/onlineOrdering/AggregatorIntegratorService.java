@@ -5,6 +5,7 @@ import com.google.i18n.phonenumbers.Phonenumber;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.Aggregator;
+import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Fee;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
@@ -101,6 +102,7 @@ public class AggregatorIntegratorService {
                             }
 
                             order.setTalabatAdminOrder(talabatAdminOrder);
+                            order.setAggregatorName(AggregatorConstants.TALABAT);
                             orderRepo.save(order);
 
                             // To be removed after testing
@@ -138,10 +140,10 @@ public class AggregatorIntegratorService {
             Product product = new Product();
 
             for (Aggregator aggregator : aggregators) {
-                if (aggregator.getName().equals(Constants.FOODICS)) {
+                if (aggregator.getName().equals(AggregatorConstants.FOODICS)) {
                     FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
                     product = foodicsWebServices.fetchProducts(generalSettings, foodicsAccountData);
-                } else if (aggregator.getName().equals(Constants.SIMPHONY)) {
+                } else if (aggregator.getName().equals(AggregatorConstants.SIMPHONY)) {
                     SimphonyAccount simphonyAccount = aggregatorConfiguration.getSimphonyAccount();
                 }
             }

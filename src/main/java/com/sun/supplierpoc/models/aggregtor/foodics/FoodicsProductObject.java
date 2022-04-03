@@ -10,6 +10,7 @@ public class FoodicsProductObject {
     public String product_id;
     public int quantity;
     public double unit_price;
+    public String kitchen_notes;
     public ArrayList<Tax> taxes;
 
     private int status;
@@ -45,6 +46,14 @@ public class FoodicsProductObject {
 
     public void setUnit_price(double unit_price) {
         this.unit_price = unit_price;
+    }
+
+    public String getKitchen_notes() {
+        return kitchen_notes;
+    }
+
+    public void setKitchen_notes(String kitchen_notes) {
+        this.kitchen_notes = kitchen_notes;
     }
 
     public ArrayList<Tax> getTaxes() {

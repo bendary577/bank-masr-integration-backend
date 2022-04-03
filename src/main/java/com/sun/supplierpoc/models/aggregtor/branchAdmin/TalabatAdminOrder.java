@@ -29,6 +29,7 @@ public class TalabatAdminOrder {
     public Payment payment;
     public ArrayList<Item> items;
     public ArrayList<Fee> fees;
+    public ArrayList<Discount> discounts;
     public ArrayList<Tax> taxes;
     public CancelReason cancelReason;
     public boolean canVoid;

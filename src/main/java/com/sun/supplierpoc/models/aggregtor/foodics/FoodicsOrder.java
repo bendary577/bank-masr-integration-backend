@@ -31,8 +31,10 @@ public class FoodicsOrder {
     private List<Charge> charges = null;
     private List<FoodicsProductObject> products = null;
 
+    private double discount_amount;
+    private int discount_type;
+
     private String check_number;
-    private String kitchen_notes;
 
     @JsonProperty("order_status")
     private int status = 1;
@@ -157,20 +159,28 @@ public class FoodicsOrder {
         return status;
     }
 
+    public double getDiscount_amount() {
+        return discount_amount;
+    }
+
+    public void setDiscount_amount(double discount_amount) {
+        this.discount_amount = discount_amount;
+    }
+
+    public int getDiscount_type() {
+        return discount_type;
+    }
+
+    public void setDiscount_type(int discount_type) {
+        this.discount_type = discount_type;
+    }
+
     public String getCheck_number() {
         return check_number;
     }
 
     public void setCheck_number(String check_number) {
         this.check_number = check_number;
-    }
-
-    public String getKitchen_notes() {
-        return kitchen_notes;
-    }
-
-    public void setKitchen_notes(String kitchen_notes) {
-        this.kitchen_notes = kitchen_notes;
     }
 
     public void setStatus(int status) {

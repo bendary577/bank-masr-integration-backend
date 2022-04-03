@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Fee;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.Discount;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
@@ -195,8 +196,7 @@ public class AggregatorIntegratorService {
         try {
             // Order Type 3 ==> Delivery
             foodicsOrder.setType(3);
-            foodicsOrder.setCheck_number(adminOrder.externalId);
-            foodicsOrder.setKitchen_notes(""); // To be added
+            foodicsOrder.setCheck_number(adminOrder.externalId + "-" + adminOrder.shortCode);
 
             // Customer Details
             if(adminOrder.getCustomer() != null){
@@ -241,6 +241,8 @@ public class AggregatorIntegratorService {
 
                 foodicsProductObject.setQuantity(item.getAmount());
                 foodicsProductObject.setUnit_price(item.getPrice());
+                if(item.getComment() != null)
+                    foodicsProductObject.setKitchen_notes(item.getComment());
 
                 // Options
                 Option option;
@@ -275,17 +277,29 @@ public class AggregatorIntegratorService {
             }
             foodicsOrder.setProducts(foodicsProductObjects);
 
+            // Discount Information
+            double totalDiscount = 0.0;
+            for (Discount discount : adminOrder.discounts) {
+                if(discount.value == 0)
+                    continue;
+                totalDiscount += discount.value;
+            }
+
+            foodicsOrder.setDiscount_amount(totalDiscount);
+            foodicsOrder.setDiscount_type(1); // Open, takes order creator value and is always
+
             // Tax information
+            // Foodics system will auto apply the taxes based on the account setting for taxes.
             Tax tax = new Tax();
             ArrayList<Tax> taxes = new ArrayList<>();
-            for (Fee fee : adminOrder.fees) {
-                if(fee.value == 0)
+            for (com.sun.supplierpoc.models.aggregtor.TalabatRest.Tax orderTax : adminOrder.taxes) {
+                if(orderTax.value == 0)
                     continue;
 
                 tax = new Tax();
 
                 tax.setId(""); // To be added
-                tax.setAmount(fee.value);
+                tax.setAmount(orderTax.value);
                 tax.setRate(0); // To be added
                 taxes.add(tax);
             }

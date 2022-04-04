@@ -264,11 +264,7 @@ public class SalesAPIController {
                 Response salesResponse;
                 List<OrderTypeChannels> newList = new ArrayList<>(orderTypeChannels);
 
-                if (account.getMicrosVersion().equals("version1")) {
-                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, newList, endpoint);
-                } else {
-                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, newList, endpoint);
-                }
+                salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, newList, endpoint);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {

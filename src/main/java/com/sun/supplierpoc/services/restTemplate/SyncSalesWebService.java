@@ -4,6 +4,9 @@ import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.configurations.OrderTypeChannels;
 import com.sun.supplierpoc.models.configurations.SalesAPIConfig;
 import com.sun.supplierpoc.models.configurations.SalesAPIStatistics;
+import com.sun.supplierpoc.models.emaar.EmaarRoot;
+import com.sun.supplierpoc.models.emaar.SalesDataCollection;
+import com.sun.supplierpoc.models.emaar.SalesInfo;
 import okhttp3.*;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -25,13 +28,20 @@ public class SyncSalesWebService {
             MediaType mediaType = MediaType.parse("application/json");
 
             String fandBSplit = getFundSplit(salesAPIStatistics);
+/*            EmaarRoot root = new EmaarRoot();
+            SalesDataCollection salesDataCollection = new SalesDataCollection();
+            SalesInfo salesInfo = new SalesInfo();
 
-/*            JSONObject json = new JSONObject();
-            json.put("UnitNo", salesAPIStatistics.unitNo);
-            json.put("LeaseCode", salesAPIStatistics.leaseCode);
-            json.put("SalesDate", salesAPIStatistics.dateFrom);
-            json.put("TransactionCount", salesAPIStatistics.NoChecks);
-            json.put("NetSales", salesAPIStatistics.NetSales);*/
+            salesInfo.unitNo = salesAPIStatistics.unitNo;
+            salesInfo.leaseCode = salesAPIStatistics.leaseCode;
+            salesInfo.salesDate = salesAPIStatistics.dateFrom;
+            salesInfo.transactionCount = salesAPIStatistics.NoChecks;
+            salesInfo.netSales = salesAPIStatistics.NetSales;
+            salesInfo.fandBSplit = "[{" + getFundSplit(salesAPIStatistics) + "}]";
+
+            salesDataCollection.salesInfo.add(salesInfo);
+            root.salesDataCollection = salesDataCollection;
+            String body =new Gson().toJson(root);*/
 
             requestBody = "{\"SalesDataCollection\": " + "{\"SalesInfo\":[" +
                     "{\"UnitNo\":\"" + salesAPIStatistics.unitNo +"\"," + "\"LeaseCode\":\""+salesAPIStatistics.leaseCode+"\"," +

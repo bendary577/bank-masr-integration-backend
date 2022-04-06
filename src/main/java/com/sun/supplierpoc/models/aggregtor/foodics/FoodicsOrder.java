@@ -35,6 +35,7 @@ public class FoodicsOrder {
     private int discount_type;
 
     private String check_number;
+    private Meta meta;
 
     @JsonProperty("order_status")
     private int status = 1;
@@ -181,6 +182,14 @@ public class FoodicsOrder {
 
     public void setCheck_number(String check_number) {
         this.check_number = check_number;
+    }
+
+    public Meta getMeta() {
+        return meta;
+    }
+
+    public void setMeta(Meta meta) {
+        this.meta = meta;
     }
 
     public void setStatus(int status) {

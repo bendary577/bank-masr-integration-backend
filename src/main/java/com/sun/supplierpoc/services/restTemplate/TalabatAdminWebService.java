@@ -172,11 +172,12 @@ public class TalabatAdminWebService {
         String parameters = "?from=" + getDate() + "T00:00:00Z" + "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&to="
                 + getDate() + "T23:59:59Z";
         try {
-
+            String tempURL = "https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-05T22:00:00Z&to=2022-04-05T22:30:59Z";
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + parameters)
+//                    .url(BASE_URL + endPoint + parameters)
+                    .url(tempURL)
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();

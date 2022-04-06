@@ -16,10 +16,11 @@ public class AggregatorConfiguration {
     private List<SimphonyAccountData> simphonyAccountData = new ArrayList<>();
 
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
+    private ArrayList<ModifierMapping> modifierMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
-    private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();
-    private ArrayList<AddressMapping> addressMappings = new ArrayList<>();
-    private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
+//    private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();
+//    private ArrayList<AddressMapping> addressMappings = new ArrayList<>();
+//    private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
 
     public FoodicsAccountData getFoodicsAccount() {
         return foodicsAccountData;
@@ -61,30 +62,6 @@ public class AggregatorConfiguration {
         this.branchMappings = branchMappings;
     }
 
-    public ArrayList<CustomerMapping> getCustomerMappings() {
-        return customerMappings;
-    }
-
-    public void setCustomerMappings(ArrayList<CustomerMapping> customerMappings) {
-        this.customerMappings = customerMappings;
-    }
-
-    public ArrayList<AddressMapping> getAddressMappings() {
-        return addressMappings;
-    }
-
-    public void setAddressMappings(ArrayList<AddressMapping> addressMappings) {
-        this.addressMappings = addressMappings;
-    }
-
-    public ArrayList<DiscountMapping> getDiscountMappings() {
-        return discountMappings;
-    }
-
-    public void setDiscountMappings(ArrayList<DiscountMapping> discountMappings) {
-        this.discountMappings = discountMappings;
-    }
-
     public ArrayList<TalabatAdminAccount> getTalabatAdminAccounts() {
         return talabatAdminAccounts;
     }
@@ -99,5 +76,13 @@ public class AggregatorConfiguration {
 
     public void setFoodicsAccountData(FoodicsAccountData foodicsAccountData) {
         this.foodicsAccountData = foodicsAccountData;
+    }
+
+    public ArrayList<ModifierMapping> getModifierMappings() {
+        return modifierMappings;
+    }
+
+    public void setModifierMappings(ArrayList<ModifierMapping> modifierMappings) {
+        this.modifierMappings = modifierMappings;
     }
 }

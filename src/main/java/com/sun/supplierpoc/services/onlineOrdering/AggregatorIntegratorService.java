@@ -4,15 +4,12 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
-import com.sun.supplierpoc.models.aggregtor.Aggregator;
-import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
-import com.sun.supplierpoc.models.aggregtor.BranchMapping;
+import com.sun.supplierpoc.models.aggregtor.*;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Fee;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.Discount;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
-import com.sun.supplierpoc.models.aggregtor.ProductsMapping;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Item;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAggregatorOrder;
 import com.sun.supplierpoc.models.aggregtor.login.Token;
@@ -196,7 +193,11 @@ public class AggregatorIntegratorService {
         try {
             // Order Type 3 ==> Delivery
             foodicsOrder.setType(3);
-            foodicsOrder.setCheck_number(adminOrder.externalId + "-" + adminOrder.shortCode);
+            foodicsOrder.setCheck_number(adminOrder.externalId);
+
+            Meta meta = new Meta();
+            meta.setExternalNumber(adminOrder.shortCode);
+            foodicsOrder.setMeta(meta);
 
             // Customer Details
             if(adminOrder.getCustomer() != null){
@@ -207,6 +208,7 @@ public class AggregatorIntegratorService {
                 foodicsOrder.setCustomerDialCode(String.valueOf(numberProto.getCountryCode()));
                 foodicsOrder.setCustomerPhone(String.valueOf(numberProto.getNationalNumber()));
             }
+
 
             if(adminOrder.getCustomer() != null){
                 foodicsOrder.setCustomerAddressName("Home"); // "Home/Work"
@@ -222,6 +224,7 @@ public class AggregatorIntegratorService {
 
             // Order products
             ProductsMapping productsMapping = new ProductsMapping();
+            ModifierMapping modifierMapping = new ModifierMapping();
 
             FoodicsProductObject foodicsProductObject;
             List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
@@ -231,7 +234,7 @@ public class AggregatorIntegratorService {
 
                 // Item information
                 productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
-                        filter(tempProduct -> tempProduct.getTalabatProductId() == item.getId())
+                        filter(tempProduct -> tempProduct.getTalabatProductId().equals(item.getProductId()))
                         .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
                 if (productsMapping != null)
@@ -251,7 +254,16 @@ public class AggregatorIntegratorService {
                     for (Modifier modifier: item.getModifiers()) {
                         option = new Option();
 
-                        option.setModifier_option_id("9598daea-07ad-418e-b769-8387e678c998"); // To be added
+                        // Extra Info
+                        modifierMapping = generalSettings.getTalabatConfiguration().getModifierMappings().stream().
+                                filter(tempProduct -> tempProduct.getTalabatProductId().equals(modifier.getProductId()))
+                                .collect(Collectors.toList()).stream().findFirst().orElse(null);
+
+                        if(modifierMapping != null)
+                            option.setModifier_option_id(modifierMapping.getFoodicsProductId());
+                        else
+                            option.setModifier_option_id("9598daea-07ad-418e-b769-8387e678c998"); // To be added
+
                         option.setQuantity(modifier.getAmount());
                         option.setUnit_price(modifier.getPrice());
 
@@ -279,10 +291,12 @@ public class AggregatorIntegratorService {
 
             // Discount Information
             double totalDiscount = 0.0;
-            for (Discount discount : adminOrder.discounts) {
-                if(discount.value == 0)
-                    continue;
-                totalDiscount += discount.value;
+            if(adminOrder.discounts != null){
+                for (Discount discount : adminOrder.discounts) {
+                    if(discount.value == 0)
+                        continue;
+                    totalDiscount += discount.value;
+                }
             }
 
             foodicsOrder.setDiscount_amount(totalDiscount);

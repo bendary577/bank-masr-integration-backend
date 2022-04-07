@@ -64,11 +64,7 @@ public class AggregatorIntegratorService {
         AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
         FoodicsAccountData foodicsAccountData = aggregatorConfiguration.getFoodicsAccount();
 
-        Token talabatPortalToken = talabatRestService.talabatLoginRequest(account);
-
-        if (talabatPortalToken != null && talabatPortalToken.isStatus()) {
-
-            for (BranchMapping branch : aggregatorConfiguration.getBranchMappings()) {
+        for (BranchMapping branch : aggregatorConfiguration.getBranchMappings()) {
                 // Check if branch configured or not
                 if(branch.getPassword().isEmpty() || branch.getUsername().isEmpty())
                     continue;
@@ -117,11 +113,6 @@ public class AggregatorIntegratorService {
                     response.setMessage("Login To Talabat Failed Due To, Please contact support team.");
                 }
             }
-
-        } else {
-            response.setStatus(false);
-            response.setMessage("Login To Talabat Failed Due To : " + talabatPortalToken.getMessage());
-        }
 
         return response;
     }

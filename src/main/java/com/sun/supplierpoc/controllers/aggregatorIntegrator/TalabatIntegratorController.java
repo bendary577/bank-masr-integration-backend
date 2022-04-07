@@ -2,13 +2,18 @@ package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.BranchMapping;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatMenu;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
+import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.TalabatIntegratorService;
 import com.sun.supplierpoc.services.onlineOrdering.FoodicsIntegratorService;
+import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,6 +30,9 @@ public class TalabatIntegratorController {
 
     @Autowired
     private TalabatRestService talabatRestService;
+
+    @Autowired
+    private TalabatAdminWebService talabatAdminWebService;
 
     @Autowired
     private TalabatIntegratorService talabatIntegratorService;
@@ -98,6 +106,29 @@ public class TalabatIntegratorController {
 
             response = foodicsIntegratorService.getOrderDetails(account, order);
 
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/menuItems")
+    public ResponseEntity<?> getTalabatMenuItems(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            TalabatMenu menu = talabatAdminWebService.getTalabatBranchMenuItems(account);
+
+            response.setData(menu);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             response.setStatus(false);

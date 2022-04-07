@@ -2,13 +2,17 @@ package com.sun.supplierpoc.services.restTemplate;
 
 import com.google.gson.Gson;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.aggregtor.BranchMapping;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatMenu;
 import com.sun.supplierpoc.models.configurations.AccountCredential;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.RestOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
+import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
+import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -16,6 +20,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -24,6 +29,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class TalabatAdminWebService {
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
 
     Logger logger = LoggerFactory.getLogger(CallRestService.class);
     /* Talabat branch base url */
@@ -177,7 +184,7 @@ public class TalabatAdminWebService {
                     .build();
             Request request = new Request.Builder()
 //                    .url(BASE_URL + endPoint + parameters)
-                    .url(tempURL)
+                    .url(tempURL) // To be removed
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();
@@ -240,6 +247,48 @@ public class TalabatAdminWebService {
 
         return talabatAdminOrder;
     }
+
+
+    public TalabatMenu getTalabatBranchMenuItems(Account account) {
+        TalabatMenu menu = new TalabatMenu();
+        String endPoint = "/api/3/platforms/HF_EG/vendors/510703/menus?expand=false";
+        TalabatAdminToken talabatAdminToken = new TalabatAdminToken();
+
+        // Get account branches
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        ArrayList<BranchMapping> branchMappings = generalSettings.getTalabatConfiguration().getBranchMappings();
+        // Default branch
+        BranchMapping branchMapping = branchMappings.get(2);
+
+        try {
+            talabatAdminToken = talabatLoginRequest(account, branchMapping);
+
+            OkHttpClient client = new OkHttpClient().newBuilder()
+                    .build();
+            Request request = new Request.Builder()
+                    .url("https://crs.me.restaurant-partners.com/api/3/platforms/HF_EG/vendors/510703/menus?expand=false")
+                    .method("GET", null)
+                    .addHeader("authorization", "Bearer " + talabatAdminToken.getToken())
+                    .build();
+
+            okhttp3.Response response = client.newCall(request).execute();
+
+            Gson gson = new Gson();
+            menu = gson.fromJson(response.body().string(), TalabatMenu.class);
+
+            if (response.code() == 200) {
+            } else {
+                return null;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            talabatAdminToken.setMessage(e.getMessage());
+            talabatAdminToken.setStatus(false);
+        }
+        return menu;
+    }
+
 
     public String getDate() {
         Date date = new Date();

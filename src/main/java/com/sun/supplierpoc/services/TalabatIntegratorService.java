@@ -1,9 +1,6 @@
 package com.sun.supplierpoc.services;
 
-import com.sun.supplierpoc.models.Account;
-import com.sun.supplierpoc.models.GeneralSettings;
-import com.sun.supplierpoc.models.Product;
-import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.*;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.Category;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
@@ -19,6 +16,7 @@ import com.sun.supplierpoc.repositories.applications.ProductRepository;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -158,55 +156,40 @@ public class TalabatIntegratorService {
         return response;
     }
 
-    public LinkedHashMap updateFoodicsProduct(Account account, FoodicsProduct foodicsProduct) {
-
+    /////////////////////////////////// Talabat Order      ///////////////////////////////////
+    public LinkedHashMap updateTalabatOrder(Account account, FoodicsOrder tempFoodicsOrder) {
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-        Product product  = new Product();
-        try {
-//            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
 
-            if (product != null) {
-
-//                foodicsProductRepo.save(foodicsProduct);
-
-                response.put("message", "Product information was successfully updated.");
-                response.put("status", "success");
-                response.put("data", foodicsProduct);
-
-            } else {
-
-                response.put("message", "Product Not Found.");
-                response.put("status", "failed");
-
-            }
-        } catch (Exception e) {
-            response.put("message", "Can't save foodics product.");
-            response.put("status", "failed");
-        }
-
-        return response;
-    }
-
-    public LinkedHashMap updateFoodicsOrder(Account account, FoodicsOrder tempFoodicsOrder) {
-
-        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-        Product product = new Product();
         try {
 
-//            FoodicsOrder foodicsOrder = foodicsOrderRepo.findById(tempFoodicsOrder.getId()).orElse(null);
+            AggregatorOrder order = orderRepo.findByFoodicsOrderId(tempFoodicsOrder.getId()).orElse(null);
+//            AggregatorOrder order = orderRepo.findByIdAndDeleted("624eeb646a3b892304e51c6d", false).orElse(null);
+            FoodicsOrder foodicsOrder = order.getFoodicsOrder();
+
+            // Get account configuration
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
+            ArrayList<BranchMapping> branches = aggregatorConfiguration.getBranchMappings();
+
+            // ==> Get order's branch
+            String branchId = order.getTalabatAdminOrder().globalEntityId + ";" + order.getTalabatAdminOrder().externalRestaurantId;
+            BranchMapping branchMapping = branches.stream().
+                    filter(branch -> branch.getTalabatBranchId().equals(branchId))
+                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
+
             String delivery_status = "";
             String status = "";
 
-            if (product != null) {
-
-//                foodicsOrderRepo.save(foodicsOrder);
+            if (foodicsOrder != null) {
                 switch (tempFoodicsOrder.getDelivery_status()) {
                     case 1:
                         delivery_status = "sent to kitchen";
                         break;
                     case 2:
                         delivery_status = "ready";
-                        talabatAdminWebService.updateOrderStatus(account, tempFoodicsOrder);
+
+                        // ==> Change status in talabat
+                        talabatAdminWebService.readyForDeliveryOrder(account, order.getTalabatAdminOrder().id, branchMapping);
                         break;
                     case 3:
                         delivery_status = "assigned";
@@ -243,6 +226,13 @@ public class TalabatIntegratorService {
                         break;
                 }
 
+                foodicsOrder.setDelivery_status(tempFoodicsOrder.getDelivery_status());
+                foodicsOrder.setStatus(tempFoodicsOrder.getStatus());
+
+                order.setFoodicsOrder(foodicsOrder);
+
+                orderRepo.save(order);
+
                 response.put("message", "Order information was successfully updated.");
                 response.put("status", "success");
                 response.put("orderStatus", status);
@@ -262,8 +252,8 @@ public class TalabatIntegratorService {
     /////////////////////////////////// Talabat Menu Items ///////////////////////////////////
 
     /*
-    * This service fetch all talabat menu items ans save it in OSII middleware database
-    * */
+     * This service fetch all talabat menu items ans save it in OSII middleware database
+     * */
     public Response fetchTalabatProducts(Account account) {
 
         Response response = new Response();
@@ -299,6 +289,39 @@ public class TalabatIntegratorService {
         } catch (Exception e) {
             response.setMessage("Can't save talabat product.");
             response.setStatus(false);
+        }
+
+        return response;
+    }
+
+    /*
+     * This service update talabat product in case of any change occurs in foodics
+     * */
+    public LinkedHashMap updateTalabatProduct(Account account, FoodicsProduct foodicsProduct) {
+
+        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
+        Product product = new Product();
+
+        try {
+//            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+
+            if (product != null) {
+
+//                foodicsProductRepo.save(foodicsProduct);
+
+                response.put("message", "Product information was successfully updated.");
+                response.put("status", "success");
+                response.put("data", foodicsProduct);
+
+            } else {
+
+                response.put("message", "Product Not Found.");
+                response.put("status", "failed");
+
+            }
+        } catch (Exception e) {
+            response.put("message", "Can't save foodics product.");
+            response.put("status", "failed");
         }
 
         return response;

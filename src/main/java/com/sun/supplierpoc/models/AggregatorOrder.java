@@ -14,7 +14,7 @@ import java.util.List;
 public class AggregatorOrder implements Serializable {
 
     @Id
-    private ObjectId _id = ObjectId.get();
+    private String id ;
     private List<SingleOrder> orderMeals;
     private TalabatAdminOrder talabatAdminOrder;
     private FoodicsOrder foodicsOrder;
@@ -36,8 +36,8 @@ public class AggregatorOrder implements Serializable {
         this.orderMeals = orderMeals;
     }
 
-    public ObjectId getId() {
-        return _id;
+    public String getId() {
+        return id;
     }
 
     public List<SingleOrder> getOrderMeals() {
@@ -56,12 +56,8 @@ public class AggregatorOrder implements Serializable {
         this.deleted = deleted;
     }
 
-    public ObjectId get_id() {
-        return _id;
-    }
-
-    public void set_id(ObjectId _id) {
-        this._id = _id;
+    public void setId(String id) {
+        this.id = id;
     }
 
     public TalabatAdminOrder getTalabatAdminOrder() {

@@ -8,7 +8,7 @@ import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
-import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
+import com.sun.supplierpoc.services.TalabatIntegratorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +26,7 @@ public class FoodicsController {
     private OrderRepo orderRepo;
 
     @Autowired
-    private AggregatorIntegratorService aggregatorIntegratorService;
+    private TalabatIntegratorService talabatIntegratorService;
 
     @Autowired
     private AccountService accountService;
@@ -46,7 +46,7 @@ public class FoodicsController {
 
         if (account != null) {
 
-            response = aggregatorIntegratorService.updateFoodicsProduct(account, foodicsProduct);
+            response = talabatIntegratorService.updateTalabatProduct(account, foodicsProduct);
 
             if (response.get("status").equals("success")) {
                 return new ResponseEntity<>(response, HttpStatus.OK);
@@ -72,7 +72,7 @@ public class FoodicsController {
 
         if (account != null) {
 
-            response = aggregatorIntegratorService.updateFoodicsOrder(account, foodicsOrder);
+            response = talabatIntegratorService.updateTalabatOrder(account, foodicsOrder);
 
             if (response.get("status").equals("success")) {
                 return new ResponseEntity<>(response, HttpStatus.OK);

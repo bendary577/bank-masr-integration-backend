@@ -339,14 +339,14 @@ public class AggregatorIntegratorService {
             String status = "";
 
             if (foodicsOrder != null) {
-
-
                 switch (tempFoodicsOrder.getDelivery_status()) {
                     case 1:
                         delivery_status = "sent to kitchen";
                         break;
                     case 2:
                         delivery_status = "ready";
+                        // Change status in talabat
+
                         break;
                     case 3:
                         delivery_status = "assigned";
@@ -382,6 +382,9 @@ public class AggregatorIntegratorService {
                         status = "Void";
                         break;
                 }
+
+                foodicsOrder.setDelivery_status(tempFoodicsOrder.getDelivery_status());
+                foodicsOrder.setStatus(tempFoodicsOrder.getStatus());
 
                 order.setFoodicsOrder(foodicsOrder);
 

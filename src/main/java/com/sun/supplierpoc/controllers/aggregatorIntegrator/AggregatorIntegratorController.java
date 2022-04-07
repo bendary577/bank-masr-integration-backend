@@ -91,59 +91,6 @@ public class AggregatorIntegratorController {
         }
     }
 
-    @RequestMapping("/webhook/products")
-    public ResponseEntity<?> updateFoodicsRequest(@RequestHeader("Authorization") String authorization,
-                                                  @RequestBody FoodicsProduct foodicsProduct) {
-
-        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-
-        InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
-
-        Account account = accountService.getAccount(invokerUser.getAccountId());
-
-        if (account != null) {
-
-            response = aggregatorIntegratorService.updateFoodicsProduct(account, foodicsProduct);
-
-            if (response.get("status").equals("success")) {
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-
-        } else {
-            response.put("message", Constants.INVALID_USER);
-            response.put("status", "failed");
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        }
-    }
-
-    @RequestMapping("/webhook/orders")
-    public ResponseEntity<?> updateFetchOrder(@RequestHeader("Authorization") String authorization,
-                                              @RequestBody FoodicsOrder foodicsOrder) {
-
-        LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-
-        InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
-        Account account = accountService.getAccount(invokerUser.getAccountId());
-
-        if (account != null) {
-
-            response = aggregatorIntegratorService.updateFoodicsOrder(account, foodicsOrder);
-
-            if (response.get("status").equals("success")) {
-                return new ResponseEntity<>(response, HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-            }
-
-        } else {
-            response.put("message", Constants.INVALID_USER);
-            response.put("status", "failed");
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        }
-    }
-
     @GetMapping("/storedOrders")
     public ResponseEntity<?> getstoredOrders(Principal principal) {
 

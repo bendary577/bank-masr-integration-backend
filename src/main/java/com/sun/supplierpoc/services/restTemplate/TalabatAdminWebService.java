@@ -249,16 +249,11 @@ public class TalabatAdminWebService {
     }
 
 
-    public TalabatMenu getTalabatBranchMenuItems(Account account) {
+    public TalabatMenu getTalabatBranchMenuItems(Account account, BranchMapping branchMapping) {
         TalabatMenu menu = new TalabatMenu();
         String endPoint = "/api/3/platforms/HF_EG/vendors/510703/menus?expand=false";
         TalabatAdminToken talabatAdminToken = new TalabatAdminToken();
 
-        // Get account branches
-        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-        ArrayList<BranchMapping> branchMappings = generalSettings.getTalabatConfiguration().getBranchMappings();
-        // Default branch
-        BranchMapping branchMapping = branchMappings.get(2);
 
         try {
             talabatAdminToken = talabatLoginRequest(account, branchMapping);

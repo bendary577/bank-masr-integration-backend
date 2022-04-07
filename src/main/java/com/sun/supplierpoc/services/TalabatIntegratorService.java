@@ -4,8 +4,8 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
-import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.*;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.Category;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
@@ -261,5 +261,47 @@ public class TalabatIntegratorService {
 
     /////////////////////////////////// Talabat Menu Items ///////////////////////////////////
 
+    /*
+    * This service fetch all talabat menu items ans save it in OSII middleware database
+    * */
+    public Response fetchTalabatProducts(Account account) {
+
+        Response response = new Response();
+
+        // Get account branches
+        GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+        ArrayList<BranchMapping> branchMappings = generalSettings.getTalabatConfiguration().getBranchMappings();
+
+        ArrayList<ProductsMapping> productsMappings = generalSettings.getTalabatConfiguration().getProductsMappings();
+
+        BranchMapping branchMapping = branchMappings.get(2);
+
+        TalabatMenu menu = talabatAdminWebService.getTalabatBranchMenuItems(account, branchMapping);
+
+        ArrayList<com.sun.supplierpoc.models.aggregtor.branchAdmin.Category> categories = menu.menus.get(0).categories;
+
+        ProductsMapping product;
+        for (Category category : categories) {
+            for (TalabatMenuItem item : category.items) {
+                product = new ProductsMapping();
+
+                product.setTalabatProductId(item.id);
+                product.setName(item.name);
+                product.setType("Product");
+                productsMappings.add(product);
+            }
+        }
+
+        generalSettings.getAggregatorConfiguration().setProductsMappings(productsMappings);
+        try {
+            generalSettingsRepo.save(generalSettings);
+            response.setData(menu);
+        } catch (Exception e) {
+            response.setMessage("Can't save talabat product.");
+            response.setStatus(false);
+        }
+
+        return response;
+    }
 
 }

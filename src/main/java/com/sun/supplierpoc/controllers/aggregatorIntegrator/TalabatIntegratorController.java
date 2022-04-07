@@ -126,9 +126,8 @@ public class TalabatIntegratorController {
 
             Account account = accountOptional.get();
 
-            TalabatMenu menu = talabatAdminWebService.getTalabatBranchMenuItems(account);
+            response = talabatIntegratorService.fetchTalabatProducts(account);
 
-            response.setData(menu);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             response.setStatus(false);

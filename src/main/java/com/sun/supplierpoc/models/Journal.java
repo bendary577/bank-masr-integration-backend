@@ -3,6 +3,7 @@ package com.sun.supplierpoc.models;
 import com.sun.supplierpoc.models.configurations.*;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Journal {
 
@@ -27,6 +28,15 @@ public class Journal {
     private String DCMarker = "";
 
     public Journal() { }
+
+    // Approved Invoice
+    public Journal(String overGroup, float totalCost, float totalNet, float totalVat, float tax) {
+        this.overGroup = overGroup;
+        this.totalCost = totalCost;
+        this.net = totalNet;
+        this.vat = totalVat;
+        this.tax = tax;
+    }
 
     // Consumption Controller
     public Journal(String overGroup, float totalCost, CostCenter costCenter, String DCMarker) {
@@ -102,6 +112,24 @@ public class Journal {
         this.departmentCode = departmentCode;
         this.costCenter = costCenter;
         this.revenueCenter = new RevenueCenter(false);
+    }
+
+    /* Approved Invoices */
+    public ArrayList<Journal> checkInvoiceLineExistence(ArrayList<Journal> journals, String overGroup, float cost,
+                                                        float tax, float vat, float net) {
+
+        for (Journal journal : journals) {
+            if (journal.overGroup.equals(overGroup)) {
+                // Add new value
+                journal.totalCost += cost;
+                journal.net += net;
+                journal.vat += vat;
+                return journals;
+            }
+        }
+        journals.add(new Journal(overGroup, cost, net, vat, tax));
+        return journals;
+
     }
 
     public ArrayList<Journal> checkExistence(ArrayList<Journal> journals, MajorGroup majorGroup,

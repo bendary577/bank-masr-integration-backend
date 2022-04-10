@@ -294,7 +294,8 @@ public class TalabatAdminWebService {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url("https://crs.me.restaurant-partners.com/api/3/platforms/HF_EG/vendors/510703/menus?expand=false")
+//                    .url("https://crs.me.restaurant-partners.com/api/3/platforms/HF_EG/vendors/510703/menus?expand=false")
+                    .url(BASE_URL + endPoint)
                     .method("GET", null)
                     .addHeader("authorization", "Bearer " + talabatAdminToken.getToken())
                     .build();

@@ -261,8 +261,8 @@ public class TalabatIntegratorService {
         // Get account branches
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         ArrayList<BranchMapping> branchMappings = generalSettings.getTalabatConfiguration().getBranchMappings();
-
-        ArrayList<ProductsMapping> productsMappings = generalSettings.getTalabatConfiguration().getProductsMappings();
+        AggregatorConfiguration configuration = generalSettings.getTalabatConfiguration();
+        ArrayList<ProductsMapping> productsMappings = configuration.getProductsMappings();
 
         BranchMapping branchMapping = branchMappings.get(2);
 
@@ -278,7 +278,10 @@ public class TalabatIntegratorService {
                 product.setTalabatProductId(item.id);
                 product.setName(item.name);
                 product.setType("Product");
-                productsMappings.add(product);
+
+                // Check if it already exist update it otherwise add it as new
+                if(!configuration.checkProductMappingExistance(productsMappings, product.getTalabatProductId()))
+                    productsMappings.add(product);
             }
         }
 

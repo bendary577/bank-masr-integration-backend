@@ -34,6 +34,15 @@ public class Conversions {
         return new Tax();
     }
 
+    public InforTax checkInforTaxExistence(ArrayList<InforTax> taxes, int taxPercantage) {
+        for (InforTax tax : taxes) {
+            if (tax.taxPercentage == taxPercantage) {
+                return tax;
+            }
+        }
+        return null;
+    }
+
     public Tender checkTenderExistence(ArrayList<Tender> tenders, String tenderName, String location, float amount) {
         for (Tender tender : tenders) {
             if ((tender.getCostCenter().locationName.equals("General") || tender.getCostCenter().locationName.equals(location))

@@ -5,14 +5,11 @@ import com.google.i18n.phonenumbers.Phonenumber;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
 import com.sun.supplierpoc.models.aggregtor.*;
-import com.sun.supplierpoc.models.aggregtor.TalabatRest.Fee;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.Discount;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Item;
-import com.sun.supplierpoc.models.aggregtor.TalabatRest.TalabatAggregatorOrder;
-import com.sun.supplierpoc.models.aggregtor.login.Token;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.SimphonyAccount;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
@@ -27,7 +24,6 @@ import org.springframework.stereotype.Service;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Modifier;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -150,6 +146,7 @@ public class AggregatorIntegratorService {
                                                        GeneralSettings generalSettings) {
 
         FoodicsOrder foodicsOrder = new FoodicsOrder();
+        AggregatorConfiguration aggregatorConfiguration = generalSettings.getAggregatorConfiguration();
 
         try {
             // Order Type 3 ==> Delivery
@@ -194,12 +191,24 @@ public class AggregatorIntegratorService {
                 foodicsProductObject = new FoodicsProductObject();
 
                 // Item information
-                productsMapping = generalSettings.getTalabatConfiguration().getProductsMappings().stream().
+                productsMapping = aggregatorConfiguration.getProductsMappings().stream().
                         filter(tempProduct -> tempProduct.getTalabatProductId().equals(item.getProductId()))
                         .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
-                if (productsMapping != null)
-                    foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
+                if (productsMapping != null) {
+                    if(productsMapping.getModifiers().size() == 0)
+                        foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
+                    else {
+                        // Find Foodics Id in case of combination
+                        for (ModifierMapping modifier : productsMapping.getModifiers()) {
+                            if(item.checkModifierExistence(item.getModifiers(), modifier.getTalabatProductId())){
+                                foodicsProductObject.setProduct_id(modifier.getFoodicsProductId());
+
+                                // Remove this modifiers
+                            }
+                        }
+                    }
+                }
                 else
                     foodicsProductObject.setProduct_id("9597379c-a45c-4c9c-963b-27d383e34085");
 

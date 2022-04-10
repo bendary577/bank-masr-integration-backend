@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.aggregtor.TalabatRest;
 
+import com.sun.supplierpoc.models.aggregtor.ModifierMapping;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,5 +150,13 @@ public class Item {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public boolean checkModifierExistence(ArrayList<Modifier> modifiers, String modifierTalabatId){
+        for (Modifier modifierMapping : modifiers) {
+            if(modifierMapping.getProductId().equals(modifierTalabatId))
+                return true;
+        }
+        return false;
     }
 }

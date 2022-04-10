@@ -16,7 +16,6 @@ import com.sun.supplierpoc.repositories.applications.ProductRepository;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -280,7 +279,7 @@ public class TalabatIntegratorService {
                 product.setType("Product");
 
                 // Check if it already exist update it otherwise add it as new
-                if(!configuration.checkProductMappingExistance(productsMappings, product.getTalabatProductId()))
+                if(!configuration.checkProductMappingExistence(productsMappings, product.getTalabatProductId()))
                     productsMappings.add(product);
             }
         }

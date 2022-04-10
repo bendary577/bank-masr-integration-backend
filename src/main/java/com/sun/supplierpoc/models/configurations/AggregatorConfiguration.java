@@ -86,9 +86,17 @@ public class AggregatorConfiguration {
         this.modifierMappings = modifierMappings;
     }
 
-    public boolean checkProductMappingExistance(ArrayList<ProductsMapping> productsMappings, String productTalabatId){
+    public boolean checkProductMappingExistence(ArrayList<ProductsMapping> productsMappings, String productTalabatId){
         for (ProductsMapping product : productsMappings) {
             if(product.getTalabatProductId().equals(productTalabatId))
+                return true;
+        }
+        return false;
+    }
+
+    public boolean checkModifierExistence(ArrayList<ModifierMapping> modifierMappings, String modifierTalabatId){
+        for (ModifierMapping modifierMapping : modifierMappings) {
+            if(modifierMapping.getTalabatProductId().equals(modifierTalabatId))
                 return true;
         }
         return false;

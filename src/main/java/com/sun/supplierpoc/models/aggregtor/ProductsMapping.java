@@ -1,10 +1,13 @@
 package com.sun.supplierpoc.models.aggregtor;
 
+import java.util.ArrayList;
+
 public class ProductsMapping {
 
     private String name;
     private String foodIcsProductId;
     private String talabatProductId;
+    private ArrayList<ModifierMapping> modifiers = new ArrayList<>();
     private String type;
 
     public String getName() {
@@ -29,6 +32,14 @@ public class ProductsMapping {
 
     public void setTalabatProductId(String talabatProductId) {
         this.talabatProductId = talabatProductId;
+    }
+
+    public ArrayList<ModifierMapping> getModifiers() {
+        return modifiers;
+    }
+
+    public void setModifiers(ArrayList<ModifierMapping> modifiers) {
+        this.modifiers = modifiers;
     }
 
     public String getType() {

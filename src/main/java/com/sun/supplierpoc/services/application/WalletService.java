@@ -249,14 +249,17 @@ public class WalletService {
 
                     if(fromDate.equals("")){
                         fromDate = dateFormat.format(new Date());
-                    }else if(toDate.equals("")){
+                    }
+                    if(toDate.equals("")){
                         toDate = dateFormat.format(new Date());
                     }
                     Date start = dateFormat.parse(fromDate);
                     Date end =  dateFormat.parse(toDate);
 
-                    String walletDateString = walletHistory.getDate().toString().substring(0,10);
-                    Date walletHistoryDate = new SimpleDateFormat("yyyy-MM-dd").parse(walletDateString);
+                    String walletDateString = walletHistory.getDate().toString();
+                    Date date = new Date(walletDateString);
+                    String walletHistoryDateString = dateFormat.format(date);
+                    Date walletHistoryDate = dateFormat.parse(walletHistoryDateString);
 
                     if (walletHistoryDate.compareTo(start) < 0) {
                         System.out.println("walletHistoryDate is before start");

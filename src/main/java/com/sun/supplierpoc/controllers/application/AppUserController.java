@@ -15,6 +15,7 @@ import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.pdfExporters.QRCodePDFGenerator;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
+import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.*;
@@ -64,6 +65,9 @@ public class AppUserController {
     ActivityService activityService;
     @Autowired
     QRCodePDFGenerator qrCodePDFGenerator;
+
+    @Autowired
+    UserRepo userRepository;
 
     private final Conversions conversions = new Conversions();
     ///////////////////////////////////////////// Reward Points Program////////////////////////////////////////////////
@@ -778,16 +782,15 @@ public class AppUserController {
         try{
             //validate email
             if(!EmailValidator.getInstance().isValid(email)){
-                response.put("message", "please enter a valid mail formet.");
+                response.put("message", "please enter a valid mail format.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             //get email from db
-//            Optional<ApplicationUser> applicationUser = userRepo.findById(email);
-            if (true) {
-//                ApplicationUser appUser = applicationUser.get();
+           Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
+            if (user != null) {
                 try {
-                    if (emailService.sendUpdatePasswordMail(email)){
-                        response.put("message", "Mail send successfully.");
+                    if (emailService.sendResetPasswordMail(user.get())){
+                        response.put("message", "Reset password mail sent successfully.");
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {
                         response.put("message", "Invalid user email.");
@@ -795,6 +798,7 @@ public class AppUserController {
                     }
                 } catch (Exception e) {
                     LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                    e.printStackTrace();
                     response.put("message", "Invalid user email.");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                 }
@@ -804,21 +808,43 @@ public class AppUserController {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            response.put("message", "something went wrong");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    @RequestMapping("/newPassword")
+    @RequestMapping("/resetPassword")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public Account forgetPasswordNewPassword(Principal principal){
+    public ResponseEntity resetPassword(@RequestBody String password, @RequestParam String id){
+        HashMap response = new HashMap();
         try{
-            User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-            Optional<Account> account = accountRepo.findByIdAndDeleted(user.getAccountId(), false);
-            return account.get();
+            //get email from db
+            Optional<User> user = userRepository.findById(id);
+            if (user != null) {
+                try {
+                    user.get().setPassword(password);
+                    if (emailService.sendPasswordUpdatedMail(user.get())){
+                        response.put("message", "Password Updated mail sent successfully.");
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        response.put("message", "Invalid user email.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
+                } catch (Exception e) {
+                    LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
+                    e.printStackTrace();
+                    response.put("message", "Invalid user email.");
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                }
+            } else {
+                response.put("message", "User not found.");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return new Account();
+            response.put("message", "something went wrong");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 }

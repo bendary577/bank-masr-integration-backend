@@ -416,41 +416,33 @@ public class SendEmailService {
         }
     }
 
-    public boolean sendUpdatePasswordMail(String mail)  throws MailException {
+    public boolean sendResetPasswordMail(User user)  throws MailException {
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
         try {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             try {
-                messageHelper.setFrom("mohamed bendary", "mbendary@577");
+//                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
+                messageHelper.setFrom("OracleHospitallity", "mbendary@577");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
 
             messageHelper.setSentDate(new Date());
-            messageHelper.setTo(mail);
+            messageHelper.setTo(user.getEmail());
 
-            String updatePasswordLink = "http://192.168.56.1:8080/resyncModule/" ;
+            String updatePasswordLink = "http://localhost:4200/resetPassword/"+user.getId();
 
             String mailSubject = "";
-            String mailContent ="";
-            mailSubject = "";
-            mailContent =
+            String mailContent =
                     "    <div style='margin-left: 6%; width: 85%;'>" +
                             "        <p style='text-align: left; font-size: 17px;'>" +
                             "            Dear" +
                             "        </p>" +
                             "            <br />" +
                             "            <span style='font-size: 15px;'>" +
-                            "                you can click below to reset your current account password then get back to your work" +
+                            "                It seems like you forgot your password. If this is true, click the link below to reset your password." +
 
-                            "                <br />" +
-                            "                <br />" +
-                            "                This data for:" +
-                            "                <br />" +
-                            "                <br />" +
-                            "                You can resend data one more time by clicking the try again button and please check the middleware configuration and MC and EBS connection first." +
-                            "            </span>" +
                             "                <br />" +
                             "                <br />" +
                             "<a " +
@@ -458,7 +450,53 @@ public class SendEmailService {
                             "border: none;padding: 15px 32px;text-align: center;" +
                             "text-decoration: none;display: inline-block;" +
                             "font-size: 16px; color:black\"" +
-                            "href='" + updatePasswordLink + "'>Try Again</a>" +
+                            "href='" + updatePasswordLink + "'>Reset My Password</a>" +
+                            "            <br />" +
+                            "            <br />" +
+
+                            "            <span style='font-size: 14px;'>" +
+                            "                For contact..." +
+                            "                <br />" +
+                            "                Send us mail to no-reply@anyware.software" +
+                            "                <br />" +
+                            "            </span>" +
+
+                            "    </div>";
+
+            messageHelper.setSubject(mailSubject);
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    public boolean sendPasswordUpdatedMail(User user)  throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            try {
+//                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
+                messageHelper.setFrom("OracleHospitallity", "mbendary@577");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(user.getEmail());
+
+            String mailSubject = "";
+            String mailContent =
+                    "    <div style='margin-left: 6%; width: 85%;'>" +
+                            "        <p style='text-align: left; font-size: 17px;'>" +
+                            "            Dear" +
+                            "        </p>" +
+                            "            <br />" +
+                            "            <span style='font-size: 15px;'>" +
+                            "                Your password was updated successfully" +
+
                             "            <br />" +
                             "            <br />" +
 

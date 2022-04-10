@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.services;
 
+import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
 import com.sun.supplierpoc.models.SyncJobType;
@@ -423,25 +424,27 @@ public class SendEmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             try {
 //                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
-                messageHelper.setFrom("OracleHospitallity", "mbendary@577");
+                messageHelper.setFrom("OracleHospitallity", "OracleHospitallity");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
 
+            messageHelper.setSubject("Reset My Password");
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(user.getEmail());
 
-            String updatePasswordLink = "http://localhost:4200/resetPassword/"+user.getId();
+            String updatePasswordLink = Constants.DEVELOPMENT_LINK + "/resetPassword/";
 
-            String mailSubject = "";
             String mailContent =
                     "    <div style='margin-left: 6%; width: 85%;'>" +
                             "        <p style='text-align: left; font-size: 17px;'>" +
-                            "            Dear" +
+                            "            Dear " + user.getName() + "," +
                             "        </p>" +
                             "            <br />" +
                             "            <span style='font-size: 15px;'>" +
-                            "                It seems like you forgot your password. If this is true, click the link below to reset your password." +
+                            "                Someone - hopefully you - requested a password reset on this account, if it was'nt you," +
+                            "                you can safely ignore this email and your password will remain the same." +
+                            "                If it was you, click the link below to reset your password." +
 
                             "                <br />" +
                             "                <br />" +
@@ -463,7 +466,6 @@ public class SendEmailService {
 
                             "    </div>";
 
-            messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
             mailSender.send(mailMessage);
             return true;
@@ -479,11 +481,11 @@ public class SendEmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             try {
 //                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
-                messageHelper.setFrom("OracleHospitallity", "mbendary@577");
+                messageHelper.setFrom("OracleHospitallity", "OracleHospitallity");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
-
+            messageHelper.setSubject("Password Updated Successfully");
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(user.getEmail());
 
@@ -491,11 +493,11 @@ public class SendEmailService {
             String mailContent =
                     "    <div style='margin-left: 6%; width: 85%;'>" +
                             "        <p style='text-align: left; font-size: 17px;'>" +
-                            "            Dear" +
+                            "           Dear " + user.getName() + "," +
                             "        </p>" +
                             "            <br />" +
                             "            <span style='font-size: 15px;'>" +
-                            "                Your password was updated successfully" +
+                            "               We would like to inform you that the password for " + user.getName() + " was updated successfully" +
 
                             "            <br />" +
                             "            <br />" +
@@ -509,7 +511,6 @@ public class SendEmailService {
 
                             "    </div>";
 
-            messageHelper.setSubject(mailSubject);
             messageHelper.setText(mailContent, true);
             mailSender.send(mailMessage);
             return true;

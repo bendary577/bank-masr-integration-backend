@@ -177,8 +177,7 @@ public class WalletController {
             if(accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-//                if (roleService.hasRole(authedUser, Roles.UNDO_WALLET_ACTION)) {
-                if (true) {
+                if (roleService.hasRole(authedUser, Roles.GET_WALLET_TOTAL_REMAINING)) {
 
                     response = walletService.getWalletsRemainingTotal(account, fromDate, toDate);
 

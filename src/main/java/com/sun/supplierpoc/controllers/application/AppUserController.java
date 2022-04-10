@@ -376,15 +376,20 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity getApplicationUsers(Principal principal) {
-        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
-        if (accountOptional.isPresent()) {
-            Account account = accountOptional.get();
-            ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountId(account.getId());
+        try{
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+                ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountId(account.getId());
 
-            return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
+                return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
+            }
+            return new ResponseEntity(HttpStatus.FORBIDDEN);
+        }catch(Exception e){
+            e.printStackTrace();
+            return new ResponseEntity(HttpStatus.FORBIDDEN);
         }
-        return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
     @RequestMapping("/applicationUsers/{id}")
@@ -789,8 +794,16 @@ public class AppUserController {
            Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
             if (user != null) {
                 try {
+                    if(!user.get().isEnabled()){
+                        response.put("message", "User is not activated.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }else if(user.get().isDeleted()){
+                        response.put("message", "User account is deleted.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
                     if (emailService.sendResetPasswordMail(user.get())){
-                        response.put("message", "Reset password mail sent successfully.");
+                        response.put("message", "Please check your mail, we have sent you a password reset link");
+                        response.put("user_id", user.get().getId());
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {
                         response.put("message", "Invalid user email.");
@@ -821,9 +834,17 @@ public class AppUserController {
         try{
             //get email from db
             Optional<User> user = userRepository.findById(id);
-            if (user != null) {
+            if (user != null){
                 try {
+                    if(!user.get().isEnabled()){
+                        response.put("message", "User is not activated.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }else if(user.get().isDeleted()){
+                        response.put("message", "User account is deleted.");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+                    }
                     user.get().setPassword(password);
+                    userRepository.save(user.get());
                     if (emailService.sendPasswordUpdatedMail(user.get())){
                         response.put("message", "Password Updated mail sent successfully.");
                         return ResponseEntity.status(HttpStatus.OK).body(response);

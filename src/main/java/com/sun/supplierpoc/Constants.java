@@ -288,5 +288,11 @@ public class Constants {
     public static final String ZIP_PATH = "src/main/resources/exported_files.zip";
     public static final String BASE_ZIP_PATH = "src/main/resources/";
 
+
+    public static final String DEVELOPMENT_LINK = "http://localhost:4200/#";
+    public static final String PRODUCTION_LINK = "34.122.155.73/#";
+
+
+
     public Constants() {}
 }

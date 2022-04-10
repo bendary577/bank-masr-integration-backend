@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models;
 
+import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.applications.BirthdayGift;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.applications.SimphonyQuota;
@@ -7,14 +8,12 @@ import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
-import com.sun.supplierpoc.models.talabat.BranchMapping;
-import com.sun.supplierpoc.models.talabat.DiscountMapping;
-import com.sun.supplierpoc.models.talabat.ProductsMapping;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class GeneralSettings {
 
@@ -32,6 +31,7 @@ public class GeneralSettings {
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
     private ArrayList<Supplier> suppliers = new ArrayList<>();
 
+    /* Opera Configurations */
     private ArrayList<BookingType> cancelReasons = new ArrayList<>();
     private ArrayList<BookingType> paymentTypes = new ArrayList<>();
     private ArrayList<BookingType> roomTypes = new ArrayList<>();
@@ -44,13 +44,16 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
-    private TalabatConfiguration talabatConfiguration = new TalabatConfiguration();
+
+    /* Delivery Aggregators */
+    private AggregatorConfiguration aggregatorConfiguration = new AggregatorConfiguration();
+    private List<Aggregator> aggregators = new ArrayList<Aggregator>();
 
     private ArrayList<OrderType> orderTypes = new ArrayList<>();
     private SimphonyQuota simphonyQuota;
     private String mailSubj;
 
-    /* Reword Points */
+    /* Reward Points */
     private float pointReward = 0; // percentage
     private float pointsRedemption = 0; // 1$ = ? points
     private BirthdayGift birthdayGift = new BirthdayGift();
@@ -323,12 +326,12 @@ public class GeneralSettings {
         this.birthdayGift = birthdayGift;
     }
 
-    public TalabatConfiguration getTalabatConfiguration() {
-        return talabatConfiguration;
+    public AggregatorConfiguration getTalabatConfiguration() {
+        return aggregatorConfiguration;
     }
 
-    public void setTalabatConfiguration(TalabatConfiguration talabatConfiguration) {
-        this.talabatConfiguration = talabatConfiguration;
+    public void setTalabatConfiguration(AggregatorConfiguration aggregatorConfiguration) {
+        this.aggregatorConfiguration = aggregatorConfiguration;
     }
 
     public ArrayList<OrderType> getOrderTypes() {
@@ -337,6 +340,22 @@ public class GeneralSettings {
 
     public void setOrderTypes(ArrayList<OrderType> orderTypes) {
         this.orderTypes = orderTypes;
+    }
+
+    public AggregatorConfiguration getAggregatorConfiguration() {
+        return aggregatorConfiguration;
+    }
+
+    public void setAggregatorConfiguration(AggregatorConfiguration aggregatorConfiguration) {
+        this.aggregatorConfiguration = aggregatorConfiguration;
+    }
+
+    public List<Aggregator> getAggregators() {
+        return aggregators;
+    }
+
+    public void setAggregators(List<Aggregator> aggregators) {
+        this.aggregators = aggregators;
     }
 }
 

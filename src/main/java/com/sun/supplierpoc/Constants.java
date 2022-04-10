@@ -231,21 +231,25 @@ public class Constants {
     public static String MICROS_V2_LINK  = "https://mte4-ohra-idm.oracleindustry.com/oidc-ui/";
     public static String MICROS_REPORT_BASE_LINK = "https://mte4-ohra.oracleindustry.com/portal/";
     public static String MICROS_INVENTORY_BASE_LINK = "https://mte4-ohra-ohim.oracleindustry.com";
-    public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=4";
+    public static String MICROS_SALES_SUMMARY  = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=20";
     public static String MICROS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports";
 
-    // SALES LINKS
-    // Reports >> Tenders Media >> Payments bye Tender Types
+    /* SALES LINKS */
+    // Reports >> Tenders Media >> Payments by Tender Types
     public static String MICROS_TENDERS_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=50";
-   // Approved Invoices
-   public static String MICROS_APPROVED_INVOICES = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
-
+    // Reports >> Service Charge
+    public static String MICROS_SERVICE_CHARGE_REPORT = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=40";
 
     // Reports >> Taxes >> Daily Taxes by Tax Type
-    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
+
+    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=60#";
+//    public static String MICROS_TAXES_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=61";
 
     // Reports >> Discount >> Daily Discounts
     public static String MICROS_DISCOUNT_REPORTS = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100046";
+
+    // Approved Invoices
+    public static String MICROS_APPROVED_INVOICES = MICROS_INVENTORY_BASE_LINK + "/InventoryManagement/Purchase/Invoicing/IvcOverviewView.aspx?type=1";
 
     // CONSUMPTION LINKS
     // My Reports >> Inventory Cost of Sales
@@ -265,7 +269,7 @@ public class Constants {
     // CONSUMPTION LINKS >> Inventory Cost of Sales
     public static String MICROS_CONSUMPTION_REPORT_LINK = MICROS_REPORT_BASE_LINK + "?root=reports&reports=myReports&myReports=reportGroup&reportGroup=100067";
 
-    ///////////////////////////////////////// Business Date ////////////////////////////////////////////////////////////
+    ///////////////////////////////////////// Business Date /////////////////////////////////////////////////////////////
     public static String USER_DEFINED = "UserDefined";
     public static String MOST_RECENT = "Most Recent";
     public static String PAST_7_DAYES = "Past 7 Days";

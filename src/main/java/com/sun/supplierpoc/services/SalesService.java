@@ -514,14 +514,18 @@ public class SalesService {
                                 , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
 
                         if(taxIncluded)
-                            discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts_vat")).getText().strip());
+                            discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
                         else
                             discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discounts")).getText().strip());
 
                         if (discountAmount != 0){
                             Discount groupDiscount = new Discount();
 
-                            groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+                            if(!revenueCenter.getRevenueCenterReference().equals(""))
+                                groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenterReference());
+                            else
+                                groupDiscount.setDiscount(majorGroup.getMajorGroup() + " Discount " + revenueCenter.getRevenueCenter());
+
                             if(majorGroupDiscount){
                                 groupDiscount.setAccount(majorGroup.getDiscountAccount());
                             }else if (revenueCenterDiscount){
@@ -573,7 +577,7 @@ public class SalesService {
                                     , location, MGRevenueCenter, null, familyGroup.departmentCode);
 
                             if(taxIncluded)
-                                discountAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("discounts_vat")).getText().strip());
+                                discountAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("discounts")).getText().strip());
                             else
                                 discountAmount = conversions.convertStringToFloat(FGCols.get(columns.indexOf("item_discounts")).getText().strip());
 
@@ -623,10 +627,14 @@ public class SalesService {
     private float getMajorGroupAmount(boolean taxIncluded, String grossDiscountSales, ArrayList<String> columns, List<WebElement> cols) {
         float majorGroupAmount;
         if(taxIncluded){
+            /* Need to sync sales amount after appling the discount amount */
             if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
                 majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_after_disc.")).getText().strip());
             }else {
-                majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_before_disc.")).getText().strip());
+                /* Need to sync sales amount before appling the discount amount */
+//                majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_before_disc.")).getText().strip());
+                majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("net_vat_after_disc.")).getText().strip()) -
+                        conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
             }
         }else {
             if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)){
@@ -893,6 +901,7 @@ public class SalesService {
             float totalMajorGroupNet = 0;
 
             // Save majorGroup {Credit}
+            float majorGroupGrossTotal;
             ArrayList<Journal> majorGroupsGross = journalBatch.getSalesMajorGroupGross();
             for (Journal majorGroupJournal : majorGroupsGross) {
                 if (majorGroupJournal.getTotalCost() == 0)
@@ -900,7 +909,9 @@ public class SalesService {
 
                 saveMajorGroup(journalBatch, transactionDate, configuration, syncJob, majorGroupJournal);
 
-                float majorGroupGrossTotal = conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost());
+                majorGroupGrossTotal = conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost());
+//                majorGroupGrossTotal = Math.abs(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost()));
+//                majorGroupGrossTotal = majorGroupJournal.getTotalCost();
                 totalMajorGroupNet += majorGroupGrossTotal;
             }
 
@@ -1093,6 +1104,7 @@ public class SalesService {
 
             float totalDr = totalTender;
             float totalCr;
+            // sales with discount amount
             if(configuration.salesConfiguration.grossDiscountSales.equals(Constants.SALES_GROSS)){
                 totalCr = totalMajorGroupNet + totalDiscount + totalTax + totalServiceCharge;
             }else
@@ -1420,6 +1432,15 @@ public class SalesService {
         majorGroupData.put("accountingPeriod", transactionDate.substring(2,6));
         majorGroupData.put("transactionDate", transactionDate);
 
+//        majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
+//        // Major Group account
+//        if(majorGroupJournal.getMajorGroup().getRevenueCenters().size() > 0
+//                && !majorGroupJournal.getRevenueCenter().getAccountCode().equals("")){
+//            majorGroupData.put("inventoryAccount", majorGroupJournal.getRevenueCenter().getAccountCode());
+//        }else {
+//            majorGroupData.put("inventoryAccount", majorGroupJournal.getMajorGroup().getAccount());
+//        }
+
         if(majorGroupJournal.getTotalCost() > 0){
             majorGroupData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(majorGroupJournal.getTotalCost())));
             // Major Group account
@@ -1463,8 +1484,12 @@ public class SalesService {
             syncJobDataService.prepareAnalysis(majorGroupData, configuration, majorGroupJournal.getCostCenter(), null, null);
         }
 
-        if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals(""))
-            description += majorGroupJournal.getRevenueCenter().getRevenueCenter();
+        if(!majorGroupJournal.getRevenueCenter().getRevenueCenter().equals("")){
+            if(!majorGroupJournal.getRevenueCenter().getRevenueCenterReference().equals(""))
+                description += majorGroupJournal.getRevenueCenter().getRevenueCenterReference();
+            else
+                description += majorGroupJournal.getRevenueCenter().getRevenueCenter();
+        }
 
         if (description.length() > 50) {
             description = description.substring(0, 50);

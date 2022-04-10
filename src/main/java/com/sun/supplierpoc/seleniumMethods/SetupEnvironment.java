@@ -84,11 +84,7 @@ public class SetupEnvironment {
         try {
             ArrayList<AccountCredential> accountCredentials = account.getAccountCredentials();
             AccountCredential hospitalityOHRACredentials = account.getAccountCredentialByAccount("HospitalityOHRA", accountCredentials);
-
-            System.out.println("First Comment");
             driver.get(url);
-            System.out.println("Second Comment");
-
             try {
                 Alert al = driver.switchTo().alert();
                 al.accept();
@@ -468,10 +464,15 @@ public class SetupEnvironment {
 
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
+            if(fromDateElements.size() > 0){
+                fromDateElements.get(0).click();
 
-            fromDateElements.get(0).click();
+                response.setStatus(true);
+            }else {
+                response.setMessage(Constants.INVALID_BUSINESS_DATE);
+                response.setStatus(false);
+            }
 
-            response.setStatus(true);
             return response;
         } catch (ParseException e) {
             response.setMessage(Constants.INVALID_BUSINESS_DATE);

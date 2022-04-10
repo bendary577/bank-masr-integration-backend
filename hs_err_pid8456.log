@@ -142,32 +142,32 @@ dbghelp: loaded successfully - version: 4.0.5 - missing functions: none
 symbol engine: initialized successfully - sym options: 0x614 - pdb path: .;C:\Users\p&p\.jdks\azul-13.0.7\bin;C:\WINDOWS\SYSTEM32;C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.19041.1110_none_60b5254171f9507e;C:\Users\p&p\.jdks\azul-13.0.7\bin\server
 
 VM Arguments:
-jvm_args: -agentlib:jdwp=transport=dt_socket,address=127.0.0.1:59151,suspend=y,server=n -javaagent:C:\Users\p&p\AppData\Local\JetBrains\IdeaIC2020.3\captureAgent\debugger-agent.jar -Dfile.encoding=UTF-8 
+jvm_args: -agentlib:jdwp=transport=dt_socket,address=127.0.0.1:59151,suspend=y,server=n -javaagent:C:\Users\p&p\AppData\Local\JetBrains\IdeaIC2020.3\captureAgent\debugger-agent.jar -Dfile.encoding=UTF-8
 java_command: com.sun.supplierpoc.SupplierPocApplication
 java_class_path (initial): D:\infor-sun-poc\target\classes;D:\infor-sun-poc;C:\Users\p&p\.m2\repository\org\springframework\boot\spring-boot-starter-web\2.2.4.RELEASE\spring-boot-starter-web-2.2.4.RELEASE.jar;C:\Users\p&p\.m2\repository\org\springframework\boot\spring-boot-starter-json\2.2.4.RELEASE\spring-boot-starter-json-2.2.4.RELEASE.jar;C:\Users\p&p\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jdk8\2.10.2\jackson-datatype-jdk8-2.10.2.jar;C:\Users\p&p\.m2\repository\com\fasterxml\jackson\datatype\jackson-datatype-jsr310\2.10.2\jackson-datatype-jsr310-2.10.2.jar;C:\Users\p&p\.m2\repository\com\fasterxml\jackson\module\jackson-module-parameter-names\2.10.2\jackson-module-parameter-names-2.10.2.jar;C:\Users\p&p\.m2\repository\org\springframework\boot\spring-boot-starter-tomcat\2.2.4.RELEASE\spring-boot-starter-tomcat-2.2.4.RELEASE.jar;C:\Users\p&p\.m2\repository\org\apache\tomcat\embed\tomcat-embed-core\9.0.30\tomcat-embed-core-9.0.30.jar;C:\Users\p&p\.m2\repository\org\apache\tomcat\embed\tomcat-embed-el\9.0.30\tomcat-embed-el-9.0.30.jar;C:\Users\p&p\.m2\repository\org\apache\tomcat\embed\tomcat-embed-websocket\9.0.30\tomcat-embed-websocket-9.0.30.jar;C:\Users\p&p\.m2\repository\org\springframework\boot\spring-boot-starter-validation\2.2.4.RELEASE\spring-boot-starter-validation-2.2.4.RELEASE.jar;C:\Users\p&p\.m2\repository\jakarta\validation\jakarta.validation-api\2.0.2\jakarta.validation-api-2.0.2.jar;C:\Users\p&p\.m2\repository\org\hibernate\validator\hibernate-validator\6.0.18.Final\hibernate-validator-6.0.18.Final.jar;C:\Users\p&p\.m2\repository\org\jboss\logging\jboss-logging\3.4.1.Final\jboss-logging-3.4.1.Final.jar;C:\Users\p&p\.m2\repository\com\fasterxml\classmate\1.5.1\classmate-1.5.1.jar;C:\Users\p&p\.m2\repository\org\springframework\spring-web\5.2.3.RELEASE\spring-web-5.2.3.RELEASE.jar;C:\Users\p&p\.m2\repository\org\springframework\spring-webmvc\5.2.3.RELEASE\spring-webmvc-5.2.3.RELEASE.jar;C:\Users\p&p\.m2\repository\org\springfr
 Launcher Type: SUN_STANDARD
 
 [Global flags]
-     intx CICompilerCount                          = 4                                         {product} {ergonomic}
-     uint ConcGCThreads                            = 3                                         {product} {ergonomic}
-     uint G1ConcRefinementThreads                  = 10                                        {product} {ergonomic}
-   size_t G1HeapRegionSize                         = 2097152                                   {product} {ergonomic}
-    uintx GCDrainStackTargetSize                   = 64                                        {product} {ergonomic}
-   size_t InitialHeapSize                          = 536870912                                 {product} {ergonomic}
-   size_t MarkStackSize                            = 4194304                                   {product} {ergonomic}
-   size_t MaxHeapSize                              = 8571060224                                {product} {ergonomic}
-   size_t MinHeapDeltaBytes                        = 2097152                                   {product} {ergonomic}
-   size_t MinHeapSize                              = 8388608                                   {product} {ergonomic}
-    uintx NonNMethodCodeHeapSize                   = 5839372                                {pd product} {ergonomic}
-    uintx NonProfiledCodeHeapSize                  = 122909434                              {pd product} {ergonomic}
-    uintx ProfiledCodeHeapSize                     = 122909434                              {pd product} {ergonomic}
-    uintx ReservedCodeCacheSize                    = 251658240                              {pd product} {ergonomic}
-     bool SegmentedCodeCache                       = true                                      {product} {ergonomic}
+     intx CICompilerCount                          = 4                                         {foodicsProductObject} {ergonomic}
+     uint ConcGCThreads                            = 3                                         {foodicsProductObject} {ergonomic}
+     uint G1ConcRefinementThreads                  = 10                                        {foodicsProductObject} {ergonomic}
+   size_t G1HeapRegionSize                         = 2097152                                   {foodicsProductObject} {ergonomic}
+    uintx GCDrainStackTargetSize                   = 64                                        {foodicsProductObject} {ergonomic}
+   size_t InitialHeapSize                          = 536870912                                 {foodicsProductObject} {ergonomic}
+   size_t MarkStackSize                            = 4194304                                   {foodicsProductObject} {ergonomic}
+   size_t MaxHeapSize                              = 8571060224                                {foodicsProductObject} {ergonomic}
+   size_t MinHeapDeltaBytes                        = 2097152                                   {foodicsProductObject} {ergonomic}
+   size_t MinHeapSize                              = 8388608                                   {foodicsProductObject} {ergonomic}
+    uintx NonNMethodCodeHeapSize                   = 5839372                                {pd foodicsProductObject} {ergonomic}
+    uintx NonProfiledCodeHeapSize                  = 122909434                              {pd foodicsProductObject} {ergonomic}
+    uintx ProfiledCodeHeapSize                     = 122909434                              {pd foodicsProductObject} {ergonomic}
+    uintx ReservedCodeCacheSize                    = 251658240                              {pd foodicsProductObject} {ergonomic}
+     bool SegmentedCodeCache                       = true                                      {foodicsProductObject} {ergonomic}
    size_t SoftMaxHeapSize                          = 8571060224                             {manageable} {ergonomic}
      bool UseCompressedClassPointers               = true                                 {lp64_product} {ergonomic}
      bool UseCompressedOops                        = true                                 {lp64_product} {ergonomic}
-     bool UseG1GC                                  = true                                      {product} {ergonomic}
-     bool UseLargePagesIndividualAllocation        = false                                  {pd product} {ergonomic}
+     bool UseG1GC                                  = true                                      {foodicsProductObject} {ergonomic}
+     bool UseLargePagesIndividualAllocation        = false                                  {pd foodicsProductObject} {ergonomic}
 
 Logging:
 Log output configuration:
@@ -176,7 +176,7 @@ Log output configuration:
 
 Environment Variables:
 JAVA_HOME=C:\Program Files\Java\jdk1.8.0_271
-PATH=D:\OracleClient\product\11.2.0\client_1\bin;C:\Program Files (x86)\VMware\VMware Workstation\bin\;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\AMD\ATI.ACE\Core-Static;C:\Program Files (x86)\ATI Technologies\ATI.ACE\Core-Static;C:\Program Files\Java\jdk1.8.0_271\bin;C:\Program Files\Git\cmd;C:\Users\p&p\.m2\wrapper\dists\apache-maven-3.6.3-bin\1iopthnavndlasol9gbrbg6bf2\apache-maven-3.6.3\bin;C:\Program Files\nodejs\;D:\gradle-6.3-all\gradle-6.3\bin;C:\Users\p&p\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Java\jdk1.8.0_271\bin;C:\Users\p&p\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\p&p\.m2\wrapper\dists\apache-maven-3.6.3-bin\1iopthnavndlasol9gbrbg6bf2\apache-maven-3.6.3\bin;C:\Users\p&p\AppData\Roaming\npm;D:\gradle-6.3-all\gradle-6.3\bin;
+PATH=D:\OracleClient\foodicsProductObject\11.2.0\client_1\bin;C:\Program Files (x86)\VMware\VMware Workstation\bin\;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\AMD\ATI.ACE\Core-Static;C:\Program Files (x86)\ATI Technologies\ATI.ACE\Core-Static;C:\Program Files\Java\jdk1.8.0_271\bin;C:\Program Files\Git\cmd;C:\Users\p&p\.m2\wrapper\dists\apache-maven-3.6.3-bin\1iopthnavndlasol9gbrbg6bf2\apache-maven-3.6.3\bin;C:\Program Files\nodejs\;D:\gradle-6.3-all\gradle-6.3\bin;C:\Users\p&p\AppData\Local\Microsoft\WindowsApps;C:\Program Files\Java\jdk1.8.0_271\bin;C:\Users\p&p\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\p&p\.m2\wrapper\dists\apache-maven-3.6.3-bin\1iopthnavndlasol9gbrbg6bf2\apache-maven-3.6.3\bin;C:\Users\p&p\AppData\Roaming\npm;D:\gradle-6.3-all\gradle-6.3\bin;
 USERNAME=p&p
 OS=Windows_NT
 PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 45 Stepping 7, GenuineIntel

@@ -45,6 +45,7 @@ public class SalesApiService {
         String timePeriod = salesSyncJobType.getConfiguration().timePeriod;
         String fromDate = salesSyncJobType.getConfiguration().fromDate;
         String toDate = salesSyncJobType.getConfiguration().toDate;
+        boolean isTaxIncluded = salesSyncJobType.getConfiguration().salesAPIConfig.taxIncluded;
 
         WebDriver driver;
         try {
@@ -80,15 +81,16 @@ public class SalesApiService {
                 for (CostCenter costCenter : costCentersLocation) {
                     if (costCenter.checked) {
                         callSalesFunction(statistics, timePeriod, fromDate, toDate, costCenter,
-                                journalBatches, driver, endpoint, response, orderTypeChannels);
+                                journalBatches, driver, endpoint, response, orderTypeChannels, isTaxIncluded);
                         if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)) {
+                            driver.quit();
                             return response;
                         }
                     }
                 }
             } else {
                 callSalesFunction(statistics, timePeriod, fromDate, toDate, new CostCenter(),
-                        journalBatches, driver, endpoint, response, orderTypeChannels);
+                        journalBatches, driver, endpoint, response, orderTypeChannels, isTaxIncluded);
                 if (!response.isStatus()) {
                     return response;
                 }
@@ -112,7 +114,7 @@ public class SalesApiService {
 
     private void callSalesFunction(ArrayList<SalesAPIStatistics> salesAPIStatistics, String timePeriod, String fromDate, String toDate,
                                    CostCenter costCenter, ArrayList<JournalBatch> journalBatches, WebDriver driver, String endPoint,
-                                   Response response, List<OrderTypeChannels> orderTypeChannels) {
+                                   Response response, List<OrderTypeChannels> orderTypeChannels, boolean isTaxIncluded) {
 
         JournalBatch journalBatch = new JournalBatch();
 
@@ -120,7 +122,7 @@ public class SalesApiService {
         Response statisticsResponse = new Response();
         if (salesAPIStatistics.size() > 0) {
             statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, endPoint,
-                    salesAPIStatistics, driver, orderTypeChannels);
+                    salesAPIStatistics, driver, orderTypeChannels, isTaxIncluded);
             if (checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
         }
 
@@ -136,7 +138,8 @@ public class SalesApiService {
     }
 
     private Response getSalesStatistics(String businessDate, String fromDate, String toDate, CostCenter location, String endPoint,
-                                        ArrayList<SalesAPIStatistics> salesStatistics, WebDriver driver, List<OrderTypeChannels> tempOrderTypeChannels) {
+                                        ArrayList<SalesAPIStatistics> salesStatistics, WebDriver driver,
+                                        List<OrderTypeChannels> tempOrderTypeChannels, boolean isTaxIncluded) {
 
         Response response = new Response();
         SalesAPIStatistics salesAPIStatistics;
@@ -188,17 +191,32 @@ public class SalesApiService {
             ArrayList<String> statisticValues = setupEnvironment.getTableColumns(rows, false, 2);
             salesAPIStatistics.NoChecks = conversions.filterString(statisticValues.get(1));
 
-            statTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
-            rows = statTable.findElements(By.tagName("tr"));
+            if(isTaxIncluded){
+                /* getting sales net amount */
+                statTable = driver.findElement(By.xpath("/html/body/table"));
+                rows = statTable.findElements(By.tagName("tr"));
 
-            if (rows.size() < 1) {
-                response.setStatus(true);
-                response.setMessage("There is no statistics info in this location");
-                return response;
+                if (rows.size() < 1) {
+                    response.setStatus(true);
+                    response.setMessage("There is no statistics info in this location");
+                    return response;
+                }
+                statisticValues = setupEnvironment.getTableColumns(rows, false, 1);
+                salesAPIStatistics.NetSales = conversions.filterString(statisticValues.get(2));
+
+            }else{
+                /* getting sales gross amount*/
+                statTable = driver.findElement(By.xpath("/html/body/table/tbody/tr/td[1]/div[1]/table"));
+                rows = statTable.findElements(By.tagName("tr"));
+
+                if (rows.size() < 1) {
+                    response.setStatus(true);
+                    response.setMessage("There is no statistics info in this location");
+                    return response;
+                }
+                statisticValues = setupEnvironment.getTableColumns(rows, false, 5);
+                salesAPIStatistics.NetSales = conversions.filterString(statisticValues.get(2));
             }
-            statisticValues = setupEnvironment.getTableColumns(rows, false, 5);
-
-            salesAPIStatistics.NetSales = conversions.filterString(statisticValues.get(2));
 
             if (endPoint.equals("Daily")) {
                 statTable = driver.findElement(By.xpath("/html/body/div[6]/table"));
@@ -218,6 +236,9 @@ public class SalesApiService {
             List<OrderTypeChannels> orderTypeChannels = new ArrayList<>();
             tempOrderTypeChannels.stream().forEach(o -> orderTypeChannels.add(o.clone()));
 
+            double taxAmount = 0;
+            double netSales;
+            int checkPerType;
             for (int i = 2; i < rows.size(); i++) {
                 statisticValues = setupEnvironment.getTableColumns(rows, false, i);
                 String OrderType = conversions.filterString(statisticValues.get(columns.indexOf("order_type")));
@@ -240,11 +261,17 @@ public class SalesApiService {
                     orderTypeChannel = RepeatedOrderTypeChannels.get(0);
                 }
 
-                Double netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
-                int checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
+
+                netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
+                checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
                         get(columns.indexOf("checks"))));
 
-                orderTypeChannel.setNetSales(String.valueOf(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales));
+                if(isTaxIncluded){
+                    /* Subtract tax amount */
+                    netSales = (netSales * 100)/105;
+                }
+
+                orderTypeChannel.setNetSales(String.valueOf(conversions.roundUpDoubleTowDigits(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales)));
                 orderTypeChannel.setCheckCount(String.valueOf(Integer.parseInt(orderTypeChannel.getCheckCount()) +checkPerType));
 
             }

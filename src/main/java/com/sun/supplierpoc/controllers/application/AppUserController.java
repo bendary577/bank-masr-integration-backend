@@ -846,7 +846,7 @@ public class AppUserController {
                     user.get().setPassword(password);
                     userRepository.save(user.get());
                     if (emailService.sendPasswordUpdatedMail(user.get())){
-                        response.put("message", "Password Updated mail sent successfully.");
+                        response.put("message", "Your password has been updated successfully.");
                         response.put("status", 200);
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {

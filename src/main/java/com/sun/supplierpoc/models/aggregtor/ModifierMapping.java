@@ -2,8 +2,9 @@ package com.sun.supplierpoc.models.aggregtor;
 
 public class ModifierMapping {
     private String name;
-    private String foodicsProductId;
     private String talabatProductId;
+    private String talabatSecProductId;
+    private String foodicsProductId;
 
     public ModifierMapping() {
     }
@@ -30,5 +31,13 @@ public class ModifierMapping {
 
     public void setTalabatProductId(String talabatProductId) {
         this.talabatProductId = talabatProductId;
+    }
+
+    public String getTalabatSecProductId() {
+        return talabatSecProductId;
+    }
+
+    public void setTalabatSecProductId(String talabatSecProductId) {
+        this.talabatSecProductId = talabatSecProductId;
     }
 }

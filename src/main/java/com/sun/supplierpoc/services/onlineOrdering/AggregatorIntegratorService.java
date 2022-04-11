@@ -94,6 +94,8 @@ public class AggregatorIntegratorService {
                             order.setTalabatAdminOrder(talabatAdminOrder);
                             order.setAggregatorName(AggregatorConstants.TALABAT);
                             orderRepo.save(order);
+
+                            break; // to be removed
                         }
 
                         response.setMessage("Send Talabat Orders Successfully");
@@ -200,15 +202,43 @@ public class AggregatorIntegratorService {
                     }
                     // Product combination (Product + Extra) or (Product + Extra + Extra)
                     else {
-                        for (ModifierMapping modifier : productsMapping.getModifiers()) {
-                            Modifier itemModifier = item.checkModifierExistenceAndGet(item.getModifiers(), modifier.getTalabatProductId());
-                            if(itemModifier != null){
-                                foodicsProductObject.setProduct_id(modifier.getFoodicsProductId());
-                                foodicsProductObject.setUnit_price(itemModifier.getPrice());
+                        foodicsProductObject.setUnit_price(item.getPrice());
 
-                                // Remove this modifiers
-                                item.getModifiers().remove(itemModifier);
+                        ArrayList<ModifierMapping> firstFilteredModifiers = new ArrayList<>();
+                        ArrayList<ModifierMapping> newModifiers = new ArrayList<>();
+
+                        // Filter product modifiers based on first modifier
+                        for (ModifierMapping modifierMap : productsMapping.getModifiers()) {
+                            // check if first id exists in item's extras (modifiers)
+                            Modifier itemMod = item.modifiers.stream().filter(tempModifier -> tempModifier.getProductId().equals(modifierMap.getTalabatProductId()))
+                                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
+                            if(itemMod != null){
+                                firstFilteredModifiers.add(modifierMap);
+
+                                foodicsProductObject.setUnit_price(foodicsProductObject.getUnit_price() + itemMod.getPrice());
+                                item.modifiers.remove(itemMod);
                             }
+                        }
+
+                        // Filter product modifiers based on second modifier, if the fist modifier require second one
+                        for (ModifierMapping modifierMap : firstFilteredModifiers) {
+                            // check if second id exists in item's extras (modifiers)
+                            if (modifierMap.getTalabatSecProductId() == null || modifierMap.getTalabatSecProductId().equals("")) {
+                                newModifiers.add(modifierMap); break;
+                            } else {
+                                Modifier itemMod = item.modifiers.stream().filter(tempModifier -> tempModifier.getProductId().equals(modifierMap.getTalabatSecProductId()))
+                                        .collect(Collectors.toList()).stream().findFirst().orElse(null);
+                                if (itemMod != null) {
+                                    newModifiers.add(modifierMap);
+
+                                    foodicsProductObject.setUnit_price(foodicsProductObject.getUnit_price() + itemMod.getPrice());
+                                    item.modifiers.remove(itemMod);
+                                }
+                            }
+                        }
+
+                        if(newModifiers.size() > 0 ){
+                            foodicsProductObject.setProduct_id(newModifiers.get(0).getFoodicsProductId());
                         }
                     }
                 }
@@ -232,13 +262,13 @@ public class AggregatorIntegratorService {
                         if(modifierMapping != null)
                             option.setModifier_option_id(modifierMapping.getFoodicsProductId());
                         else
-                            option.setModifier_option_id("9598daea-07ad-418e-b769-8387e678c998"); // To be added
+                            option.setModifier_option_id(""); // To be added
 
                         option.setQuantity(modifier.getAmount());
                         option.setUnit_price(modifier.getPrice());
 
                         // Tax information
-                        Tax tax = new Tax();
+/*                        Tax tax;
                         ArrayList<Tax> taxes = new ArrayList<>();
 
                         tax = new Tax();
@@ -248,7 +278,7 @@ public class AggregatorIntegratorService {
                         tax.setRate(0); // To be added
                         taxes.add(tax);
 
-                        option.setTaxes(taxes);
+                        option.setTaxes(taxes);*/
 
                         options.add(option);
                     }
@@ -269,7 +299,7 @@ public class AggregatorIntegratorService {
                 }
             }
 
-            foodicsOrder.setDiscount_amount(totalDiscount);
+            foodicsOrder.setDiscount_amount(totalDiscount * -1);
             foodicsOrder.setDiscount_type(1); // Open, takes order creator value and is always
 
             // Tax information

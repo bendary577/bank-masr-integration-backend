@@ -186,7 +186,8 @@ public class TalabatAdminWebService {
         Date oneMinBack = cal.getTime();
 
         String dailyParams = "?from=" + getDate() + "T00:00:00Z" + "&to=" + getDate() + "T23:59:59Z" +
-                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=WAITING_FOR_TRANSPORT";
+//                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=WAITING_FOR_TRANSPORT" +
+                "&statuses=CLOSED";
         String tempParams = "?from=2022-04-05T22:00:00Z&to=2022-04-05T22:30:59Z";
 
         String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +

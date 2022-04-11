@@ -15,6 +15,7 @@ import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.FeatureService;
 import com.sun.supplierpoc.services.application.AppUserService;
+import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
 import com.sun.supplierpoc.services.opera.BookingService;
 import com.sun.supplierpoc.services.opera.CancelBookingService;
 import com.sun.supplierpoc.services.opera.ExpensesService;
@@ -80,6 +81,9 @@ public class ScheduledTasks {
     private FeatureService featureService;
     @Autowired
     private SalesAPIController salesAPIController;
+
+    @Autowired
+    private AggregatorIntegratorService aggregatorIntegratorService;
 
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -269,5 +273,22 @@ public class ScheduledTasks {
 
         }
 
+    }
+
+    /*
+    * Delivery aggregator scheduler that run every 1 min to check new orders
+    * */
+    @Scheduled(cron = "0 * * * * SUN-SAT")
+    public void aggregatorScheduler() {
+        Feature feature = featureService.getFeatureByRef(Features.DELIVERY_AGGREGATORS);
+        if(feature == null)
+            return;
+
+        ArrayList<Account> accounts = accountService.getActiveAccountsHasFeature(feature);
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+
+        for (Account account : accounts) {
+            aggregatorIntegratorService.sendTalabatOrdersToFoodics(account);
+        }
     }
 }

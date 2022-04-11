@@ -49,7 +49,7 @@ public class AggregatorIntegratorService {
     private TalabatAdminWebService talabatAdminWebService;
 
     /*
-    * Syncronize orders between talabat and foodics
+    * synchronize orders between talabat and foodics
     * */
     public Response sendTalabatOrdersToFoodics(Account account) {
 
@@ -94,9 +94,6 @@ public class AggregatorIntegratorService {
                             order.setTalabatAdminOrder(talabatAdminOrder);
                             order.setAggregatorName(AggregatorConstants.TALABAT);
                             orderRepo.save(order);
-
-                            // To be removed after testing
-                            // break;
                         }
 
                         response.setMessage("Send Talabat Orders Successfully");

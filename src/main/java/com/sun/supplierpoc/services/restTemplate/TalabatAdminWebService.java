@@ -170,21 +170,32 @@ public class TalabatAdminWebService {
     }
 
     /*
-     * Get all order details
+     * Get all order details of last 1 min
      * Customer info, Items
      * */
     public TalabatAdminOrder[] getAllOrderDetails(TalabatAdminToken talabatAdminToken) {
         TalabatAdminOrder[] orders = new TalabatAdminOrder[0];
         String endPoint = "/api/2/deliveries";
-        String parameters = "?from=" + getDate() + "T00:00:00Z" + "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&to="
-                + getDate() + "T23:59:59Z";
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        Date currentDate = new Date();
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(currentDate);
+        cal.add(Calendar.MINUTE, -1);
+        Date oneMinBack = cal.getTime();
+
+        String dailyParams = "?from=" + getDate() + "T00:00:00Z" + "&to=" + getDate() + "T23:59:59Z" + "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED";
+        String tempParams = "?from=2022-04-05T22:00:00Z&to=2022-04-05T22:30:59Z";
+
+        String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
+                "&to=" + getDate() + "T" + dateFormat.format(currentDate) + ":00Z" +
+                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED";
         try {
-            String tempURL = "https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-05T22:00:00Z&to=2022-04-05T22:30:59Z";
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
                     .url(BASE_URL + endPoint + parameters)
-//                    .url(tempURL) // To be removed
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();

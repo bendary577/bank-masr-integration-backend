@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
+import org.openqa.selenium.Platform;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.mail.MailException;
@@ -424,7 +425,7 @@ public class SendEmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             try {
 //                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
-                messageHelper.setFrom("OracleHospitallity", "OracleHospitallity");
+                messageHelper.setFrom("no-reply@anyware.software", "no-reply@anyware.software");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -433,7 +434,12 @@ public class SendEmailService {
             messageHelper.setSentDate(new Date());
             messageHelper.setTo(user.getEmail());
 
-            String updatePasswordLink = Constants.DEVELOPMENT_LINK + "/resetPassword/";
+            String updatePasswordLink = "";
+            if (Platform.getCurrent().is(Platform.WINDOWS)) {
+                 updatePasswordLink = Constants.DEVELOPMENT_LINK + "/resetPassword/";
+            }else {
+                 updatePasswordLink = Constants.PRODUCTION_LINK + "/resetPassword/";
+            }
 
             String mailContent =
                     "    <div style='margin-left: 6%; width: 85%;'>" +
@@ -450,7 +456,7 @@ public class SendEmailService {
                             "                <br />" +
                             "<a " +
                             "style=\"background-color: #f8b15f;margin-right: 10px; " +
-                            "border: none;padding: 15px 32px;text-align: center;" +
+                            "border: none;padding: 5px 25px;text-align: center;" +
                             "text-decoration: none;display: inline-block;" +
                             "font-size: 16px; color:black\"" +
                             "href='" + updatePasswordLink + "'>Reset My Password</a>" +
@@ -474,6 +480,7 @@ public class SendEmailService {
             return false;
         }
     }
+
     public boolean sendPasswordUpdatedMail(User user)  throws MailException {
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
@@ -481,7 +488,7 @@ public class SendEmailService {
             MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
             try {
 //                messageHelper.setFrom(account.getEmailConfig().getUsername(), accountName);
-                messageHelper.setFrom("OracleHospitallity", "OracleHospitallity");
+                messageHelper.setFrom("no-reply@anyware.software", "no-reply@anyware.software");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }

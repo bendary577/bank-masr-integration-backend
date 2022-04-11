@@ -136,6 +136,7 @@ public class AccountController {
                 user.setCredentialsNonExpired(true);
                 user.setCreationDate(new Date());
                 user.setUpdateDate(new Date());
+                user.setEmail(userRequest.getEmail());
 
             }else {
                 Optional<User> updatedUserOptional = userRepo.findById(userRequest.getId());

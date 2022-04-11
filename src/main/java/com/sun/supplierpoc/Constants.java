@@ -290,7 +290,7 @@ public class Constants {
 
 
     public static final String DEVELOPMENT_LINK = "http://localhost:4200/#";
-    public static final String PRODUCTION_LINK = "34.122.155.73/#";
+    public static final String PRODUCTION_LINK = "http://34.122.155.73/#";
 
 
 

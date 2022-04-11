@@ -787,7 +787,7 @@ public class AppUserController {
         try{
             //validate email
             if(!EmailValidator.getInstance().isValid(email)){
-                response.put("message", "please enter a valid mail format.");
+                response.put("message", "Please make sure you have entered a valid email format.");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             }
             //get email from db
@@ -806,13 +806,13 @@ public class AppUserController {
                         response.put("user_id", user.get().getId());
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {
-                        response.put("message", "Invalid user email.");
+                        response.put("message", "Sorry, we have encountered an error while trying to send you an email, please try again after a while");
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                     }
                 } catch (Exception e) {
                     LoggerFactory.getLogger(ApplicationUser.class).info(e.getMessage());
                     e.printStackTrace();
-                    response.put("message", "Invalid user email.");
+                    response.put("message", "Sorry, we have encountered an error while trying to send you an email, please try again after a while");
                     return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
                 }
             } else {
@@ -847,6 +847,7 @@ public class AppUserController {
                     userRepository.save(user.get());
                     if (emailService.sendPasswordUpdatedMail(user.get())){
                         response.put("message", "Password Updated mail sent successfully.");
+                        response.put("status", 200);
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     } else {
                         response.put("message", "Invalid user email.");

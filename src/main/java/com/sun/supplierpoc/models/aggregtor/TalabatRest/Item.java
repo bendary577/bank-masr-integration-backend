@@ -159,4 +159,13 @@ public class Item {
         }
         return false;
     }
+
+    public Modifier checkModifierExistenceAndGet(ArrayList<Modifier> modifiers, String modifierTalabatId){
+        for (Modifier modifierMapping : modifiers) {
+            if(modifierMapping.getProductId().equals(modifierTalabatId)){
+                return modifierMapping;
+            }
+        }
+        return null;
+    }
 }

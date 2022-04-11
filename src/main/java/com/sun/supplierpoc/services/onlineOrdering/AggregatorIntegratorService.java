@@ -178,8 +178,8 @@ public class AggregatorIntegratorService {
             foodicsOrder.setBranchId(branchMapping.getFoodIcsBranchId());
 
             // Order products
-            ProductsMapping productsMapping = new ProductsMapping();
-            ModifierMapping modifierMapping = new ModifierMapping();
+            ProductsMapping productsMapping;
+            ModifierMapping modifierMapping;
 
             FoodicsProductObject foodicsProductObject;
             List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
@@ -193,24 +193,27 @@ public class AggregatorIntegratorService {
                         .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
                 if (productsMapping != null) {
-                    if(productsMapping.getModifiers().size() == 0)
+                    // Normal Product
+                    if(productsMapping.getModifiers().size() == 0){
                         foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
+                        foodicsProductObject.setUnit_price(item.getPrice());
+                    }
+                    // Product combination (Product + Extra) or (Product + Extra + Extra)
                     else {
-                        // Find Foodics Id in case of combination
                         for (ModifierMapping modifier : productsMapping.getModifiers()) {
-                            if(item.checkModifierExistence(item.getModifiers(), modifier.getTalabatProductId())){
+                            Modifier itemModifier = item.checkModifierExistenceAndGet(item.getModifiers(), modifier.getTalabatProductId());
+                            if(itemModifier != null){
                                 foodicsProductObject.setProduct_id(modifier.getFoodicsProductId());
+                                foodicsProductObject.setUnit_price(itemModifier.getPrice());
 
                                 // Remove this modifiers
+                                item.getModifiers().remove(itemModifier);
                             }
                         }
                     }
                 }
-                else
-                    foodicsProductObject.setProduct_id("9597379c-a45c-4c9c-963b-27d383e34085");
 
                 foodicsProductObject.setQuantity(item.getAmount());
-                foodicsProductObject.setUnit_price(item.getPrice());
                 if(item.getComment() != null)
                     foodicsProductObject.setKitchen_notes(item.getComment());
 

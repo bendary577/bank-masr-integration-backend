@@ -185,7 +185,8 @@ public class TalabatAdminWebService {
         cal.add(Calendar.MINUTE, -1);
         Date oneMinBack = cal.getTime();
 
-        String dailyParams = "?from=" + getDate() + "T00:00:00Z" + "&to=" + getDate() + "T23:59:59Z" + "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED";
+        String dailyParams = "?from=" + getDate() + "T00:00:00Z" + "&to=" + getDate() + "T23:59:59Z" +
+                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=WAITING_FOR_TRANSPORT";
         String tempParams = "?from=2022-04-05T22:00:00Z&to=2022-04-05T22:30:59Z";
 
         String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
@@ -195,7 +196,7 @@ public class TalabatAdminWebService {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + parameters)
+                    .url(BASE_URL + endPoint + dailyParams)
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();

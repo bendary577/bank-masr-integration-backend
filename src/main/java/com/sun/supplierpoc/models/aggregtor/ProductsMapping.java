@@ -7,9 +7,9 @@ import java.util.stream.Collectors;
 
 public class ProductsMapping {
 
-    private String name;
-    private String foodIcsProductId;
-    private String talabatProductId;
+    private String name = "";
+    private String foodIcsProductId = "";
+    private String talabatProductId = "";
     private ArrayList<ModifierMapping> modifiers = new ArrayList<>();
     private String type;
 

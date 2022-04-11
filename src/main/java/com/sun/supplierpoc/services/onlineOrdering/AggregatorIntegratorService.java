@@ -54,7 +54,7 @@ public class AggregatorIntegratorService {
     public Response sendTalabatOrdersToFoodics(Account account) {
 
         Response response = new Response();
-        AggregatorOrder order = new AggregatorOrder();
+        AggregatorOrder order;
 
         GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
         AggregatorConfiguration aggregatorConfiguration = generalSettings.getTalabatConfiguration();
@@ -74,6 +74,7 @@ public class AggregatorIntegratorService {
                 if (branchOrders != null && branchOrders.length > 0) {
                     try {
                         for (TalabatAdminOrder talabatAdminOrder : branchOrders) {
+                            order = new AggregatorOrder();
 
                             // Prepare foodics order
                             FoodicsOrder foodicsOrder = parseOrderParametersToFoodics(talabatAdminOrder, branch, generalSettings);
@@ -94,8 +95,6 @@ public class AggregatorIntegratorService {
                             order.setTalabatAdminOrder(talabatAdminOrder);
                             order.setAggregatorName(AggregatorConstants.TALABAT);
                             orderRepo.save(order);
-
-                            break; // to be removed
                         }
 
                         response.setMessage("Send Talabat Orders Successfully");
@@ -197,6 +196,8 @@ public class AggregatorIntegratorService {
                 if (productsMapping != null) {
                     // Normal Product
                     if(productsMapping.getModifiers().size() == 0){
+                        if (productsMapping.getFoodIcsProductId() == null || productsMapping.getFoodIcsProductId().equals(""))
+                            continue; // Skip this product
                         foodicsProductObject.setProduct_id(productsMapping.getFoodIcsProductId());
                         foodicsProductObject.setUnit_price(item.getPrice());
                     }
@@ -239,8 +240,13 @@ public class AggregatorIntegratorService {
 
                         if(newModifiers.size() > 0 ){
                             foodicsProductObject.setProduct_id(newModifiers.get(0).getFoodicsProductId());
+                        }else {
+                            continue; // Skip this product
                         }
                     }
+                }
+                else {
+                    continue; // Skip this product
                 }
 
                 foodicsProductObject.setQuantity(item.getAmount());
@@ -262,7 +268,7 @@ public class AggregatorIntegratorService {
                         if(modifierMapping != null)
                             option.setModifier_option_id(modifierMapping.getFoodicsProductId());
                         else
-                            option.setModifier_option_id(""); // To be added
+                            continue; // Skip this product's modifier
 
                         option.setQuantity(modifier.getAmount());
                         option.setUnit_price(modifier.getPrice());

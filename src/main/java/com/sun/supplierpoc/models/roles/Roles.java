@@ -13,7 +13,7 @@ public class Roles {
     public static  final String CHARGE_WALLET = "charge_wallet";
     public static  final String DEDUCT_WALLET = "deduct_wallet";
     public static  final String UNDO_WALLET_ACTION = "undo_wallet_action";
-    public static  final String GET_WALLET_TOTAL_REMAINING = "get_wallet_total_remaining";
+    public static  final String GET_WALLET_TOTAL_REMAINING = "wallet_remaining_balance";
     public static  final String GENERATE_WASTAGE_REPORT = "wastage_report";
 
     public static  final String CONSUMPTION_CUSTOM_REPORT = "consumption_custom_report";

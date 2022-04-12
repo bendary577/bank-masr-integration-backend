@@ -280,6 +280,10 @@ public class ScheduledTasks {
     * */
     @Scheduled(cron = "0 * * * * SUN-SAT")
     public void aggregatorScheduler() {
+
+        logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
+        logger.info("Current Thread : {}", Thread.currentThread().getName());
+
         Feature feature = featureService.getFeatureByRef(Features.DELIVERY_AGGREGATORS);
         if(feature == null)
             return;

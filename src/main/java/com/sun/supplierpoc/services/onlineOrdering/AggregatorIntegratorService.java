@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Modifier;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -92,6 +93,7 @@ public class AggregatorIntegratorService {
                                 order.setFoodicsOrder(foodicsOrder);
                             }
 
+                            order.setCreationDate(new Date());
                             order.setTalabatAdminOrder(talabatAdminOrder);
                             order.setAggregatorName(AggregatorConstants.TALABAT);
                             orderRepo.save(order);

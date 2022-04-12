@@ -277,10 +277,8 @@ public class WalletService {
                         Date walletHistoryDate = dateFormat.parse(walletHistoryDateString);
 
                         if (walletHistoryDate.compareTo(start) < 0) {
-                            System.out.println("walletHistoryDate is before start");
                             continue;
                         } else if (walletHistoryDate.compareTo(end) > 0) {
-                            System.out.println("walletHistoryDate is after end");
                             continue;
                         }
                     if(walletHistory.getOperation().equals(ActionType.CHARGE_WALLET) || walletHistory.getOperation().equals(ActionType.ENTRANCE_AMOUNT)){

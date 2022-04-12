@@ -192,7 +192,7 @@ public class TalabatAdminWebService {
 
         String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(currentDate) + ":00Z" +
-                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED";
+                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
         System.out.println(parameters);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()

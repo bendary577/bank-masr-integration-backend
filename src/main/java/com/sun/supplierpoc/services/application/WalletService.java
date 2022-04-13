@@ -302,10 +302,8 @@ public class WalletService {
                         Date walletHistoryDate = dateFormat.parse(walletHistoryDateString);
 
                         if (walletHistoryDate.compareTo(start) < 0) {
-                            System.out.println("walletHistoryDate is before start");
                             continue;
                         } else if (walletHistoryDate.compareTo(end) > 0) {
-                            System.out.println("walletHistoryDate is after end");
                             continue;
                         }
                         //add to array

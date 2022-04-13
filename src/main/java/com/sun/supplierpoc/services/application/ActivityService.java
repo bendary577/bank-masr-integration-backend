@@ -179,8 +179,7 @@ public class ActivityService {
                         newBalance = calculateBalance(wallet);
                         WalletHistory walletHistory = new WalletHistory("Use wallet in " + revenueCenter.getRevenueCenter(),
                                 paidAmount, previousBalance, newBalance, null, new Date());
-                        walletHistory.setUniqueId(UUID.randomUUID().toString());
-                        walletHistory.setCheck(transaction.getCheckNumber());
+                        walletHistory.setActionId(UUID.randomUUID().toString());
                         walletHistory.setEmployee(transaction.getEmployeeId());
                         wallet.getWalletHistory().add(walletHistory);
                         user.setWallet(wallet);

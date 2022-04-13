@@ -7,16 +7,16 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import java.util.Date;
 
 public class WalletHistory {
-    private String uniqueId;
+    private String actionId;
     private String operation;
     private double amount;
     private double previousBalance;
     private double newBalance;
-    private String check;
     private String employee;
     @DBRef
     private User user;
     private Date date;
+    private boolean deleted;
 
     public WalletHistory() {
     }
@@ -28,7 +28,6 @@ public class WalletHistory {
         this.newBalance = newBalance;
         this.user = user;
         this.date = date;
-
     }
 
 //    public WalletHistory(String operation, double amount, double previousBalance, double newBalance, Date date) {
@@ -87,14 +86,6 @@ public class WalletHistory {
         this.date = date;
     }
 
-    public String getCheck() {
-        return check;
-    }
-
-    public void setCheck(String check) {
-        this.check = check;
-    }
-
     public String getEmployee() {
         return employee;
     }
@@ -103,11 +94,19 @@ public class WalletHistory {
         this.employee = employee;
     }
 
-    public String getUniqueId() {
-        return uniqueId;
+    public String getActionId() {
+        return actionId;
     }
 
-    public void setUniqueId(String uniqueId) {
-        this.uniqueId = uniqueId;
+    public void setActionId(String actionId) {
+        this.actionId = actionId;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }

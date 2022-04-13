@@ -2,6 +2,7 @@ package com.sun.supplierpoc.repositories.applications;
 
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
@@ -22,7 +23,10 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
 
     ArrayList<ApplicationUser> findAllByAccountId(String accountId);
     ArrayList<ApplicationUser> findAllByAccountIdAndDeleted(String accountId, boolean deleted);
+
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId);
+    ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId, Pageable pageable);
+    int countAllByAccountId(String accountId);
 
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);
 

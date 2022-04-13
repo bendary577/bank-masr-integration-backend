@@ -392,6 +392,45 @@ public class AppUserController {
         }
     }
 
+    @RequestMapping("/getApplicationUsersPaginated")
+    @CrossOrigin(origins = "*")
+    @ResponseBody
+    public ResponseEntity getApplicationUsers(Principal principal,
+                                              @RequestParam(name = "pageNumber") int pageNumber,
+                                              @RequestParam(name = "limit") int limit) {
+        try{
+            User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+            Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+            if (accountOptional.isPresent()) {
+                Account account = accountOptional.get();
+                ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountIdPaginated(account.getId(), pageNumber, limit);
+                return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
+            }
+            return new ResponseEntity(HttpStatus.FORBIDDEN);
+        }catch(Exception e){
+            e.printStackTrace();
+            return new ResponseEntity(HttpStatus.FORBIDDEN);
+        }
+    }
+
+    @RequestMapping("/getUsersCount")
+    public int getUsersCount(Principal principal) {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            int usersCount = appUserService.getUsersCount(account.getId());
+
+            return usersCount;
+        }else{
+            return 0;
+        }
+    }
+
     @RequestMapping("/applicationUsers/{id}")
     @CrossOrigin(origins = "*")
     @ResponseBody

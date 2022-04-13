@@ -17,6 +17,8 @@ import com.sun.supplierpoc.services.*;
 import io.jsonwebtoken.impl.Base64UrlCodec;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -71,6 +73,15 @@ public class AppUserService {
 
     public ArrayList<ApplicationUser> getAppUsersByAccountId(String accountId){
         return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId);
+    }
+
+    public ArrayList<ApplicationUser> getAppUsersByAccountIdPaginated(String accountId, int pageNumber, int limit){
+        Pageable paging = PageRequest.of(pageNumber-1, limit);
+        return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId, paging);
+    }
+
+    public int getUsersCount(String accountId){
+        return userRepo.countAllByAccountId(accountId);
     }
 
     public ApplicationUser getAppUserByCode(String guestCode, String accountCode){
@@ -346,7 +357,7 @@ public class AppUserService {
 
                 WalletHistory walletHistory = new WalletHistory(ActionType.ENTRANCE_AMOUNT ,Double.parseDouble(balance) ,
                         0, Double.parseDouble(balance), agent, new Date());
-                walletHistory.setUniqueId(UUID.randomUUID().toString());
+                walletHistory.setActionId(UUID.randomUUID().toString());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
 
                 userRepo.save(applicationUser);

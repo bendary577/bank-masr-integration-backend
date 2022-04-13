@@ -12,10 +12,7 @@ import org.springframework.stereotype.Service;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class WalletService {
@@ -53,7 +50,7 @@ public class WalletService {
                 applicationUser.getWallet().getBalance().add(balance);
                 WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() ,
                         lastBalance, (lastBalance + balance.getAmount()), agent, new Date());
-                walletHistory.setUniqueId(UUID.randomUUID().toString());
+                walletHistory.setActionId(UUID.randomUUID().toString());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -79,17 +76,17 @@ public class WalletService {
                 }
 
                 response.setStatus(true);
-                response.setMessage("Wallet Charged Successfully.");
                 response.setData(applicationUser);
-                return response;
+                response.setMessage("Wallet Charged Successfully.");
             }catch(Exception e) {
+                e.printStackTrace();
                 response.setStatus(false);
                 response.setMessage(e.getMessage());
             }
         }else{
+            response.setStatus(false);
             response.setMessage("This guest doesn't exist.");
         }
-        response.setStatus(false);
         return response;
     }
 
@@ -125,7 +122,7 @@ public class WalletService {
 
                 WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount),
                         agent, new Date());
-                walletHistory.setUniqueId(UUID.randomUUID().toString());
+                walletHistory.setActionId(UUID.randomUUID().toString());
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -164,7 +161,7 @@ public class WalletService {
         return response;
     }
 
-    public Response undoWalletAction(User agent, String userId, String check) {
+    public Response undoWalletAction(User agent, String userId, String actionId) {
 
         Response response = new Response();
 
@@ -178,24 +175,36 @@ public class WalletService {
                 for(Balance tempBalance : applicationUser.getWallet().getBalance()){
                     lastBalance = lastBalance+ tempBalance.getAmount();
                 }
-                WalletHistory WalletHistoryChosen = null;
+                WalletHistory walletHistoryChosen = null;
                 for(WalletHistory walletHistory : applicationUser.getWallet().getWalletHistory()){
-                    if(walletHistory.getCheck().equals(check)){
-                        WalletHistoryChosen = walletHistory;
+                    if(walletHistory.getActionId().equals(actionId)){
+                        walletHistoryChosen = walletHistory;
                         break;
                     }
                 }
-//                WalletHistory walletHistory = applicationUser.getWallet().getWalletHistory()
-//                        .stream()
-//                        .filter(walletHistoryRecord -> check.equals(walletHistoryRecord.getCheck()));
-                if(WalletHistoryChosen != null){
-                    if(WalletHistoryChosen.getOperation().equals(ActionType.CHARGE_WALLET)){
-                        WalletHistoryChosen.setAmount(lastBalance-WalletHistoryChosen.getAmount());
-                    }else if(WalletHistoryChosen.getOperation().equals(ActionType.DEDUCT_WALLET)){
-                        WalletHistoryChosen.setAmount(lastBalance+WalletHistoryChosen.getAmount());
+
+                if(walletHistoryChosen != null){
+
+                    if(walletHistoryChosen.isDeleted()){
+                        response.setStatus(false);
+                        response.setMessage("Wallet action is already deleted");
+                        return response;
                     }
 
-                    applicationUser.getWallet().getWalletHistory().remove(WalletHistoryChosen);
+                    Balance balance = new Balance();
+                    double newBalanceAmount = 0;
+                    walletHistoryChosen.setPreviousBalance(lastBalance);
+                    if(walletHistoryChosen.getOperation().equals(ActionType.CHARGE_WALLET) || walletHistoryChosen.getOperation().equals(ActionType.ENTRANCE_AMOUNT)){
+                         newBalanceAmount = walletHistoryChosen.getAmount() * -1;
+//                        walletHistoryChosen.setNewBalance(lastBalance-walletHistoryChosen.getAmount());
+                    }else if(walletHistoryChosen.getOperation().equals(ActionType.DEDUCT_WALLET)){
+                        newBalanceAmount = walletHistoryChosen.getAmount();
+//                        walletHistoryChosen.setNewBalance(lastBalance+walletHistoryChosen.getAmount());
+                    }
+
+                    walletHistoryChosen.setDeleted(true);
+                    balance.setAmount(newBalanceAmount);
+                    applicationUser.getWallet().getBalance().add(balance);
                     applicationUserRepo.save(applicationUser);
 
                     /* Create new user action */
@@ -220,14 +229,12 @@ public class WalletService {
                     }
 
                     response.setStatus(true);
-                    response.setMessage("Wallet Action Reverted Successfully.");
                     response.setData(applicationUser);
+                    response.setMessage("Wallet Action Reverted Successfully.");
                     return response;
                 }else{
                     response.setStatus(false);
                     response.setMessage("Wallet Action cannot be found");
-                    response.setData(applicationUser);
-                    return response;
                 }
             }catch(Exception e) {
                 e.printStackTrace();
@@ -235,9 +242,9 @@ public class WalletService {
                 response.setMessage(e.getMessage());
             }
         }else{
+            response.setStatus(false);
             response.setMessage("This guest doesn't exist.");
         }
-        response.setStatus(false);
         return response;
     }
 
@@ -267,12 +274,30 @@ public class WalletService {
             //loop on each user wallet
             for (ApplicationUser applicationUser: applicationUsers) {
                 double totalWalletHistory = 0;
-                //loop on histories
-                for (WalletHistory walletHistory: applicationUser.getWallet().getWalletHistory()) {
 
-                    //if action in time period(from, to) add histories amount
-//                        String walletDateString = walletHistory.getDate().toString();
-//                        Date date = new Date(walletDateString);
+                //get latest wallet history
+                WalletHistory latestWalletHistory;
+
+                //check if action is not deleted
+                int counter = applicationUser.getWallet().getWalletHistory().size()-1; //latest action index
+                do{
+                    latestWalletHistory = applicationUser.getWallet().getWalletHistory().get(counter);
+                    counter--;
+                }while(latestWalletHistory.isDeleted());
+                String latestWalletHistoryDateString = dateFormat.format(latestWalletHistory.getDate());
+                Date latestWalletHistoryDate = dateFormat.parse(latestWalletHistoryDateString);
+
+                //if start date is after latest history
+                if(start.compareTo(latestWalletHistoryDate) > 0){
+                    // remaining of this user = sum of all histories before
+                    totalWalletHistory += latestWalletHistory.getNewBalance();
+                }else{
+                    //create ranged history array
+                    List<WalletHistory> rangedWalletHistory = new ArrayList<>();
+                    for (WalletHistory walletHistory: applicationUser.getWallet().getWalletHistory()) {
+                        if(walletHistory.isDeleted()){
+                            continue;
+                        }
                         String walletHistoryDateString = dateFormat.format(walletHistory.getDate());
                         Date walletHistoryDate = dateFormat.parse(walletHistoryDateString);
 
@@ -283,13 +308,15 @@ public class WalletService {
                             System.out.println("walletHistoryDate is after end");
                             continue;
                         }
-                    if(walletHistory.getOperation().equals(ActionType.CHARGE_WALLET) || walletHistory.getOperation().equals(ActionType.ENTRANCE_AMOUNT)){
-                        totalWalletHistory += walletHistory.getAmount();
-                    }else if(walletHistory.getOperation().equals(ActionType.DEDUCT_WALLET)){
-                        totalWalletHistory -= walletHistory.getAmount();
+                        //add to array
+                        rangedWalletHistory.add(walletHistory);
                     }
-                    totalWalletHistory += walletHistory.getAmount();
+                    if(!rangedWalletHistory.isEmpty()){
+                        //get latest
+                        totalWalletHistory += rangedWalletHistory.get(rangedWalletHistory.size()-1).getNewBalance();
+                    }
                 }
+
                 totalRemaining += totalWalletHistory;
             }
         } catch (Exception e) {

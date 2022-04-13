@@ -123,7 +123,7 @@ public class WalletController {
 
     @PostMapping("/undoWalletAction")
     public ResponseEntity<?> UndoWalletAction(@RequestParam("userId") String userId,
-                                              @RequestParam("check") String check,
+                                              @RequestParam("actionId") String actionId,
                                               Principal principal){
 
         Response response = new Response();
@@ -134,19 +134,22 @@ public class WalletController {
             Optional<Account> accountOptional = accountRepo.findById(authedUser.getAccountId());
 
             if(accountOptional.isPresent()) {
-                if (roleService.hasRole(authedUser, Roles.UNDO_WALLET_ACTION)) {
-
-                    response = walletService.undoWalletAction(authedUser, userId, check);
-
+/*                if (roleService.hasRole(authedUser, Roles.UNDO_WALLET_ACTION)) {
+                    response = walletService.undoWalletAction(authedUser, userId, actionId);
                     if(response.isStatus()){
                         return new ResponseEntity<>(response, HttpStatus.OK);
                     }else{
                         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                     }
-
                 }else{
                     response.setStatus(false);
                     response.setMessage(Constants.NOT_ELIGIBLE_USER);
+                }*/
+                response = walletService.undoWalletAction(authedUser, userId, actionId);
+                if(response.isStatus()){
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }else{
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                 }
             }else{
                 response.setStatus(false);
@@ -164,7 +167,7 @@ public class WalletController {
     @GetMapping("/getWalletsRemainingTotal")
     public ResponseEntity<?> getWalletsRemainingTotal(
                                                 @RequestParam(name = "fromDate", required = false) String fromDate,
-                                                @RequestParam(name = "fromDate", required = false) String toDate,
+                                                @RequestParam(name = "toDate", required = false) String toDate,
                                                 Principal principal){
 
         Response response = new Response();

@@ -268,8 +268,14 @@ public class WalletService {
             if(toDate.equals("")){
                 toDate = dateFormat.format(new Date());
             }
+
             Date start = dateFormat.parse(fromDate);
             Date end =  dateFormat.parse(toDate);
+            if(start.after(end)){
+                Date swap = start;
+                start = end;
+                end = swap;
+            }
 
             //loop on each user wallet
             for (ApplicationUser applicationUser: applicationUsers) {

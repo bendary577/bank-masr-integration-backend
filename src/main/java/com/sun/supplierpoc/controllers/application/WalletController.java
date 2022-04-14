@@ -186,6 +186,7 @@ public class WalletController {
                     if(response.isStatus()){
                         return ResponseEntity.status(HttpStatus.OK).body(response);
                     }else{
+
                         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                     }
 

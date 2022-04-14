@@ -284,6 +284,7 @@ public class WalletService {
                     continue;
                 }
 
+
                 double totalWalletHistory = 0;
 
                 //get latest & oldest wallet history

@@ -280,10 +280,17 @@ public class WalletService {
             //loop on each user wallet
             for (ApplicationUser applicationUser: applicationUsers) {
 
-                if (getActiveGuestsOnly && (applicationUser.isExpired() || applicationUser.isDeleted())) {
+                if(applicationUser.getWallet().getWalletHistory().isEmpty()){
                     continue;
                 }
 
+                if (getActiveGuestsOnly) {
+                    String expirationDateString = dateFormat.format(applicationUser.getExpiryDate());
+                    Date expirationDate = dateFormat.parse(expirationDateString);
+                    if(start.compareTo(expirationDate) > 0 || start.compareTo(expirationDate) == 0 && (end.after(expirationDate))) { //start after expirationDate
+                        continue;
+                    }
+                }
 
                 double totalWalletHistory = 0;
 

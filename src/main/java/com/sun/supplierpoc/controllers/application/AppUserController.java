@@ -821,16 +821,11 @@ public class AppUserController {
     @RequestMapping("/forgetPasswordMail")
     @CrossOrigin(origins = "*")
     @ResponseBody
-    public ResponseEntity forgetPasswordSetEmail(@RequestParam String email){
+    public ResponseEntity forgetPasswordSetEmail(@RequestParam String username){
         HashMap response = new HashMap();
         try{
-            //validate email
-            if(!EmailValidator.getInstance().isValid(email)){
-                response.put("message", "Please make sure you have entered a valid email format.");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-            }
             //get email from db
-           Optional<User> user = Optional.ofNullable(userRepository.findByEmail(email));
+           Optional<User> user = Optional.ofNullable(userRepository.findByUsername(username));
             if (user != null) {
                 try {
                     if(!user.get().isEnabled()){

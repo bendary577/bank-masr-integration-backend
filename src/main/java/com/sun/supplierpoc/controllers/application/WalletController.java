@@ -168,6 +168,7 @@ public class WalletController {
     public ResponseEntity<?> getWalletsRemainingTotal(
                                                 @RequestParam(name = "fromDate", required = false) String fromDate,
                                                 @RequestParam(name = "toDate", required = false) String toDate,
+                                                @RequestParam(name = "getActiveGuestsOnly", required = false) boolean getActiveGuestsOnly,
                                                 Principal principal){
 
         Response response = new Response();
@@ -180,9 +181,7 @@ public class WalletController {
             if(accountOptional.isPresent()) {
                 Account account = accountOptional.get();
 
-                if (roleService.hasRole(authedUser, Roles.GET_WALLET_TOTAL_REMAINING)) {
-
-                    response = walletService.getWalletsRemainingTotal(account, fromDate, toDate);
+                    response = walletService.getWalletsRemainingTotal(account, fromDate, toDate, getActiveGuestsOnly);
 
                     if(response.isStatus()){
                         return ResponseEntity.status(HttpStatus.OK).body(response);
@@ -190,10 +189,20 @@ public class WalletController {
                         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
                     }
 
-                }else{
-                    response.setStatus(false);
-                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
-                }
+//                if (roleService.hasRole(authedUser, Roles.GET_WALLET_TOTAL_REMAINING)) {
+//
+//                    response = walletService.getWalletsRemainingTotal(account, fromDate, toDate, getActiveGuestsOnly);
+//
+//                    if(response.isStatus()){
+//                        return ResponseEntity.status(HttpStatus.OK).body(response);
+//                    }else{
+//                        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+//                    }
+//
+//                }else{
+//                    response.setStatus(false);
+//                    response.setMessage(Constants.NOT_ELIGIBLE_USER);
+//                }
             }else{
                 response.setStatus(false);
                 response.setMessage(Constants.NOT_ELIGIBLE_ACCOUNT);

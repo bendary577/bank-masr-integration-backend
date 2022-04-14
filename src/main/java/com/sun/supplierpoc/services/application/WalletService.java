@@ -248,7 +248,7 @@ public class WalletService {
         return response;
     }
 
-    public Response getWalletsRemainingTotal(Account account, String fromDate, String toDate) {
+    public Response getWalletsRemainingTotal(Account account, String fromDate, String toDate, boolean getActiveGuestsOnly) {
 
         Response response = new Response();
         DecimalFormat decimalFormat = new DecimalFormat("#0.00");
@@ -279,24 +279,35 @@ public class WalletService {
 
             //loop on each user wallet
             for (ApplicationUser applicationUser: applicationUsers) {
+
+                if (getActiveGuestsOnly && (applicationUser.isExpired() || applicationUser.isDeleted())) {
+                    continue;
+                }
+
                 double totalWalletHistory = 0;
 
-                //get latest wallet history
+                //get latest & oldest wallet history
                 WalletHistory latestWalletHistory;
+                WalletHistory oldestWalletHistory = applicationUser.getWallet().getWalletHistory().get(0);
 
                 //check if action is not deleted
-                int counter = applicationUser.getWallet().getWalletHistory().size()-1; //latest action index
-                do{
+                int counter = applicationUser.getWallet().getWalletHistory().size() - 1; //latest action index
+                do {
                     latestWalletHistory = applicationUser.getWallet().getWalletHistory().get(counter);
                     counter--;
-                }while(latestWalletHistory.isDeleted());
+                } while (latestWalletHistory.isDeleted());
+
                 String latestWalletHistoryDateString = dateFormat.format(latestWalletHistory.getDate());
                 Date latestWalletHistoryDate = dateFormat.parse(latestWalletHistoryDateString);
 
+                String oldestWalletHistoryDateString = dateFormat.format(oldestWalletHistory.getDate());
+                Date oldestWalletHistoryDate = dateFormat.parse(oldestWalletHistoryDateString);
+
                 //if start date is after latest history
-                if(start.compareTo(latestWalletHistoryDate) > 0){
-                    // remaining of this user = sum of all histories before
+                if (start.compareTo(latestWalletHistoryDate) > 0) {
                     totalWalletHistory += latestWalletHistory.getNewBalance();
+                }else if(end.compareTo(oldestWalletHistoryDate) < 0){
+                    continue;
                 }else{
                     //create ranged history array
                     List<WalletHistory> rangedWalletHistory = new ArrayList<>();
@@ -307,9 +318,9 @@ public class WalletService {
                         String walletHistoryDateString = dateFormat.format(walletHistory.getDate());
                         Date walletHistoryDate = dateFormat.parse(walletHistoryDateString);
 
-                        if (walletHistoryDate.compareTo(start) < 0) {
+                        if (walletHistoryDate.compareTo(start) < 0) { //before start
                             continue;
-                        } else if (walletHistoryDate.compareTo(end) > 0) {
+                        } else if (walletHistoryDate.compareTo(end) > 0) { //after end
                             continue;
                         }
                         //add to array

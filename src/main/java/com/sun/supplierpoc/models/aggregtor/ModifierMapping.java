@@ -4,7 +4,8 @@ public class ModifierMapping {
     private String name;
     private String talabatProductId;
     private String talabatSecProductId;
-    private String foodicsProductId;
+    private String foodicsProductId = "";
+    private String secondFoodicsProductId = "";
 
     public ModifierMapping() {
     }
@@ -39,5 +40,13 @@ public class ModifierMapping {
 
     public void setTalabatSecProductId(String talabatSecProductId) {
         this.talabatSecProductId = talabatSecProductId;
+    }
+
+    public String getSecondFoodicsProductId() {
+        return secondFoodicsProductId;
+    }
+
+    public void setSecondFoodicsProductId(String secondFoodicsProductId) {
+        this.secondFoodicsProductId = secondFoodicsProductId;
     }
 }

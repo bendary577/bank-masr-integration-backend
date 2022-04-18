@@ -358,6 +358,7 @@ public class AppUserService {
                 WalletHistory walletHistory = new WalletHistory(ActionType.ENTRANCE_AMOUNT ,Double.parseDouble(balance) ,
                         0, Double.parseDouble(balance), agent, new Date());
                 walletHistory.setActionId(UUID.randomUUID().toString());
+                walletHistory.setCheck("");
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
 
                 userRepo.save(applicationUser);

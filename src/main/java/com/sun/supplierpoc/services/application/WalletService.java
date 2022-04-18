@@ -51,6 +51,7 @@ public class WalletService {
                 WalletHistory walletHistory = new WalletHistory(ActionType.CHARGE_WALLET , balance.getAmount() ,
                         lastBalance, (lastBalance + balance.getAmount()), agent, new Date());
                 walletHistory.setActionId(UUID.randomUUID().toString());
+                walletHistory.setCheck("");
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 
@@ -123,6 +124,7 @@ public class WalletService {
                 WalletHistory walletHistory = new WalletHistory(ActionType.DEDUCT_WALLET, amount, lastBalance, (lastBalance - amount),
                         agent, new Date());
                 walletHistory.setActionId(UUID.randomUUID().toString());
+                walletHistory.setCheck("");
                 applicationUser.getWallet().getWalletHistory().add(walletHistory);
                 applicationUserRepo.save(applicationUser);
 

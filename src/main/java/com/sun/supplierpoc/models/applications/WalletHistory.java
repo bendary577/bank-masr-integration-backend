@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import java.util.Date;
 
 public class WalletHistory {
+    private String check;
     private String actionId;
     private String operation;
     private double amount;
@@ -108,5 +109,13 @@ public class WalletHistory {
 
     public void setDeleted(boolean deleted) {
         this.deleted = deleted;
+    }
+
+    public String getCheck() {
+        return check;
+    }
+
+    public void setCheck(String check) {
+        this.check = check;
     }
 }

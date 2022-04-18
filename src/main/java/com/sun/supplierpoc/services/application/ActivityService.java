@@ -181,6 +181,7 @@ public class ActivityService {
                                 paidAmount, previousBalance, newBalance, null, new Date());
                         walletHistory.setActionId(UUID.randomUUID().toString());
                         walletHistory.setEmployee(transaction.getEmployeeId());
+                        walletHistory.setCheck(transaction.getCheckNumber());
                         wallet.getWalletHistory().add(walletHistory);
                         user.setWallet(wallet);
 

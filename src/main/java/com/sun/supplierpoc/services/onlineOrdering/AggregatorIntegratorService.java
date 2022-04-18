@@ -257,6 +257,7 @@ public class AggregatorIntegratorService {
 
                 // Options
                 Option option;
+                Option secondOption;
                 ArrayList<Option> options = new ArrayList<>();
                 if(item.getModifiers() != null){
                     for (Modifier modifier: item.getModifiers()) {
@@ -264,12 +265,12 @@ public class AggregatorIntegratorService {
 
                         // Extra Info
                         modifierMapping = generalSettings.getTalabatConfiguration().getModifierMappings().stream().
-                                filter(tempProduct -> tempProduct.getTalabatProductId().equals(modifier.getProductId()))
+                                filter(tempProduct -> tempProduct.getName().equals(modifier.getName()))
                                 .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
-                        if(modifierMapping != null)
+                        if (modifierMapping != null) {
                             option.setModifier_option_id(modifierMapping.getFoodicsProductId());
-                        else
+                        } else
                             continue; // Skip this product's modifier
 
                         option.setQuantity(modifier.getAmount());
@@ -289,6 +290,14 @@ public class AggregatorIntegratorService {
                         option.setTaxes(taxes);*/
 
                         options.add(option);
+
+                        if(!modifierMapping.getSecondFoodicsProductId().equals("")){
+                            secondOption = new Option();
+                            secondOption.setModifier_option_id(modifierMapping.getSecondFoodicsProductId());
+                            secondOption.setQuantity(modifier.getAmount());
+                            secondOption.setUnit_price(modifier.getPrice());
+                            options.add(secondOption);
+                        }
                     }
                 }
                 foodicsProductObject.setOptions(options);

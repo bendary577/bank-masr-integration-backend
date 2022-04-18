@@ -46,7 +46,6 @@ public class SetupEnvironment {
                     "--ignore-certificate-errors");
             return new ChromeDriver(options);
         } else {
-
             FirefoxBinary firefoxBinary = new FirefoxBinary();
 //            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();

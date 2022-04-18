@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SalesAPIConfig {
+    public boolean taxIncluded = true;
 
     public String apiKey  = "";
 

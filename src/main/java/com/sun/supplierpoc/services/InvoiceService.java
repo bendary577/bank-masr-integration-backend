@@ -684,23 +684,24 @@ public class InvoiceService {
     }
 
     private void getInvoiceReceiptsDetails(Configuration configuration,
-                                           ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups, HashMap<String, Object> invoice, WebDriver driver,
+                                           ArrayList<Item> items, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups,
+                                           HashMap<String, Object> invoice, WebDriver driver,
                                            ArrayList<HashMap<String, Object>> journalEntries, boolean flag) {
         ArrayList<Journal> journals = new ArrayList<>();
-
-        if (configuration.syncPerGroup.equals("OverGroups")) {
-            for (OverGroup overGroup : overGroups) {
-                if (overGroup.getChecked()) {
-                    journals.add(new Journal(overGroup.getOverGroup()));
-                }
-            }
-        } else {
-            for (ItemGroup itemGroup : itemGroups) {
-                if (itemGroup.getChecked()) {
-                    journals.add(new Journal(itemGroup.getItemGroup()));
-                }
-            }
-        }
+        Journal newJournal = new Journal();
+//        if (configuration.syncPerGroup.equals("OverGroups")) {
+//            for (OverGroup overGroup : overGroups) {
+//                if (overGroup.getChecked()) {
+//                    journals.add(new Journal(overGroup.getOverGroup()));
+//                }
+//            }
+//        } else {
+//            for (ItemGroup itemGroup : itemGroups) {
+//                if (itemGroup.getChecked()) {
+//                    journals.add(new Journal(itemGroup.getItemGroup()));
+//                }
+//            }
+//        }
 
 
         driver.get((String) invoice.get("reference_link"));
@@ -713,8 +714,6 @@ public class InvoiceService {
         }
 
         // Get Receipt page
-
-
         wait.until(ExpectedConditions.presenceOfElementLocated(By.id("igtxttbxReference")));
         String reference = driver.findElement(By.id("igtxttbxReference")).getAttribute("value");
 
@@ -759,8 +758,10 @@ public class InvoiceService {
 
                 if (configuration.syncPerGroup.equals("OverGroups"))
                     group = item.getOverGroup();
-                else
+                else if (configuration.syncPerGroup.equals("ItemGroups"))
                     group = item.getItemGroup();
+                else
+                    group = item.getItem();
 
                 invoiceDetails.put("Item", td.getText().strip());
 
@@ -780,11 +781,18 @@ public class InvoiceService {
                     td = cols.get(columns.indexOf("gross"));
                     invoiceDetails.put("gross", td.getText().strip());
                 }
-                calculateJournal(journals, group,
+
+                newJournal.checkInvoiceLineExistence(journals, group,
                         conversions.convertStringToFloat((String) invoiceDetails.get("gross")),
                         conversions.convertStringToFloat((String) invoiceDetails.get("vat[%]")),
                         conversions.convertStringToFloat((String) invoiceDetails.get("vat")),
                         conversions.convertStringToFloat((String) invoiceDetails.get("net")));
+
+//                calculateJournal(journals, group,
+//                        conversions.convertStringToFloat((String) invoiceDetails.get("gross")),
+//                        conversions.convertStringToFloat((String) invoiceDetails.get("vat[%]")),
+//                        conversions.convertStringToFloat((String) invoiceDetails.get("vat")),
+//                        conversions.convertStringToFloat((String) invoiceDetails.get("net")));
             }
             for (Journal journal : journals) {
                 if (journal.getTotalCost() == 0) {
@@ -807,7 +815,8 @@ public class InvoiceService {
                         journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                         journalEntry.put("expensesAccount", supplier.getAccountCode());
                     }
-                } else {
+                }
+                else if(configuration.syncPerGroup.equals("ItemGroups")){
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemGroups, journal.getOverGroup());
                     if (!itemGroup.getChecked())
                         continue;
@@ -819,6 +828,23 @@ public class InvoiceService {
                         journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
                     } else {  // Credit Note from cost center to supplier
                         journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
+                        journalEntry.put("expensesAccount", supplier.getAccountCode());
+                    }
+                }
+                else {
+                    // Get item's over group
+                    Item item = conversions.checkItemExistence(items, journal.getOverGroup());
+
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, item.getOverGroup());
+                    if (!oldOverGroupData.getChecked())
+                        continue;
+                    if (oldOverGroupData.getExpensesAccount().equals("") || oldOverGroupData.getInventoryAccount().equals(""))
+                        continue;
+                    if (!flag) { // Invoice from supplier to cost center
+                        journalEntry.put("inventoryAccount", supplier.getAccountCode());
+                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                    } else {  // Credit Note from cost center to supplier
+                        journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                         journalEntry.put("expensesAccount", supplier.getAccountCode());
                     }
                 }
@@ -890,10 +916,14 @@ public class InvoiceService {
                 journalEntry.put("createdAt", invoice.get("created_at"));
 
                 String description;
-                if (!flag) {
-                    description = "Inv F " + supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
-                } else {
-                    description = "CN F " + supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
+                if(configuration.getInvoiceConfiguration().useMyInvDescription)
+                    description = journal.getOverGroup();
+                else{
+                    if (!flag) {
+                        description = "Inv F " + supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
+                    } else {
+                        description = "CN F " + supplier.getSupplierReference() + " / " + toCostCenter.costCenterReference;
+                    }
                 }
 
                 if (description.length() > 50) {

@@ -8,4 +8,6 @@ public class InvoiceConfiguration implements Serializable {
      * */
     public String invoiceTypeIncluded = "";
     public String invoiceSyncPlace = "";
+
+    public boolean useMyInvDescription = false;
 }

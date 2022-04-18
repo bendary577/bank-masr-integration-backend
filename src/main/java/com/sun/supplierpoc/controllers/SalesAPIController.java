@@ -63,8 +63,8 @@ public class SalesAPIController {
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
         if (accountOptional.isPresent()) {
             Account account = accountOptional.get();
-//            emailService.sendEmaarMail("bassel.faisal.bs@gmail.com", responseData, account);
             response = syncPOSSalesInDayRange(user.getId(), account, endpoint);
+
             if (!response.isStatus()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
             } else {
@@ -182,16 +182,19 @@ public class SalesAPIController {
 
                 syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
                 syncJobTypeRepo.save(syncJobType);
-            }else if (syncJobType.getConfiguration().timePeriod.equals(Constants.LAST_MONTH)) {
+            }
+            else if (syncJobType.getConfiguration().timePeriod.equals(Constants.LAST_MONTH)) {
 
                 Calendar calendar = Calendar.getInstance();
+
                 calendar.setTime(new Date());
-                calendar.set(2022, Calendar.MONTH -2 , 1);
+                calendar.add(Calendar.MONTH, -1);
+                calendar.set(Calendar.DATE, 1);
                 syncJobType.getConfiguration().fromDate = dateFormat.format(calendar.getTime());
 
                 calendar.setTime(new Date());
-                calendar.set(2022, Calendar.MONTH -1 , 1);
-                calendar.add(Calendar.DATE, -1);
+                calendar.add(Calendar.MONTH, -1);
+                calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));
                 syncJobType.getConfiguration().toDate = dateFormat.format(calendar.getTime());
 
                 syncJobTypeRepo.save(syncJobType);
@@ -261,11 +264,7 @@ public class SalesAPIController {
                 Response salesResponse;
                 List<OrderTypeChannels> newList = new ArrayList<>(orderTypeChannels);
 
-                if (account.getMicrosVersion().equals("version1")) {
-                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, newList, endpoint);
-                } else {
-                    salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, newList, endpoint);
-                }
+                salesResponse = salesApiService.getSalesData(syncJobType, locations, statistics, account, newList, endpoint);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {
@@ -283,8 +282,15 @@ public class SalesAPIController {
                             }else{
                                 response = syncSalesWebService.syncSalesMonthlyAPI(journalBatch.getSalesAPIStatistics(), configuration, responseData);
                             }
+
+                            /* Update sync job data */
+                            if (response.isStatus()) {
+                                syncJobDataService.updateSyncJobDataStatus(journalBatch.getStatisticsData(), Constants.SUCCESS);
+                            }else{
+                                syncJobDataService.updateSyncJobDataStatus(journalBatch.getStatisticsData(), Constants.FAILED);
+                            }
                         }
-                        emailService.sendEmaarMail("bfaisal@entrepreware.com", responseData, account);
+                        emailService.sendEmaarMail("lyoussef@entrepreware.com", responseData, account, syncJobType);
 
                         if (response.isStatus()) {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
@@ -316,6 +322,8 @@ public class SalesAPIController {
 
                     response.setStatus(false);
                     response.setMessage(salesResponse.getMessage());
+
+                    emailService.sendEmaarMail("lyoussef@entrepreware.com", new ArrayList<>(), account, syncJobType);
                 }
 
             } catch (Exception e) {

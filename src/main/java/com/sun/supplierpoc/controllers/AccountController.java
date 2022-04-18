@@ -3,15 +3,11 @@ package com.sun.supplierpoc.controllers;
 import com.google.common.collect.Sets;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.*;
-import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.auth.OauthClientDetails;
 import com.sun.supplierpoc.repositories.*;
 import com.sun.supplierpoc.services.security.CustomClientDetailsService;
 import com.sun.supplierpoc.models.auth.User;
-import org.apache.commons.validator.routines.EmailValidator;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
@@ -21,7 +17,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -136,7 +131,6 @@ public class AccountController {
                 user.setCredentialsNonExpired(true);
                 user.setCreationDate(new Date());
                 user.setUpdateDate(new Date());
-                user.setEmail(userRequest.getEmail());
 
             }else {
                 Optional<User> updatedUserOptional = userRepo.findById(userRequest.getId());
@@ -328,7 +322,7 @@ public class AccountController {
                 new Date(),costOfGoodsConfig,account.getId());
         syncJobTypeRepo.save(costOfGoodsType);*/
         // Sales
-      /*    syncDescription = "Used to sync sales from oracle hospitality reports to sun monthly.";
+          syncDescription = "Used to sync sales from oracle hospitality reports to sun monthly.";
         Configuration salesConfig = new Configuration();
         salesConfig.salesConfiguration = new SalesConfiguration();
         if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
@@ -337,29 +331,28 @@ public class AccountController {
        SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES, syncDescription, "/posSalesSun",
               new Date(), salesConfig, account.getId());
       syncJobTypeRepo.save(salesSyncType);
-*/
 
       // Sales API Daily
-      syncDescription = "Used to sync sales from oracle hospitality reports to API daily .";
-        Configuration salesAPIDailyConfig = new Configuration();
-        salesAPIDailyConfig.salesAPIConfig = new SalesAPIConfig();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            salesAPIDailyConfig.inforConfiguration = new InforConfiguration();
-      }
-       SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES_API_Daily, syncDescription, "/posSalesAPIDaily",
-              new Date(), salesAPIDailyConfig, account.getId());
-      syncJobTypeRepo.save(salesSyncType);
-
-      // Sales API Daily
-      syncDescription = "Used to sync sales from oracle hospitality reports to API monthly.";
-        Configuration salesAPIMonthlyConfig = new Configuration();
-        salesAPIMonthlyConfig.salesAPIConfig = new SalesAPIConfig();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            salesAPIMonthlyConfig.inforConfiguration = new InforConfiguration();
-      }
-       SyncJobType salesSyncApiType = new SyncJobType(7, Constants.SALES_API_Monthly, syncDescription, "/posSalesAPIMonthly",
-              new Date(), salesAPIMonthlyConfig, account.getId());
-      syncJobTypeRepo.save(salesSyncApiType);
+//      syncDescription = "Used to sync sales from oracle hospitality reports to API daily .";
+//        Configuration salesAPIDailyConfig = new Configuration();
+//        salesAPIDailyConfig.salesAPIConfig = new SalesAPIConfig();
+//        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+//            salesAPIDailyConfig.inforConfiguration = new InforConfiguration();
+//      }
+//       SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES_API_Daily, syncDescription, "/posSalesAPIDaily",
+//              new Date(), salesAPIDailyConfig, account.getId());
+//      syncJobTypeRepo.save(salesSyncType);
+//
+//      // Sales API Daily
+//      syncDescription = "Used to sync sales from oracle hospitality reports to API monthly.";
+//        Configuration salesAPIMonthlyConfig = new Configuration();
+//        salesAPIMonthlyConfig.salesAPIConfig = new SalesAPIConfig();
+//        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
+//            salesAPIMonthlyConfig.inforConfiguration = new InforConfiguration();
+//      }
+//       SyncJobType salesSyncApiType = new SyncJobType(7, Constants.SALES_API_Monthly, syncDescription, "/posSalesAPIMonthly",
+//              new Date(), salesAPIMonthlyConfig, account.getId());
+//      syncJobTypeRepo.save(salesSyncApiType);
 
 
 
@@ -446,7 +439,5 @@ public class AccountController {
     public ArrayList<Account> getAccounts() {
         return (ArrayList<Account>) accountRepo.findAll();
     }
-
-
 
 }

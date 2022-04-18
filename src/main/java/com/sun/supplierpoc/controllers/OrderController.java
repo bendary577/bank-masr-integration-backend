@@ -1,14 +1,11 @@
 package com.sun.supplierpoc.controllers;
 
-import com.sun.supplierpoc.models.MenuItemMap;
-import com.sun.supplierpoc.models.Order;
-import com.sun.supplierpoc.repositories.MenuItemsMapRepo;
+import com.sun.supplierpoc.models.AggregatorOrder;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,7 +22,7 @@ public class OrderController {
 
     @PostMapping(value = "/opera/addOrder")
     @ResponseBody
-    public HashMap<String, Object> addOrder(@RequestBody Order order) {
+    public HashMap<String, Object> addOrder(@RequestBody AggregatorOrder order) {
         HashMap<String, Object> response = new HashMap<>();
 
 
@@ -43,21 +40,21 @@ public class OrderController {
     @ResponseBody
     public int getTotalOrders(){
 
-        List<Order> allOrders = orderRepo.findAll();
+        List<AggregatorOrder> allOrders = orderRepo.findAll();
         int totalLength = allOrders.size();
         return totalLength;
     }
 
     @RequestMapping(value = "/opera/getOrders")
     @ResponseBody
-    public List<Order> getOrders(@RequestParam("offset") int offset,
-                                 @RequestParam("size") int size
+    public List<AggregatorOrder> getOrders(@RequestParam("offset") int offset,
+                                           @RequestParam("size") int size
         ){
 
-        List<Order> allOrders = orderRepo.findAll();
+        List<AggregatorOrder> allOrders = orderRepo.findAll();
         int totalLength = allOrders.size();
         int endIndex = offset+size > totalLength ? totalLength : offset+size;
-        List <Order> orders = allOrders.subList(offset,endIndex);
+        List <AggregatorOrder> orders = allOrders.subList(offset,endIndex);
 
         return orders;
     }

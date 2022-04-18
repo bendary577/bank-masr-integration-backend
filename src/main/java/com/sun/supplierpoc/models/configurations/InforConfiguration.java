@@ -1,5 +1,7 @@
 package com.sun.supplierpoc.models.configurations;
 
+import java.util.ArrayList;
+
 public class InforConfiguration {
     public String businessUnit = "";
     public String journalType = "";
@@ -8,6 +10,7 @@ public class InforConfiguration {
     public String suspenseAccount = "";
 
     public String taxAccountCode= "";
-    public String taxAccountReference= "";
-    public String noTaxAccountReference= "";
+    public ArrayList<InforTax> taxes = new ArrayList<>();
+//    public String taxAccountReference= "";
+//    public String noTaxAccountReference= "";
 }

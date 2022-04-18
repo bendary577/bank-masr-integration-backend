@@ -7,6 +7,7 @@ public class RevenueCenter {
     private boolean checked = false;
     private int revenueCenterId;
     private String revenueCenter = "";
+    private String revenueCenterReference = "";
     private String discountAccount ="";
     private String accountCode ="";
     private boolean requireAnalysis = false;
@@ -39,6 +40,14 @@ public class RevenueCenter {
 
     public void setRevenueCenter(String revenueCenter) {
         this.revenueCenter = revenueCenter;
+    }
+
+    public String getRevenueCenterReference() {
+        return revenueCenterReference;
+    }
+
+    public void setRevenueCenterReference(String revenueCenterReference) {
+        this.revenueCenterReference = revenueCenterReference;
     }
 
     public String getDiscountAccount() {

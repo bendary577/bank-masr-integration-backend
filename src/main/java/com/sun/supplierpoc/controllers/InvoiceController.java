@@ -373,14 +373,15 @@ public class InvoiceController {
          * */
         else if(syncJobType.getConfiguration().timePeriod.equals(Constants.USER_DEFINED)) {
             String startDate = syncJobType.getConfiguration().fromDate;
-            String endDate = syncJobType.getConfiguration().toDate;
+            String endDateText = syncJobType.getConfiguration().toDate;
 
             Date date= dateFormat.parse(startDate);
+            Date endDate= dateFormat.parse(endDateText);
 
             Calendar calendar = Calendar.getInstance();
             calendar.setTime(date);
-
-            while (!startDate.equals(endDate)){
+//!startDate.equals(endDate)
+            while (date.compareTo(endDate) < 1){
                 response = getApprovedInvoices(userId, account);
                 if (response.get("success").toString().equals("true") || tryCount == 0){
                     tryCount = 2;
@@ -388,7 +389,8 @@ public class InvoiceController {
                     startDate = dateFormat.format(calendar.getTime());
                     syncJobType.getConfiguration().fromDate = startDate;
                     syncJobType.getConfiguration().toDate = startDate;
-                    endDate=startDate;
+                    date= dateFormat.parse(startDate);
+//                    endDate=startDate;
                     syncJobTypeRepo.save(syncJobType);
                 }else{
                     tryCount = tryCount;

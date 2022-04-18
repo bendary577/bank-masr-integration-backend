@@ -4,7 +4,8 @@ public class CostCenter {
     public boolean checked;
     public String costCenter = "";
     public String locationName = "";
-    public String accountCode = "";
+    public String accountCode = ""; // location code
+    public String branchCode = "";
     public String costCenterReference = "";
     public CostCenter location;
     public boolean syncPerCostCenter;

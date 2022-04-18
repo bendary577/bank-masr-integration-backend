@@ -16,6 +16,7 @@ public class Features {
     public static final String ENTRY_SYSTEM = "entry_system";
     public static final String WALLET = "wallet";
     public static final String REWARD_POINTS = "reward_points";
+    public static final String DELIVERY_AGGREGATORS = "delivery_aggregators";
 
     public static final String OPERA_PAYMENT = "operaPayment";
     public static final String SIMPHONY_MENU = "simphonyMenu";

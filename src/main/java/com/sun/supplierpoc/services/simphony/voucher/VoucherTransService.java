@@ -62,8 +62,8 @@ public class VoucherTransService {
                 response.put("message", "This voucher has been ended.");
             } else if (uniqueVoucher.getNumOfRedemption() >= voucher.getRedemption() ||  uniqueVoucher.getStatus().equals(Constants.CONSUMED)) {
                 response.put("message", "This voucher has been exceeded the redemption quota.");
-            } else if (transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatus(
-                    voucherTransaction.getCheckNumber(), voucherTransaction.getRevenueCentreId(), Constants.SUCCESS)) {
+            } else if (transactionRepo.existsByCheckNumberAndRevenueCentreIdAndStatusAndAccountId(
+                    voucherTransaction.getCheckNumber(), voucherTransaction.getRevenueCentreId(), Constants.SUCCESS, account.getId())) {
                 response.put("message", "Can't use an voucher for the same check twice.");
             } else {
 

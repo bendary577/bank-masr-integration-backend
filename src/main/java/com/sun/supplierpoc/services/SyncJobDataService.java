@@ -1,6 +1,7 @@
 package com.sun.supplierpoc.services;
 
 import com.sun.supplierpoc.Constants;
+import com.sun.supplierpoc.Conversions;
 import com.sun.supplierpoc.models.Journal;
 import com.sun.supplierpoc.models.SyncJob;
 import com.sun.supplierpoc.models.SyncJobData;
@@ -22,6 +23,8 @@ public class SyncJobDataService {
 
     @Autowired
     SyncJobDataRepo syncJobDataRepo;
+
+    private Conversions conversions = new Conversions();
 
     public void updateSyncJobDataStatus(SyncJobData syncJobData, String status, String reason) {
         syncJobData.setStatus(status);
@@ -98,6 +101,11 @@ public class SyncJobDataService {
         if(location != null && !location.accountCode.equals("")){
             index = configuration.locationAnalysisCode;
             data.put("analysisCodeT" + index, location.accountCode);
+        }
+
+        if(location != null && !location.branchCode.equals("")){
+            index = configuration.branchAnalysisCode;
+            data.put("analysisCodeT" + index, location.branchCode);
         }
 
         if(tender != null && !tender.getAnalysisCodeT5().equals("")){
@@ -181,12 +189,14 @@ public class SyncJobDataService {
         }
 
         if(supplier != null && !supplier.getAccountCode().equals("")){
-            index = configuration.taxesCodeAnalysisCode;
-            if(journal.getTax() == 14.00){
-            data.put("analysisCodeT" + index, configuration.inforConfiguration.taxAccountReference);}
-            else{
-            data.put("analysisCodeT" + index, configuration.inforConfiguration.noTaxAccountReference);
+            ArrayList<InforTax> taxes = configuration.inforConfiguration.taxes;
+            InforTax tax = conversions.checkInforTaxExistence(taxes, (int) journal.getTax());
+
+            if(tax != null){
+                index = configuration.taxesCodeAnalysisCode;
+                data.put("analysisCodeT" + index, tax.taxCode);
             }
+
         }
     }
 }

@@ -9,9 +9,9 @@
 3. Add local jars to maven
 	link: https://maven.apache.org/guides/mini/guide-3rd-party-jars-local.html
 
-	mvn install:install-file -Dfile="E:\MahmiudSaeed\xercesImpl.jar" -DgroupId="org.w3c" -DartifactId=xercesImpl -Dversion=1.0 -Dpackaging=1.0
+	mvn install:install-file -Dfile="D:\JARs\xercesImpl.jar" -DgroupId="org.w3c" -DartifactId=xercesImpl -Dversion=1.0 -Dpackaging=1.0
 
-	mvn install:install-file -Dfile="E:\MahmiudSaeed\connect-client.jar" -DgroupId="com.systemsunion" -DartifactId=clientlib -Dversion=1.0 -Dpackaging=1.0
+	mvn install:install-file -Dfile="D:\JARs\connect-client.jar" -DgroupId="com.systemsunion" -DartifactId=clientlib -Dversion=1.0 -Dpackaging=1.0
 
 3. Upload new JAR
     -Generate new jar from terminal

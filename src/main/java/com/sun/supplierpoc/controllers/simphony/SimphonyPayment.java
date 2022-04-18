@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentReq;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.services.AccountService;
@@ -13,9 +14,11 @@ import com.sun.supplierpoc.services.simphony.SimphonyPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.validation.Valid;
 import java.security.Principal;
@@ -33,6 +36,18 @@ public class SimphonyPayment{
     @Autowired
     private AccountRepo accountRepo;
 
+    private SimpleClientHttpRequestFactory getClientHttpRequestFactory()
+    {
+        SimpleClientHttpRequestFactory clientHttpRequestFactory
+                = new SimpleClientHttpRequestFactory();
+        //Connect timeout
+        clientHttpRequestFactory.setConnectTimeout(100_000);
+        //Read timeout
+        clientHttpRequestFactory.setReadTimeout(100_000);
+        return clientHttpRequestFactory;
+    }
+
+    RestTemplate restTemplate = new RestTemplate(getClientHttpRequestFactory());
 
     @PostMapping("/test/simphonyPayment/paySplitCheck")
     public ResponseEntity<?> paymentTransaction(@RequestHeader("Authorization") String authorization,
@@ -40,42 +55,47 @@ public class SimphonyPayment{
                                                 BindingResult result) {
         Response response = new Response();
 
-        try{
-            if(!result.hasErrors()) {
+        ResponseEntity paxResult = restTemplate.getForEntity("http://192.168.1.35:5050" + "?transactionAmount=" +
+                Math.round(1f) + "&currency=" + "eg" + "&transType=" + "12", String.class);
 
-                InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+        paxResult.getBody();
 
-                if(invokerUser != null) {
-
-
-                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
-
-                    if (accountOptional.isPresent()) {
-
-                        Account account = accountOptional.get();
-                        response = simphonyPaymentService.createSimphonyPaymentTransaction(simphonyPayment, account);
-
-                    } else {
-                        response.setStatus(false);
-                        response.setMessage(Constants.ACCOUNT_NOT_EXIST);
-                    }
-                }else{
-
-                    response.setStatus(false);
-                    response.setMessage(Constants.INVALID_USER);
-
-                }
-
-            }else{
-
-            response.setStatus(false);
-            response.setMessage(result.getAllErrors().get(0).getDefaultMessage());
-
-            }
-        }catch(Exception e){
-            response.setStatus(false);
-            response.setMessage(e.getMessage());
-        }
+//        try{
+//            if(!result.hasErrors()) {
+//
+//                InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+//
+//                if(invokerUser != null) {
+//
+//
+//                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
+//
+//                    if (accountOptional.isPresent()) {
+//
+//                        Account account = accountOptional.get();
+//                        response = simphonyPaymentService.createSimphonyPaymentTransaction(simphonyPayment, account);
+//
+//                    } else {
+//                        response.setStatus(false);
+//                        response.setMessage(Constants.ACCOUNT_NOT_EXIST);
+//                    }
+//                }else{
+//
+//                    response.setStatus(false);
+//                    response.setMessage(Constants.INVALID_USER);
+//
+//                }
+//
+//            }else{
+//
+//            response.setStatus(false);
+//            response.setMessage(result.getAllErrors().get(0).getDefaultMessage());
+//
+//            }
+//        }catch(Exception e){
+//            response.setStatus(false);
+//            response.setMessage(e.getMessage());
+//        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

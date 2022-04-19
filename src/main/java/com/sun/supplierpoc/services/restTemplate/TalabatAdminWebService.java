@@ -197,7 +197,7 @@ public class TalabatAdminWebService {
 
         String testParams = "?from=2022-04-16T00:00:00Z&to=2022-04-18T22:17:00Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
 
-        System.out.println(testParams);
+        System.out.println(parameters);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();

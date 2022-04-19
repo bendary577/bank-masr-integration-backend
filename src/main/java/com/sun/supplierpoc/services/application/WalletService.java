@@ -179,6 +179,7 @@ public class WalletService {
                 }
                 WalletHistory walletHistoryChosen = null;
                 for(WalletHistory walletHistory : applicationUser.getWallet().getWalletHistory()){
+                    if(walletHistory.getActionId() == null) continue;
                     if(walletHistory.getActionId().equals(actionId)){
                         walletHistoryChosen = walletHistory;
                         break;
@@ -254,11 +255,7 @@ public class WalletService {
 
         Response response = new Response();
         DecimalFormat decimalFormat = new DecimalFormat("#0.00");
-
-        //get app users
         ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountId(account.getId());
-
-        // total remaining
         double totalRemaining = 0;
 
         try {
@@ -273,6 +270,7 @@ public class WalletService {
 
             Date start = dateFormat.parse(fromDate);
             Date end =  dateFormat.parse(toDate);
+
             if(start.after(end)){
                 Date swap = start;
                 start = end;
@@ -281,14 +279,12 @@ public class WalletService {
 
             //loop on each user wallet
             for (ApplicationUser applicationUser: applicationUsers) {
-
-                if(applicationUser.getWallet().getWalletHistory().isEmpty()){
+                if(applicationUser.isDeleted() || applicationUser.isExpired() || applicationUser.isSuspended() || applicationUser.getWallet() == null || (!(applicationUser.getWallet() == null) && applicationUser.getWallet().getWalletHistory().isEmpty())){
                     continue;
                 }
 
                 if (getActiveGuestsOnly) {
-                    String expirationDateString = dateFormat.format(applicationUser.getExpiryDate());
-                    Date expirationDate = dateFormat.parse(expirationDateString);
+                    Date expirationDate = dateFormat.parse(dateFormat.format(applicationUser.getExpiryDate()));
                     if(start.compareTo(expirationDate) > 0 || start.compareTo(expirationDate) == 0 && (end.after(expirationDate))) { //start after expirationDate
                         continue;
                     }
@@ -307,11 +303,8 @@ public class WalletService {
                     counter--;
                 } while (latestWalletHistory.isDeleted());
 
-                String latestWalletHistoryDateString = dateFormat.format(latestWalletHistory.getDate());
-                Date latestWalletHistoryDate = dateFormat.parse(latestWalletHistoryDateString);
-
-                String oldestWalletHistoryDateString = dateFormat.format(oldestWalletHistory.getDate());
-                Date oldestWalletHistoryDate = dateFormat.parse(oldestWalletHistoryDateString);
+                Date latestWalletHistoryDate = dateFormat.parse(dateFormat.format(latestWalletHistory.getDate()));
+                Date oldestWalletHistoryDate = dateFormat.parse(dateFormat.format(oldestWalletHistory.getDate()));
 
                 //if start date is after latest history
                 if (start.compareTo(latestWalletHistoryDate) > 0) {
@@ -348,11 +341,9 @@ public class WalletService {
             e.printStackTrace();
             System.out.println("exception");
         }
-
         response.setStatus(true);
         response.setMessage("users wallets remaining total returned successfully");
         response.setData(Double.parseDouble(decimalFormat.format(totalRemaining)));
-
         return response;
     }
 

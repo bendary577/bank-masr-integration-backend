@@ -96,6 +96,7 @@ public class AggregatorIntegratorService {
                             order.setCreationDate(new Date());
                             order.setTalabatAdminOrder(talabatAdminOrder);
                             order.setAggregatorName(AggregatorConstants.TALABAT);
+                            order.setAccount(account);
                             orderRepo.save(order);
                         }
 

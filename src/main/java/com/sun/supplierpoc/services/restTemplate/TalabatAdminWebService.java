@@ -60,8 +60,8 @@ public class TalabatAdminWebService {
             MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
 
             // Get Branch Credentials - e.g. password=123456&username=eg-holmes-san-stefano
-//            RequestBody body = RequestBody.create(mediaType, "password=" + branchMapping.getPassword() + "&username=" + branchMapping.getUsername());
-            RequestBody body = RequestBody.create(mediaType, "password=123456&username=eg-holmes-san-stefano");
+            RequestBody body = RequestBody.create(mediaType, "password=" + branchMapping.getPassword() + "&username=" + branchMapping.getUsername());
+//            RequestBody body = RequestBody.create(mediaType, "password=123456&username=eg-holmes-san-stefano");
             Request request = new Request.Builder()
                     .url(BASE_URL+endPoint)
                     .post(body)
@@ -195,15 +195,15 @@ public class TalabatAdminWebService {
                 "&to=" + getDate() + "T" + dateFormat.format(currentDate) + ":00Z" +
                 "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
 
-//        String testParams = "?from=2022-04-18T00:00:00Z&to=2022-04-18T22:17:00Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
-        String testParams = "?from=2022-04-18T00:00:00Z&to=2022-04-18T22:17:00Z";
+        String testParams = "?from=2022-04-16T00:00:00Z&to=2022-04-18T22:17:00Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
 
         System.out.println(testParams);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + testParams)
+                    .url(BASE_URL + endPoint + parameters)
+//                    .url("https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-18T00:00:00Z&to=2022-04-19T07:37:00Z")
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();

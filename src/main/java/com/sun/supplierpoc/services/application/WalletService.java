@@ -188,6 +188,13 @@ public class WalletService {
 
                 if(walletHistoryChosen != null){
 
+                    //if the wallet action amount is charge action and more than current balance, refuse the operation
+                    if(walletHistoryChosen.getOperation().equals(ActionType.CHARGE_WALLET) && walletHistoryChosen.getAmount() > lastBalance){
+                        response.setStatus(false);
+                        response.setMessage("Sorry, your current balance is not enough to deduct the chosen action amount");
+                        return response;
+                    }
+
                     if(walletHistoryChosen.isDeleted()){
                         response.setStatus(false);
                         response.setMessage("Wallet action is already deleted");
@@ -237,7 +244,7 @@ public class WalletService {
                     return response;
                 }else{
                     response.setStatus(false);
-                    response.setMessage("Wallet Action cannot be found");
+                    response.setMessage("Sorry, Can not undo wallet action that has no action id");
                 }
             }catch(Exception e) {
                 e.printStackTrace();

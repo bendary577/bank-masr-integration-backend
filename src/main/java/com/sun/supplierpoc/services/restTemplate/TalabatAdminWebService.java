@@ -203,6 +203,7 @@ public class TalabatAdminWebService {
                     .build();
             Request request = new Request.Builder()
                     .url(BASE_URL + endPoint + parameters)
+//                    .url("https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-18T00:00:00Z&to=2022-04-19T07:37:00Z")
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();

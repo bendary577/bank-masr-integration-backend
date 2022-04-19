@@ -7,6 +7,8 @@ public class ModifierMapping {
     private String foodicsProductId = "";
     private String secondFoodicsProductId = "";
 
+    private boolean isProduct = false;
+
     public ModifierMapping() {
     }
 
@@ -48,5 +50,13 @@ public class ModifierMapping {
 
     public void setSecondFoodicsProductId(String secondFoodicsProductId) {
         this.secondFoodicsProductId = secondFoodicsProductId;
+    }
+
+    public boolean isProduct() {
+        return isProduct;
+    }
+
+    public void setProduct(boolean product) {
+        isProduct = product;
     }
 }

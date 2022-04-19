@@ -35,6 +35,7 @@ public class FoodicsOrder {
     private int discount_type;
 
     private String check_number;
+    private String reference;
     private Meta meta;
 
     @JsonProperty("order_status")
@@ -182,6 +183,14 @@ public class FoodicsOrder {
 
     public void setCheck_number(String check_number) {
         this.check_number = check_number;
+    }
+
+    public String getReference() {
+        return reference;
+    }
+
+    public void setReference(String reference) {
+        this.reference = reference;
     }
 
     public Meta getMeta() {

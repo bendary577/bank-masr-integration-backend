@@ -105,7 +105,7 @@ public class AggregatorIntegratorController {
 
             response.setStatus(true);
             response.setMessage("");
-            response.setData(orderRepo.findAll());
+            response.setData(orderRepo.findAllByAccountOrderByCreationDateDesc(account));
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {

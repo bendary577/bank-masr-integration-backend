@@ -259,6 +259,8 @@ public class AggregatorIntegratorService {
                 Option option;
                 Option secondOption;
                 ArrayList<Option> options = new ArrayList<>();
+                ArrayList<Option> extraProductOptions = new ArrayList<>();
+
                 if(item.getModifiers() != null){
                     for (Modifier modifier: item.getModifiers()) {
                         option = new Option();
@@ -269,12 +271,37 @@ public class AggregatorIntegratorService {
                                 .collect(Collectors.toList()).stream().findFirst().orElse(null);
 
                         if (modifierMapping != null) {
-                            option.setModifier_option_id(modifierMapping.getFoodicsProductId());
+                            ///check on product flag
+                            if(modifierMapping.isProduct()){
+                                extraProductOptions = new ArrayList<>();
+
+                                FoodicsProductObject extraProductObject = new FoodicsProductObject();
+                                extraProductObject.setQuantity(modifier.getAmount());
+                                extraProductObject.setProduct_id(modifierMapping.getFoodicsProductId());
+                                extraProductObject.setUnit_price(modifier.getPrice());
+
+                                // Add options
+                                if(!modifierMapping.getSecondFoodicsProductId().equals("")){
+                                    secondOption = new Option();
+                                    secondOption.setModifier_option_id(modifierMapping.getSecondFoodicsProductId());
+                                    secondOption.setQuantity(1);
+                                    secondOption.setUnit_price(0);
+                                    extraProductOptions.add(secondOption);
+                                }
+
+                                extraProductObject.setOptions(extraProductOptions);
+                                foodicsProductObjects.add(extraProductObject);
+                                continue;
+                            }else{
+                                option.setModifier_option_id(modifierMapping.getFoodicsProductId());
+                            }
                         } else
                             continue; // Skip this product's modifier
 
                         option.setQuantity(modifier.getAmount());
                         option.setUnit_price(modifier.getPrice());
+
+                        options.add(option);
 
                         // Tax information
 /*                        Tax tax;
@@ -289,15 +316,6 @@ public class AggregatorIntegratorService {
 
                         option.setTaxes(taxes);*/
 
-                        options.add(option);
-
-                        if(!modifierMapping.getSecondFoodicsProductId().equals("")){
-                            secondOption = new Option();
-                            secondOption.setModifier_option_id(modifierMapping.getSecondFoodicsProductId());
-                            secondOption.setQuantity(modifier.getAmount());
-                            secondOption.setUnit_price(modifier.getPrice());
-                            options.add(secondOption);
-                        }
                     }
                 }
                 foodicsProductObject.setOptions(options);

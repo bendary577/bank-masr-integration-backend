@@ -299,7 +299,7 @@ public class SalesController {
                         e.getMessage(), Constants.FAILED);
             }
 
-            String message = "Failed to sync sales, Please try agian after few minutes.";
+            String message = "Failed to sync sales, Please try again after few minutes.";
             response.setStatus(false);
             response.setMessage(message);
         }

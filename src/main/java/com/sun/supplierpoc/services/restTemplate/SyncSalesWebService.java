@@ -48,6 +48,8 @@ public class SyncSalesWebService {
                     "\"SalesDate\": \""+salesAPIStatistics.dateFrom+"\"," + "\"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
                     "\"NetSales\": "+salesAPIStatistics.NetSales+"," + "\"FandBSplit\": [" + "{" + fandBSplit + "}]}]}}";
 
+            response.setRequestbody(requestBody);
+
             RequestBody body = RequestBody.create(mediaType, requestBody);
             Request request = new Request.Builder()
                     .url(salesAPIConfig.getApiURL()+salesAPIConfig.getApiEndpoint())

@@ -463,9 +463,12 @@ public class SetupEnvironment {
 
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
-            if(fromDateElements.size() > 0){
-                fromDateElements.get(0).click();
+            if(driver.findElements(By.cssSelector("*[title='Select "
+                    + fromDayName + ", " + fromDateFormatted + "']")).size() > 0){
+//                fromDateElements.get(0).click();
 
+                driver.findElements(By.cssSelector("*[title='Select "
+                        + fromDayName + ", " + fromDateFormatted + "']")).get(0).click();
                 response.setStatus(true);
             }else {
                 response.setMessage(Constants.INVALID_BUSINESS_DATE);

@@ -23,6 +23,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -55,28 +59,46 @@ public class TalabatAdminWebService {
             Gson gson = new Gson();
             String jsonCredential = gson.toJson(credentials);
 
-            OkHttpClient client = new OkHttpClient();
+            boolean talabatConnected = false;
+            try {
+                System.out.println("api url is " + BASE_URL+endPoint);
+                URL url = new URL(BASE_URL+endPoint);
+                URLConnection connection = url.openConnection();
+                connection.connect();
+                talabatConnected = true;
+                System.out.println("Internet is connected " + talabatConnected);
+            } catch (MalformedURLException e) {
+                System.out.println("Internet is not connected " + talabatConnected);
+            } catch (IOException e) {
+                System.out.println("Internet is not connected " + talabatConnected);
+            }
 
-            MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+            if(talabatConnected){
+                OkHttpClient client = new OkHttpClient();
 
-            // Get Branch Credentials - e.g. password=123456&username=eg-holmes-san-stefano
-            RequestBody body = RequestBody.create(mediaType, "password=" + branchMapping.getPassword() + "&username=" + branchMapping.getUsername());
+                MediaType mediaType = MediaType.parse("application/x-www-form-urlencoded");
+
+                // Get Branch Credentials - e.g. password=123456&username=eg-holmes-san-stefano
+                RequestBody body = RequestBody.create(mediaType, "password=" + branchMapping.getPassword() + "&username=" + branchMapping.getUsername());
 //            RequestBody body = RequestBody.create(mediaType, "password=123456&username=eg-holmes-san-stefano");
-            Request request = new Request.Builder()
-                    .url(BASE_URL+endPoint)
-                    .post(body)
-                    .addHeader("content-type", "application/x-www-form-urlencoded")
-                    .addHeader("cache-control", "no-cache")
-                    .build();
+                Request request = new Request.Builder()
+                        .url(BASE_URL+endPoint)
+                        .post(body)
+                        .addHeader("content-type", "application/x-www-form-urlencoded")
+                        .addHeader("cache-control", "no-cache")
+                        .build();
 
-            okhttp3.Response loginResponse = client.newCall(request).execute();
+                okhttp3.Response loginResponse = client.newCall(request).execute();
 
-            gson = new Gson();
+                gson = new Gson();
 
-            talabatAdminToken = gson.fromJson(loginResponse.body().string(), TalabatAdminToken.class);
+                talabatAdminToken = gson.fromJson(loginResponse.body().string(), TalabatAdminToken.class);
 
-            talabatAdminToken.setStatus(loginResponse.code() == 200);
-
+                talabatAdminToken.setStatus(loginResponse.code() == 200);
+            }else{
+                talabatAdminToken.setMessage("failed to connect to talabat webservice");
+                talabatAdminToken.setStatus(false);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             talabatAdminToken.setMessage(e.getMessage());
@@ -183,21 +205,36 @@ public class TalabatAdminWebService {
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(currentDate);
+//        cal.add(Calendar.HOUR, -2);
         cal.add(Calendar.MINUTE, -1);
         Date oneMinBack = cal.getTime();
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        System.out.println(oneMinBack);
+
+        Calendar calender = Calendar.getInstance();
+        calender.setTime(currentDate);
+//        calender.add(Calendar.HOUR, -2);
+        Date toDate = calender.getTime();
+
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
+        System.out.println(toDate);
 
         String dailyParams = "?from=" + getDate() + "T00:00:00Z" + "&to=" + getDate() + "T23:59:59Z" +
 //                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=WAITING_FOR_TRANSPORT" +
                 "&statuses=CLOSED";
-        String tempParams = "?from=2022-04-05T22:00:00Z&to=2022-04-05T22:30:59Z";
+        String tempParams = "?from=2022-04-19T00:00:00Z&to=2022-04-21T" + dateFormat.format(toDate) + ":00Z";
 
         String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
-                "&to=" + getDate() + "T" + dateFormat.format(currentDate) + ":00Z" +
+                "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z" +
                 "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
+
+        String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
+                "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
         String testParams = "?from=2022-04-16T00:00:00Z&to=2022-04-18T22:17:00Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
 
         System.out.println(parameters);
+        System.out.println(BASE_URL + endPoint + parameters);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();

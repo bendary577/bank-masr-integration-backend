@@ -290,7 +290,8 @@ public class SalesAPIController {
                                 syncJobDataService.updateSyncJobDataStatus(journalBatch.getStatisticsData(), Constants.FAILED);
                             }
                         }
-                        emailService.sendEmaarMail("lyoussef@entrepreware.com", responseData, account, syncJobType);
+                        emailService.sendEmaarMail("lyoussef@entrepreware.com", responseData, account, syncJobType, response);
+                        emailService.sendEmaarMail("mbendary@entrepreware.com", responseData, account, syncJobType, response);
 
                         if (response.isStatus()) {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
@@ -323,7 +324,8 @@ public class SalesAPIController {
                     response.setStatus(false);
                     response.setMessage(salesResponse.getMessage());
 
-                    emailService.sendEmaarMail("lyoussef@entrepreware.com", new ArrayList<>(), account, syncJobType);
+                    emailService.sendEmaarMail("lyoussef@entrepreware.com", new ArrayList<>(), account, syncJobType, response);
+                    emailService.sendEmaarMail("mbendary@entrepreware.com", new ArrayList<>(), account, syncJobType, response);
                 }
 
             } catch (Exception e) {

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class MicrosFeatures {
@@ -78,13 +79,18 @@ public class MicrosFeatures {
                 try {
                     // Advanced
                     try {
+//                        TimeUnit.SECONDS.sleep(1);
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
                         driver.findElement(By.id("businessDateFilter_href_link")).click();
+                        TimeUnit.SECONDS.sleep(1);
                     } catch (Exception e){
                         response.setStatus(false);
                         response.setMessage(e.getMessage());
                         return response;
                     }
+
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+                    driver.findElement(By.id("clear0")).click();
 
                     // Choose Date Range
                     if (fromDate.equals(toDate)){

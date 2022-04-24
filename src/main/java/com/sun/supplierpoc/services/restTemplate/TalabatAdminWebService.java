@@ -205,7 +205,7 @@ public class TalabatAdminWebService {
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(currentDate);
-//        cal.add(Calendar.HOUR, -2);
+//        cal.add(Calendar.HOUR, -5);
         cal.add(Calendar.MINUTE, -1);
         Date oneMinBack = cal.getTime();
         System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
@@ -213,7 +213,7 @@ public class TalabatAdminWebService {
 
         Calendar calender = Calendar.getInstance();
         calender.setTime(currentDate);
-//        calender.add(Calendar.HOUR, -2);
+//        calender.add(Calendar.HOUR, -4);
         Date toDate = calender.getTime();
 
         System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
@@ -231,7 +231,8 @@ public class TalabatAdminWebService {
         String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
-        String testParams = "?from=2022-04-16T00:00:00Z&to=2022-04-18T22:17:00Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
+        String testParams = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
+                "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
         System.out.println(parameters);
         System.out.println(BASE_URL + endPoint + parameters);

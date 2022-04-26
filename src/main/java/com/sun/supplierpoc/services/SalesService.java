@@ -1119,6 +1119,7 @@ public class SalesService {
                 differentData.put("transactionDate", transactionDate);
 
                 // {Debit} - ShortagePOS
+
                 if (totalCr > totalDr ) {
                     String cashShortagePOS = configuration.salesConfiguration.cashShortagePOS;
                     differentData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(totalCr - totalDr)));

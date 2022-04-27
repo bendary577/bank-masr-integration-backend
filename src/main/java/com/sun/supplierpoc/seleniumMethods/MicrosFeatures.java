@@ -88,25 +88,17 @@ public class MicrosFeatures {
                         response.setMessage(e.getMessage());
                         return response;
                     }
-//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
                     if(!driver.findElements(By.id("clear0")).isEmpty()){
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
                     }else{
-                        System.out.println("no element");
                         //while element is not possible .. cancel and start again
                         do{
                             wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("advance_filter_busDates_cancel")));
                             driver.findElement(By.id("advance_filter_busDates_cancel")).click();
                             try {
-                                System.out.println("re edit filter");
-//                                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
-//                                driver.findElement(By.id("edit_filter_button")).click();
-                                System.out.println("re run advanced business dates");
                                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
                                 driver.findElement(By.id("businessDateFilter_href_link")).click();
-                                System.out.println("after choosing dates");
                                 TimeUnit.SECONDS.sleep(1);
-
                             }catch (Exception e){
                                 response.setStatus(false);
                                 response.setMessage(e.getMessage());

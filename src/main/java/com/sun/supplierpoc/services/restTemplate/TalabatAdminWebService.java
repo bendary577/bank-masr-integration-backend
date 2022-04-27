@@ -205,19 +205,12 @@ public class TalabatAdminWebService {
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(currentDate);
-//        cal.add(Calendar.HOUR, -5);
         cal.add(Calendar.MINUTE, -1);
         Date oneMinBack = cal.getTime();
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-        System.out.println(oneMinBack);
 
         Calendar calender = Calendar.getInstance();
         calender.setTime(currentDate);
-//        calender.add(Calendar.HOUR, -4);
         Date toDate = calender.getTime();
-
-        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-        System.out.println(toDate);
 
         String dailyParams = "?from=" + getDate() + "T00:00:00Z" + "&to=" + getDate() + "T23:59:59Z" +
 //                "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=WAITING_FOR_TRANSPORT" +
@@ -231,16 +224,15 @@ public class TalabatAdminWebService {
         String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
-        String testParams = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
-                "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
+        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
 
-        System.out.println(parameters);
-        System.out.println(BASE_URL + endPoint + parameters);
+        System.out.println(TESTPARAM);
+        System.out.println(BASE_URL + endPoint + TESTPARAM);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + parameters)
+                    .url(BASE_URL + endPoint + TESTPARAM)
 //                    .url("https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-18T00:00:00Z&to=2022-04-19T07:37:00Z")
                     .method("GET", null)
                     .addHeader("Authorization",
@@ -262,6 +254,7 @@ public class TalabatAdminWebService {
             talabatAdminToken.setStatus(false);
         }
 
+        System.out.println("number of orders is " + orders.length);
         return orders;
     }
 

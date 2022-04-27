@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
@@ -277,7 +278,7 @@ public class SendEmailService {
     }
 
 
-    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account, SyncJobType syncJobType){
+    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account, SyncJobType syncJobType, Response requestResponse){
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
         try {
@@ -294,6 +295,8 @@ public class SendEmailService {
                         "Store Number : " + response.get("storeNum") + " <br>"  +
                         "Start Date : "  + syncJobType.getConfiguration().getFromDate()+ " <br>" +
                         "End Date : "  + syncJobType.getConfiguration().getToDate() + " <br>" +
+                        "Request Body Is: "  + requestResponse.getRequestbody() + " <br>" +
+                        "Request Response Is: "  + requestResponse.getData() + " <br>" +
 //                        "For Date : "  + response.get("date") + " <br>" +
                         "Result : " + response.get("Result") + " <br>" +
                         "with request body : " + response.get("requestBody")  + " <br> <br> <br>";

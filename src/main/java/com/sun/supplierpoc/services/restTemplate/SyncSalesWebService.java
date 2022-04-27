@@ -48,9 +48,11 @@ public class SyncSalesWebService {
                     "\"SalesDate\": \""+salesAPIStatistics.dateFrom+"\"," + "\"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
                     "\"NetSales\": "+salesAPIStatistics.NetSales+"," + "\"FandBSplit\": [" + "{" + fandBSplit + "}]}]}}";
 
+            response.setRequestbody(requestBody);
+
             RequestBody body = RequestBody.create(mediaType, requestBody);
             Request request = new Request.Builder()
-                    .url(url)
+                    .url(salesAPIConfig.getApiURL()+salesAPIConfig.getApiEndpoint())
                     .post(body)
                     .addHeader("content-type", "application/json")
                     .addHeader("x-apikey", salesAPIConfig.apiKey)
@@ -108,7 +110,7 @@ public class SyncSalesWebService {
 
             RequestBody body = RequestBody.create(mediaType,requestBody);
 
-            Request request = new Request.Builder().url(url).post(body)
+            Request request = new Request.Builder().url(salesAPIConfig.getApiURL()+salesAPIConfig.getApiEndpoint()).post(body)
                     .addHeader("content-type", "application/json")
                     .addHeader("x-apikey", salesAPIConfig.apiKey)
                     .addHeader("cache-control", "no-cache")

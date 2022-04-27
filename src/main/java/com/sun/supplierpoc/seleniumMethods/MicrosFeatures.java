@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class MicrosFeatures {
@@ -78,13 +79,43 @@ public class MicrosFeatures {
                 try {
                     // Advanced
                     try {
+//                        TimeUnit.SECONDS.sleep(1);
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
                         driver.findElement(By.id("businessDateFilter_href_link")).click();
+                        TimeUnit.SECONDS.sleep(1);
                     } catch (Exception e){
                         response.setStatus(false);
                         response.setMessage(e.getMessage());
                         return response;
                     }
+//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+                    if(!driver.findElements(By.id("clear0")).isEmpty()){
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+                    }else{
+                        System.out.println("no element");
+                        //while element is not possible .. cancel and start again
+                        do{
+                            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("advance_filter_busDates_cancel")));
+                            driver.findElement(By.id("advance_filter_busDates_cancel")).click();
+                            try {
+                                System.out.println("re edit filter");
+//                                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
+//                                driver.findElement(By.id("edit_filter_button")).click();
+                                System.out.println("re run advanced business dates");
+                                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
+                                driver.findElement(By.id("businessDateFilter_href_link")).click();
+                                System.out.println("after choosing dates");
+                                TimeUnit.SECONDS.sleep(1);
+
+                            }catch (Exception e){
+                                response.setStatus(false);
+                                response.setMessage(e.getMessage());
+                                return response;
+                            }
+
+                        }while(driver.findElements(By.id("clear0")).isEmpty());
+                    }
+                    driver.findElement(By.id("clear0")).click();
 
                     // Choose Date Range
                     if (fromDate.equals(toDate)){
@@ -133,32 +164,32 @@ public class MicrosFeatures {
                 }
             }
 
-            if (driver.findElements(By.id("location_label")).size() != 0){
-                try {
-                    // Business Location
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_locations_select")));
-                    wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_locations_select")));
-                    driver.findElement(By.id("oj-select-choice-search_locations_select")).click();
-
-                    // Filter by range
-                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
-
-                    if (location == null || location.equals("")){
-                        input.sendKeys("all");
-                    }else{
-                        input.sendKeys(location);
-                    }
-
-                    Thread.sleep(500);
-                    input.sendKeys(Keys.ARROW_DOWN);
-                    input.sendKeys(Keys.ENTER);
-                } catch (Exception e) {
-                    response.setStatus(false);
-                    response.setMessage(Constants.INVALID_LOCATION);
-                    response.setEntries(new ArrayList<>());
-                    return response;
-                }
-            }
+//            if (driver.findElements(By.id("location_label")).size() != 0){
+//                try {
+//                    // Business Location
+//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_locations_select")));
+//                    wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_locations_select")));
+//                    driver.findElement(By.id("oj-select-choice-search_locations_select")).click();
+//
+//                    // Filter by range
+//                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
+//
+//                    if (location == null || location.equals("")){
+//                        input.sendKeys("all");
+//                    }else{
+//                        input.sendKeys(location);
+//                    }
+//
+//                    Thread.sleep(500);
+//                    input.sendKeys(Keys.ARROW_DOWN);
+//                    input.sendKeys(Keys.ENTER);
+//                } catch (Exception e) {
+//                    response.setStatus(false);
+//                    response.setMessage(Constants.INVALID_LOCATION);
+//                    response.setEntries(new ArrayList<>());
+//                    return response;
+//                }
+//            }
 
             if (driver.findElements(By.id("rvc_filter_label")).size() != 0){
                 try {
@@ -310,4 +341,75 @@ public class MicrosFeatures {
         return response;
     }
 
+//    public Response reRunFilters(Response response, WebDriver driver, String timePeriod, String fromDate, String toDate){
+//        try {
+//            WebDriverWait wait = new WebDriverWait(driver, 30);
+//            WebDriverWait shortWait = new WebDriverWait(driver, 5);
+//
+//            // Edit Parameters
+//            try {
+//                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
+//                driver.findElement(By.id("edit_filter_button")).click();
+//            }catch (Exception e){
+//                response.setStatus(false);
+//                response.setMessage(e.getMessage());
+//                return response;
+//            }
+//
+//            if (timePeriod.equals(Constants.USER_DEFINED)) {
+//                try {
+//                    // Advanced
+//                    try {
+////                        TimeUnit.SECONDS.sleep(1);
+//                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
+//                        driver.findElement(By.id("businessDateFilter_href_link")).click();
+//                        TimeUnit.SECONDS.sleep(1);
+//                    } catch (Exception e){
+//                        response.setStatus(false);
+//                        response.setMessage(e.getMessage());
+//                        return response;
+//                    }
+//
+////                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+//                    TimeUnit.SECONDS.sleep(1);
+//                    if(!driver.findElements(By.id("clear0")).isEmpty()){
+//                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+//                        driver.findElement(By.id("clear0")).click();
+//                    }else{
+//                        System.out.println("no element");
+//                        driver.findElement(By.id("advance_filter_busDates_cancel")).click();
+//                    }
+//
+//
+//                    // Choose Date Range
+//                    if (fromDate.equals(toDate)){
+//                        response = setupEnvironment.chooseDayDateOHRA(fromDate,driver);
+//                    }else{
+//                        response = setupEnvironment.chooseRangeDaysDateOHRA(fromDate, toDate, driver);
+//                    }
+//
+//                    if (!response.isStatus()){
+//                        return response;
+//                    }
+//
+//                    // Apply
+//                    driver.findElement(By.xpath("//*[@id=\"advance_filter_busDates_apply\"]/button")).click();
+//
+//                } catch (Exception e) {
+//                    driver.quit();
+//                    e.printStackTrace();
+//                    response.setStatus(false);
+//                    response.setMessage(Constants.INVALID_BUSINESS_DATE);
+//                    response.setEntries(new ArrayList<>());
+//                    return response;
+//                }
+//            }
+//
+//            response.setStatus(true);
+//            response.setMessage("");
+//        } catch (Exception e) {
+//            response.setStatus(false);
+//            response.setMessage("Failed to choose business date");
+//        }
+//    }
 }

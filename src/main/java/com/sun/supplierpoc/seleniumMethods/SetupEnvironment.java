@@ -47,7 +47,7 @@ public class SetupEnvironment {
             return new ChromeDriver(options);
         } else {
             FirefoxBinary firefoxBinary = new FirefoxBinary();
-            firefoxBinary.addCommandLineOptions("--headless");
+//            firefoxBinary.addCommandLineOptions("--headless");
             FirefoxOptions firefoxOptions = new FirefoxOptions();
 
             firefoxOptions.setBinary(firefoxBinary);
@@ -438,10 +438,9 @@ public class SetupEnvironment {
     public Response chooseDayDateOHRA(String syncFromDate, WebDriver driver) {
         Response response = new Response();
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 20);
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
-
-            driver.findElement(By.id("clear0")).click();
+//            WebDriverWait wait = new WebDriverWait(driver, 30);
+//            wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
+//            driver.findElement(By.id("clear0")).click();
             try {
                 Select businessDate = new Select(driver.findElement(By.id("selectYear")));
                 businessDate.selectByVisibleText(syncFromDate.split("-")[0]);
@@ -463,9 +462,13 @@ public class SetupEnvironment {
 
             List<WebElement> fromDateElements = driver.findElements(By.cssSelector("*[title='Select "
                     + fromDayName + ", " + fromDateFormatted + "']"));
+//            if(driver.findElements(By.cssSelector("*[title='Select "
+//                    + fromDayName + ", " + fromDateFormatted + "']")).size() > 0){
             if(fromDateElements.size() > 0){
                 fromDateElements.get(0).click();
 
+//                driver.findElements(By.cssSelector("*[title='Select "
+//                        + fromDayName + ", " + fromDateFormatted + "']")).get(0).click();
                 response.setStatus(true);
             }else {
                 response.setMessage(Constants.INVALID_BUSINESS_DATE);

@@ -224,7 +224,8 @@ public class TalabatAdminWebService {
         String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
-        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
+//        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
+        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z";
 
         System.out.println(TESTPARAM);
         System.out.println(BASE_URL + endPoint + TESTPARAM);

@@ -238,6 +238,7 @@ public class SalesApiService {
 
             double taxAmount = 0;
             double netSales;
+            double totalNetSales = 0;
             int checkPerType;
             for (int i = 2; i < rows.size(); i++) {
                 statisticValues = setupEnvironment.getTableColumns(rows, false, i);
@@ -268,14 +269,15 @@ public class SalesApiService {
 
                 if(isTaxIncluded){
                     /* Subtract tax amount */
-                    netSales = (netSales * 100)/105;
+                    netSales = conversions.roundUpDouble((netSales * 100)/105);
                 }
+                totalNetSales += netSales;
 
-                orderTypeChannel.setNetSales(String.valueOf(conversions.roundUpDoubleTowDigits(Double.parseDouble(orderTypeChannel.getNetSales()) + netSales)));
-                orderTypeChannel.setCheckCount(String.valueOf(Integer.parseInt(orderTypeChannel.getCheckCount()) +checkPerType));
+                orderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
+                orderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
 
             }
-
+            salesAPIStatistics.NetSales = String.valueOf(conversions.roundUpDouble(totalNetSales));
             salesAPIStatistics.setOrderTypeChannels(orderTypeChannels);
 
             response.setStatus(true);

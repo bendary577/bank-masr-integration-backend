@@ -57,11 +57,12 @@ public class SyncSalesWebService {
                     .addHeader("content-type", "application/json")
                     .addHeader("x-apikey", salesAPIConfig.apiKey)
                     .addHeader("cache-control", "no-cache")
-                    .addHeader("postman-token", "1ae7acda-de8d-b7e0-735a-eea92685be0f")
+//                    .addHeader("postman-token", "1ae7acda-de8d-b7e0-735a-eea92685be0f")
                     .build();
             okhttp3.Response salesResponse = client.newCall(request).execute();
             if (salesResponse.code() == 200){
                 Gson gson = new Gson();
+
 
                 salesAPIResponse = gson.fromJson(salesResponse.body().string(), HashMap.class);
                 salesAPIResponse.put("storeName", salesAPIStatistics.getBrand());
@@ -69,8 +70,13 @@ public class SyncSalesWebService {
                 salesAPIResponse.put("date", salesAPIStatistics.getDateFrom());
                 salesAPIResponse.put("requestBody", requestBody);
                 responseData.add(salesAPIResponse);
-                response.setStatus(true);
                 response.setData(responseData);
+
+                if(salesAPIResponse.get("Code").equals("200")){
+                    response.setStatus(true);
+                }else {
+                    response.setStatus(false);
+                }
                 response.setMessage(responseData.get(0).get("Result"));
             }else {
                 response.setStatus(false);

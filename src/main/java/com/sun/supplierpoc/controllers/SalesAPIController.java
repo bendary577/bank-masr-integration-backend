@@ -302,10 +302,10 @@ public class SalesAPIController {
                                 return response;
                             } else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                        "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
+                                        "Failed to send files via Emaar API.", Constants.FAILED);
 
                                 response.setStatus(true);
-                                response.setMessage("Failed to send files via " + account.getSendMethod() + ".");
+                                response.setMessage("Failed to send files via Emaar API.");
                                 return response;
                             }
 

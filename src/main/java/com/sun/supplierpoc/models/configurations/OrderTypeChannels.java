@@ -6,8 +6,8 @@ public class OrderTypeChannels implements Cloneable{
     private String orderType;
     private String channel;
     private String channelCount;
-    private String checkCount = "0";
-    private String netSales = "0";
+    private int checkCount = 0;
+    private double netSales = 0;
 
     public boolean isChecked() {
         return checked;
@@ -33,20 +33,20 @@ public class OrderTypeChannels implements Cloneable{
         this.channel = channel;
     }
 
-    public String getNetSales() {
-        return netSales;
-    }
-
-    public void setNetSales(String netSales) {
-        this.netSales = netSales;
-    }
-
-    public String getCheckCount() {
+    public int getCheckCount() {
         return checkCount;
     }
 
-    public void setCheckCount(String checkCount) {
+    public void setCheckCount(int checkCount) {
         this.checkCount = checkCount;
+    }
+
+    public double getNetSales() {
+        return netSales;
+    }
+
+    public void setNetSales(double netSales) {
+        this.netSales = netSales;
     }
 
     public String getChannelCount() {

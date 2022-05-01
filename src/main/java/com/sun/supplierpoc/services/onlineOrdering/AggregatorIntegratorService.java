@@ -277,7 +277,7 @@ public class AggregatorIntegratorService {
                 Option secondOption;
                 ArrayList<Option> extraProductOptions = new ArrayList<>();
 
-                if(item.getModifiers() != null){
+                if(item.getModifiers() != null && !productsMapping.isCombo()){
                     for (Modifier modifier: item.getModifiers()) {
                         option = new Option();
 

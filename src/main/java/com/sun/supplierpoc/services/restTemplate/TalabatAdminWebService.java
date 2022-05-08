@@ -225,15 +225,15 @@ public class TalabatAdminWebService {
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
 //        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
-//        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z";
+        String TESTPARAM = "?from=2022-05-01T00:00:00Z&to=2022-05-01T23:59:59Z";
 
-        System.out.println(parameters);
-        System.out.println(BASE_URL + endPoint + parameters);
+        System.out.println(TESTPARAM);
+        System.out.println(BASE_URL + endPoint + TESTPARAM);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + parameters)
+                    .url(BASE_URL + endPoint + TESTPARAM)
 //                    .url("https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-18T00:00:00Z&to=2022-04-19T07:37:00Z")
                     .method("GET", null)
                     .addHeader("Authorization",

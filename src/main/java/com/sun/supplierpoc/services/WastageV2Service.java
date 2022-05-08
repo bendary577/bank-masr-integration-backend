@@ -114,7 +114,7 @@ public class WastageV2Service {
 
                 // Filter Report
                 Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                        null,"", driver);
+                        null,"", driver, account.getMicrosVersion());
 
                 if (!dateResponse.isStatus()){
                     response.setStatus(false);

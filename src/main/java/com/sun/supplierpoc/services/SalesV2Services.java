@@ -925,13 +925,15 @@ public class SalesV2Services {
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                 }
 
-                majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
-                        , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
-
                 /* Discount amount */
 //                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discount_total")).getText().strip());
                 discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
-                majorGroupAmount = majorGroupAmount - discountAmount;
+
+//                majorGroupAmount = majorGroupAmount - (discountAmount);
+
+                majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
+                        , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
+
 
                 if (discountAmount != 0){
                     Discount groupDiscount = new Discount();
@@ -1033,7 +1035,12 @@ public class SalesV2Services {
 
             // Fetch service charges table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7097_0\"]/table")));
+                if(version.equals(Constants.VERSION_1)){
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_1575_0\"]/table")));
+                }else{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7097_0\"]/table")));
+                }
+
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
@@ -1041,13 +1048,39 @@ public class SalesV2Services {
             }
 
             /* view/expand service charge types */
-            WebElement expander = driver.findElement(By.id("row_expander_7097_0_0:0"));
+            WebElement expander = null;
+            WebElement secondExpander = null;
+
+            if(version.equals(Constants.VERSION_1)){
+                expander = driver.findElement(By.id("row_expander_1575_0_0:0"));
+                secondExpander = driver.findElement(By.id("row_expander_1575_0_0:1"));
+            }else{
+                expander = driver.findElement(By.id("row_expander_7097_0_0:0"));
+                secondExpander = driver.findElement(By.id("row_expander_7097_0_0:1"));
+            }
+
             if(expander != null)
                 expander.click();
 
+            try{
+                if(secondExpander != null)
+                    secondExpander.click();
+            }catch (Exception e){
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("row_expander_1575_0_0:1")));
+                driver.findElement(By.id("row_expander_1575_0_0:1")).click();
+            }
+
+
             /* Wait until table be ready for reading */
             TimeUnit.SECONDS.sleep(2);
-            WebElement serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7097_0\"]/table"));
+
+            WebElement serviceChargeTable = null;
+            if(version.equals(Constants.VERSION_1)){
+                serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_1575_0\"]/table"));
+            }else{
+                serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7097_0\"]/table"));
+            }
+
 
             List<WebElement> rows = serviceChargeTable.findElements(By.tagName("tr"));
 

@@ -61,16 +61,14 @@ public class TalabatAdminWebService {
 
             boolean talabatConnected = false;
             try {
-                System.out.println("api url is " + BASE_URL+endPoint);
                 URL url = new URL(BASE_URL+endPoint);
                 URLConnection connection = url.openConnection();
                 connection.connect();
                 talabatConnected = true;
-                System.out.println("Internet is connected " + talabatConnected);
             } catch (MalformedURLException e) {
-                System.out.println("Internet is not connected " + talabatConnected);
+//                System.out.println("Internet is not connected " + talabatConnected);
             } catch (IOException e) {
-                System.out.println("Internet is not connected " + talabatConnected);
+//                System.out.println("Internet is not connected " + talabatConnected);
             }
 
             if(talabatConnected){
@@ -217,24 +215,20 @@ public class TalabatAdminWebService {
                 "&statuses=CLOSED";
         String tempParams = "?from=2022-04-19T00:00:00Z&to=2022-04-21T" + dateFormat.format(toDate) + ":00Z";
 
+        String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
+                "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
+
+        String TESTPARAM = "?from=2022-05-01T00:00:00Z&to=2022-05-01T23:59:59Z";
+
         String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z" +
                 "&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
 
-        String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
-                "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
-
-//        String TESTPARAM = "?from=2022-04-27T00:00:00Z&to=2022-04-27T23:59:59Z&statuses=ACCEPTED&statuses=PREORDER_ACCEPTED&statuses=NEW&statuses=WAITING_FOR_TRANSPORT";
-        String TESTPARAM = "?from=2022-05-01T00:00:00Z&to=2022-05-01T23:59:59Z";
-
-        System.out.println(TESTPARAM);
-        System.out.println(BASE_URL + endPoint + TESTPARAM);
         try {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + TESTPARAM)
-//                    .url("https://crs.me.restaurant-partners.com/api/2/deliveries?from=2022-04-18T00:00:00Z&to=2022-04-19T07:37:00Z")
+                    .url(BASE_URL + endPoint + parameters)
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();
@@ -255,7 +249,6 @@ public class TalabatAdminWebService {
             talabatAdminToken.setStatus(false);
         }
 
-        System.out.println("number of orders is " + orders.length);
         return orders;
     }
 

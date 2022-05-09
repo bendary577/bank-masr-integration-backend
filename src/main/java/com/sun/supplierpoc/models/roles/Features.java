@@ -13,6 +13,7 @@ public class Features {
 
     public static final String APPLICATIONS = "applications";
     public static final String LOYALTY = "loyalty";
+    public static final String CANTEEN = "canteen";
     public static final String ENTRY_SYSTEM = "entry_system";
     public static final String WALLET = "wallet";
     public static final String REWARD_POINTS = "reward_points";

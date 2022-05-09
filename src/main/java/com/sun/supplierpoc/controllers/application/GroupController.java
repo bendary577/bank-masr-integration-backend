@@ -91,6 +91,7 @@ public class GroupController {
         return new ResponseEntity(HttpStatus.FORBIDDEN);
     }
 
+
     @RequestMapping("/getApplicationGroups")
     @CrossOrigin(origins = "*")
     @ResponseBody
@@ -422,4 +423,13 @@ public class GroupController {
             return new ArrayList<>();
         }
     }
+
+
+    @RequestMapping("/saveGroup")
+    public Group saveGroup(Principal principal, @RequestBody Group group) {
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Group savedGroup = appGroupService.saveGroup(group);
+        return savedGroup;
+    }
+
 }

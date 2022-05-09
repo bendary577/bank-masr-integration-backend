@@ -81,6 +81,7 @@ public class Constants {
 
 
     public static String USE_WALLET = "Wallet";
+    public static String CANTEEN = "Canteen";
     // Guest pay product to get more points
     public static String REWARD_POINTS = "Reward Points";
     // Guest use points to get products

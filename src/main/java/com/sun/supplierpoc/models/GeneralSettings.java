@@ -61,6 +61,8 @@ public class GeneralSettings {
     private Date creationDate;
     private boolean deleted;
 
+
+
     public GeneralSettings() {
     }
 

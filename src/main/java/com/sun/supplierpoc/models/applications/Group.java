@@ -1,5 +1,6 @@
 package com.sun.supplierpoc.models.applications;
 
+import com.sun.supplierpoc.models.configurations.CanteenConfiguration;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
@@ -18,6 +19,7 @@ public class Group implements Serializable {
     private Date creationDate;
     private Date lastUpdate;
     private boolean deleted;
+    private CanteenConfiguration canteenConfiguration;
 
     public Group() {
     }
@@ -118,6 +120,14 @@ public class Group implements Serializable {
 
     public void setSimphonyDiscount(SimphonyDiscount simphonyDiscount) {
         this.simphonyDiscount = simphonyDiscount;
+    }
+
+    public CanteenConfiguration getCanteenConfiguration() {
+        return canteenConfiguration;
+    }
+
+    public void setCanteenConfiguration(CanteenConfiguration canteenConfiguration) {
+        this.canteenConfiguration = canteenConfiguration;
     }
 }
 

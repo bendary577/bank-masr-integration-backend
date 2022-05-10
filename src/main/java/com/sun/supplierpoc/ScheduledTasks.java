@@ -8,11 +8,14 @@ import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.BirthdayGift;
+import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.SyncJobTypeRepo;
+import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.AccountService;
+import com.sun.supplierpoc.services.AppGroupService;
 import com.sun.supplierpoc.services.FeatureService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
@@ -85,6 +88,9 @@ public class ScheduledTasks {
     @Autowired
     private AggregatorIntegratorService aggregatorIntegratorService;
 
+    @Autowired
+    AppGroupService appGroupService;
+
     private static final Logger logger = LoggerFactory.getLogger(ScheduledTasks.class);
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
@@ -148,6 +154,93 @@ public class ScheduledTasks {
                     user.setPoints(addedPoints);
                     appUserService.saveUsers(user);
                 }
+            }
+        }
+
+        feature = featureService.getFeatureByRef(Features.CANTEEN);
+        if(feature == null)
+            return;
+
+        accounts = accountService.getActiveAccountsHasFeature(feature);
+
+        //////////////////////////////////////  Get Current date //////////////////////////////////////
+        String[] weekdays = new DateFormatSymbols(Locale.ENGLISH).getWeekdays();
+
+        myCalendar = Calendar.getInstance();
+        date = new Date();
+        myCalendar.setTime(date);
+
+        int hour = myCalendar.get(Calendar.HOUR_OF_DAY);
+        int dayOfWeek = myCalendar.get(Calendar.DAY_OF_WEEK);
+        dayOfMonth = myCalendar.get(Calendar.DAY_OF_MONTH);
+        String dayOfWeekName = weekdays[dayOfWeek];
+        ///////////////////////////////////////////////////////////////////////////////////////////////
+
+        boolean accountHasCanteenFeature = false;
+
+        for (Account account : accounts) {
+
+            //check if account has canteen feature
+            for (Feature feature1 : account.getFeatures()) {
+                if (feature1.getReference().equals(Features.CANTEEN)) {
+                    accountHasCanteenFeature = true;
+                    break;
+                }
+            }
+
+            if (accountHasCanteenFeature) {
+                List<Group> groups = appGroupService.getTopGroups(account);
+                ArrayList<Group> groupsQueue = new ArrayList<>();
+                if (groups.size() == 0) continue;
+
+                for (Group group : groups) {
+                    if (group.getCanteenConfiguration().getHour().equals("")) continue;
+
+                    String schedulerHour = group.getCanteenConfiguration().getHour();
+                    String[] arrOfStr = schedulerHour.split(":");
+
+                    // check hours
+                    if (group.getCanteenConfiguration().getDuration().equals(Constants.DAILY)) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
+                            groupsQueue.add(group);
+                            System.out.println(Constants.DAILY);
+                            System.out.println(group.getName());
+                        }
+                    }
+
+                    // check hours and day_name
+                    if (group.getCanteenConfiguration().getDuration().equals(Constants.WEEKLY)) {
+                        if (group.getCanteenConfiguration().getDayName() != null) {
+                            if (Integer.parseInt(arrOfStr[0]) == hour) {
+                                String schedulerDay = (group.getCanteenConfiguration().getDayName()).toLowerCase();
+                                if (dayOfWeekName.equals(schedulerDay)) {
+                                    groupsQueue.add(group);
+                                    System.out.println(Constants.WEEKLY);
+                                    System.out.println(group.getName());
+                                }
+                            }
+                        }
+                    }
+
+                    // check hours and day
+                    if (group.getCanteenConfiguration().getDuration().equals(Constants.MONTHLY)) {
+                        if (group.getCanteenConfiguration().getDay() != null) {
+                            if (Integer.parseInt(arrOfStr[0]) == hour) {
+                                int schedulerDay = Integer.parseInt(group.getCanteenConfiguration().getDay());
+                                if (dayOfMonth == schedulerDay) {
+                                    groupsQueue.add(group);
+                                    System.out.println(Constants.MONTHLY);
+                                    System.out.println(group.getName());
+                                }
+                            }
+                        }
+                    }
+                }
+                for (Group group : groupsQueue) {
+                    appGroupService.resetGroupWallet(account, group.getId());
+                }
+            } else {
+                continue;
             }
         }
     }
@@ -295,4 +388,22 @@ public class ScheduledTasks {
             aggregatorIntegratorService.sendTalabatOrdersToFoodics(account);
         }
     }
+
+
+
+//    // run every 60 min
+//    // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
+//    //    @Scheduled(cron = "0 0/52 * * * SUN-SAT")
+//    //    @Scheduled(cron = "0/20 * * * * ?")
+//    //    @Scheduled(cron = "*/1 * * * * SUN-SAT")
+//    @Scheduled(cron = "0 * * * * SUN-SAT")
+//    public void canteenSchedular() {
+//        logger.info("Canteen Schedular Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
+//        logger.info("Current Thread : {}", Thread.currentThread().getName());
+//
+//
+//    }
+
+
+
 }

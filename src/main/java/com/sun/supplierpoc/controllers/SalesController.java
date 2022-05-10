@@ -178,13 +178,16 @@ public class SalesController {
 
             try {
                 Response salesResponse;
-                if (account.getMicrosVersion().equals("version1")) {
-                    salesResponse = salesService.getSalesData(syncJobType, locations,
-                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
-                } else {
-                    salesResponse = salesV2Services.getSalesData(syncJobType, locations,
-                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
-                }
+//                if (account.getMicrosVersion().equals("version1")) {
+//                    salesResponse = salesService.getSalesData(syncJobType, locations,
+//                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
+//                } else {
+//                    salesResponse = salesV2Services.getSalesData(syncJobType, locations,
+//                            majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
+//                }
+
+                salesResponse = salesV2Services.getSalesData(syncJobType, locations,
+                        majorGroups, tenders, taxes, discounts, serviceCharges, revenueCenters, statistics, account);
 
                 if (salesResponse.isStatus()) {
                     if (salesResponse.getJournalBatches().size() > 0) {

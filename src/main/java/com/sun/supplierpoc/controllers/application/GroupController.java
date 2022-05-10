@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.configurations.CanteenConfiguration;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.ApplicationRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -198,6 +199,15 @@ public class GroupController {
                     group.setCreationDate(new Date());
                     group.setLastUpdate(new Date());
                     group.setDeleted(false);
+
+                    CanteenConfiguration canteenConfiguration = new CanteenConfiguration();
+                    canteenConfiguration.setDuration("");
+                    canteenConfiguration.setDay("");
+                    canteenConfiguration.setHour("");
+                    canteenConfiguration.setDayName("");
+                    canteenConfiguration.setAccumulate(false);
+                    canteenConfiguration.setChargeAmount("");
+                    group.setCanteenConfiguration(canteenConfiguration);
                     groupRepo.save(group);
                 }else {
                     Optional<Group> groupOptional = groupRepo.findById(groupId);

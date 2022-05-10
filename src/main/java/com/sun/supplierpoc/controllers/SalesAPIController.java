@@ -290,7 +290,8 @@ public class SalesAPIController {
                                 syncJobDataService.updateSyncJobDataStatus(journalBatch.getStatisticsData(), Constants.FAILED);
                             }
                         }
-                        emailService.sendEmaarMail("lyoussef@entrepreware.com", responseData, account, syncJobType);
+                        emailService.sendEmaarMail("lyoussef@entrepreware.com", responseData, account, syncJobType, response);
+                        emailService.sendEmaarMail("mbendary@entrepreware.com", responseData, account, syncJobType, response);
 
                         if (response.isStatus()) {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
@@ -301,10 +302,10 @@ public class SalesAPIController {
                                 return response;
                             } else {
                                 syncJobService.saveSyncJobStatus(syncJob, addedSalesBatches.size(),
-                                        "Failed to send files via " + account.getSendMethod() + ".", Constants.FAILED);
+                                        "Failed to send files via Emaar API.", Constants.FAILED);
 
                                 response.setStatus(true);
-                                response.setMessage("Failed to send files via " + account.getSendMethod() + ".");
+                                response.setMessage("Failed to send files via Emaar API.");
                                 return response;
                             }
 
@@ -323,7 +324,8 @@ public class SalesAPIController {
                     response.setStatus(false);
                     response.setMessage(salesResponse.getMessage());
 
-                    emailService.sendEmaarMail("lyoussef@entrepreware.com", new ArrayList<>(), account, syncJobType);
+                    emailService.sendEmaarMail("lyoussef@entrepreware.com", new ArrayList<>(), account, syncJobType, response);
+                    emailService.sendEmaarMail("mbendary@entrepreware.com", new ArrayList<>(), account, syncJobType, response);
                 }
 
             } catch (Exception e) {

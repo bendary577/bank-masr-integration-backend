@@ -3,6 +3,7 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
+import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
@@ -277,7 +278,7 @@ public class SendEmailService {
     }
 
 
-    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account, SyncJobType syncJobType){
+    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account, SyncJobType syncJobType, Response requestResponse){
 
         MimeMessage mailMessage = mailSender.createMimeMessage();
         try {
@@ -286,17 +287,25 @@ public class SendEmailService {
             messageHelper.setTo(email);
             String mailSubject = "Emaar " + syncJobType.getName() + "!";
 
-            String body = "";
+            StringBuilder body = new StringBuilder();
             String mailContent = "";
 
             for(HashMap response: responses){
-                body = body + "Store Name : " + response.get("storeName")  + "<br>" +
-                        "Store Number : " + response.get("storeNum") + " <br>"  +
-                        "Start Date : "  + syncJobType.getConfiguration().getFromDate()+ " <br>" +
-                        "End Date : "  + syncJobType.getConfiguration().getToDate() + " <br>" +
+                body.append("Store Name: ")
+                        .append(response.get("storeName")).append("<br>")
+                        .append("Store Number: ").append(response.get("storeNum")).append(" <br>")
+                        .append("Start Date: ").append(syncJobType.getConfiguration().getFromDate()).append(" <br>")
+                        .append("End Date: ").append(syncJobType.getConfiguration().getToDate()).append(" <br>")
+
+                        .append("Result Code: ").append(response.get("Code")).append(" <br>")
+                        .append("Result: ").append(response.get("Result")).append(" <br>")
+//                        .append("Result Message: ").append(response.get("ErrorMsg")).append(" <br>")
+                        .append("Request Body: ").append(" <br>").append(response.get("requestBody")).append(" <br> <br> <br>");
+
+//                        "with request body : " + response.get("requestBody")  +
+//                        "Request Body Is: "  + requestResponse.getRequestbody() + " <br>" +
+//                        "Request Response Is: "  + requestResponse.getData() + " <br>" +
 //                        "For Date : "  + response.get("date") + " <br>" +
-                        "Result : " + response.get("Result") + " <br>" +
-                        "with request body : " + response.get("requestBody")  + " <br> <br> <br>";
             }
             if(responses.size() == 0){
                 mailContent =

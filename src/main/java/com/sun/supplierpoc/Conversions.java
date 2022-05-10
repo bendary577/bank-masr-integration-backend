@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.opera.booking.RateCode;
 import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.stereotype.Component;
 
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.text.*;
 import java.util.*;
@@ -458,7 +459,7 @@ public class Conversions {
     }
 
     public float roundUpFloat(float value){
-        DecimalFormat df = new DecimalFormat("###.###");
+        DecimalFormat df = new DecimalFormat("###.##");
         String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);
@@ -466,6 +467,14 @@ public class Conversions {
 
     public float roundUpFloat2Digest(float value){
         DecimalFormat df = new DecimalFormat("###.##");
+        String temp = df.format(value);
+        temp = temp.toLowerCase().replaceAll(",", "");
+        return Float.parseFloat(temp);
+    }
+
+    public float roundUpFloatTwoDigitsRounded(float value){
+        DecimalFormat df = new DecimalFormat("###.##");
+        df.setRoundingMode(RoundingMode.UP);
         String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);

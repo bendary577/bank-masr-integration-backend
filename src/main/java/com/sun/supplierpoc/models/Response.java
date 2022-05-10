@@ -17,6 +17,9 @@ public class Response<T> {
     private ArrayList<HashMap<String, Object>> entries;
     private T data;
 
+    private String requestbody;
+    private String requestResponse;
+
     // Sales Variables
     private ArrayList<Tax> salesTax = new ArrayList<>();
     private ArrayList<Tender> salesTender = new ArrayList<>();
@@ -236,5 +239,21 @@ public class Response<T> {
 
     public void setFoodicsProducts(ArrayList<FoodicsProduct> foodicsFoodicsProducts) {
         this.foodicsFoodicsProducts = foodicsFoodicsProducts;
+    }
+
+    public String getRequestbody() {
+        return requestbody;
+    }
+
+    public void setRequestbody(String requestbody) {
+        this.requestbody = requestbody;
+    }
+
+    public String getRequestResponse() {
+        return requestResponse;
+    }
+
+    public void setRequestResponse(String requestResponse) {
+        this.requestResponse = requestResponse;
     }
 }

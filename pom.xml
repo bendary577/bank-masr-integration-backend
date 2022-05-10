@@ -371,11 +371,13 @@
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.googlecode.libphonenumber/libphonenumber -->
-        <dependency>
-            <groupId>com.googlecode.libphonenumber</groupId>
-            <artifactId>libphonenumber</artifactId>
-            <version>8.12.10</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId> </groupId>-->
+<!--            <artifactId>libphonenumber</artifactId>-->
+<!--            <version>8.12.10</version>-->
+<!--        </dependency>-->
+
+
 
 
         <!--        <dependency>-->
@@ -436,6 +438,11 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
             <version>5.2.9.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+            <version>8.12.10</version>
         </dependency>
 
     </dependencies>

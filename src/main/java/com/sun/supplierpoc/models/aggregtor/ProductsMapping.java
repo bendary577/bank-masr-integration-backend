@@ -12,6 +12,7 @@ public class ProductsMapping {
     private String talabatProductId = "";
     private ArrayList<ModifierMapping> modifiers = new ArrayList<>();
     private String type;
+    public boolean combo;
 
     public String getName() {
         return name;
@@ -51,6 +52,14 @@ public class ProductsMapping {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public boolean isCombo() {
+        return combo;
+    }
+
+    public void setCombo(boolean combo) {
+        this.combo = combo;
     }
 
     public ArrayList<ModifierMapping> filterModifier(ArrayList<ModifierMapping> modifierMappings, ArrayList<Modifier> modifiers){

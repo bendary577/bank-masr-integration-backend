@@ -91,17 +91,13 @@ public class SetupEnvironment {
                 System.out.println("No alert exits");
             }
 
-//            driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
-//            driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
-//            driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
+            driver.findElement(By.id("usr")).sendKeys(hospitalityOHRACredentials.getUsername());
+            driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
+            driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
 
-            driver.findElement(By.id("user-name-input|input")).sendKeys(hospitalityOHRACredentials.getUsername());
-            driver.findElement(By.id("password-input|input")).sendKeys(hospitalityOHRACredentials.getPassword());
-            driver.findElement(By.id("org-name-input|input")).sendKeys(hospitalityOHRACredentials.getCompany());
 
             String previous_url = driver.getCurrentUrl();
-//            driver.findElement(By.id("Login")).click();
-            driver.findElement(By.id("signinBtn")).click();
+            driver.findElement(By.id("Login")).click();
 
             try {
                 // card is wrong

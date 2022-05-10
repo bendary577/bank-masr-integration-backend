@@ -750,7 +750,7 @@ public class SalesV2Services {
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 5);
+            WebDriverWait wait = new WebDriverWait(driver, 30);
 
             // Open reports
             if(!driver.getCurrentUrl().equals(link + Constants.MICROS_SALES_SUMMARY)){
@@ -792,13 +792,13 @@ public class SalesV2Services {
                 return response;
             }
 
-            try {
-                wait = new WebDriverWait(driver, 5);
-                wait.until(ExpectedConditions.alertIsPresent());
-                System.out.println("No Alert");
-            } catch (Exception e) {
-                System.out.println("Waiting");
-            }
+//            try {
+//                wait = new WebDriverWait(driver, 5);
+//                wait.until(ExpectedConditions.alertIsPresent());
+//                System.out.println("No Alert");
+//            } catch (Exception e) {
+//                System.out.println("Waiting");
+//            }
 
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
@@ -855,7 +855,7 @@ public class SalesV2Services {
 //                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_1510_0']/table")));
                     wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_1934_0']/table")));
                 }else{
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7032_0']/table")));
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7456_0']/table")));
                 }
 
             }catch (Exception e){
@@ -869,7 +869,7 @@ public class SalesV2Services {
 //                 tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_1510_0\"]/table"));
                  tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_1934_0\"]/table"));
             }else{
-                 tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7032_0\"]/table"));
+                 tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7456_0\"]/table"));
             }
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 

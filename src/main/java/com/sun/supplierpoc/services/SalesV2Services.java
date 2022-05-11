@@ -921,9 +921,9 @@ public class SalesV2Services {
                 if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_discounts")).getText().strip());
                 } else {
-                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
+//                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
 //                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
-//                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
+                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                 }
 
                 /* Discount amount */

@@ -173,12 +173,12 @@ public class SalesV2Services {
         String totalDiscountsAccount = configuration.totalDiscountsAccount;
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
-//        if (includedDiscount.size() > 0 || syncTotalDiscounts){
-//            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
-//                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver, link, version);
-//            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
-//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-//        }
+        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver, link, version);
+            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+        }
 
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;

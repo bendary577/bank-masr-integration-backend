@@ -1122,13 +1122,13 @@ public class SalesService {
 
                 if (totalCr > totalDr ) {
                     String cashShortagePOS = configuration.salesConfiguration.cashShortagePOS;
-                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloat2Digest(totalCr - totalDr)));
+                    differentData.put("totalDr", String.valueOf(conversions.roundUpFloatTwoDigitsRounded(totalCr - totalDr)));
                     differentData.put("expensesAccount", cashShortagePOS);
                 }
                 // {Credit} - SurplusPOS
                 else {
                     String cashSurplusPOS = configuration.salesConfiguration.cashSurplusPOS;
-                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloat2Digest(totalDr - totalCr)));
+                    differentData.put("totalCr", String.valueOf(conversions.roundUpFloatTwoDigitsRounded(totalDr - totalCr)));
                     differentData.put("inventoryAccount", cashSurplusPOS);
                 }
 
@@ -1147,7 +1147,12 @@ public class SalesService {
                 if (journalBatch.getCostCenter().costCenterReference.equals("")){
                     description = "O.Stand.CHQ";
                 }else{
-                    description = journalBatch.getCostCenter().costCenterReference + "_O.Stand.CHQ";
+                    if(configuration.getSalesConfiguration().getClearanceDescription().equals("")){
+                        description = journalBatch.getCostCenter().costCenterReference + "_O.Stand.CHQ";
+                    }else{
+                        description = journalBatch.getCostCenter().costCenterReference + " " + configuration.getSalesConfiguration().getClearanceDescription();
+                    }
+
                     reference = journalBatch.getCostCenter().costCenterReference;
                 }
 

@@ -59,7 +59,7 @@ public class MicrosFeatures {
     }
 
     public Response selectDateRangeMicros(String timePeriod, String fromDate, String toDate,
-                                         String location, String revenueCenter, String orderType, WebDriver driver){
+                                         String location, String revenueCenter, String orderType, WebDriver driver, String version){
         Response response = new Response();
         try {
             WebDriverWait wait = new WebDriverWait(driver, 30);
@@ -88,25 +88,17 @@ public class MicrosFeatures {
                         response.setMessage(e.getMessage());
                         return response;
                     }
-//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
                     if(!driver.findElements(By.id("clear0")).isEmpty()){
                         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("clear0")));
                     }else{
-                        System.out.println("no element");
                         //while element is not possible .. cancel and start again
                         do{
                             wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("advance_filter_busDates_cancel")));
                             driver.findElement(By.id("advance_filter_busDates_cancel")).click();
                             try {
-                                System.out.println("re edit filter");
-//                                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
-//                                driver.findElement(By.id("edit_filter_button")).click();
-                                System.out.println("re run advanced business dates");
                                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("businessDateFilter_href_link")));
                                 driver.findElement(By.id("businessDateFilter_href_link")).click();
-                                System.out.println("after choosing dates");
                                 TimeUnit.SECONDS.sleep(1);
-
                             }catch (Exception e){
                                 response.setStatus(false);
                                 response.setMessage(e.getMessage());
@@ -164,32 +156,35 @@ public class MicrosFeatures {
                 }
             }
 
-//            if (driver.findElements(By.id("location_label")).size() != 0){
-//                try {
-//                    // Business Location
-//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_locations_select")));
-//                    wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_locations_select")));
-//                    driver.findElement(By.id("oj-select-choice-search_locations_select")).click();
-//
-//                    // Filter by range
-//                    WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
-//
-//                    if (location == null || location.equals("")){
-//                        input.sendKeys("all");
-//                    }else{
-//                        input.sendKeys(location);
-//                    }
-//
-//                    Thread.sleep(500);
-//                    input.sendKeys(Keys.ARROW_DOWN);
-//                    input.sendKeys(Keys.ENTER);
-//                } catch (Exception e) {
-//                    response.setStatus(false);
-//                    response.setMessage(Constants.INVALID_LOCATION);
-//                    response.setEntries(new ArrayList<>());
-//                    return response;
-//                }
-//            }
+            if(version.equals(Constants.VERSION_1)){
+                if (driver.findElements(By.id("location_label")).size() != 0){
+                    try {
+                        // Business Location
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("oj-select-choice-search_locations_select")));
+                        wait.until(ExpectedConditions.elementToBeClickable(By.id("oj-select-choice-search_locations_select")));
+                        driver.findElement(By.id("oj-select-choice-search_locations_select")).click();
+
+                        // Filter by range
+                        WebElement input = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div/div/div/div/input"));
+
+                        if (location == null || location.equals("")){
+                            input.sendKeys("all");
+                        }else{
+                            input.sendKeys(location);
+                        }
+
+                        Thread.sleep(500);
+                        input.sendKeys(Keys.ARROW_DOWN);
+                        input.sendKeys(Keys.ENTER);
+                    } catch (Exception e) {
+                        response.setStatus(false);
+                        response.setMessage(Constants.INVALID_LOCATION);
+                        response.setEntries(new ArrayList<>());
+                        return response;
+                    }
+                }
+            }
+
 
             if (driver.findElements(By.id("rvc_filter_label")).size() != 0){
                 try {

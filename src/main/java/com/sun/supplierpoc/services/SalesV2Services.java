@@ -63,7 +63,17 @@ public class SalesV2Services {
         }
 
         try {
-            if (!microsFeatures.loginMicrosOHRA(driver, Constants.MICROS_V2_LINK, account)) {
+            String link = "";
+            String reportLink = "";
+            if(account.getMicrosVersion().equals("version1")){
+                link = Constants.OHRA_LINK;
+                reportLink = Constants.OHRA_LINK+"/portal/";
+            }else{
+                link = Constants.MICROS_V2_LINK;
+                reportLink = Constants.MICROS_REPORT_BASE_LINK;
+            }
+
+            if (!microsFeatures.loginMicrosOHRA(driver, link, account)) {
                 driver.quit();
 
                 response.setStatus(false);
@@ -77,7 +87,7 @@ public class SalesV2Services {
                     if(costCenter.checked){
                         callSalesFunction(salesSyncJobType, majorGroups, includedTenders, includedTax, includedDiscount,
                                 includedServiceCharge, revenueCenters, statistics, timePeriod, fromDate, toDate, costCenter,
-                                journalBatches, driver, response);
+                                journalBatches, driver, response, reportLink, account.getMicrosVersion());
                         if (!response.isStatus() && !response.getMessage().equals(Constants.INVALID_LOCATION)){
                             return response;
                         }
@@ -87,7 +97,7 @@ public class SalesV2Services {
             else {
                 callSalesFunction(salesSyncJobType, majorGroups, includedTenders, includedTax, includedDiscount,
                         includedServiceCharge, revenueCenters, statistics, timePeriod, fromDate, toDate, new CostCenter(),
-                        journalBatches, driver, response);
+                        journalBatches, driver, response, reportLink, account.getMicrosVersion());
                 if (!response.isStatus()){
                     return response;
                 }
@@ -115,7 +125,7 @@ public class SalesV2Services {
                                    ArrayList<RevenueCenter> revenueCenters, ArrayList<SalesStatistics> statistics,
                                    String timePeriod, String fromDate, String toDate, CostCenter costCenter,
                                    ArrayList<JournalBatch> journalBatches,
-                                   WebDriver driver, Response response){
+                                   WebDriver driver, Response response, String link, String version){
 
         JournalBatch journalBatch = new JournalBatch();
         SalesConfiguration configuration = salesSyncJobType.getConfiguration().salesConfiguration;
@@ -123,7 +133,7 @@ public class SalesV2Services {
         // Get statistics
         Response statisticsResponse = new Response();
         if (statistics.size() > 0){
-            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver);
+            statisticsResponse = getSalesStatistics(timePeriod, fromDate, toDate, costCenter, statistics, driver, link, version);
             if (salesService.checkSalesFunctionResponse(driver, response, statisticsResponse)) return;
         }
 
@@ -134,7 +144,7 @@ public class SalesV2Services {
         Response serviceChargeResponse = new Response();
         if (includedServiceCharge.size() > 0 || syncTotalServiceCharge){
             serviceChargeResponse = getSalesServiceCharge(timePeriod, fromDate, toDate, costCenter,
-                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver);
+                    syncTotalServiceCharge, totalServiceChargeAccount, includedServiceCharge, driver, link, version);
             if (salesService.checkSalesFunctionResponse(driver, response, serviceChargeResponse)) return;
         }
 
@@ -142,7 +152,7 @@ public class SalesV2Services {
         Response tenderResponse = new Response();
         if(includedTenders.size() > 0){
             tenderResponse = getSalesTenders(timePeriod, fromDate, toDate,
-                    costCenter, includedTenders, driver);
+                    costCenter, includedTenders, driver, link, version);
             if (salesService.checkSalesFunctionResponse(driver, response, tenderResponse)) return;
         }
 
@@ -153,22 +163,22 @@ public class SalesV2Services {
         Response taxResponse = new Response();
         if(includedTax.size() > 0 || syncTotalTax){
             taxResponse = getSalesTaxes(timePeriod, fromDate, toDate, costCenter, syncTotalTax,
-                    totalTaxAccount, includedTax, driver);
+                    totalTaxAccount, includedTax, driver, link, version);
             if (salesService.checkSalesFunctionResponse(driver, response, taxResponse)) return;
         }
 
-        // Get discounts
+//        // Get discounts
         Response discountResponse;
         boolean syncTotalDiscounts = configuration.syncTotalDiscounts;
         String totalDiscountsAccount = configuration.totalDiscountsAccount;
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
-        if (includedDiscount.size() > 0 || syncTotalDiscounts){
-            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
-                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver);
-            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
-            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-        }
+//        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+//            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+//                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver, link, version);
+//            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+//        }
 
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;
@@ -188,7 +198,7 @@ public class SalesV2Services {
 
                 overGroupGrossResponse = getSalesMajorGroups(taxIncluded, rc, timePeriod, fromDate, toDate, costCenter,
                         majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
-                        driver);
+                        driver, link, version);
 
                 if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
 
@@ -204,7 +214,7 @@ public class SalesV2Services {
 
             overGroupGrossResponse = getSalesMajorGroups(taxIncluded, new RevenueCenter(), timePeriod, fromDate, toDate, costCenter,
                     majorGroups, grossDiscountSales, majorGroupDiscount, revenueCenterDiscount, syncMajorGroups,
-                    driver);
+                    driver, link, version);
 
             if (salesService.checkSalesFunctionResponse(driver, response, overGroupGrossResponse)) return;
 
@@ -217,13 +227,11 @@ public class SalesV2Services {
 
         // Set Statistics Info
         journalBatch.setSalesStatistics(statisticsResponse.getSalesStatistics());
-
         // Set Debit Entries (Tenders)
         journalBatch.setSalesTender(tenderResponse.getSalesTender());
-
         // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
         journalBatch.setSalesTax(taxResponse.getSalesTax());
-        journalBatch.setSalesDiscount(salesDiscounts);
+//        journalBatch.setSalesDiscount(salesDiscounts);
         journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
         journalBatch.setSalesServiceCharge(serviceChargeResponse.getSalesServiceCharge());
 
@@ -235,7 +243,7 @@ public class SalesV2Services {
     }
 
     private Response getSalesStatistics(String businessDate, String fromDate, String toDate, CostCenter location,
-                                        ArrayList<SalesStatistics> statistics, WebDriver driver) {
+                                        ArrayList<SalesStatistics> statistics, WebDriver driver, String link, String version) {
         Response response = new Response();
         String statisticType;
         SalesStatistics salesStatistics = conversions.checkSalesStatisticsExistence(location.locationName, statistics);
@@ -250,7 +258,7 @@ public class SalesV2Services {
             // Open reports
             WebDriverWait wait = new WebDriverWait(driver, 29);
 
-            driver.get("https://mte4-ohra.oracleindustry.com/portal/?root=reports&reports=myReports&myReports=reportGroup&reportGroup=1");
+            driver.get(link+"?root=reports&reports=myReports&myReports=reportGroup&reportGroup=1");
 //            wait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("My Reports")));
 //            driver.findElement(By.partialLinkText("My Reports")).click();
 //
@@ -268,7 +276,7 @@ public class SalesV2Services {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                    null,"", driver);
+                    null,"", driver, version);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -349,7 +357,7 @@ public class SalesV2Services {
     }
 
     private Response getSalesTenders(String businessDate, String fromDate, String toDate,
-                                     CostCenter location, ArrayList<Tender> includedTenders, WebDriver driver){
+                                     CostCenter location, ArrayList<Tender> includedTenders, WebDriver driver, String link, String version){
         Response response = new Response();
         Tender tender;
         ArrayList<Tender> tenders = new ArrayList<>();
@@ -358,7 +366,7 @@ public class SalesV2Services {
             WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
-            driver.get(Constants.MICROS_TENDERS_REPORTS);
+            driver.get(link +  Constants.MICROS_TENDERS_REPORTS);
 
             try {
                 wait = new WebDriverWait(driver, 5);
@@ -370,7 +378,7 @@ public class SalesV2Services {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                    null,"", driver);
+                    null,"", driver, version);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -399,16 +407,26 @@ public class SalesV2Services {
                   return response;
               }
 
-                try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7202_0']/table")));
+              try{
+                  if(version.equals(Constants.VERSION_1)){
+                      wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_1680_0']/table")));
+                  }else{
+                      wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7202_0']/table")));
+                  }
+
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
                 return response;
             }
 
+            WebElement tendersTable = null;
+            if(version.equals(Constants.VERSION_1)){
+                 tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_1680_0']/table"));
+            }else{
+                 tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_7202_0']/table"));
+            }
 
-            WebElement tendersTable = driver.findElement(By.xpath("//*[@id='standard_table_7202_0']/table"));
 
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
@@ -467,7 +485,7 @@ public class SalesV2Services {
 
     private Response getSalesTaxes(String businessDate, String fromDate, String toDate,
                                    CostCenter location, boolean getTaxTotalFlag, String totalTaxAccount,
-                                   ArrayList<Tax> includedTaxes, WebDriver driver) {
+                                   ArrayList<Tax> includedTaxes, WebDriver driver, String link, String version) {
         Response response = new Response();
         ArrayList<Tax> salesTax = new ArrayList<>();
 
@@ -475,7 +493,7 @@ public class SalesV2Services {
             WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
-            driver.get(Constants.MICROS_TAXES_REPORTS);
+            driver.get( link +  Constants.MICROS_TAXES_REPORTS);
 
             try {
                 wait = new WebDriverWait(driver, 5);
@@ -487,7 +505,7 @@ public class SalesV2Services {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                    null,"", driver);
+                    null,"", driver, version);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -593,14 +611,14 @@ public class SalesV2Services {
 
     private Response getSalesDiscount(String businessDate, String fromDate, String toDate, CostCenter location,
                                       boolean getDiscountTotalFlag, String totalDiscountsAccount,
-                                      ArrayList<Discount> discounts, WebDriver driver) {
+                                      ArrayList<Discount> discounts, WebDriver driver, String link, String version) {
         Response response = new Response();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
         try {
             WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
-            driver.get(Constants.MICROS_DISCOUNT_REPORTS);
+            driver.get(link +  Constants.MICROS_DISCOUNT_REPORTS);
 
             try {
                 wait = new WebDriverWait(driver, 5);
@@ -612,7 +630,7 @@ public class SalesV2Services {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                    null,"", driver);
+                    null,"", driver, version);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -726,44 +744,47 @@ public class SalesV2Services {
                                          CostCenter location, ArrayList<MajorGroup> majorGroups,
                                          String grossDiscountSales, boolean majorGroupDiscount,
                                          boolean revenueCenterDiscount, boolean syncMajorGroups,
-                                         WebDriver driver) {
+                                         WebDriver driver, String link, String version) {
         Response response = new Response();
         ArrayList<Journal> majorGroupsGross = new ArrayList<>();
         ArrayList<Discount> salesDiscount = new ArrayList<>();
 
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 5);
+            WebDriverWait wait = new WebDriverWait(driver, 30);
 
             // Open reports
-            if(!driver.getCurrentUrl().equals(Constants.MICROS_SALES_SUMMARY)){
-                driver.get(Constants.MICROS_SALES_SUMMARY);
+            if(!driver.getCurrentUrl().equals(link + Constants.MICROS_SALES_SUMMARY)){
+                driver.get(link + Constants.MICROS_SALES_SUMMARY);
 
+// <!------------------------------- new comment --------------------->
                 // Wait until loading appears
-                try{
-                    wait = new WebDriverWait(driver, 60);
-                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("progressCircle_7032")));
-                }catch (Exception e){
-                    response.setStatus(true);
-                    response.setMessage("There is no sales per major group found in this location");
-                    return response;
-                }
+//                try{
+//                    wait = new WebDriverWait(driver, 60);
+//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("progressCircle_7032")));
+//                }catch (Exception e){
+//                    response.setStatus(true);
+//                    response.setMessage("There is no sales per major group found in this location");
+//                    return response;
+//                }
             }
+
 
             // Wait until loading disppears
-            if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
-                try{
-                    wait = new WebDriverWait(driver, 60);
-                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("progressCircle_7032")));
-                }catch (Exception e){
-                    response.setStatus(true);
-                    response.setMessage("There is no sales per major group found in this location");
-                    return response;
-                }
-            }
+//            if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
+//                try{
+//                    wait = new WebDriverWait(driver, 60);
+//                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("progressCircle_7032")));
+//                }catch (Exception e){
+//                    response.setStatus(true);
+//                    response.setMessage("There is no sales per major group found in this location");
+//                    return response;
+//                }
+//            }
+// <!-------------------------------end new comment --------------------->
 
             // Filter Report
              Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                     revenueCenter.getRevenueCenter(),"", driver);
+                     revenueCenter.getRevenueCenter(),"", driver, version);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -771,13 +792,13 @@ public class SalesV2Services {
                 return response;
             }
 
-            try {
-                wait = new WebDriverWait(driver, 5);
-                wait.until(ExpectedConditions.alertIsPresent());
-                System.out.println("No Alert");
-            } catch (Exception e) {
-                System.out.println("Waiting");
-            }
+//            try {
+//                wait = new WebDriverWait(driver, 5);
+//                wait.until(ExpectedConditions.alertIsPresent());
+//                System.out.println("No Alert");
+//            } catch (Exception e) {
+//                System.out.println("Waiting");
+//            }
 
             // Run
             driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
@@ -791,33 +812,35 @@ public class SalesV2Services {
                 return response;
             }
 
+ // <!------------------------------- new comment --------------------->
             // Wait until the report is completely loaded, or get no data flag
-            if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
-                try{
-                    wait = new WebDriverWait(driver, 60);
-                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("progressCircle_7032")));
-                }catch (Exception e){
-                    response.setStatus(true);
-                    response.setMessage("There is no sales per major group found in this location");
-                    return response;
-                }
-            }
-
-            // Fetch major groups table - check no data flag
-
-            if(driver.findElements(By.xpath("//*[@id=\"report_web_component7032\"]/div[1]/div[2]/div")).size() > 0){
-                response.setStatus(true);
-                response.setMessage("There is no sales per major group found in this location");
-                return response;
-            }
-
-            try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")));
-            }catch (Exception e){
-                response.setStatus(true);
-                response.setMessage("There is no sales per major group found in this location");
-                return response;
-            }
+//            if(driver.findElements(By.id("progressCircle_7032")).size() > 0){
+//                try{
+//                    wait = new WebDriverWait(driver, 60);
+//                    wait.until(ExpectedConditions.invisibilityOfElementLocated(By.id("progressCircle_7032")));
+//                }catch (Exception e){
+//                    response.setStatus(true);
+//                    response.setMessage("There is no sales per major group found in this location");
+//                    return response;
+//                }
+//            }
+//
+//            // Fetch major groups table - check no data flag
+//
+//            if(driver.findElements(By.xpath("//*[@id=\"report_web_component7032\"]/div[1]/div[2]/div")).size() > 0){
+//                response.setStatus(true);
+//                response.setMessage("There is no sales per major group found in this location");
+//                return response;
+//            }
+//
+//            try{
+//                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")));
+//            }catch (Exception e){
+//                response.setStatus(true);
+//                response.setMessage("There is no sales per major group found in this location");
+//                return response;
+//            }
+// <!------------------------------- end new comment --------------------->
 
 //            if(driver.findElements(By.xpath("//*[@id=\"standard_table_7032_0\"]/table")).size() == 0){
 //                response.setStatus(true);
@@ -825,7 +848,29 @@ public class SalesV2Services {
 //                return response;
 //            }
 
-            WebElement tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7032_0\"]/table"));
+//            WebElement tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7032_0\"]/table"));
+
+            try{
+                if(version.equals(Constants.VERSION_1)){
+//                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_1510_0']/table")));
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_1934_0']/table")));
+                }else{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id='standard_table_7456_0']/table")));
+                }
+
+            }catch (Exception e){
+                response.setStatus(true);
+                response.setMessage(Constants.NO_INFO);
+                return response;
+            }
+
+            WebElement tendersTable = null;
+            if(version.equals(Constants.VERSION_1)){
+//                 tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_1510_0\"]/table"));
+                 tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_1934_0\"]/table"));
+            }else{
+                 tendersTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7456_0\"]/table"));
+            }
             List<WebElement> rows = tendersTable.findElements(By.tagName("tr"));
 
             if (rows.size() < 1){
@@ -876,14 +921,20 @@ public class SalesV2Services {
                 if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_discounts")).getText().strip());
                 } else {
-                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
+                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
+//                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
+//                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                 }
+
+                /* Discount amount */
+//                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discount_total")).getText().strip());
+                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
+
+//                majorGroupAmount = majorGroupAmount - (discountAmount*(-1));
 
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
                         , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");
 
-                /* Discount amount */
-                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discount_total")).getText().strip());
 
                 if (discountAmount != 0){
                     Discount groupDiscount = new Discount();
@@ -936,7 +987,7 @@ public class SalesV2Services {
 
     private Response getSalesServiceCharge(String businessDate, String fromDate, String toDate,
                                    CostCenter location, boolean getSCTotalFlag, String totalSCAccount,
-                                           ArrayList<ServiceCharge> serviceCharges, WebDriver driver) {
+                                           ArrayList<ServiceCharge> serviceCharges, WebDriver driver, String link, String version) {
         Response response = new Response();
         ServiceCharge serviceCharge;
         ArrayList<ServiceCharge> salesServiceCharges = new ArrayList<>();
@@ -945,7 +996,7 @@ public class SalesV2Services {
             WebDriverWait wait = new WebDriverWait(driver, 29);
 
             // Open reports
-            driver.get(Constants.MICROS_SERVICE_CHARGE_REPORT);
+            driver.get(link + Constants.MICROS_SERVICE_CHARGE_REPORT);
 
             try {
                 wait = new WebDriverWait(driver, 5);
@@ -957,7 +1008,7 @@ public class SalesV2Services {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                    null,"", driver);
+                    null,"", driver, version);
 
             if (!dateResponse.isStatus()){
                 response.setStatus(false);
@@ -985,7 +1036,12 @@ public class SalesV2Services {
 
             // Fetch service charges table
             try{
-                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7097_0\"]/table")));
+                if(version.equals(Constants.VERSION_1)){
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_1575_0\"]/table")));
+                }else{
+                    wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[@id=\"standard_table_7097_0\"]/table")));
+                }
+
             }catch (Exception e){
                 response.setStatus(true);
                 response.setMessage(Constants.NO_INFO);
@@ -993,13 +1049,39 @@ public class SalesV2Services {
             }
 
             /* view/expand service charge types */
-            WebElement expander = driver.findElement(By.id("row_expander_7097_0_0:0"));
+            WebElement expander = null;
+            WebElement secondExpander = null;
+
+            if(version.equals(Constants.VERSION_1)){
+                expander = driver.findElement(By.id("row_expander_1575_0_0:0"));
+                secondExpander = driver.findElement(By.id("row_expander_1575_0_0:1"));
+            }else{
+                expander = driver.findElement(By.id("row_expander_7097_0_0:0"));
+                secondExpander = driver.findElement(By.id("row_expander_7097_0_0:1"));
+            }
+
             if(expander != null)
                 expander.click();
 
+            try{
+                if(secondExpander != null)
+                    secondExpander.click();
+            }catch (Exception e){
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("row_expander_1575_0_0:1")));
+                driver.findElement(By.id("row_expander_1575_0_0:1")).click();
+            }
+
+
             /* Wait until table be ready for reading */
             TimeUnit.SECONDS.sleep(2);
-            WebElement serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7097_0\"]/table"));
+
+            WebElement serviceChargeTable = null;
+            if(version.equals(Constants.VERSION_1)){
+                serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_1575_0\"]/table"));
+            }else{
+                serviceChargeTable = driver.findElement(By.xpath("//*[@id=\"standard_table_7097_0\"]/table"));
+            }
+
 
             List<WebElement> rows = serviceChargeTable.findElements(By.tagName("tr"));
 

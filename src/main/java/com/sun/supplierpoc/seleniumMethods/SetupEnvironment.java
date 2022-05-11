@@ -95,6 +95,7 @@ public class SetupEnvironment {
             driver.findElement(By.id("pwd")).sendKeys(hospitalityOHRACredentials.getPassword());
             driver.findElement(By.id("cpny")).sendKeys(hospitalityOHRACredentials.getCompany());
 
+
             String previous_url = driver.getCurrentUrl();
             driver.findElement(By.id("Login")).click();
 

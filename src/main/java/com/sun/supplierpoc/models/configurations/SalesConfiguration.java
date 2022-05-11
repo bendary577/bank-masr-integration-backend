@@ -8,6 +8,7 @@ public class SalesConfiguration implements Serializable{
     public String cashShortagePOS = "";
     public String cashSurplusPOS = "";
     public String grossDiscountSales = "";
+    public String clearanceDescription = "";
 
     public boolean taxIncluded = true;
     public boolean syncTotalTax = true;
@@ -42,4 +43,11 @@ public class SalesConfiguration implements Serializable{
 
     public ArrayList<SalesStatistics> statistics = new ArrayList<>();
 
+    public String getClearanceDescription() {
+        return clearanceDescription;
+    }
+
+    public void setClearanceDescription(String clearanceDescription) {
+        this.clearanceDescription = clearanceDescription;
+    }
 }

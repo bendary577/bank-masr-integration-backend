@@ -88,7 +88,7 @@ public class JournalV2Service {
 
             // Filter Report
             Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, null,
-                    null, "", driver);
+                    null, "", driver, account.getMicrosVersion());
 
             if (!dateResponse.isStatus()) {
                 response.setStatus(false);
@@ -495,7 +495,7 @@ public class JournalV2Service {
 
                 // Filter Report
                 Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, costCenter.locationName,
-                        null, "", driver);
+                        null, "", driver, account.getMicrosVersion());
 
                 if (!dateResponse.isStatus()) {
                     response.setStatus(false);
@@ -659,7 +659,7 @@ public class JournalV2Service {
 
         // Filter Report
         Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                null, "", driver);
+                null, "", driver, "version2");
 
         if (!dateResponse.isStatus()) {
             response.setStatus(false);

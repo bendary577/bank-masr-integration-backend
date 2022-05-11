@@ -188,6 +188,8 @@ public class AggregatorIntegratorService {
             FoodicsProductObject foodicsProductObject;
             List<FoodicsProductObject> foodicsProductObjects = new ArrayList<>();
 
+            ArrayList<Option> options = new ArrayList<>();
+
             for (Item item : adminOrder.getItems()) {
                 foodicsProductObject = new FoodicsProductObject();
 
@@ -247,6 +249,21 @@ public class AggregatorIntegratorService {
                             continue; // Skip this product
                         }
                     }
+
+                    //if it's a combo offer product
+                    if(productsMapping.isCombo()){
+                        modifierMapping = generalSettings.getTalabatConfiguration().getModifierMappings().stream().
+                                filter(tempProduct -> tempProduct.getName().equals("Combo Talabat"))
+                                .collect(Collectors.toList()).stream().findFirst().orElse(null);
+
+                        if (modifierMapping != null) {
+                            Option option = new Option();
+                            option.setModifier_option_id(modifierMapping.getFoodicsProductId());
+                            option.setQuantity(1);
+                            option.setUnit_price(0.0);
+                            options.add(option);
+                        }
+                    }
                 }
                 else {
                     continue; // Skip this product
@@ -259,10 +276,9 @@ public class AggregatorIntegratorService {
                 // Options
                 Option option;
                 Option secondOption;
-                ArrayList<Option> options = new ArrayList<>();
                 ArrayList<Option> extraProductOptions = new ArrayList<>();
 
-                if(item.getModifiers() != null){
+                if(item.getModifiers() != null && !productsMapping.isCombo()){
                     for (Modifier modifier: item.getModifiers()) {
                         option = new Option();
 
@@ -319,6 +335,8 @@ public class AggregatorIntegratorService {
 
                     }
                 }
+
+
                 foodicsProductObject.setOptions(options);
 
                 foodicsProductObjects.add(foodicsProductObject);

@@ -1147,7 +1147,12 @@ public class SalesService {
                 if (journalBatch.getCostCenter().costCenterReference.equals("")){
                     description = "O.Stand.CHQ";
                 }else{
-                    description = journalBatch.getCostCenter().costCenterReference + "_O.Stand.CHQ";
+                    if(configuration.getSalesConfiguration().getClearanceDescription().equals("")){
+                        description = journalBatch.getCostCenter().costCenterReference + "_O.Stand.CHQ";
+                    }else{
+                        description = journalBatch.getCostCenter().costCenterReference + " " + configuration.getSalesConfiguration().getClearanceDescription();
+                    }
+
                     reference = journalBatch.getCostCenter().costCenterReference;
                 }
 

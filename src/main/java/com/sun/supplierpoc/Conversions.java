@@ -474,7 +474,7 @@ public class Conversions {
 
     public float roundUpFloatTwoDigitsRounded(float value){
         DecimalFormat df = new DecimalFormat("###.##");
-        df.setRoundingMode(RoundingMode.UP);
+//        df.setRoundingMode(RoundingMode.UP);
         String temp = df.format(value);
         temp = temp.toLowerCase().replaceAll(",", "");
         return Float.parseFloat(temp);

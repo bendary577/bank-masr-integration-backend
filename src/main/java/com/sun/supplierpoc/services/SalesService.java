@@ -12,6 +12,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.text.DecimalFormat;
 import java.util.*;
 
 @Service
@@ -1117,6 +1119,10 @@ public class SalesService {
 
                 differentData.put("accountingPeriod", transactionDate.substring(2,6));
                 differentData.put("transactionDate", transactionDate);
+
+                DecimalFormat df = new DecimalFormat("###.##");
+                totalCr = Float.parseFloat(df.format(totalCr));
+                totalDr = Float.parseFloat(df.format(totalDr));
 
                 // {Debit} - ShortagePOS
 

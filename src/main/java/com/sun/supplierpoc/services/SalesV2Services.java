@@ -173,12 +173,12 @@ public class SalesV2Services {
         String totalDiscountsAccount = configuration.totalDiscountsAccount;
         ArrayList<Discount> salesDiscounts = new ArrayList<>();
 
-        if (includedDiscount.size() > 0 || syncTotalDiscounts){
-            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
-                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver, link, version);
-            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
-            salesDiscounts.addAll(discountResponse.getSalesDiscount());
-        }
+//        if (includedDiscount.size() > 0 || syncTotalDiscounts){
+//            discountResponse = getSalesDiscount(timePeriod, fromDate, toDate, costCenter,
+//                    syncTotalDiscounts, totalDiscountsAccount, includedDiscount, driver, link, version);
+//            if (salesService.checkSalesFunctionResponse(driver, response, discountResponse)) return;
+//            salesDiscounts.addAll(discountResponse.getSalesDiscount());
+//        }
 
         // Get Major Groups/Family Groups net sales
         String grossDiscountSales = configuration.grossDiscountSales;
@@ -231,7 +231,7 @@ public class SalesV2Services {
         journalBatch.setSalesTender(tenderResponse.getSalesTender());
         // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
         journalBatch.setSalesTax(taxResponse.getSalesTax());
-//        journalBatch.setSalesDiscount(salesDiscounts);
+        journalBatch.setSalesDiscount(salesDiscounts);
         journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
         journalBatch.setSalesServiceCharge(serviceChargeResponse.getSalesServiceCharge());
 
@@ -921,7 +921,7 @@ public class SalesV2Services {
                 if (grossDiscountSales.equals(Constants.SALES_GROSS_LESS_DISCOUNT)) {
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_less_item_discounts")).getText().strip());
                 } else {
-//                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
+//                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
 //                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                 }
@@ -930,7 +930,7 @@ public class SalesV2Services {
 //                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discount_total")).getText().strip());
                 discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
 
-//                majorGroupAmount = majorGroupAmount - (discountAmount*(-1));
+                majorGroupAmount = majorGroupAmount - (discountAmount);
 
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
                         , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");

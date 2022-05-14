@@ -888,9 +888,12 @@ public class InvoiceService {
 
                 journalEntry.put("vat", String.valueOf(conversions.roundUpFloat(journal.getVat())));
                 journalEntry.put("net", String.valueOf(conversions.roundUpFloat(journal.getNet())));
-                journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
+                if(!invoice.get("vat").equals("0.000")){
+                    journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getNet())));
+                }else{
+                    journalEntry.put("totalCr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost())));
+                }
                 journalEntry.put("totalDr", String.valueOf(conversions.roundUpFloat(journal.getTotalCost()) * -1));
-
 
                 if (!flag) {
                     journalEntry.put("fromCostCenter", supplier.getSupplierName());

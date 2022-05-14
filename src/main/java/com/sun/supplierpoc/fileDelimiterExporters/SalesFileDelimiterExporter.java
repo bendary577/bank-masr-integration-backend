@@ -317,7 +317,7 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.accountCode = accountCode;
 
         } else if (CDMaker.equals("DV")) {
-            syncJobDataCSV.DCMarker = "D";
+            syncJobDataCSV.DCMarker = "C";
             totalDr = syncJobData.getData().get("vat").toString();
 
             if (totalDr.substring(0, 1).equals("-")) {

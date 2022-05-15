@@ -199,7 +199,6 @@ public class SalesFileDelimiterExporter {
                 tempSyncJobData = syncJobData;
             }
 
-
             if (!syncJobData.getData().get("invoiceNo").toString().equals(invoiceNumber)) {
                 tempSyncJobData.getData().put("vat", vat);
                 syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
@@ -222,6 +221,7 @@ public class SalesFileDelimiterExporter {
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
             if (counter == listSyncJobData.size()) {
+                tempSyncJobData.getData().put("vat", vat);
                 syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
@@ -290,8 +290,8 @@ public class SalesFileDelimiterExporter {
         if (CDMaker.equals("D")) {
             syncJobDataCSV.DCMarker = "D";
 
-            if (syncJobData.getData().containsKey("totalDr")) {
-                totalDr = syncJobData.getData().get("totalDr").toString();
+            if (syncJobData.getData().containsKey("totalCr")) {
+                totalDr = syncJobData.getData().get("totalCr").toString();
             } else {
                 totalDr = syncJobData.getData().get("net").toString();
             }
@@ -317,7 +317,7 @@ public class SalesFileDelimiterExporter {
             syncJobDataCSV.accountCode = accountCode;
 
         } else if (CDMaker.equals("DV")) {
-            syncJobDataCSV.DCMarker = "C";
+            syncJobDataCSV.DCMarker = "D";
             totalDr = syncJobData.getData().get("vat").toString();
 
             if (totalDr.substring(0, 1).equals("-")) {
@@ -332,12 +332,13 @@ public class SalesFileDelimiterExporter {
                 accountCode = String.format("%-10s", accountCode);
             }
             syncJobDataCSV.accountCode = accountCode;
-            syncJobDataCSV.description = "TAX" + syncJobDataCSV.description.substring(3, 25);
+//            syncJobDataCSV.description = "TAX" + syncJobDataCSV.description.substring(3, 25);
+            syncJobDataCSV.description = "TAX VAT Value Invoice " + syncJobData.getData().get("invoiceNo").toString().substring(2);
         } else {
             syncJobDataCSV.DCMarker = "C";
 
             // 18 char --> 15 char + 3 decimals
-            String totalCr = syncJobData.getData().get("totalCr").toString();
+            String totalCr = syncJobData.getData().get("totalDr").toString();
             if (totalCr.substring(0, 1).equals("-")) {
                 totalCr = totalCr.substring(1);
             }

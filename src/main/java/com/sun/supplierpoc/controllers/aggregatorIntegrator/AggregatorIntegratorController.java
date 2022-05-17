@@ -2,6 +2,7 @@ package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.AggregatorOrder;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
@@ -105,7 +107,8 @@ public class AggregatorIntegratorController {
 
             response.setStatus(true);
             response.setMessage("");
-            response.setData(orderRepo.findAllByAccountOrderByCreationDateDesc(account));
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findTop15ByAccountOrderByCreationDateDesc(account);
+            response.setData(aggregatorOrders);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {

@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Item;
+import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.SimphonyAccount;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
@@ -20,6 +21,8 @@ import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import com.sun.supplierpoc.services.restTemplate.TalabatAdminWebService;
 import com.sun.supplierpoc.services.restTemplate.TalabatRestService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Modifier;
 
@@ -387,4 +390,5 @@ public class AggregatorIntegratorService {
         }
         return foodicsOrder;
     }
+
 }

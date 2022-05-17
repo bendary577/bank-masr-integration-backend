@@ -18,7 +18,7 @@ public interface OrderRepo extends MongoRepository<AggregatorOrder, String>{
 
     List<AggregatorOrder> findAll();
 
-    List<AggregatorOrder> findAllByAccountOrderByCreationDateDesc(Account account);
+    List<AggregatorOrder> findTop15ByAccountOrderByCreationDateDesc(Account account);
 
     Optional<AggregatorOrder> findByFoodicsOrderId(String id);
 }

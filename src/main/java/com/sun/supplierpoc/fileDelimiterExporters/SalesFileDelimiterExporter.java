@@ -83,7 +83,7 @@ public class SalesFileDelimiterExporter {
              * */
             if (syncJobType.getName().equals(Constants.SALES) || syncJobType.getName().equals(Constants.COST_OF_GOODS)
             || syncJobType.getName().equals(Constants.CONSUMPTION))
-                this.extractSalesSyncJobData();
+                extractSalesSyncJobData();
             else if (syncJobType.getName().equals(Constants.APPROVED_INVOICES) ||(syncJobType.getName().equals(Constants.CREDIT_NOTES)))
                 this.extractInvoicesSyncJobData();
             else if (syncJobType.getName().equals(Constants.WASTAGE))
@@ -212,17 +212,17 @@ public class SalesFileDelimiterExporter {
             }
 
 
-            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "D");
+            syncJobDataCSV = createInvoiceSyncJobDataObject(syncJobType, syncJobData, "D");
             if (syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
-            syncJobDataCSV = createSyncJobDataObject(syncJobType, syncJobData, "C");
+            syncJobDataCSV = createInvoiceSyncJobDataObject(syncJobType, syncJobData, "C");
             if (syncJobDataCSV != null)
                 this.syncJobDataCSVList.add(syncJobDataCSV);
 
             if (counter == listSyncJobData.size()) {
                 tempSyncJobData.getData().put("vat", vat);
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
+                syncJobDataCSV = createInvoiceSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
             }
@@ -261,6 +261,147 @@ public class SalesFileDelimiterExporter {
     }
 
     private SyncJobDataCSV createSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker) {
+
+        SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
+        syncJobDataCSV.description = syncJobData.getData().get("description").toString();
+
+        if (syncJobDataCSV.description.length() > 25) {
+            syncJobDataCSV.description = syncJobDataCSV.description.substring(0, 25);
+        } else if (syncJobDataCSV.description.length() < 25) {
+            syncJobDataCSV.description = String.format("%-25s", syncJobDataCSV.description);
+        }
+
+        syncJobDataCSV.transactionReference = syncJobData.getData().get("transactionReference").toString();
+        if (syncJobDataCSV.transactionReference.length() > 15) {
+            syncJobDataCSV.transactionReference = syncJobDataCSV.transactionReference.substring(0, 15);
+        } else if (syncJobDataCSV.transactionReference.length() < 15) {
+            syncJobDataCSV.transactionReference = String.format("%-15s", syncJobDataCSV.transactionReference);
+        }
+
+        String year = syncJobData.getData().get("transactionDate").toString().substring(4);
+        String month = syncJobData.getData().get("transactionDate").toString().substring(2, 4);
+        String day = syncJobData.getData().get("transactionDate").toString().substring(0, 2);
+
+        syncJobDataCSV.transactionDate = year + month + day;
+        syncJobDataCSV.accountingPeriod = year + "0" + month;
+
+        String totalDr;
+
+        if (CDMaker.equals("D")) {
+            syncJobDataCSV.DCMarker = "D";
+
+            if (syncJobData.getData().containsKey("totalDr")) {
+                totalDr = syncJobData.getData().get("totalDr").toString();
+            } else {
+                totalDr = syncJobData.getData().get("net").toString();
+            }
+
+
+            if (totalDr.substring(0, 1).equals("-")) {
+                totalDr = totalDr.substring(1);
+            }
+
+            splitTotalAmount(syncJobDataCSV, totalDr);
+
+            String accountCode = "";
+
+            if (syncJobData.getData().containsKey("expensesAccount")) {
+                accountCode = syncJobData.getData().get("expensesAccount").toString();
+            } else {
+                accountCode = syncJobData.getData().get("toLocation").toString();
+            }
+
+            if (accountCode.length() < 10) {
+                accountCode = String.format("%-10s", accountCode);
+            }
+            syncJobDataCSV.accountCode = accountCode;
+
+        } else if (CDMaker.equals("DV")) {
+            syncJobDataCSV.DCMarker = "C";
+            totalDr = syncJobData.getData().get("vat").toString();
+
+            if (totalDr.substring(0, 1).equals("-")) {
+                totalDr = totalDr.substring(1);
+            }
+
+            splitTotalAmount(syncJobDataCSV, totalDr);
+
+            String accountCode = syncJobType.getConfiguration().inforConfiguration.taxAccountCode;
+
+            if (accountCode.length() < 10) {
+                accountCode = String.format("%-10s", accountCode);
+            }
+            syncJobDataCSV.accountCode = accountCode;
+//            syncJobDataCSV.description = "TAX" + syncJobDataCSV.description.substring(3, 25);
+            syncJobDataCSV.description = "TAX VAT Value Invoice " + syncJobData.getData().get("invoiceNo").toString().substring(2);
+        } else {
+            syncJobDataCSV.DCMarker = "C";
+
+            // 18 char --> 15 char + 3 decimals
+            String totalCr = syncJobData.getData().get("totalCr").toString();
+            if (totalCr.substring(0, 1).equals("-")) {
+                totalCr = totalCr.substring(1);
+            }
+            String[] amountArray = totalCr.split("\\.");
+
+            String amountPart = amountArray[0];
+            String decimalPart = "0";
+
+            if (amountArray.length > 1) {
+                decimalPart = amountArray[1];
+            }
+            if (amountPart.length() < 15) {
+                amountPart = String.format("%0" + 15 + "d", Integer.parseInt(amountPart));
+            }
+
+            if (decimalPart.length() > 3) {
+                decimalPart = decimalPart.substring(0, 4);
+            } else if (decimalPart.length() < 3) {
+                decimalPart = decimalPart +
+                        String.format("%0" + (3 - decimalPart.length()) + "d", 0);
+            }
+
+            syncJobDataCSV.amount = amountPart + decimalPart;
+
+
+            String accountCode = syncJobData.getData().get("inventoryAccount").toString();
+
+            if (accountCode.length() < 10) {
+                accountCode = String.format("%-10s", accountCode);
+            }
+            syncJobDataCSV.accountCode = accountCode;
+        }
+
+        syncJobDataCSV.recordType = this.syncJobType.getConfiguration().recordType;
+        syncJobDataCSV.conversionCode = this.syncJobType.getConfiguration().conversionCode;
+        syncJobDataCSV.conversionRate = this.syncJobType.getConfiguration().conversionRate;
+
+        syncJobDataCSV.journalType = this.syncJobType.getConfiguration().inforConfiguration.journalType;
+        if (syncJobDataCSV.journalType.length() > 5) {
+            syncJobDataCSV.journalType = syncJobDataCSV.journalType.substring(0, 5);
+        } else if (syncJobDataCSV.journalType.length() < 5) {
+            syncJobDataCSV.journalType = String.format("%-5s", syncJobDataCSV.journalType);
+        }
+
+        /* 15 char */
+        syncJobDataCSV.analysisCode1 = fillTCode(1, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode2 = fillTCode(2, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode3 = fillTCode(3, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode4 = fillTCode(4, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode5 = fillTCode(5, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode6 = fillTCode(6, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode7 = fillTCode(7, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode8 = fillTCode(8, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode9 = fillTCode(9, syncJobData, CDMaker,syncJobType.getConfiguration());
+        syncJobDataCSV.analysisCode10 = fillTCode(10, syncJobData, CDMaker,syncJobType.getConfiguration());
+
+        if (syncJobDataCSV.amount.equals("000000000000000000")) {
+            return null;
+        }
+        return syncJobDataCSV;
+    }
+
+    private SyncJobDataCSV createInvoiceSyncJobDataObject(SyncJobType syncJobType, SyncJobData syncJobData, String CDMaker) {
 
         SyncJobDataCSV syncJobDataCSV = new SyncJobDataCSV();
         syncJobDataCSV.description = syncJobData.getData().get("description").toString();

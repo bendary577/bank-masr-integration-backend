@@ -97,7 +97,7 @@ public class ScheduledTasks {
     /*
     * Add birthday points daily
     * */
-//    @Scheduled(cron = "0 0 1 * * SUN-SAT")
+    @Scheduled(cron = "0 0 1 * * SUN-SAT")
 //    @GetMapping("opera/addGuestPoints")
     public void scheduleTaskWithFixedRate() {
         logger.info("Fixed Rate Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
@@ -247,7 +247,7 @@ public class ScheduledTasks {
 
     // run every 60 min
     // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
-//    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
+    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
 //    @GetMapping("opera/checkUsers")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException, ParseException, IOException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));

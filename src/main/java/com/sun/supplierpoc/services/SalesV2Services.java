@@ -924,6 +924,7 @@ public class SalesV2Services {
 //                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_before_discounts")).getText().strip());
 //                      majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
 //                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_total")).getText().strip());
+//                    majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("gross_sales_after_discounts")).getText().strip());
                     majorGroupAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("sales_net_vat")).getText().strip());
                 }
 

@@ -3,6 +3,8 @@ package com.sun.supplierpoc.models.configurations;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class OverGroup implements Serializable {
 
@@ -15,6 +17,7 @@ public class OverGroup implements Serializable {
     private String inventoryAccount="";
     private String expensesAccount="";
     private String product="";
+    private List<CostCenterAccountCodeMapping> costCenterAccountCodeMappingList = new ArrayList<CostCenterAccountCodeMapping>();
 
     private Float total;
 
@@ -92,5 +95,13 @@ public class OverGroup implements Serializable {
 
     public void setTotal(Float total) {
         this.total = total;
+    }
+
+    public List<CostCenterAccountCodeMapping> getCostCenterAccountCodeMappingList() {
+        return costCenterAccountCodeMappingList;
+    }
+
+    public void setCostCenterAccountCodeMappingList(List<CostCenterAccountCodeMapping> costCenterAccountCodeMappingList) {
+        this.costCenterAccountCodeMappingList = costCenterAccountCodeMappingList;
     }
 }

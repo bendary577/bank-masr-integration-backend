@@ -13,6 +13,8 @@ import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -98,7 +100,9 @@ public class AggregatorIntegratorController {
     }
 
     @GetMapping("/storedOrders")
-    public ResponseEntity<?> getstoredOrders(Principal principal) {
+    public ResponseEntity<?> getstoredOrders(Principal principal,
+                                             @RequestParam(name = "pageNumber") int pageNumber,
+                                             @RequestParam(name = "limit") int limit) {
 
         Response response = new Response();
 
@@ -112,13 +116,8 @@ public class AggregatorIntegratorController {
             response.setStatus(true);
             response.setMessage("");
 
-//            LocalDate startDate = LocalDate.of( 2022 , Month.MAY , 16 );
-//            LocalDate endDate = LocalDate.of( 2022 , Month.MAY , 17 );
-//
-//            String sDate6 = "31-Dec-1998 23:37:50";
-//            SimpleDateFormat formatter1=new SimpleDateFormat("dd/MM/yyyy");
-
-            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findTop15ByAccountOrderByCreationDateDesc(account);
+            Pageable paging = PageRequest.of(pageNumber-1, limit);
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAllByAccountOrderByCreationDateDesc(account, paging);
             response.setData(aggregatorOrders);
 
             return new ResponseEntity<>(response, HttpStatus.OK);

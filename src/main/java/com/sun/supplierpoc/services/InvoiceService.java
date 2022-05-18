@@ -855,7 +855,18 @@ public class InvoiceService {
                         continue;
                     if (!flag) { // Invoice from supplier to cost center
                         journalEntry.put("inventoryAccount", supplier.getAccountCode());
-                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
+                            if(toCostCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                                costCenterMappingAvailable = true;
+                                break;
+                            }
+                            coseCenterIndex++;
+                        }
+                        if(costCenterMappingAvailable == true){
+                            journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
+                        }else {
+                            journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        }
                     } else {  // Credit Note from cost center to supplier
                         journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                         journalEntry.put("expensesAccount", supplier.getAccountCode());

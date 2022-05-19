@@ -8,6 +8,7 @@ import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
@@ -36,6 +37,9 @@ public class AggregatorIntegratorController {
 
     @Autowired
     private AggregatorIntegratorService aggregatorIntegratorService;
+
+    @Autowired
+    AccountRepo accountRepo;
 
     @Autowired
     private AccountService accountService;
@@ -128,4 +132,73 @@ public class AggregatorIntegratorController {
         }
     }
 
+    @RequestMapping("/getOrdersCount")
+    public int getOrdersCount(Principal principal) {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            int ordersCount = orderRepo.countAllByAccountId(account.getId());
+
+            return ordersCount;
+        }else{
+            return 0;
+        }
+    }
+
+    @GetMapping("/getMappedProducts")
+    public ResponseEntity<?> getMappedProducts(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response.setStatus(true);
+            response.setMessage("");
+
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAll();
+            response.setData(aggregatorOrders);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/getUnMappedProducts")
+    public ResponseEntity<?> getUnMappedProducts(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response.setStatus(true);
+            response.setMessage("");
+
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAll();
+            response.setData(aggregatorOrders);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
 }

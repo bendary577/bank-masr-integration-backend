@@ -349,6 +349,8 @@ public class TransferService {
                 HashMap<String, Object> journalEntry = new HashMap<>();
                 CostCenter fromCostCenter = (CostCenter) transfer.get("fromCostCenter");
                 CostCenter toCostCenter = (CostCenter) transfer.get("toCostCenter");
+                boolean costCenterMappingAvailable = false;
+                int coseCenterIndex = 0;
 
                 if (fromCostCenter.costCenterReference.equals("")) {
                     fromCostCenter.costCenterReference = fromCostCenter.costCenter;
@@ -397,10 +399,47 @@ public class TransferService {
                 if (syncPer.equals("OverGroups")) {
                     OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
                     journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                    journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                    CostCenter costCenter;
+                    if(journalEntry.get("totalCr").equals("") || journalEntry.get("totalCr") == null ){
+                        costCenter = toCostCenter;
+                    }else{
+                        costCenter = fromCostCenter;
+                    }
+                    for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
+                        if(costCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                            costCenterMappingAvailable = true;
+                            break;
+                        }
+                        coseCenterIndex++;
+                    }
+                    if(costCenterMappingAvailable){
+                        journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
+                    }else {
+                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                    }
                 } else {
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemsGroups, journal.getOverGroup());
+                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
                     journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
+
+                    CostCenter costCenter;
+                    if(journalEntry.get("totalCr").equals("") || journalEntry.get("totalCr") == null ){
+                        costCenter = toCostCenter;
+                    }else{
+                        costCenter = fromCostCenter;
+                    }
+                    for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
+                        if(costCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                            costCenterMappingAvailable = true;
+                            break;
+                        }
+                        coseCenterIndex++;
+                    }
+                    if(costCenterMappingAvailable){
+                        journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
+                    }else {
+                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                    }
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
                 }
 

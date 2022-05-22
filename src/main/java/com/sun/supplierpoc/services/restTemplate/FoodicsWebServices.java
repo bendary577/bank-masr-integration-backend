@@ -9,12 +9,9 @@ import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsFailedResponse;
+import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
 import com.sun.supplierpoc.models.aggregtor.FoodicProductResponse;
-import com.sun.supplierpoc.models.aggregtor.foodics.CreateOrderRequest;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsLoginBody;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -25,6 +22,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class FoodicsWebServices {
@@ -103,5 +102,29 @@ public class FoodicsWebServices {
         }
     }
 
+    public List<FoodicsProduct> fetchFoodicsProducts(FoodicsAccountData foodicsAccountData) {
+        ArrayList<FoodicsProduct> foodicsProducts = new ArrayList<>();
+        String url = "https://api-sandbox.foodics.com/v5/products";
+        try {
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            Request request = new Request.Builder()
+                    .url(url).method("GET", null)
+                    .addHeader("Authorization", "Bearer " + foodicsAccountData.getToken())
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json") .build();
 
+            okhttp3.Response getProductsResponse = client.newCall(request).execute();
+            if (getProductsResponse.code() == 200) {
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+                FoodicProductResponse foodicsProductsResponse = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
+//                foodicsProducts.setFoodicsProducts(foodicsProductsResponse.getData());
+//                foodicsProducts.setType(AggregatorConstants.FOODICS);
+                return foodicsProducts;
+            } else {
+                return foodicsProducts;
+            }
+        } catch (IOException e) {
+            return foodicsProducts;
+        }
+    }
 }

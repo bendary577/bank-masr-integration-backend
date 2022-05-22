@@ -9,6 +9,7 @@ import com.sun.supplierpoc.models.SyncJobType;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.BirthdayGift;
 import com.sun.supplierpoc.models.applications.Group;
+import com.sun.supplierpoc.models.configurations.RevenueCenter;
 import com.sun.supplierpoc.models.configurations.SimphonyLocation;
 import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -178,7 +179,10 @@ public class ScheduledTasks {
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
         for (Account account : accounts) {
+            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
             List<Group> groups = appGroupService.getTopGroups(account);
+
             ArrayList<Group> groupsQueue = new ArrayList<>();
             if (groups.size() == 0) continue;
 
@@ -226,7 +230,7 @@ public class ScheduledTasks {
                 }
             }
             for (Group group : groupsQueue) {
-                appGroupService.resetGroupWallet(account, group.getId());
+                appGroupService.resetGroupWallet(account, group, revenueCenters);
             }
         }
     }
@@ -357,7 +361,7 @@ public class ScheduledTasks {
     /*
     * Delivery aggregator scheduler that run every 1 min to check new orders
     * */
-    @Scheduled(cron = "0 * * * * SUN-SAT")
+//    @Scheduled(cron = "0 * * * * SUN-SAT")
     public void aggregatorScheduler() {
 
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));

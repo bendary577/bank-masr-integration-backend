@@ -48,22 +48,20 @@ public class AppGroupService {
     }
 
 
-    public void resetGroupWallet(Account account, String groupId) {
-        Optional<Group> group = groupRepo.findById(groupId);
-        if(group.isPresent()){
-           Group newGroup = group.get();
-           List<ApplicationUser> users = appUserService.getActiveUsers(account.getId());
-           for(ApplicationUser applicationUser : users){
-               User user = userRepo.findByAccountId(account.getId()).get(0);
-               if(applicationUser.getGroup().getId().equals(groupId)){
-                   Balance canteenChargeBalance = new Balance();
-                   canteenChargeBalance.setAmount(Double.parseDouble(newGroup.getCanteenConfiguration().getChargeAmount()));
-                   canteenChargeBalance.setRevenueCenters(new ArrayList<RevenueCenter>());
-                   walletService.resetWallet(user, applicationUser.getId(), canteenChargeBalance, newGroup.getCanteenConfiguration().isAccumulate());
-               }
+    public void resetGroupWallet(Account account, Group group, ArrayList<RevenueCenter> revenueCenters) {
+        User user = userRepo.findByAccountId(account.getId()).get(0);
+        List<ApplicationUser> appUsers = appUserService.getActiveUsersByGroup(account.getId(), group);
+
+       for(ApplicationUser applicationUser : appUsers){
+
+           if(applicationUser.getGroup().getId().equals(group.getId())){
+               Balance canteenChargeBalance = new Balance();
+               canteenChargeBalance.setAmount(Double.parseDouble(group.getCanteenConfiguration().getChargeAmount()));
+               canteenChargeBalance.setRevenueCenters(revenueCenters);
+
+               walletService.resetWallet(user, applicationUser, canteenChargeBalance, group.getCanteenConfiguration().isAccumulate());
            }
-        }else{
-            System.out.println("group doesn't exist");
-        }
+       }
+
     }
 }

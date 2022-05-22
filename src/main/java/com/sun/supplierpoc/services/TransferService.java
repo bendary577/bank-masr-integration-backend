@@ -349,8 +349,10 @@ public class TransferService {
                 HashMap<String, Object> journalEntry = new HashMap<>();
                 CostCenter fromCostCenter = (CostCenter) transfer.get("fromCostCenter");
                 CostCenter toCostCenter = (CostCenter) transfer.get("toCostCenter");
-                boolean costCenterMappingAvailable = false;
-                int coseCenterIndex = 0;
+                boolean fromCostCenterMappingAvailable = false;
+                boolean toCostCenterMappingAvailable = false;
+                int fromCostCenterIndex = 0;
+                int toCostCenterIndex = 0;
 
                 if (fromCostCenter.costCenterReference.equals("")) {
                     fromCostCenter.costCenterReference = fromCostCenter.costCenter;
@@ -399,47 +401,40 @@ public class TransferService {
                 if (syncPer.equals("OverGroups")) {
                     OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
                     journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
-                    CostCenter costCenter;
-                    if(journalEntry.get("totalCr").equals("") || journalEntry.get("totalCr") == null ){
-                        costCenter = toCostCenter;
-                    }else{
-                        costCenter = fromCostCenter;
-                    }
                     for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
-                        if(costCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
-                            costCenterMappingAvailable = true;
+                        if(fromCostCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                            fromCostCenterMappingAvailable = true;
                             break;
                         }
-                        coseCenterIndex++;
+                        fromCostCenterIndex++;
                     }
-                    if(costCenterMappingAvailable){
-                        journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
+
+                    for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
+                        if(toCostCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                            toCostCenterMappingAvailable = true;
+                            break;
+                        }
+                        toCostCenterIndex++;
+                    }
+
+                    if(fromCostCenterMappingAvailable){
+                        journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(fromCostCenterIndex).getAccountCode());
+                        journalEntry.put("fromCostCenterAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(fromCostCenterIndex).getAccountCode());
                     }else {
                         journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        journalEntry.put("fromCostCenterAccount", oldOverGroupData.getExpensesAccount());
+                    }
+
+                    if(toCostCenterMappingAvailable){
+                        journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(toCostCenterIndex).getAccountCode());
+                        journalEntry.put("toCostCenterAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(toCostCenterIndex).getAccountCode());
+                    }else {
+                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        journalEntry.put("toCostCenterAccount", oldOverGroupData.getExpensesAccount());
                     }
                 } else {
                     ItemGroup itemGroup = conversions.checkItemGroupExistence(itemsGroups, journal.getOverGroup());
-                    OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
                     journalEntry.put("inventoryAccount", itemGroup.getInventoryAccount());
-
-                    CostCenter costCenter;
-                    if(journalEntry.get("totalCr").equals("") || journalEntry.get("totalCr") == null ){
-                        costCenter = toCostCenter;
-                    }else{
-                        costCenter = fromCostCenter;
-                    }
-                    for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
-                        if(costCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
-                            costCenterMappingAvailable = true;
-                            break;
-                        }
-                        coseCenterIndex++;
-                    }
-                    if(costCenterMappingAvailable){
-                        journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
-                    }else {
-                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
-                    }
                     journalEntry.put("expensesAccount", itemGroup.getExpensesAccount());
                 }
 

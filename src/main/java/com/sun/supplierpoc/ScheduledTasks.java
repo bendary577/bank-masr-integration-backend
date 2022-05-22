@@ -96,9 +96,10 @@ public class ScheduledTasks {
 
     /*
     * Add birthday points daily
+    * Reset employee quota at the end of the day
     * */
-//    @Scheduled(cron = "0 0 1 * * SUN-SAT")
-//    @GetMapping("opera/addGuestPoints")
+    @Scheduled(cron = "0 0 1 * * SUN-SAT")
+    @GetMapping("opera/addGuestPoints")
     public void scheduleTaskWithFixedRate() {
         logger.info("Fixed Rate Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
@@ -176,79 +177,64 @@ public class ScheduledTasks {
         String dayOfWeekName = weekdays[dayOfWeek];
         ///////////////////////////////////////////////////////////////////////////////////////////////
 
-        boolean accountHasCanteenFeature = false;
-
         for (Account account : accounts) {
+            List<Group> groups = appGroupService.getTopGroups(account);
+            ArrayList<Group> groupsQueue = new ArrayList<>();
+            if (groups.size() == 0) continue;
 
-            //check if account has canteen feature
-            for (Feature feature1 : account.getFeatures()) {
-                if (feature1.getReference().equals(Features.CANTEEN)) {
-                    accountHasCanteenFeature = true;
-                    break;
+            for (Group group : groups) {
+                if (group.getCanteenConfiguration().getHour().equals("")) continue;
+
+                String schedulerHour = group.getCanteenConfiguration().getHour();
+                String[] arrOfStr = schedulerHour.split(":");
+
+                // check hours
+                if (group.getCanteenConfiguration().getDuration().equals(Constants.DAILY)) {
+                    if (Integer.parseInt(arrOfStr[0]) == hour) {
+                        groupsQueue.add(group);
+                        System.out.println(Constants.DAILY);
+                        System.out.println(group.getName());
+                    }
+                }
+
+                // check hours and day_name
+                if (group.getCanteenConfiguration().getDuration().equals(Constants.WEEKLY)) {
+                    if (group.getCanteenConfiguration().getDayName() != null) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
+                            String schedulerDay = (group.getCanteenConfiguration().getDayName()).toLowerCase();
+                            if (dayOfWeekName.equals(schedulerDay)) {
+                                groupsQueue.add(group);
+                                System.out.println(Constants.WEEKLY);
+                                System.out.println(group.getName());
+                            }
+                        }
+                    }
+                }
+
+                // check hours and day
+                if (group.getCanteenConfiguration().getDuration().equals(Constants.MONTHLY)) {
+                    if (group.getCanteenConfiguration().getDay() != null) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
+                            int schedulerDay = Integer.parseInt(group.getCanteenConfiguration().getDay());
+                            if (dayOfMonth == schedulerDay) {
+                                groupsQueue.add(group);
+                                System.out.println(Constants.MONTHLY);
+                                System.out.println(group.getName());
+                            }
+                        }
+                    }
                 }
             }
-
-            if (accountHasCanteenFeature) {
-                List<Group> groups = appGroupService.getTopGroups(account);
-                ArrayList<Group> groupsQueue = new ArrayList<>();
-                if (groups.size() == 0) continue;
-
-                for (Group group : groups) {
-                    if (group.getCanteenConfiguration().getHour().equals("")) continue;
-
-                    String schedulerHour = group.getCanteenConfiguration().getHour();
-                    String[] arrOfStr = schedulerHour.split(":");
-
-                    // check hours
-                    if (group.getCanteenConfiguration().getDuration().equals(Constants.DAILY)) {
-                        if (Integer.parseInt(arrOfStr[0]) == hour) {
-                            groupsQueue.add(group);
-                            System.out.println(Constants.DAILY);
-                            System.out.println(group.getName());
-                        }
-                    }
-
-                    // check hours and day_name
-                    if (group.getCanteenConfiguration().getDuration().equals(Constants.WEEKLY)) {
-                        if (group.getCanteenConfiguration().getDayName() != null) {
-                            if (Integer.parseInt(arrOfStr[0]) == hour) {
-                                String schedulerDay = (group.getCanteenConfiguration().getDayName()).toLowerCase();
-                                if (dayOfWeekName.equals(schedulerDay)) {
-                                    groupsQueue.add(group);
-                                    System.out.println(Constants.WEEKLY);
-                                    System.out.println(group.getName());
-                                }
-                            }
-                        }
-                    }
-
-                    // check hours and day
-                    if (group.getCanteenConfiguration().getDuration().equals(Constants.MONTHLY)) {
-                        if (group.getCanteenConfiguration().getDay() != null) {
-                            if (Integer.parseInt(arrOfStr[0]) == hour) {
-                                int schedulerDay = Integer.parseInt(group.getCanteenConfiguration().getDay());
-                                if (dayOfMonth == schedulerDay) {
-                                    groupsQueue.add(group);
-                                    System.out.println(Constants.MONTHLY);
-                                    System.out.println(group.getName());
-                                }
-                            }
-                        }
-                    }
-                }
-                for (Group group : groupsQueue) {
-                    appGroupService.resetGroupWallet(account, group.getId());
-                }
-            } else {
-                continue;
+            for (Group group : groupsQueue) {
+                appGroupService.resetGroupWallet(account, group.getId());
             }
         }
     }
 
     // run every 60 min
     // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
-//    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
-//    @GetMapping("opera/checkUsers")
+    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
+    @GetMapping("opera/checkUsers")
     public void scheduleTaskWithCronExpression() throws SoapFaultException, ComponentException, ParseException, IOException {
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
         logger.info("Current Thread : {}", Thread.currentThread().getName());
@@ -371,7 +357,7 @@ public class ScheduledTasks {
     /*
     * Delivery aggregator scheduler that run every 1 min to check new orders
     * */
-//    @Scheduled(cron = "0 * * * * SUN-SAT")
+    @Scheduled(cron = "0 * * * * SUN-SAT")
     public void aggregatorScheduler() {
 
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
@@ -388,22 +374,4 @@ public class ScheduledTasks {
             aggregatorIntegratorService.sendTalabatOrdersToFoodics(account);
         }
     }
-
-
-
-//    // run every 60 min
-//    // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
-//    //    @Scheduled(cron = "0 0/52 * * * SUN-SAT")
-//    //    @Scheduled(cron = "0/20 * * * * ?")
-//    //    @Scheduled(cron = "*/1 * * * * SUN-SAT")
-//    @Scheduled(cron = "0 * * * * SUN-SAT")
-//    public void canteenSchedular() {
-//        logger.info("Canteen Schedular Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
-//        logger.info("Current Thread : {}", Thread.currentThread().getName());
-//
-//
-//    }
-
-
-
 }

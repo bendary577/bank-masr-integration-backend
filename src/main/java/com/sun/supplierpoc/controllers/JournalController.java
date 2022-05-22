@@ -257,7 +257,7 @@ public class JournalController {
 //                    ArrayList<ConsumptionLocation> consumptionLocations = configuration.consumptionLocations;
 //                    ArrayList<ConsumptionLocation> consumptionCostCenters = configuration.consumptionCostCenters;
                     data = journalV2Service.getJournalDataByCostCenterAndLocation(journalSyncJobType, costCentersLocation,
-                            costCenters, itemGroups, account);
+                            costCenters, itemGroups, overGroups, account);
                 }
             } else {
                 response.put("message", "Please configure account version before starting the process.");

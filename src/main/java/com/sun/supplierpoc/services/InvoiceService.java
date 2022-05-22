@@ -801,6 +801,8 @@ public class InvoiceService {
                 HashMap<String, Object> journalEntry = new HashMap<>();
                 Supplier supplier = (Supplier) invoice.get("vendor");
                 CostCenter toCostCenter = (CostCenter) invoice.get("cost_center");
+                boolean costCenterMappingAvailable = false;
+                int coseCenterIndex = 0;
 
                 if (configuration.syncPerGroup.equals("OverGroups")) {
                     OverGroup oldOverGroupData = conversions.checkOverGroupExistence(overGroups, journal.getOverGroup());
@@ -810,7 +812,18 @@ public class InvoiceService {
                         continue;
                     if (!flag) { // Invoice from supplier to cost center
                         journalEntry.put("inventoryAccount", supplier.getAccountCode());
-                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
+                            if(toCostCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                                costCenterMappingAvailable = true;
+                                break;
+                            }
+                            coseCenterIndex++;
+                        }
+                        if(costCenterMappingAvailable == true){
+                            journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
+                        }else {
+                            journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        }
                     } else {  // Credit Note from cost center to supplier
                         journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                         journalEntry.put("expensesAccount", supplier.getAccountCode());
@@ -842,7 +855,18 @@ public class InvoiceService {
                         continue;
                     if (!flag) { // Invoice from supplier to cost center
                         journalEntry.put("inventoryAccount", supplier.getAccountCode());
-                        journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : oldOverGroupData.getCostCenterAccountCodeMappingList()) {
+                            if(toCostCenter.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                                costCenterMappingAvailable = true;
+                                break;
+                            }
+                            coseCenterIndex++;
+                        }
+                        if(costCenterMappingAvailable == true){
+                            journalEntry.put("expensesAccount", oldOverGroupData.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode());
+                        }else {
+                            journalEntry.put("expensesAccount", oldOverGroupData.getExpensesAccount());
+                        }
                     } else {  // Credit Note from cost center to supplier
                         journalEntry.put("inventoryAccount", oldOverGroupData.getInventoryAccount());
                         journalEntry.put("expensesAccount", supplier.getAccountCode());

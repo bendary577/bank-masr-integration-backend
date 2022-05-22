@@ -2,21 +2,30 @@ package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.AggregatorOrder;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsOrder;
+import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Optional;
 
@@ -28,6 +37,9 @@ public class AggregatorIntegratorController {
 
     @Autowired
     private AggregatorIntegratorService aggregatorIntegratorService;
+
+    @Autowired
+    AccountRepo accountRepo;
 
     @Autowired
     private AccountService accountService;
@@ -92,7 +104,9 @@ public class AggregatorIntegratorController {
     }
 
     @GetMapping("/storedOrders")
-    public ResponseEntity<?> getstoredOrders(Principal principal) {
+    public ResponseEntity<?> getstoredOrders(Principal principal,
+                                             @RequestParam(name = "pageNumber") int pageNumber,
+                                             @RequestParam(name = "limit") int limit) {
 
         Response response = new Response();
 
@@ -105,7 +119,10 @@ public class AggregatorIntegratorController {
 
             response.setStatus(true);
             response.setMessage("");
-            response.setData(orderRepo.findAllByAccountOrderByCreationDateDesc(account));
+
+            Pageable paging = PageRequest.of(pageNumber-1, limit);
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAllByAccountOrderByCreationDateDesc(account, paging);
+            response.setData(aggregatorOrders);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
@@ -115,4 +132,73 @@ public class AggregatorIntegratorController {
         }
     }
 
+    @RequestMapping("/getOrdersCount")
+    public int getOrdersCount(Principal principal) {
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+
+        Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            int ordersCount = orderRepo.countAllByAccountId(account.getId());
+
+            return ordersCount;
+        }else{
+            return 0;
+        }
+    }
+
+    @GetMapping("/getMappedProducts")
+    public ResponseEntity<?> getMappedProducts(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response.setStatus(true);
+            response.setMessage("");
+
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAll();
+            response.setData(aggregatorOrders);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/getUnMappedProducts")
+    public ResponseEntity<?> getUnMappedProducts(Principal principal) {
+
+        Response response = new Response();
+
+        User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+
+            response.setStatus(true);
+            response.setMessage("");
+
+            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAll();
+            response.setData(aggregatorOrders);
+
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
 }

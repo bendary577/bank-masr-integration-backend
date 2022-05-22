@@ -218,7 +218,7 @@ public class TalabatAdminWebService {
         String dailyTesetParam = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z";
 
-        String TESTPARAM = "?from=2022-05-01T00:00:00Z&to=2022-05-01T23:59:59Z";
+        String TESTPARAM = "?from=2022-05-15T00:00:00Z&to=2022-05-15T23:59:59Z";
 
         String parameters = "?from=" + getDate() + "T" + dateFormat.format(oneMinBack) + ":00Z" +
                 "&to=" + getDate() + "T" + dateFormat.format(toDate) + ":00Z" +

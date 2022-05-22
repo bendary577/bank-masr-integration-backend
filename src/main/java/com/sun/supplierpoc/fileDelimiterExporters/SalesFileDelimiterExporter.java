@@ -201,7 +201,7 @@ public class SalesFileDelimiterExporter {
 
             if (!syncJobData.getData().get("invoiceNo").toString().equals(invoiceNumber)) {
                 tempSyncJobData.getData().put("vat", vat);
-                syncJobDataCSV = createSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
+                syncJobDataCSV = createInvoiceSyncJobDataObject(syncJobType, tempSyncJobData, "DV");
                 if (syncJobDataCSV != null)
                     this.syncJobDataCSVList.add(syncJobDataCSV);
                 tempSyncJobData = syncJobData;

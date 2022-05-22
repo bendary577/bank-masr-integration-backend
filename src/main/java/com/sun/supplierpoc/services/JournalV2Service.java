@@ -690,7 +690,7 @@ public class JournalV2Service {
      * Get consumptions entries based on cost center
      * */
     public Response getJournalDataByCostCenterAndLocation(SyncJobType journalSyncJobType, ArrayList<CostCenter> consumptionLocations,
-                                                          ArrayList<CostCenter> consumptionCostCenters, ArrayList<ItemGroup> itemGroups, Account account) {
+                                                          ArrayList<CostCenter> consumptionCostCenters, ArrayList<ItemGroup> itemGroups, ArrayList<OverGroup> overGroups, Account account) {
         Response response = new Response();
 
         WebDriver driver;
@@ -817,12 +817,13 @@ public class JournalV2Service {
                         WebElement costTd = costCols.get(costColumns.indexOf("item_group"));
 
                         ItemGroup itemGroup;
-
-                        if (!costCenter.accountCode.equals(""))
+                        OverGroup overGroup;
+                        overGroup = conversions.checkOverGroupExistence(overGroups, costCols.get(costColumns.indexOf("over-group")).getText().strip());
+                        if (!costCenter.accountCode.equals("")) {
                             itemGroup = conversions.checkItemGroupExistence(itemGroups, costTd.getText().strip());
-                        else
-                            itemGroup = conversions.checkItemGroupExistence(itemGroups, costTd.getText().strip());
-
+                        }else {
+                            itemGroup = conversions.checkItemGroupExistence(itemGroups, costCols.get(costColumns.indexOf("item_group")).getText().strip());
+                        }
                         if (itemGroup.getItemGroup().equals(""))
                             continue;
 
@@ -848,8 +849,23 @@ public class JournalV2Service {
 
                         costCenterTotalCost += Math.abs(cost);
 
-                        costCenterJournals = consumptionJournal.checkJournalExistence(costCenterJournals, group, Math.abs(cost), itemGroup.getExpensesAccount(),
-                                costCenter, "D");
+                        boolean costCenterMappingAvailable = false;
+                        int coseCenterIndex = 0;
+                        for (CostCenterAccountCodeMapping costCenterAccountCodeMapping : overGroup.getCostCenterAccountCodeMappingList()) {
+                            if(location.costCenter.equalsIgnoreCase(costCenterAccountCodeMapping.getCostCenter())){
+                                costCenterMappingAvailable = true;
+                                break;
+                            }
+                            coseCenterIndex++;
+                        }
+                        if(costCenterMappingAvailable == true){
+                            costCenterJournals = consumptionJournal.checkJournalExistence(costCenterJournals, group, Math.abs(cost), overGroup.getCostCenterAccountCodeMappingList().get(coseCenterIndex).getAccountCode(),
+                                    costCenter, "D");
+                        }else {
+                            costCenterJournals = consumptionJournal.checkJournalExistence(costCenterJournals, group, Math.abs(cost), itemGroup.getExpensesAccount(),
+                                    costCenter, "D");
+                        }
+
                     }
 
                     costCenterJournals = consumptionJournal.checkJournalExistence(costCenterJournals, "", costCenterTotalCost, costCenter.accountCode,

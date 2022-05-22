@@ -83,7 +83,7 @@ public class TransferService {
         ArrayList<HashMap<String, Object>> journalEntries = new ArrayList<>();
 
         try {
-            WebDriverWait wait = new WebDriverWait(driver, 5);
+            WebDriverWait wait = new WebDriverWait(driver, 20);
 
             if (account.getMicrosVersion().equals("version1")) {
                 if (!setupEnvironment.loginOHIM(driver, Constants.OHIM_LOGIN_LINK, account)) {
@@ -115,7 +115,7 @@ public class TransferService {
                     driver.findElement(By.id("drawerToggleButton")).click();
 
                     try {
-                        WebDriverWait newWait = new WebDriverWait(driver, 10);
+                        WebDriverWait newWait = new WebDriverWait(driver, 30);
                         newWait.until(ExpectedConditions.visibilityOfElementLocated(By.partialLinkText("Inventory Management")));
                     } catch (Exception e) {
                         System.out.println(e.getMessage());
@@ -124,7 +124,7 @@ public class TransferService {
                     List<WebElement> elements = driver.findElements(By.partialLinkText("Inventory Management"));
                     if (elements.size() >= 2) {
                         try {
-                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            WebDriverWait newWait = new WebDriverWait(driver, 30);
                             newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement_")));
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
@@ -134,7 +134,7 @@ public class TransferService {
                         ArrayList<String> tabs2 = new ArrayList<String>(driver.getWindowHandles());
 
                         try {
-                            WebDriverWait newWait = new WebDriverWait(driver, 10);
+                            WebDriverWait newWait = new WebDriverWait(driver, 30);
                             newWait.until(ExpectedConditions.elementToBeClickable(By.id("InventoryManagement_")));
                         } catch (Exception e) {
                             System.out.println(e.getMessage());
@@ -152,7 +152,7 @@ public class TransferService {
             }
 
             try {
-                WebDriverWait newWait = new WebDriverWait(driver, 10);
+                WebDriverWait newWait = new WebDriverWait(driver, 30);
                 newWait.until(ExpectedConditions.elementToBeClickable(By.id("filterPanel_")));
             } catch (Exception e) {
                 System.out.println(e.getMessage());

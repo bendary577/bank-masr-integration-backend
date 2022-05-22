@@ -25,6 +25,7 @@ public interface OrderRepo extends MongoRepository<AggregatorOrder, String>{
     List<AggregatorOrder> findAllByAccountOrderByCreationDateDesc(Account account, Pageable pageable);
 
     Optional<AggregatorOrder> findByFoodicsOrderId(String id);
+    int countAllByAccountId(String id);
 
     @Query("{'date' : { $gte: ?0, $lte: ?1 } }")
     List<AggregatorOrder> getAllBetweenDates(Date startDate, Date endDate);

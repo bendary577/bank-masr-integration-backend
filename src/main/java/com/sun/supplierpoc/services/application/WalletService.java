@@ -354,107 +354,75 @@ public class WalletService {
         return response;
     }
 
-    public Response resetWallet(User agent, String userId, Balance balance, boolean accumulateLastBalance) {
+    public Response resetWallet(User agent, ApplicationUser applicationUser, Balance balance, boolean accumulateLastBalance) {
 
         Response response = new Response();
 
-        Optional<ApplicationUser> applicationUserOptional = applicationUserRepo.findById(userId);
-        if(applicationUserOptional.isPresent()){
+        try{
+            //get last balance
+            if(applicationUser.getWallet().getWalletHistory().size() == 0 || applicationUser.getWallet() == null){
+               response.setStatus(false);
+               response.setMessage("User doesn't have wallet");
+            }
 
-            ApplicationUser applicationUser = applicationUserOptional.get();
 
+            //add new charge balance to wallet history
+            applicationUser.getWallet().getBalance().add(balance);
+            WalletHistory walletHistory = null;
 
-            try{
-                //get last balance
-                if(applicationUser.getWallet().getWalletHistory().size() == 0 || applicationUser.getWallet() == null){
-                   response.setStatus(false);
-                   response.setMessage("User doesn't have wallet");
-                }
-
+            if(accumulateLastBalance){
                 Double lastBalance = applicationUser.getWallet().getWalletHistory().get(applicationUser.getWallet().getWalletHistory().size()-1).getNewBalance();
 
+                //add last balance to new charged balance
+                walletHistory = new WalletHistory(ActionType.CANTEEN_CHARGE , balance.getAmount() ,
+                        lastBalance,  (lastBalance + balance.getAmount()), agent, new Date());
+            }else{
+                //add new charged balance only
+                walletHistory = new WalletHistory(ActionType.CANTEEN_CHARGE , balance.getAmount() ,
+                        0,  balance.getAmount(), agent, new Date());
+
                 // reset all previous balances and wallet history actions
-                for(Balance tempBalance : applicationUser.getWallet().getBalance()){
-                    tempBalance.setAmount(0);
+                for (int i = 0; i < applicationUser.getWallet().getBalance().size() - 1; i++) {
+                    applicationUser.getWallet().getBalance().get(i).setAmount(0);
                 }
-
-                for(WalletHistory walletHistory : applicationUser.getWallet().getWalletHistory()){
-                    walletHistory.setAmount(0);
-                    walletHistory.setPreviousBalance(0);
-                    walletHistory.setNewBalance(0);
-                }
-
-                //add new charge balance to wallet history
-                applicationUser.getWallet().getBalance().add(balance);
-                WalletHistory walletHistory = null;
-                if(accumulateLastBalance){
-                    //add last balance to new charged balance
-                    walletHistory = new WalletHistory(ActionType.CANTEEN_CHARGE , balance.getAmount() ,
-                            lastBalance,  (lastBalance + balance.getAmount()), agent, new Date());
-                }else{
-                    //add new charged balance only
-                    walletHistory = new WalletHistory(ActionType.CANTEEN_CHARGE , balance.getAmount() ,
-                            0,  balance.getAmount(), agent, new Date());
-                }
-
-                walletHistory.setActionId(UUID.randomUUID().toString());
-                walletHistory.setCheck("");
-                applicationUser.getWallet().getWalletHistory().add(walletHistory);
-                applicationUserRepo.save(applicationUser);
-
-                /* Create new user action */
-                Action action = new Action();
-                action.setUser(agent);
-                action.setId(walletHistory.getActionId());
-                action.setApplicationUser(applicationUser);
-                action.setAccountId(agent.getAccountId());
-                action.setAmount(balance.getAmount());
-                action.setDate(new Date());
-                action.setActionType(ActionType.CANTEEN_CHARGE);
-
-                actionService.createUserAction(action);
-
-                /* Update agent action stats */
-                ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
-                if(actionStats == null){
-                    actionStats = new ActionStats(agent, balance.getAmount(), 0,0, agent.getAccountId());
-                    actionStatsService.createActionStats(actionStats);
-                }else {
-                    actionStats.setChargeAmount(actionStats.getChargeAmount() + balance.getAmount());
-                    actionStatsService.createActionStats(actionStats);
-                }
-
-                response.setStatus(true);
-                response.setData(applicationUser);
-                response.setMessage("Wallet was reset Successfully.");
-            }catch(Exception e) {
-                e.printStackTrace();
-                response.setStatus(false);
-                response.setMessage(e.getMessage());
             }
-        }else{
+
+            walletHistory.setActionId(UUID.randomUUID().toString());
+            walletHistory.setCheck("");
+            applicationUser.getWallet().getWalletHistory().add(walletHistory);
+            applicationUserRepo.save(applicationUser);
+
+            /* Create new user action */
+            Action action = new Action();
+            action.setUser(agent);
+            action.setId(walletHistory.getActionId());
+            action.setApplicationUser(applicationUser);
+            action.setAccountId(agent.getAccountId());
+            action.setAmount(balance.getAmount());
+            action.setDate(new Date());
+            action.setActionType(ActionType.CANTEEN_CHARGE);
+
+            actionService.createUserAction(action);
+
+            /* Update agent action stats */
+            ActionStats actionStats = actionStatsService.findActionStatsByAgent(agent);
+            if(actionStats == null){
+                actionStats = new ActionStats(agent, balance.getAmount(), 0,0, agent.getAccountId());
+                actionStatsService.createActionStats(actionStats);
+            }else {
+                actionStats.setChargeAmount(actionStats.getChargeAmount() + balance.getAmount());
+                actionStatsService.createActionStats(actionStats);
+            }
+
+            response.setStatus(true);
+            response.setData(applicationUser);
+            response.setMessage("Wallet was reset Successfully.");
+        }catch(Exception e) {
+            e.printStackTrace();
             response.setStatus(false);
-            response.setMessage("This guest doesn't exist.");
+            response.setMessage(e.getMessage());
         }
+
         return response;
     }
-
-
-
-
-
-
-
-
-
-
-//    private double getWalletRemainingTotalFrom(){}
-//
-//    private double getWalletRemainingTotalTo(){}
-//
-//    private double getWalletRemainingTotalFromTo(){}
-//
-//    private double getAllWalletRemainingTotal(){}
-
-
 }

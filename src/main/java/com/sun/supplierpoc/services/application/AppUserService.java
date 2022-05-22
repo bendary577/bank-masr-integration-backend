@@ -14,8 +14,6 @@ import com.sun.supplierpoc.models.roles.Roles;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.*;
-import io.jsonwebtoken.impl.Base64UrlCodec;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -69,6 +67,10 @@ public class AppUserService {
 
     public ArrayList<ApplicationUser> getActiveUsers(String accountId){
         return userRepo.findAllByAccountIdAndDeleted(accountId, false);
+    }
+
+    public List<ApplicationUser> getActiveUsersByGroup(String accountId, Group group){
+        return userRepo.findAllByAccountIdAndGroupId(accountId, group.getId());
     }
 
     public ArrayList<ApplicationUser> getAppUsersByAccountId(String accountId){

@@ -255,16 +255,23 @@ public class SalesApiService {
                 }
 
                 OrderTypeChannels finalOrderTypeChannel = orderTypeChannel;
+                OrderTypeChannels delivrooDelivryOrderTypeChannel = null;
                 List<OrderTypeChannels> RepeatedOrderTypeChannels = orderTypeChannels.stream().
                         filter(channel -> channel.getChannel().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getChannel().toLowerCase())).collect(Collectors.toList());
 
                 if(RepeatedOrderTypeChannels.size() > 1){
-//                    orderTypeChannel = RepeatedOrderTypeChannels.get(0);
-                    List<OrderTypeChannels> requiredRepeatedOrderType = RepeatedOrderTypeChannels.stream().
-                            filter(orderType -> orderType.getOrderType().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getOrderType().toLowerCase())).collect(Collectors.toList());
-                    orderTypeChannel = requiredRepeatedOrderType.get(0);
-                }
+                    if(finalOrderTypeChannel.getOrderType().equalsIgnoreCase("delivroo_delivery")){
+                        List<OrderTypeChannels> requiredRepeatedOrderType = RepeatedOrderTypeChannels.stream().
+                        filter(orderType -> orderType.getOrderType().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getOrderType().toLowerCase())).collect(Collectors.toList());
+                        orderTypeChannel = requiredRepeatedOrderType.get(0);
 
+                    }else{
+                        orderTypeChannel = RepeatedOrderTypeChannels.get(0);
+                        if(finalOrderTypeChannel.getOrderType().equalsIgnoreCase("Delivroo")){
+                            delivrooDelivryOrderTypeChannel = RepeatedOrderTypeChannels.get(1);
+                        }
+                    }
+                }
 
                 netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
                 checkPerType = Integer.parseInt(conversions.filterString(statisticValues.
@@ -276,9 +283,13 @@ public class SalesApiService {
                 }
                 totalNetSales += netSales;
 
-                orderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
-                orderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
-
+                if(delivrooDelivryOrderTypeChannel != null){
+                    delivrooDelivryOrderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
+                    delivrooDelivryOrderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
+                }else{
+                    orderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
+                    orderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
+                }
             }
             salesAPIStatistics.NetSales = String.valueOf(conversions.roundUpDouble(totalNetSales));
             salesAPIStatistics.setOrderTypeChannels(orderTypeChannels);

@@ -117,8 +117,7 @@ public class FoodicsWebServices {
             if (getProductsResponse.code() == 200) {
                 Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
                 FoodicProductResponse foodicsProductsResponse = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
-//                foodicsProducts.setFoodicsProducts(foodicsProductsResponse.getData());
-//                foodicsProducts.setType(AggregatorConstants.FOODICS);
+                foodicsProducts.addAll(foodicsProductsResponse.getData());
                 return foodicsProducts;
             } else {
                 return foodicsProducts;

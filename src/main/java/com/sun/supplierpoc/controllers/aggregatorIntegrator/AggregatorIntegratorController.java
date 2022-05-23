@@ -3,6 +3,7 @@ package com.sun.supplierpoc.controllers.aggregatorIntegrator;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AggregatorOrder;
+import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
@@ -14,6 +15,7 @@ import com.sun.supplierpoc.repositories.OrderRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
 import com.sun.supplierpoc.services.onlineOrdering.AggregatorIntegratorService;
+import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -48,6 +51,11 @@ public class AggregatorIntegratorController {
     @Autowired
     private InvokerUserService invokerUserService;
 
+    @Autowired
+    private GeneralSettingsRepo generalSettingsRepo;
+
+    @Autowired
+    private FoodicsWebServices foodicsWebServices;
 
     @GetMapping("/products")
     public ResponseEntity<?> fetchProducts(Principal principal) {
@@ -202,5 +210,31 @@ public class AggregatorIntegratorController {
             response.setMessage(Constants.INVALID_ACCOUNT);
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
+    }
+
+    @GetMapping("/foodicsProducts")
+    public ResponseEntity<?> foodicsProducts(Principal principal) {
+
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            List<FoodicsProduct> foodicsProductList = foodicsWebServices.fetchFoodicsProducts(generalSettings.getAggregatorConfiguration().getFoodicsAccountData());
+
+            response.setStatus(true);
+            response.setMessage("Foodics products returned successfully");
+            response.setData(foodicsProductList);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
     }
 }

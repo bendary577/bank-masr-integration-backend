@@ -62,8 +62,6 @@ public class SyncSalesWebService {
             okhttp3.Response salesResponse = client.newCall(request).execute();
             if (salesResponse.code() == 200){
                 Gson gson = new Gson();
-
-
                 salesAPIResponse = gson.fromJson(salesResponse.body().string(), HashMap.class);
                 salesAPIResponse.put("storeName", salesAPIStatistics.getBrand());
                 salesAPIResponse.put("storeNum", salesAPIStatistics.getUnitNo());

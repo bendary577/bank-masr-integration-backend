@@ -53,6 +53,7 @@ public class ActivityController {
     public ResponseEntity<?> transactionActivity(@RequestHeader("Authorization") String authorization,
                                                  @Valid @RequestBody Transactions transaction, BindingResult result){
 
+        String message = "You don't have role to use " + transaction.getTransactionTypeName() + " feature!.";
         HashMap response = new HashMap();
 
         try {
@@ -81,9 +82,15 @@ public class ActivityController {
                     transactionType = transactionTypeRepo.findByNameAndAccountId(transaction.getTransactionTypeName(), account.getId());
                 }
 
+                if(transactionType == null){
+                    response.put("isSuccess", false);
+                    response.put("message", message);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
                 if (!invokerUser.getTypeId().contains(transactionType.getId())) {
                     response.put("isSuccess", false);
-                    response.put("message", "You don't have role to redeem reward!.");
+                    response.put("message", message);
                     return ResponseEntity.status(HttpStatus.OK).body(response);
                 }
 

@@ -45,6 +45,7 @@ public class ActivityService {
 
         try {
             ApplicationUser user = userRepo.findByCodeAndAccountIdAndDeleted(transaction.getCode(), account.getId(), false);
+            transaction.setAccountId(account.getId());
 
             if(user == null){
                 response.put("message", "No user for this code.");
@@ -202,15 +203,27 @@ public class ActivityService {
                         response.put("rest", conversions.roundUpDouble(rest));
                         response.put("newBalance", conversions.roundUpDouble(newBalance));
                         response.put("paidAmount", conversions.roundUpDouble(paidAmount));
-                    }else if(transactionType.getName().equals(Constants.CANTEEN)){
+                    }
+                    else if(transactionType.getName().equals(Constants.CANTEEN)){
                         if(user.getWallet() == null){
                             response.put("isSuccess", false);
                             response.put("message", "This user is not a member of the wallet system.");
                             return response;
                         }
 
-                        /* check if account has loyalSome thing went wrongty system */
-                        transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
+                        /* check if account has loyalty feature */
+                        if(group.getSimphonyDiscount().getDiscountId() != 0){
+                            ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
+                            SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
+
+                            double discount = simphonyDiscount.getDiscountRate();
+                            double amountAfterDiscount = amount - (amount * (discount / 100));
+
+                            transaction.setDiscountRate(discount);
+                            transaction.setAfterDiscount(amountAfterDiscount);
+                        }else {
+                            transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
+                        }
 
                         Wallet wallet = user.getWallet();
                         double previousBalance = calculateBalance(wallet);
@@ -274,7 +287,8 @@ public class ActivityService {
                         response.put("rest", conversions.roundUpDouble(rest));
                         response.put("newBalance", conversions.roundUpDouble(newBalance));
                         response.put("paidAmount", conversions.roundUpDouble(paidAmount));
-                    } else{
+                    }
+                    else{
                         transaction.setDiscountRate(0.0);
                         transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
                     }

@@ -207,7 +207,7 @@ public class ActivityService {
                     else if(transactionType.getName().equals(Constants.CANTEEN)){
                         if(user.getWallet() == null){
                             response.put("isSuccess", false);
-                            response.put("message", "This user is not a member of the wallet system.");
+                            response.put("message", "This user is not a member of the canteen system.");
                             return response;
                         }
 

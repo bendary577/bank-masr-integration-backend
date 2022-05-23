@@ -259,7 +259,10 @@ public class SalesApiService {
                         filter(channel -> channel.getChannel().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getChannel().toLowerCase())).collect(Collectors.toList());
 
                 if(RepeatedOrderTypeChannels.size() > 1){
-                    orderTypeChannel = RepeatedOrderTypeChannels.get(0);
+//                    orderTypeChannel = RepeatedOrderTypeChannels.get(0);
+                    List<OrderTypeChannels> requiredRepeatedOrderType = RepeatedOrderTypeChannels.stream().
+                            filter(orderType -> orderType.getOrderType().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getOrderType().toLowerCase())).collect(Collectors.toList());
+                    orderTypeChannel = requiredRepeatedOrderType.get(0);
                 }
 
 

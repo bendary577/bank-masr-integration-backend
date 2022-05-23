@@ -166,12 +166,12 @@ public class SyncSalesWebService {
             }
         }
         int index = 1 ;
-        for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
-            if(orderTypeChannels.isChecked()) {
+        for(OrderTypeChannels orderTypeChannel : salesAPIStatistics.orderTypeChannels){
+            if(orderTypeChannel.isChecked()) {
                 if (index != salesAPIStatistics.orderTypeChannels.size()) {
-                    fandBSplit = fandBSplit + "\"" + orderTypeChannels.getChannelCount() + "\":" + orderTypeChannels.getCheckCount() + ",";
+                    fandBSplit = fandBSplit + "\"" + orderTypeChannel.getChannelCount() + "\":" + orderTypeChannel.getCheckCount() + ",";
                 } else {
-                    fandBSplit = fandBSplit + "\"" + orderTypeChannels.getChannelCount() + "\":" + orderTypeChannels.getCheckCount();
+                    fandBSplit = fandBSplit + "\"" + orderTypeChannel.getChannelCount() + "\":" + orderTypeChannel.getCheckCount();
                 }
             }
             index += 1;

@@ -309,7 +309,7 @@ public class TalabatIntegratorService {
 
             if (product != null) {
 
-//                foodicsProductRepo.save(foodicsProduct);
+//                productRepository.save(foodicsProduct);
 
                 response.put("message", "Product information was successfully updated.");
                 response.put("status", "success");

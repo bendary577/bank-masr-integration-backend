@@ -5,6 +5,9 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AggregatorOrder;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
+import com.sun.supplierpoc.models.aggregtor.FoodicsAccessToken;
+import com.sun.supplierpoc.models.aggregtor.FoodicsAccessTokenRequest;
+import com.sun.supplierpoc.models.aggregtor.ProductsMapping;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/aggregator")
@@ -171,12 +175,16 @@ public class AggregatorIntegratorController {
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            ArrayList<ProductsMapping> unmappedProductsList = (ArrayList<ProductsMapping>) generalSettings.getAggregatorConfiguration().getProductsMappings()
+                    .stream()
+                    .filter(productsMapping -> !productsMapping.getFoodIcsProductId().equals("") || productsMapping.getModifiers().size() > 0 )
+                    .collect(Collectors.toList());
 
             response.setStatus(true);
-            response.setMessage("");
-
-            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAll();
-            response.setData(aggregatorOrders);
+            response.setMessage("mapped foodics products returned successfully");
+            response.setData(unmappedProductsList);
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
@@ -197,13 +205,16 @@ public class AggregatorIntegratorController {
         if (accountOptional.isPresent()) {
 
             Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            ArrayList<ProductsMapping> unmappedProductsList = (ArrayList<ProductsMapping>) generalSettings.getAggregatorConfiguration().getProductsMappings()
+                    .stream()
+                    .filter(productsMapping -> productsMapping.getFoodIcsProductId().equals("") && productsMapping.getModifiers().size() == 0 )
+                    .collect(Collectors.toList());
 
             response.setStatus(true);
-            response.setMessage("");
-
-            ArrayList<AggregatorOrder> aggregatorOrders = (ArrayList<AggregatorOrder>) orderRepo.findAll();
-            response.setData(aggregatorOrders);
-
+            response.setMessage("Unmapped foodics products returned successfully");
+            response.setData(unmappedProductsList);
             return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             response.setStatus(false);
@@ -230,6 +241,40 @@ public class AggregatorIntegratorController {
             response.setMessage("Foodics products returned successfully");
             response.setData(foodicsProductList);
             return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+    }
+
+    @PostMapping("/getFoodicsAccessToken")
+    public ResponseEntity<?> getFoodicsAccessToken(Principal principal,@RequestBody FoodicsAccessTokenRequest foodicsAccessTokenRequest) {
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            FoodicsAccessToken foodicsAccessToken = foodicsWebServices.getFoodicsAccessToken(foodicsAccessTokenRequest);
+
+            if(foodicsAccessToken.isStatus()){
+                generalSettings.getAggregatorConfiguration().getFoodicsAccountData().setToken(foodicsAccessToken.getAccess_token());
+                response.setStatus(true);
+                response.setMessage("Foodics products returned successfully");
+                response.setData(foodicsAccessToken);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }else{
+                response.setStatus(false);
+                response.setMessage(foodicsAccessToken.getMessage());
+                response.setData(foodicsAccessToken);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }
+
         } else {
             response.setStatus(false);
             response.setMessage(Constants.INVALID_ACCOUNT);

@@ -290,6 +290,7 @@ public class SalesApiService {
                     orderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
                     orderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
                 }
+
             }
             salesAPIStatistics.NetSales = String.valueOf(conversions.roundUpDouble(totalNetSales));
             salesAPIStatistics.setOrderTypeChannels(orderTypeChannels);

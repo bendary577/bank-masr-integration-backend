@@ -11,6 +11,10 @@ import okhttp3.*;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -47,6 +51,7 @@ public class SyncSalesWebService {
                     "{\"UnitNo\":\"" + salesAPIStatistics.unitNo +"\"," + "\"LeaseCode\":\""+salesAPIStatistics.leaseCode+"\"," +
                     "\"SalesDate\": \""+salesAPIStatistics.dateFrom+"\"," + "\"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
                     "\"NetSales\": "+salesAPIStatistics.NetSales+"," + "\"FandBSplit\": [" + "{" + fandBSplit + "}]}]}}";
+
 
             response.setRequestbody(requestBody);
 
@@ -111,6 +116,7 @@ public class SyncSalesWebService {
                             "\"SalesDateFrom\": \""+salesAPIStatistics.dateFrom+"\"," + "\"SalesDateTo\": \""+salesAPIStatistics.dateTo+"\"," +
                             " \"TransactionCount\": "+salesAPIStatistics.NoChecks+"," + "\"TotalSales\": "+salesAPIStatistics.NetSales+"," +
                             "\"Remarks\": \"Remarks\"," + "\"FandBSplit\": [" + "{" + fandBSplit + "}]}]}}";
+
 
             RequestBody body = RequestBody.create(mediaType,requestBody);
 

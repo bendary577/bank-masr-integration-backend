@@ -60,7 +60,9 @@ public class FoodicsController {
 
         if (account != null) {
 
-            response = talabatIntegratorService.updateTalabatProduct(account, foodicsProduct);
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            response = talabatIntegratorService.updateTalabatProduct(foodicsProduct, generalSettings);
 
             if (response.get("status").equals("success")) {
                 return new ResponseEntity<>(response, HttpStatus.OK);

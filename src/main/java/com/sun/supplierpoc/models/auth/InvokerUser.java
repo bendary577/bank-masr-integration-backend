@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -15,7 +16,7 @@ public class InvokerUser implements Serializable {
     private String username ;
     private String password;
     private String accountId;
-    private List<String> typeId;
+    private List<String> typeId = new ArrayList<>();
     private boolean deleted;
     private Date creationDate;
 

@@ -13,7 +13,7 @@ public interface TransactionTypeRepo extends MongoRepository<TransactionType, St
 
     TransactionType findByIdAndAccountId(String transactionTypeId, String id);
 
-    List<TransactionType> findByAccountIdAndDeleted(String id, boolean b);
+    List<TransactionType> findByAccountIdAndDeleted(String id, boolean deleted);
 
     List<TransactionType> findByAccountId(String id);
 }

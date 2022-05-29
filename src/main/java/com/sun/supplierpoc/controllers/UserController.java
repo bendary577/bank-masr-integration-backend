@@ -4,16 +4,20 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.controllers.application.TransactionController;
 import com.sun.supplierpoc.excelExporters.ActionsExcelExporter;
 import com.sun.supplierpoc.models.Account;
+import com.sun.supplierpoc.models.TransactionType;
 import com.sun.supplierpoc.models.applications.Action;
 import com.sun.supplierpoc.models.applications.ActionStats;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
+import com.sun.supplierpoc.models.roles.Features;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.InvokerUserRepo;
+import com.sun.supplierpoc.repositories.TransactionTypeRepo;
 import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.services.ActionService;
+import com.sun.supplierpoc.services.FeatureService;
 import com.sun.supplierpoc.services.application.ActionStatsService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +45,16 @@ public class UserController {
     private AccountRepo accountRepo;
 
     @Autowired
+    private TransactionTypeRepo transactionTypeRepo;
+
+    @Autowired
     private ActionService actionService;
 
     @Autowired
     private ActionStatsService actionStatsService;
+
+    @Autowired
+    private FeatureService featureService;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -97,7 +107,14 @@ public class UserController {
                 Account account = accountOptional.get();
 
                 invoker.setAccountId(account.getId());
-                invoker.setTypeId(invoker.getTypeId());
+
+                // Add all account types
+                if(featureService.hasFeature(account, Features.APPLICATIONS)){
+                    List<TransactionType> transactionTypes = transactionTypeRepo.findByAccountIdAndDeleted(account.getId(), false);
+                    for (TransactionType type : transactionTypes) {
+                        invoker.getTypeId().add(type.getId());
+                    }
+                }
 
                 // check existence
                 if (invokerUserRepo.countAllByUsernameAndAccountId(invoker.getUsername(), account.getId()) > 0) {

@@ -425,7 +425,7 @@ public class GroupController {
     }
 
     @RequestMapping("/getTopGroups")
-    public List getTransactionByType(Principal principal) {
+    public List getTopGroups(Principal principal) {
 
         User user = (User) ((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 

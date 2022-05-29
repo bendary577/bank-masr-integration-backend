@@ -85,7 +85,24 @@ public class GroupController {
 
             Account account = accountOptional.get();
 
-            Optional<Group> group = groupRepo.findByAccountIdAndDeletedAndName(account.getId(),false, Constants.GENERIC);
+            Group group = groupRepo.findByAccountIdAndDeletedAndName(account.getId(),false, Constants.GENERIC);
+
+            // Create if not exists
+            if(group == null){
+                Group newGenericGroup = new Group();
+                SimphonyDiscount simphonyDiscount = new SimphonyDiscount();
+
+                newGenericGroup.setName(Constants.GENERIC);
+                newGenericGroup.setDescription(Constants.GENERIC);
+                newGenericGroup.setLogoUrl("");
+                newGenericGroup.setAccountId(account.getId());
+                newGenericGroup.setSimphonyDiscount(simphonyDiscount);
+                newGenericGroup.setCreationDate(new Date());
+                newGenericGroup.setLastUpdate(new Date());
+                newGenericGroup.setDeleted(false);
+
+                group = groupRepo.save(newGenericGroup);
+            }
 
             return ResponseEntity.status(HttpStatus.OK).body(group);
         }
@@ -200,14 +217,6 @@ public class GroupController {
                     group.setLastUpdate(new Date());
                     group.setDeleted(false);
 
-                    CanteenConfiguration canteenConfiguration = new CanteenConfiguration();
-                    canteenConfiguration.setDuration("");
-                    canteenConfiguration.setDay("");
-                    canteenConfiguration.setHour("");
-                    canteenConfiguration.setDayName("");
-                    canteenConfiguration.setAccumulate(false);
-                    canteenConfiguration.setChargeAmount("");
-                    group.setCanteenConfiguration(canteenConfiguration);
                     groupRepo.save(group);
                 }else {
                     Optional<Group> groupOptional = groupRepo.findById(groupId);

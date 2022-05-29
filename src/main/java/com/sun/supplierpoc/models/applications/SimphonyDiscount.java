@@ -1,9 +1,9 @@
 package com.sun.supplierpoc.models.applications;
 
 public class SimphonyDiscount {
-    private float discountRate;
-    private int discountId;
-    private boolean deleted;
+    private float discountRate = 0;
+    private int discountId = 0;
+    private boolean deleted = false;
 
     public SimphonyDiscount() { }
 

@@ -19,7 +19,7 @@ public class Group implements Serializable {
     private Date creationDate;
     private Date lastUpdate;
     private boolean deleted;
-    private CanteenConfiguration canteenConfiguration;
+    private CanteenConfiguration canteenConfiguration = new CanteenConfiguration();
 
     public Group() {
     }

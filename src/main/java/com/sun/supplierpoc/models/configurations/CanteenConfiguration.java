@@ -8,7 +8,7 @@ public class CanteenConfiguration {
     private String dayName = "";
 
     private String chargeAmount = "";
-    private boolean accumulate;
+    private boolean accumulate = false;
 
     public String getChargeAmount() {
         return chargeAmount;

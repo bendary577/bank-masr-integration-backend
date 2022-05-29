@@ -299,17 +299,19 @@ public class TalabatIntegratorService {
     /*
      * This service update talabat product in case of any change occurs in foodics
      * */
-    public LinkedHashMap updateTalabatProduct(Account account, FoodicsProduct foodicsProduct) {
+    public LinkedHashMap updateTalabatProduct(FoodicsProduct foodicsProduct, GeneralSettings generalSettings) {
 
         LinkedHashMap<String, Object> response = new LinkedHashMap<>();
-        Product product = new Product();
+        ProductsMapping productsMapping = null;
 
         try {
 //            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+            productsMapping = generalSettings.getAggregatorConfiguration().getProductsMappings().stream().
+                    filter(tempProduct -> tempProduct.getTalabatProductId().equals(foodicsProduct.getId()))
+                    .collect(Collectors.toList()).stream().findFirst().orElse(null);
+            if (productsMapping != null) {
 
-            if (product != null) {
-
-//                foodicsProductRepo.save(foodicsProduct);
+                generalSettings.getAggregatorConfiguration().getProductsNeedsAttention().add(productsMapping);
 
                 response.put("message", "Product information was successfully updated.");
                 response.put("status", "success");

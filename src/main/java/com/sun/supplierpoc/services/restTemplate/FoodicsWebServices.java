@@ -8,7 +8,10 @@ import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
+import com.sun.supplierpoc.models.aggregtor.FoodicsAccessToken;
+import com.sun.supplierpoc.models.aggregtor.FoodicsAccessTokenRequest;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
+import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
 import com.sun.supplierpoc.models.aggregtor.FoodicProductResponse;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -124,6 +128,41 @@ public class FoodicsWebServices {
             }
         } catch (IOException e) {
             return foodicsProducts;
+        }
+    }
+
+    public FoodicsAccessToken getFoodicsAccessToken(FoodicsAccessTokenRequest foodicsAccessTokenRequest) {
+        FoodicsAccessToken foodicsAccessToken = new FoodicsAccessToken();
+        String url = "https://api-sandbox.foodics.com/oauth/token";
+        String requestBody = "";
+        try {
+            requestBody = "{\n" +
+                    "    \"grant_type\": \"authorization_code\",\n" +
+                    "    \"code\":" + "\"" + foodicsAccessTokenRequest.getCode() + "\"" + ",\n" +
+                    "    \"client_id\":" + "\"" + foodicsAccessTokenRequest.getClientId() + "\"" + ",\n" +
+                    "    \"client_secret\":" + "\"" + foodicsAccessTokenRequest.getClientSecret() + "\"" + ",\n" +
+                    "    \"redirect_uri\":" + "\"" + foodicsAccessTokenRequest.getRedirect_url() + "\"" + "\n" +
+                    "}";
+            MediaType mediaType = MediaType.parse("application/json");
+            RequestBody body = RequestBody.create(mediaType, requestBody);
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            Request request = new Request.Builder()
+                    .url(url).method("POST", body)
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json").build();
+            okhttp3.Response getTokenResponse = client.newCall(request).execute();
+            if (getTokenResponse.code() == 200) {
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+                 foodicsAccessToken = gson.fromJson(getTokenResponse.body().string(), FoodicsAccessToken.class);
+                 foodicsAccessToken.setStatus(getTokenResponse.code() == 200);
+                 return foodicsAccessToken;
+            } else {
+                foodicsAccessToken.setStatus(getTokenResponse.code() == 200);
+                foodicsAccessToken.setMessage("Failed to generate foodics access token");
+                return foodicsAccessToken;
+            }
+        } catch (IOException e) {
+            return foodicsAccessToken;
         }
     }
 }

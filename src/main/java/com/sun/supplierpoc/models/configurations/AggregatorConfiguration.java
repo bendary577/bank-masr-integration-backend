@@ -16,6 +16,7 @@ public class AggregatorConfiguration {
     private List<SimphonyAccountData> simphonyAccountData = new ArrayList<>();
 
     private ArrayList<ProductsMapping> productsMappings = new ArrayList<>();
+    private ArrayList<ProductsMapping> ProductsNeedsAttention = new ArrayList<>();
     private ArrayList<ModifierMapping> modifierMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
 //    private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();
@@ -100,5 +101,13 @@ public class AggregatorConfiguration {
                 return true;
         }
         return false;
+    }
+
+    public ArrayList<ProductsMapping> getProductsNeedsAttention() {
+        return ProductsNeedsAttention;
+    }
+
+    public void setProductsNeedsAttention(ArrayList<ProductsMapping> productsNeedsAttention) {
+        ProductsNeedsAttention = productsNeedsAttention;
     }
 }

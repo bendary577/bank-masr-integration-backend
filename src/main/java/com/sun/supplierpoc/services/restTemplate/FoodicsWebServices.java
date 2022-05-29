@@ -7,14 +7,11 @@ import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Product;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.aggregtor.AggregatorConstants;
-import com.sun.supplierpoc.models.aggregtor.FoodicsAccessToken;
-import com.sun.supplierpoc.models.aggregtor.FoodicsAccessTokenRequest;
+import com.sun.supplierpoc.models.aggregtor.*;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminFailedResponse;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.configurations.foodics.FoodicsAccountData;
-import com.sun.supplierpoc.models.aggregtor.FoodicProductResponse;
 import com.sun.supplierpoc.services.simphony.CallRestService;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -165,4 +162,30 @@ public class FoodicsWebServices {
             return foodicsAccessToken;
         }
     }
+
+    public List<FoodicsBranch> fetchFoodicsBranches(FoodicsAccountData foodicsAccountData) {
+        ArrayList<FoodicsBranch> foodicsBranches = new ArrayList<>();
+        String url = "https://api-sandbox.foodics.com/v5/branches";
+        try {
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            Request request = new Request.Builder()
+                    .url(url).method("GET", null)
+                    .addHeader("Authorization", "Bearer " + foodicsAccountData.getToken())
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json") .build();
+
+            okhttp3.Response getBranchesResponse = client.newCall(request).execute();
+            if (getBranchesResponse.code() == 200) {
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+                FoodicBranchResponse foodicBranchResponse = gson.fromJson(getBranchesResponse.body().string(), FoodicBranchResponse.class);
+                foodicsBranches.addAll(foodicBranchResponse.getData());
+                return foodicsBranches;
+            } else {
+                return foodicsBranches;
+            }
+        } catch (IOException e) {
+            return foodicsBranches;
+        }
+    }
+
 }

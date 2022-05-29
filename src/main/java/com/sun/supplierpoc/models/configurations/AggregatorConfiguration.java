@@ -19,6 +19,7 @@ public class AggregatorConfiguration {
     private ArrayList<ProductsMapping> ProductsNeedsAttention = new ArrayList<>();
     private ArrayList<ModifierMapping> modifierMappings = new ArrayList<>();
     private ArrayList<BranchMapping> branchMappings = new ArrayList<>();
+    private boolean integrationStatus = false;
 //    private ArrayList<CustomerMapping> customerMappings = new ArrayList<>();
 //    private ArrayList<AddressMapping> addressMappings = new ArrayList<>();
 //    private ArrayList<DiscountMapping> discountMappings = new ArrayList<>();
@@ -109,5 +110,13 @@ public class AggregatorConfiguration {
 
     public void setProductsNeedsAttention(ArrayList<ProductsMapping> productsNeedsAttention) {
         ProductsNeedsAttention = productsNeedsAttention;
+    }
+
+    public boolean isIntegrationStatus() {
+        return integrationStatus;
+    }
+
+    public void setIntegrationStatus(boolean integrationStatus) {
+        this.integrationStatus = integrationStatus;
     }
 }

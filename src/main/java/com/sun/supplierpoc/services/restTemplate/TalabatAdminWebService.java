@@ -228,7 +228,7 @@ public class TalabatAdminWebService {
             OkHttpClient client = new OkHttpClient().newBuilder()
                     .build();
             Request request = new Request.Builder()
-                    .url(BASE_URL + endPoint + TESTPARAM)
+                    .url(BASE_URL + endPoint + parameters)
                     .method("GET", null)
                     .addHeader("Authorization",
                             "Bearer " + talabatAdminToken.getToken()).build();

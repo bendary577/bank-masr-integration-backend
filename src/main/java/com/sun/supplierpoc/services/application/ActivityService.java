@@ -77,7 +77,6 @@ public class ActivityService {
 
                     double amount = transaction.getTotalPayment();
 
-
                     /*
                     * pointReward = 0; // percentage
                     * pointsRedemption = 0; // 1$ = ? points
@@ -205,6 +204,10 @@ public class ActivityService {
                         response.put("paidAmount", conversions.roundUpDouble(paidAmount));
                     }
                     else if(transactionType.getName().equals(Constants.CANTEEN)){
+                        if(!group.getCanteenConfiguration().isIncludeFees()){
+                            amount = transaction.getNetAmount();
+                        }
+
                         if(user.getWallet() == null){
                             response.put("isSuccess", false);
                             response.put("message", "This user is not a member of the canteen system.");
@@ -214,15 +217,27 @@ public class ActivityService {
                         /* check if account has loyalty feature */
                         if(group.getSimphonyDiscount().getDiscountId() != 0){
                             ArrayList<SimphonyDiscount> discounts = generalSettings.getDiscountRates();
-                            SimphonyDiscount simphonyDiscount = conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
+                            SimphonyDiscount simphonyDiscount =
+                                    conversions.checkSimphonyDiscountExistence(discounts, group.getSimphonyDiscount().getDiscountId());
 
+                            double netAmount = transaction.getNetAmount();
                             double discount = simphonyDiscount.getDiscountRate();
-                            double amountAfterDiscount = amount - (amount * (discount / 100));
+                            double amountAfterDiscount = netAmount - Math.round(netAmount * (discount / 100));
 
                             transaction.setDiscountRate(discount);
-                            transaction.setAfterDiscount(amountAfterDiscount);
+
+                            if(!group.getCanteenConfiguration().isIncludeFees()){
+                                transaction.setAfterDiscount(amountAfterDiscount);
+                            }else {
+                                // Calculate service charge and vat after discount
+                                double newServiceCharges = Math.round((transaction.getServiceCharges() * amountAfterDiscount)/netAmount);
+                                double newVat = Math.round((transaction.getVat() * amountAfterDiscount)/netAmount);
+                                transaction.setAfterDiscount(amountAfterDiscount +
+                                        newServiceCharges + newVat);
+                            }
+
                         }else {
-                            transaction.setAfterDiscount(Double.parseDouble(decimalFormat.format(transaction.getTotalPayment())));
+                            transaction.setAfterDiscount(amount);
                         }
 
                         Wallet wallet = user.getWallet();
@@ -286,7 +301,7 @@ public class ActivityService {
 
                         response.put("rest", conversions.roundUpDouble(rest));
                         response.put("newBalance", conversions.roundUpDouble(newBalance));
-                        response.put("paidAmount", conversions.roundUpDouble(paidAmount));
+                        response.put("paidAmount", conversions.roundUpDouble(paidAmount) + " " + account.getCurrency());
                     }
                     else{
                         transaction.setDiscountRate(0.0);

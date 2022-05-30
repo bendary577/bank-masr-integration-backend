@@ -9,6 +9,7 @@ public class CanteenConfiguration {
 
     private String chargeAmount = "";
     private boolean accumulate = false;
+    private boolean includeFees = false;
 
     public String getChargeAmount() {
         return chargeAmount;
@@ -24,6 +25,14 @@ public class CanteenConfiguration {
 
     public void setAccumulate(boolean accumulate) {
         this.accumulate = accumulate;
+    }
+
+    public boolean isIncludeFees() {
+        return includeFees;
+    }
+
+    public void setIncludeFees(boolean includeFees) {
+        this.includeFees = includeFees;
     }
 
     public String getHour() {

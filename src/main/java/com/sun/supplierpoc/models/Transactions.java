@@ -26,10 +26,16 @@ public class Transactions {
     private int revenueCentreId;
     private String revenueCentreName;
     private String employeeId;
+    private String employeeName;
     private String checkNumber;
     @DBRef
     private Group group;
     private ApplicationUser user;
+
+    private double netAmount;
+    private double serviceCharges;
+    private double vat;
+
     @NotNull(message="Total Payment can't be empty.")
     private double totalPayment;
     private double partialPayment;
@@ -79,6 +85,30 @@ public class Transactions {
 
     public void setUser(ApplicationUser user) {
         this.user = user;
+    }
+
+    public double getNetAmount() {
+        return netAmount;
+    }
+
+    public void setNetAmount(double netAmount) {
+        this.netAmount = netAmount;
+    }
+
+    public double getServiceCharges() {
+        return serviceCharges;
+    }
+
+    public void setServiceCharges(double serviceCharges) {
+        this.serviceCharges = serviceCharges;
+    }
+
+    public double getVat() {
+        return vat;
+    }
+
+    public void setVat(double vat) {
+        this.vat = vat;
     }
 
     public double getTotalPayment() {
@@ -151,6 +181,14 @@ public class Transactions {
 
     public void setEmployeeId(String employeeId) {
         this.employeeId = employeeId;
+    }
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
 
     public String getCheckNumber() {

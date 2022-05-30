@@ -11,8 +11,10 @@ import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.OrderRepo;
+import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
+import com.sun.supplierpoc.services.SendEmailService;
 import com.sun.supplierpoc.services.TalabatIntegratorService;
 import com.sun.supplierpoc.services.restTemplate.FoodicsWebServices;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +50,12 @@ public class FoodicsController {
     @Autowired
     private GeneralSettingsRepo generalSettingsRepo;
 
+    @Autowired
+    private SendEmailService sendEmailService;
+
+    @Autowired
+    private UserRepo userRepo;
+
     @RequestMapping("/webhook/products")
     public ResponseEntity<?> updateFoodicsProduct(@RequestHeader("Authorization") String authorization,
                                                   @RequestBody FoodicsProduct foodicsProduct) {
@@ -58,6 +66,8 @@ public class FoodicsController {
 
         Account account = accountService.getAccount(invokerUser.getAccountId());
 
+        User user = (User) userRepo.findByAccountIdAndDeleted(account.getId(), false);
+
         if (account != null) {
 
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
@@ -65,6 +75,8 @@ public class FoodicsController {
             response = talabatIntegratorService.updateTalabatProduct(foodicsProduct, generalSettings);
 
             if (response.get("status").equals("success")) {
+                FoodicsProduct updatedFoodicsProduct = (FoodicsProduct) response.get("data");
+                sendEmailService.sendFoodicsProductUpdatedMail(user, updatedFoodicsProduct );
                 return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);

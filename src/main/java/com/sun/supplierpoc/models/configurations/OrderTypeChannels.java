@@ -1,9 +1,11 @@
 package com.sun.supplierpoc.models.configurations;
 
+import java.util.ArrayList;
+
 public class OrderTypeChannels implements Cloneable{
 
     private boolean checked;
-    private String orderType;
+    private ArrayList<String> orderType;
     private String channel;
     private String channelCount;
     private int checkCount = 0;
@@ -17,11 +19,11 @@ public class OrderTypeChannels implements Cloneable{
         this.checked = checked;
     }
 
-    public String getOrderType() {
+    public ArrayList<String> getOrderType() {
         return orderType;
     }
 
-    public void setOrderType(String orderType) {
+    public void setOrderType(ArrayList<String> orderType) {
         this.orderType = orderType;
     }
 

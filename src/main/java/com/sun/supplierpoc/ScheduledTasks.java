@@ -380,7 +380,7 @@ public class ScheduledTasks {
     }
 
     /*
-     * Delivery aggregator scheduler that run every 1 min to check new orders
+     * Delivery aggregator scheduler that run every 1 day to clear orders
      * */
     @Scheduled(cron = "0 0 6 * * *")
     public void aggregatorDropOrdersScheduler() {

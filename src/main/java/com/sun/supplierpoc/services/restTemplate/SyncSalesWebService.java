@@ -32,21 +32,6 @@ public class SyncSalesWebService {
             MediaType mediaType = MediaType.parse("application/json");
 
             String fandBSplit = getFundSplit(salesAPIStatistics);
-/*            EmaarRoot root = new EmaarRoot();
-            SalesDataCollection salesDataCollection = new SalesDataCollection();
-            SalesInfo salesInfo = new SalesInfo();
-
-            salesInfo.unitNo = salesAPIStatistics.unitNo;
-            salesInfo.leaseCode = salesAPIStatistics.leaseCode;
-            salesInfo.salesDate = salesAPIStatistics.dateFrom;
-            salesInfo.transactionCount = salesAPIStatistics.NoChecks;
-            salesInfo.netSales = salesAPIStatistics.NetSales;
-            salesInfo.fandBSplit = "[{" + getFundSplit(salesAPIStatistics) + "}]";
-
-            salesDataCollection.salesInfo.add(salesInfo);
-            root.salesDataCollection = salesDataCollection;
-            String body =new Gson().toJson(root);*/
-
             requestBody = "{\"SalesDataCollection\": " + "{\"SalesInfo\":[" +
                     "{\"UnitNo\":\"" + salesAPIStatistics.unitNo +"\"," + "\"LeaseCode\":\""+salesAPIStatistics.leaseCode+"\"," +
                     "\"SalesDate\": \""+salesAPIStatistics.dateFrom+"\"," + "\"TransactionCount\": "+salesAPIStatistics.NoChecks+"," +
@@ -58,11 +43,9 @@ public class SyncSalesWebService {
             RequestBody body = RequestBody.create(mediaType, requestBody);
             Request request = new Request.Builder()
                     .url(salesAPIConfig.getApiURL()+salesAPIConfig.getApiEndpoint())
-                    .post(body)
+                    .method("POST", body)
                     .addHeader("content-type", "application/json")
                     .addHeader("x-apikey", salesAPIConfig.apiKey)
-                    .addHeader("cache-control", "no-cache")
-//                    .addHeader("postman-token", "1ae7acda-de8d-b7e0-735a-eea92685be0f")
                     .build();
             okhttp3.Response salesResponse = client.newCall(request).execute();
             if (salesResponse.code() == 200){
@@ -82,6 +65,9 @@ public class SyncSalesWebService {
                 }
                 response.setMessage(responseData.get(0).get("Result"));
             }else {
+                Gson gson = new Gson();
+                salesAPIResponse = gson.fromJson(salesResponse.body().string(), HashMap.class);
+
                 response.setStatus(false);
                 response.setMessage(salesResponse.message());
             }
@@ -163,23 +149,42 @@ public class SyncSalesWebService {
 
     private String getFundSplit(SalesAPIStatistics salesAPIStatistics) {
 
-        String fandBSplit = "";
+        StringBuilder fandBSplit = new StringBuilder();
         for(OrderTypeChannels orderTypeChannels : salesAPIStatistics.orderTypeChannels){
             if(orderTypeChannels.isChecked()) {
-                fandBSplit = fandBSplit + "\"" + orderTypeChannels.getChannel() + "\":" + orderTypeChannels.getNetSales() + ",";
+                fandBSplit.append("\"").append(orderTypeChannels.getChannel()).append("\":")
+                        .append(orderTypeChannels.getNetSales()).append(",");
             }
         }
-        int index = 1 ;
+
         for(OrderTypeChannels orderTypeChannel : salesAPIStatistics.orderTypeChannels){
             if(orderTypeChannel.isChecked()) {
-                if (index != salesAPIStatistics.orderTypeChannels.size()) {
-                    fandBSplit = fandBSplit + "\"" + orderTypeChannel.getChannelCount() + "\":" + orderTypeChannel.getCheckCount() + ",";
-                } else {
-                    fandBSplit = fandBSplit + "\"" + orderTypeChannel.getChannelCount() + "\":" + orderTypeChannel.getCheckCount();
-                }
+                fandBSplit.append("\"").append(orderTypeChannel.getChannelCount()).append("\":")
+                        .append(orderTypeChannel.getCheckCount()).append(",");
+
             }
-            index += 1;
         }
-        return fandBSplit;
+
+        if(fandBSplit.charAt(fandBSplit.length() - 1) == ','){
+            // Remove last char
+            fandBSplit = new StringBuilder(fandBSplit.substring(0, fandBSplit.length() - 1));
+        }
+        return fandBSplit.toString();
     }
 }
+
+
+/*            EmaarRoot root = new EmaarRoot();
+            SalesDataCollection salesDataCollection = new SalesDataCollection();
+            SalesInfo salesInfo = new SalesInfo();
+
+            salesInfo.unitNo = salesAPIStatistics.unitNo;
+            salesInfo.leaseCode = salesAPIStatistics.leaseCode;
+            salesInfo.salesDate = salesAPIStatistics.dateFrom;
+            salesInfo.transactionCount = salesAPIStatistics.NoChecks;
+            salesInfo.netSales = salesAPIStatistics.NetSales;
+            salesInfo.fandBSplit = "[{" + getFundSplit(salesAPIStatistics) + "}]";
+
+            salesDataCollection.salesInfo.add(salesInfo);
+            root.salesDataCollection = salesDataCollection;
+            String body =new Gson().toJson(root);*/

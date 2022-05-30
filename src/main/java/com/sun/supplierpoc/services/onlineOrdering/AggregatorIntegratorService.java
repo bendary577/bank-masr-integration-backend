@@ -391,4 +391,8 @@ public class AggregatorIntegratorService {
         return foodicsOrder;
     }
 
+    public void dropOrdersCollection() {
+        this.orderRepo.deleteAll();
+    }
+
 }

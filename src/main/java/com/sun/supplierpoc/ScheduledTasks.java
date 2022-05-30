@@ -378,4 +378,20 @@ public class ScheduledTasks {
             aggregatorIntegratorService.sendTalabatOrdersToFoodics(account);
         }
     }
+
+    /*
+     * Delivery aggregator scheduler that run every 1 min to check new orders
+     * */
+    @Scheduled(cron = "0 0 6 * * *")
+    public void aggregatorDropOrdersScheduler() {
+
+        logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
+        logger.info("Current Thread : {}", Thread.currentThread().getName());
+
+        Feature feature = featureService.getFeatureByRef(Features.DELIVERY_AGGREGATORS);
+        if(feature == null)
+            return;
+
+        aggregatorIntegratorService.dropOrdersCollection();
+    }
 }

@@ -5,10 +5,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AggregatorOrder;
 import com.sun.supplierpoc.models.GeneralSettings;
 import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.aggregtor.BranchMapping;
-import com.sun.supplierpoc.models.aggregtor.FoodicsAccessToken;
-import com.sun.supplierpoc.models.aggregtor.FoodicsAccessTokenRequest;
-import com.sun.supplierpoc.models.aggregtor.ProductsMapping;
+import com.sun.supplierpoc.models.aggregtor.*;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsBranch;
 import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.auth.InvokerUser;
@@ -238,16 +235,61 @@ public class AggregatorIntegratorController {
             Account account = accountOptional.get();
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
-            if(generalSettings.getAggregatorConfiguration().isIntegrationStatus()){
+            if(!generalSettings.getAggregatorConfiguration().isIntegrationStatus()){
                 response.setStatus(false);
                 response.setMessage("Please finish foodics integration process before starting getting foodics products");
+                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
             }else{
-                List<FoodicsProduct> foodicsProductList = foodicsWebServices.fetchFoodicsProducts(generalSettings.getAggregatorConfiguration().getFoodicsAccountData());
-                response.setStatus(true);
-                response.setMessage("Foodics products returned successfully");
-                response.setData(foodicsProductList);
+                FoodicProductResponse foodicProductResponse = foodicsWebServices.fetchFoodicsProducts(generalSettings.getAggregatorConfiguration().getFoodicsAccountData());
+                if(foodicProductResponse.isStatus()){
+                    response.setStatus(true);
+                    response.setMessage(foodicProductResponse.getMessage());
+                    response.setData(foodicProductResponse);
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }else{
+                    response.setStatus(false);
+                    response.setMessage(foodicProductResponse.getMessage());
+                    response.setData(foodicProductResponse);
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }
             }
-            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @PostMapping("/foodicsProductsPaginated")
+    public ResponseEntity<?> foodicsProductsPaginated(Principal principal, @RequestBody FoodicsGetPaginatedProductsRequest foodicsGetPaginatedProductsRequest) {
+
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            if(!generalSettings.getAggregatorConfiguration().isIntegrationStatus()){
+                response.setStatus(false);
+                response.setMessage("Please finish foodics integration process before starting getting foodics products");
+                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+            }else{
+                FoodicProductResponse foodicProductResponse = foodicsWebServices.fetchFoodicsProductsPaginated(generalSettings.getAggregatorConfiguration().getFoodicsAccountData(), foodicsGetPaginatedProductsRequest.getRequestAPI());
+                if(foodicProductResponse.isStatus()){
+                    response.setStatus(true);
+                    response.setMessage(foodicProductResponse.getMessage());
+                    response.setData(foodicProductResponse);
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }else{
+                    response.setStatus(false);
+                    response.setMessage(foodicProductResponse.getMessage());
+                    response.setData(foodicProductResponse);
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }
+            }
         } else {
             response.setStatus(false);
             response.setMessage(Constants.INVALID_ACCOUNT);
@@ -271,6 +313,7 @@ public class AggregatorIntegratorController {
             if(foodicsAccessToken.isStatus()){
                 generalSettings.getAggregatorConfiguration().getFoodicsAccountData().setToken(foodicsAccessToken.getAccess_token());
                 generalSettings.getAggregatorConfiguration().setIntegrationStatus(true);
+                generalSettingsRepo.save(generalSettings);
                 response.setStatus(true);
                 response.setMessage("Foodics products returned successfully");
                 response.setData(foodicsAccessToken);
@@ -302,35 +345,36 @@ public class AggregatorIntegratorController {
             Account account = accountOptional.get();
             GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
 
-            if(generalSettings.getAggregatorConfiguration().isIntegrationStatus()){
+            if(!generalSettings.getAggregatorConfiguration().isIntegrationStatus()){
                 response.setStatus(false);
                 response.setMessage("Please finish foodics integration process before starting getting foodics products");
+                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
             }else{
                 List<FoodicsBranch> foodicsBranchList = foodicsWebServices.fetchFoodicsBranches(generalSettings.getAggregatorConfiguration().getFoodicsAccountData());
-                boolean newBranchFetched = false;
-                for (FoodicsBranch foodicsBranch : foodicsBranchList) {
-                    List<BranchMapping> resultFoodicsBranches = generalSettings.getAggregatorConfiguration().getBranchMappings().stream()
-                            .filter(branch -> branch.getName().equals(foodicsBranch.getName()))
-                            .collect(Collectors.toList());
-                    if(resultFoodicsBranches.isEmpty()){
-                        newBranchFetched = true;
-                        BranchMapping branchMapping = new BranchMapping();
-                        branchMapping.setName(foodicsBranch.getName());
-                        branchMapping.setFoodIcsBranchId(foodicsBranch.getId());
-                        branchMapping.setTalabatBranchId("");
-                        branchMapping.setPassword("");
-                        branchMapping.setUsername("");
-                        generalSettings.getAggregatorConfiguration().getBranchMappings().add(branchMapping);
-                    }
-                }
-                if(newBranchFetched){
-                    generalSettingsRepo.save(generalSettings);
-                }
+//                boolean newBranchFetched = false;
+//                for (FoodicsBranch foodicsBranch : foodicsBranchList) {
+//                    List<BranchMapping> resultFoodicsBranches = generalSettings.getAggregatorConfiguration().getBranchMappings().stream()
+//                            .filter(branch -> branch.getName().equals(foodicsBranch.getName()))
+//                            .collect(Collectors.toList());
+//                    if(resultFoodicsBranches.isEmpty()){
+//                        newBranchFetched = true;
+//                        BranchMapping branchMapping = new BranchMapping();
+//                        branchMapping.setName(foodicsBranch.getName());
+//                        branchMapping.setFoodIcsBranchId(foodicsBranch.getId());
+//                        branchMapping.setTalabatBranchId("");
+//                        branchMapping.setPassword("");
+//                        branchMapping.setUsername("");
+//                        generalSettings.getAggregatorConfiguration().getBranchMappings().add(branchMapping);
+//                    }
+//                }
+//                if(newBranchFetched){
+//                    generalSettingsRepo.save(generalSettings);
+//                }
                 response.setStatus(true);
                 response.setMessage("Branches mapping Returned successfully");
                 response.setData(foodicsBranchList);
+                return new ResponseEntity<>(response, HttpStatus.OK);
             }
-            return new ResponseEntity<>(response, HttpStatus.OK);
         } else {
             response.setStatus(false);
             response.setMessage(Constants.INVALID_ACCOUNT);

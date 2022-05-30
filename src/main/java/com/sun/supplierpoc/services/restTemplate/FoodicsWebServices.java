@@ -103,7 +103,7 @@ public class FoodicsWebServices {
         }
     }
 
-    public List<FoodicsProduct> fetchFoodicsProducts(FoodicsAccountData foodicsAccountData) {
+    public FoodicProductResponse fetchFoodicsProducts(FoodicsAccountData foodicsAccountData) {
         ArrayList<FoodicsProduct> foodicsProducts = new ArrayList<>();
         String url = "https://api-sandbox.foodics.com/v5/products";
         try {
@@ -118,13 +118,56 @@ public class FoodicsWebServices {
             if (getProductsResponse.code() == 200) {
                 Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
                 FoodicProductResponse foodicsProductsResponse = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
-                foodicsProducts.addAll(foodicsProductsResponse.getData());
-                return foodicsProducts;
+//                foodicsProducts.addAll(foodicsProductsResponse.getData());
+                foodicsProductsResponse.setStatus(true);
+                foodicsProductsResponse.setMessage("Foodics products returned successfully");
+                return foodicsProductsResponse;
             } else {
-                return foodicsProducts;
+                FoodicProductResponse foodicsProductsResponse = new FoodicProductResponse();
+                foodicsProductsResponse.setStatus(false);
+                foodicsProductsResponse.setMessage("Error occurred while trying to fetch foodics products");
+                return foodicsProductsResponse;
             }
         } catch (IOException e) {
-            return foodicsProducts;
+//            e.printStackTrace();
+            FoodicProductResponse foodicsProductsResponse = new FoodicProductResponse();
+            foodicsProductsResponse.setStatus(false);
+            foodicsProductsResponse.setMessage("Error occurred while trying to fetch foodics products");
+            return foodicsProductsResponse;
+        }
+    }
+
+    public FoodicProductResponse fetchFoodicsProductsPaginated(FoodicsAccountData foodicsAccountData, String requestAPI) {
+        ArrayList<FoodicsProduct> foodicsProducts = new ArrayList<>();
+        String url = "https://api-sandbox.foodics.com/v5/products";
+        try {
+            OkHttpClient client = new OkHttpClient().newBuilder().build();
+            Request request = new Request.Builder()
+                    .url(requestAPI).method("GET", null)
+                    .addHeader("Authorization", "Bearer " + foodicsAccountData.getToken())
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json") .build();
+
+            okhttp3.Response getProductsResponse = client.newCall(request).execute();
+            if (getProductsResponse.code() == 200) {
+                Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+                FoodicProductResponse foodicsProductsResponse = gson.fromJson(getProductsResponse.body().string(), FoodicProductResponse.class);
+//                foodicsProducts.addAll(foodicsProductsResponse.getData());
+                foodicsProductsResponse.setStatus(true);
+                foodicsProductsResponse.setMessage("Foodics products returned successfully");
+                return foodicsProductsResponse;
+            } else {
+                FoodicProductResponse foodicsProductsResponse = new FoodicProductResponse();
+                foodicsProductsResponse.setStatus(false);
+                foodicsProductsResponse.setMessage("Error occurred while trying to fetch foodics products");
+                return foodicsProductsResponse;
+            }
+        } catch (IOException e) {
+//            e.printStackTrace();
+            FoodicProductResponse foodicsProductsResponse = new FoodicProductResponse();
+            foodicsProductsResponse.setStatus(false);
+            foodicsProductsResponse.setMessage("Error occurred while trying to fetch foodics products");
+            return foodicsProductsResponse;
         }
     }
 

@@ -5,6 +5,7 @@ import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
 import com.sun.supplierpoc.models.Response;
 import com.sun.supplierpoc.models.SyncJobType;
+import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
 import com.sun.supplierpoc.models.configurations.CostCenter;
@@ -529,6 +530,50 @@ public class SendEmailService {
                             "            <br />" +
                             "            <span style='font-size: 15px;'>" +
                             "               We would like to inform you that the password for " + user.getName() + " was updated successfully" +
+
+                            "            <br />" +
+                            "            <br />" +
+
+                            "            <span style='font-size: 14px;'>" +
+                            "                For contact..." +
+                            "                <br />" +
+                            "                Send us mail to no-reply@anyware.software" +
+                            "                <br />" +
+                            "            </span>" +
+
+                            "    </div>";
+
+            messageHelper.setText(mailContent, true);
+            mailSender.send(mailMessage);
+            return true;
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean sendFoodicsProductUpdatedMail(User user, FoodicsProduct foodicsProduct)  throws MailException {
+
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+        try {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
+            try {
+                messageHelper.setFrom("no-reply@anyware.software", "no-reply@anyware.software");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            messageHelper.setSubject("Password Updated Successfully");
+            messageHelper.setSentDate(new Date());
+            messageHelper.setTo(user.getEmail());
+
+            String mailContent =
+                    "    <div style='margin-left: 6%; width: 85%;'>" +
+                            "        <p style='text-align: left; font-size: 17px;'>" +
+                            "           Dear " + user.getName() + "," +
+                            "        </p>" +
+                            "            <br />" +
+                            "            <span style='font-size: 15px;'>" +
+                            "               We would like to inform you that an update had occurred on " + foodicsProduct.getName() + " foodics product and that this item was moved to items that needs attention section." +
 
                             "            <br />" +
                             "            <br />" +

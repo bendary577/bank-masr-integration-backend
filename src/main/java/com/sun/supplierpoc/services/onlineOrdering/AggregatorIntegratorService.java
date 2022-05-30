@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminOrder;
 import com.sun.supplierpoc.models.aggregtor.branchAdmin.TalabatAdminToken;
 import com.sun.supplierpoc.models.aggregtor.foodics.*;
 import com.sun.supplierpoc.models.aggregtor.TalabatRest.Item;
+import com.sun.supplierpoc.models.aggregtor.foodics.Meta;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.configurations.AggregatorConfiguration;
 import com.sun.supplierpoc.models.configurations.SimphonyAccount;

@@ -651,7 +651,7 @@ public class JournalV2Service {
         driver.get(journalUrl);
 
         try {
-            wait = new WebDriverWait(driver, 5);
+            wait = new WebDriverWait(driver, 30);
             wait.until(ExpectedConditions.alertIsPresent());
         } catch (Exception e) {
             System.out.println("Waiting");
@@ -671,7 +671,7 @@ public class JournalV2Service {
         driver.findElement(By.xpath("//*[@id=\"save-close-button\"]/button")).click();
 
         try {
-            wait = new WebDriverWait(driver, 5);
+            wait = new WebDriverWait(driver, 30);
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.tagName("tr")));
             System.out.println("No Alert");
         } catch (Exception e) {

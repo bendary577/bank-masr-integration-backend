@@ -19,7 +19,7 @@ public class FoodicsProduct {
     public int selling_method;
     public int costing_method;
     public Object preparation_time;
-    public int price;
+    public double price;
     public Object cost;
     public int calories;
     public String created_at;
@@ -155,7 +155,7 @@ public class FoodicsProduct {
         this.preparation_time = preparation_time;
     }
 
-    public int getPrice() {
+    public double getPrice() {
         return price;
     }
 

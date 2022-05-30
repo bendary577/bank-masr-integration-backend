@@ -244,33 +244,18 @@ public class SalesApiService {
                 statisticValues = setupEnvironment.getTableColumns(rows, false, i);
                 String OrderType = conversions.filterString(statisticValues.get(columns.indexOf("order_type")));
 
-                OrderTypeChannels orderTypeChannel = orderTypeChannels.stream().
-                        filter(channel -> channel.getOrderType().toLowerCase(Locale.ROOT).equals(OrderType)).collect(Collectors.toList())
-                        .stream().findFirst().orElse(null);
+                OrderTypeChannels orderTypeChannel = new OrderTypeChannels();
+                for (OrderTypeChannels order : orderTypeChannels) {
+                    if(order.getOrderType().contains(OrderType)){
+                        orderTypeChannel = order;
+                        break;
+                    }
+                }
 
                 if (orderTypeChannel == null) {
                     response.setStatus(false);
                     response.setMessage("Please Configure Channel With Order type " + OrderType);
                     return response;
-                }
-
-                OrderTypeChannels finalOrderTypeChannel = orderTypeChannel;
-                OrderTypeChannels delivrooDelivryOrderTypeChannel = null;
-                List<OrderTypeChannels> RepeatedOrderTypeChannels = orderTypeChannels.stream().
-                        filter(channel -> channel.getChannel().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getChannel().toLowerCase())).collect(Collectors.toList());
-
-                if(RepeatedOrderTypeChannels.size() > 1){
-                    if(finalOrderTypeChannel.getOrderType().equalsIgnoreCase("delivroo_delivery")){
-                        List<OrderTypeChannels> requiredRepeatedOrderType = RepeatedOrderTypeChannels.stream().
-                        filter(orderType -> orderType.getOrderType().toLowerCase(Locale.ROOT).equals(finalOrderTypeChannel.getOrderType().toLowerCase())).collect(Collectors.toList());
-                        orderTypeChannel = requiredRepeatedOrderType.get(0);
-
-                    }else{
-                        orderTypeChannel = RepeatedOrderTypeChannels.get(0);
-                        if(finalOrderTypeChannel.getOrderType().equalsIgnoreCase("Delivroo")){
-                            delivrooDelivryOrderTypeChannel = RepeatedOrderTypeChannels.get(1);
-                        }
-                    }
                 }
 
                 netSales = Double.parseDouble(conversions.filterString(statisticValues.get(columns.indexOf("gross_sales_after_disc."))));
@@ -282,14 +267,8 @@ public class SalesApiService {
                     netSales = conversions.roundUpDouble((netSales * 100)/105);
                 }
                 totalNetSales += netSales;
-
-                if(delivrooDelivryOrderTypeChannel != null){
-                    delivrooDelivryOrderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
-                    delivrooDelivryOrderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
-                }else{
-                    orderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
-                    orderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
-                }
+                orderTypeChannel.setNetSales(conversions.roundUpDoubleTowDigits(orderTypeChannel.getNetSales() + netSales));
+                orderTypeChannel.setCheckCount(orderTypeChannel.getCheckCount() +checkPerType);
 
             }
             salesAPIStatistics.NetSales = String.valueOf(conversions.roundUpDouble(totalNetSales));

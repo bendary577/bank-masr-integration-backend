@@ -301,7 +301,7 @@ public class ActivityService {
 
                         response.put("rest", conversions.roundUpDouble(rest));
                         response.put("newBalance", conversions.roundUpDouble(newBalance));
-                        response.put("paidAmount", conversions.roundUpDouble(paidAmount) + " " + account.getCurrency());
+                        response.put("paidAmount", conversions.roundUpDouble(paidAmount));
                     }
                     else{
                         transaction.setDiscountRate(0.0);

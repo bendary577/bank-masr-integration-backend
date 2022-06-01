@@ -70,6 +70,8 @@ public class MicrosFeatures {
                 wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("edit_filter_button")));
                 driver.findElement(By.id("edit_filter_button")).click();
             }catch (Exception e){
+                driver.quit();
+
                 response.setStatus(false);
                 response.setMessage(e.getMessage());
                 return response;

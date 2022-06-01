@@ -77,13 +77,34 @@ public class AppUserService {
         return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId);
     }
 
-    public ArrayList<ApplicationUser> getAppUsersByAccountIdPaginated(String accountId, int pageNumber, int limit){
+    public ArrayList<ApplicationUser> getAppUsersByAccountIdPaginated(String accountId, String groupId,
+                                                                      int pageNumber, int limit){
+        ArrayList<ApplicationUser> users = new ArrayList<>();
         Pageable paging = PageRequest.of(pageNumber-1, limit);
-        return userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId, paging);
+
+        if(groupId == null || groupId.equals("")){
+            users = userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId, paging);
+        }else {
+            Optional<Group> group = groupRepo.findById(groupId);
+            if (group != null){
+                users = userRepo.findAllByAccountIdAndGroupOrderByCreationDateDesc(accountId, group.get(), paging);
+            }
+        }
+        return users;
     }
 
-    public int getUsersCount(String accountId){
-        return userRepo.countAllByAccountId(accountId);
+    public int getUsersCount(String accountId, String groupId){
+        int counter = 0;
+        if(groupId == null || groupId.equals("")){
+            counter = userRepo.countAllByAccountId(accountId);
+        }
+        else {
+            Optional<Group> group = groupRepo.findById(groupId);
+            if (group != null){
+                counter = userRepo.countAllByAccountIdAndGroup(accountId, group.get());
+            }
+        }
+        return counter;
     }
 
     public ApplicationUser getAppUserByCode(String guestCode, String accountCode){

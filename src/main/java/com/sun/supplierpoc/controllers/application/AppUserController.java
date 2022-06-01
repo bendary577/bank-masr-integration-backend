@@ -401,6 +401,7 @@ public class AppUserController {
     @CrossOrigin(origins = "*")
     @ResponseBody
     public ResponseEntity getApplicationUsers(Principal principal,
+                                              @RequestParam(name = "group", required = false) String group,
                                               @RequestParam(name = "pageNumber") int pageNumber,
                                               @RequestParam(name = "limit") int limit) {
         try{
@@ -408,7 +409,8 @@ public class AppUserController {
             Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
-                ArrayList<ApplicationUser> applicationUsers = appUserService.getAppUsersByAccountIdPaginated(account.getId(), pageNumber, limit);
+                ArrayList<ApplicationUser> applicationUsers =
+                        appUserService.getAppUsersByAccountIdPaginated(account.getId(), group, pageNumber, limit);
                 return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
             }
             return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -419,7 +421,8 @@ public class AppUserController {
     }
 
     @RequestMapping("/getUsersCount")
-    public int getUsersCount(Principal principal) {
+    public int getUsersCount(Principal principal,
+                             @RequestParam(name = "group", required = false) String group) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -428,7 +431,7 @@ public class AppUserController {
 
             Account account = accountOptional.get();
 
-            int usersCount = appUserService.getUsersCount(account.getId());
+            int usersCount = appUserService.getUsersCount(account.getId(), group);
 
             return usersCount;
         }else{

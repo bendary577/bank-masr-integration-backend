@@ -26,7 +26,11 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
 
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId);
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId, Pageable pageable);
+
+    ArrayList<ApplicationUser> findAllByAccountIdAndGroupOrderByCreationDateDesc(String accountId, Group group, Pageable pageable);
+
     int countAllByAccountId(String accountId);
+    int countAllByAccountIdAndGroup(String accountId, Group group);
 
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);
 

@@ -332,7 +332,7 @@ public class AppUserController {
             if (guestCode.equals("")) {
                 response.put("isSuccess", false);
                 response.put("balance", 0);
-                response.put("message", "Kindly provide the customer code.");
+                response.put("message", "Kindly provide the correct code.");
                 return ResponseEntity.status(HttpStatus.OK).body(response);
             }
 
@@ -344,8 +344,11 @@ public class AppUserController {
                 if (applicationUser != null) {
                     double guestBalance = activityService.calculateBalance(applicationUser.getWallet());
                     guestBalance = conversions.roundUpDouble(guestBalance);
-                    String message = "The guest with card number " + applicationUser.getCode() + " has a balance of "
-                            + String.valueOf(guestBalance) + " " + account.getCurrency();
+                    String message = applicationUser.getName() + ", Card number " + applicationUser.getCode() + " has a balance of "
+                            + guestBalance;
+                    if(account.getCurrency() != null){
+                        message +=  " " + account.getCurrency();
+                    }
                     response.put("isSuccess", true);
                     response.put("balance", String.valueOf(guestBalance));
                     response.put("message", message);

@@ -99,7 +99,7 @@ public class ScheduledTasks {
     * Add birthday points daily
     * Reset employee quota at the end of the day
     * */
-    @Scheduled(cron = "0 0 1 * * SUN-SAT")
+    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
     @GetMapping("opera/addGuestPoints")
     public void scheduleTaskWithFixedRate() {
         logger.info("Fixed Rate Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
@@ -172,7 +172,7 @@ public class ScheduledTasks {
         date = new Date();
         myCalendar.setTime(date);
 
-        int hour = myCalendar.get(Calendar.HOUR_OF_DAY);
+        int hour = myCalendar.get(Calendar.HOUR_OF_DAY) + 2;
         int dayOfWeek = myCalendar.get(Calendar.DAY_OF_WEEK);
         dayOfMonth = myCalendar.get(Calendar.DAY_OF_MONTH);
         String dayOfWeekName = weekdays[dayOfWeek];
@@ -181,7 +181,7 @@ public class ScheduledTasks {
         for (Account account : accounts) {
             generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
             ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
-            List<Group> groups = appGroupService.getTopGroups(account);
+            List<Group> groups = appGroupService.getGroups(account);
 
             ArrayList<Group> groupsQueue = new ArrayList<>();
             if (groups.size() == 0) continue;
@@ -196,8 +196,6 @@ public class ScheduledTasks {
                 if (group.getCanteenConfiguration().getDuration().equals(Constants.DAILY)) {
                     if (Integer.parseInt(arrOfStr[0]) == hour) {
                         groupsQueue.add(group);
-                        System.out.println(Constants.DAILY);
-                        System.out.println(group.getName());
                     }
                 }
 
@@ -208,8 +206,6 @@ public class ScheduledTasks {
                             String schedulerDay = (group.getCanteenConfiguration().getDayName()).toLowerCase();
                             if (dayOfWeekName.equals(schedulerDay)) {
                                 groupsQueue.add(group);
-                                System.out.println(Constants.WEEKLY);
-                                System.out.println(group.getName());
                             }
                         }
                     }

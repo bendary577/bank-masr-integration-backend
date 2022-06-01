@@ -188,7 +188,7 @@ public class ActivityService {
                         if(rest == transaction.getAfterDiscount()){
                             response.put("rest", conversions.roundUpDouble(transaction.getAfterDiscount()));
                             transaction.setStatus(Constants.INSUFFICIENT_AMOUNT);
-                            response.put("message", "Guest has no balance to spend at this revenue center.");
+                            response.put("message", user.getName() + " has no balance to spend at this revenue center.");
                         }else if(rest != 0){
                             transaction.setStatus(Constants.PARTIAL_PAYMENT);
                             response.put("message", "Payment added successfully.");
@@ -288,7 +288,7 @@ public class ActivityService {
                         if(rest == transaction.getAfterDiscount()){
                             response.put("rest", conversions.roundUpDouble(transaction.getAfterDiscount()));
                             transaction.setStatus(Constants.INSUFFICIENT_AMOUNT);
-                            response.put("message", "Guest has no balance to spend at this revenue center.");
+                            response.put("message", user.getName() + " has no balance to spend at this revenue center.");
                         }else if(rest != 0){
                             transaction.setStatus(Constants.PARTIAL_PAYMENT);
                             response.put("message", "Payment added successfully.");

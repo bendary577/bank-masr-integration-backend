@@ -206,6 +206,9 @@ public class ActivityService {
                     else if(transactionType.getName().equals(Constants.CANTEEN)){
                         if(!group.getCanteenConfiguration().isIncludeFees()){
                             amount = transaction.getNetAmount();
+                            response.put("fees", false);
+                        }else{
+                            response.put("fees", true);
                         }
 
                         if(user.getWallet() == null){

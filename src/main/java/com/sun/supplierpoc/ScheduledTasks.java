@@ -97,9 +97,8 @@ public class ScheduledTasks {
 
     /*
     * Add birthday points daily
-    * Reset employee quota at the end of the day
     * */
-    @Scheduled(cron = "0 0/60 * * * SUN-SAT")
+    @Scheduled(cron = "0 0 1 * * SUN-SAT")
     @GetMapping("opera/addGuestPoints")
     public void scheduleTaskWithFixedRate() {
         logger.info("Fixed Rate Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
@@ -158,80 +157,10 @@ public class ScheduledTasks {
                 }
             }
         }
-
-        feature = featureService.getFeatureByRef(Features.CANTEEN);
-        if(feature == null)
-            return;
-
-        accounts = accountService.getActiveAccountsHasFeature(feature);
-
-        //////////////////////////////////////  Get Current date //////////////////////////////////////
-        String[] weekdays = new DateFormatSymbols(Locale.ENGLISH).getWeekdays();
-
-        myCalendar = Calendar.getInstance();
-        date = new Date();
-        myCalendar.setTime(date);
-
-        int hour = myCalendar.get(Calendar.HOUR_OF_DAY) + 2;
-        int dayOfWeek = myCalendar.get(Calendar.DAY_OF_WEEK);
-        dayOfMonth = myCalendar.get(Calendar.DAY_OF_MONTH);
-        String dayOfWeekName = weekdays[dayOfWeek];
-        ///////////////////////////////////////////////////////////////////////////////////////////////
-
-        for (Account account : accounts) {
-            generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
-            ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
-            List<Group> groups = appGroupService.getGroups(account);
-
-            ArrayList<Group> groupsQueue = new ArrayList<>();
-            if (groups.size() == 0) continue;
-
-            for (Group group : groups) {
-                if (group.getCanteenConfiguration().getHour().equals("")) continue;
-
-                String schedulerHour = group.getCanteenConfiguration().getHour();
-                String[] arrOfStr = schedulerHour.split(":");
-
-                // check hours
-                if (group.getCanteenConfiguration().getDuration().equals(Constants.DAILY)) {
-                    if (Integer.parseInt(arrOfStr[0]) == hour) {
-                        groupsQueue.add(group);
-                    }
-                }
-
-                // check hours and day_name
-                if (group.getCanteenConfiguration().getDuration().equals(Constants.WEEKLY)) {
-                    if (group.getCanteenConfiguration().getDayName() != null) {
-                        if (Integer.parseInt(arrOfStr[0]) == hour) {
-                            String schedulerDay = (group.getCanteenConfiguration().getDayName()).toLowerCase();
-                            if (dayOfWeekName.equals(schedulerDay)) {
-                                groupsQueue.add(group);
-                            }
-                        }
-                    }
-                }
-
-                // check hours and day
-                if (group.getCanteenConfiguration().getDuration().equals(Constants.MONTHLY)) {
-                    if (group.getCanteenConfiguration().getDay() != null) {
-                        if (Integer.parseInt(arrOfStr[0]) == hour) {
-                            int schedulerDay = Integer.parseInt(group.getCanteenConfiguration().getDay());
-                            if (dayOfMonth == schedulerDay) {
-                                groupsQueue.add(group);
-                                System.out.println(Constants.MONTHLY);
-                                System.out.println(group.getName());
-                            }
-                        }
-                    }
-                }
-            }
-            for (Group group : groupsQueue) {
-                appGroupService.resetGroupWallet(account, group, revenueCenters);
-            }
-        }
     }
 
     // run every 60 min
+    // Reset employee quota at the end of the day
     // @Scheduled(cron = "[Seconds] [Minutes] [Hours] [Day of month] [Month] [Day of week] [Year]")
     @Scheduled(cron = "0 0/60 * * * SUN-SAT")
     @GetMapping("opera/checkUsers")
@@ -250,7 +179,7 @@ public class ScheduledTasks {
         Date date = new Date();
         myCalendar.setTime(date);
 
-        int hour = myCalendar.get(Calendar.HOUR_OF_DAY);
+        int hour = myCalendar.get(Calendar.HOUR_OF_DAY) + 2;
         int dayOfWeek = myCalendar.get(Calendar.DAY_OF_WEEK);
         int dayOfMonth = myCalendar.get(Calendar.DAY_OF_MONTH);
         String dayOfWeekName = weekdays[dayOfWeek];
@@ -349,9 +278,66 @@ public class ScheduledTasks {
                 }
 
             }
-
         }
 
+        //////////////////////////////////////  CANTEEN Feature //////////////////////////////////////
+        Feature feature = featureService.getFeatureByRef(Features.CANTEEN);
+        if(feature == null)
+            return;
+
+        accounts = accountService.getActiveAccountsHasFeature(feature);
+
+        for (Account account : accounts) {
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
+            List<Group> groups = appGroupService.getGroups(account);
+
+            ArrayList<Group> groupsQueue = new ArrayList<>();
+            if (groups.size() == 0) continue;
+
+            for (Group group : groups) {
+                if (group.getCanteenConfiguration().getHour().equals("")) continue;
+
+                String schedulerHour = group.getCanteenConfiguration().getHour();
+                String[] arrOfStr = schedulerHour.split(":");
+
+                // check hours
+                if (group.getCanteenConfiguration().getDuration().equals(Constants.DAILY)) {
+                    if (Integer.parseInt(arrOfStr[0]) == hour) {
+                        groupsQueue.add(group);
+                    }
+                }
+
+                // check hours and day_name
+                if (group.getCanteenConfiguration().getDuration().equals(Constants.WEEKLY)) {
+                    if (group.getCanteenConfiguration().getDayName() != null) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
+                            String schedulerDay = (group.getCanteenConfiguration().getDayName()).toLowerCase();
+                            if (dayOfWeekName.equals(schedulerDay)) {
+                                groupsQueue.add(group);
+                            }
+                        }
+                    }
+                }
+
+                // check hours and day
+                if (group.getCanteenConfiguration().getDuration().equals(Constants.MONTHLY)) {
+                    if (group.getCanteenConfiguration().getDay() != null) {
+                        if (Integer.parseInt(arrOfStr[0]) == hour) {
+                            int schedulerDay = Integer.parseInt(group.getCanteenConfiguration().getDay());
+                            if (dayOfMonth == schedulerDay) {
+                                groupsQueue.add(group);
+                                System.out.println(Constants.MONTHLY);
+                                System.out.println(group.getName());
+                            }
+                        }
+                    }
+                }
+            }
+            for (Group group : groupsQueue) {
+                appGroupService.resetGroupWallet(account, group, revenueCenters);
+            }
+        }
     }
 
     /*

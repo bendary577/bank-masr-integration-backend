@@ -140,4 +140,166 @@ public class ActivityController {
         }
     }
 
+    //////////////////////////////////////////// Canteen ///////////////////////////////////////////////////////////////
+
+    @RequestMapping("/checkForDiscount")
+    @CrossOrigin("*")
+    public ResponseEntity<?> checkForDiscount(@RequestHeader("Authorization") String authorization,
+                                                 @Valid @RequestBody Transactions transaction, BindingResult result){
+
+        String message = "You don't have role to use " + transaction.getTransactionTypeName() + " feature!.";
+        HashMap response = new HashMap();
+
+        try {
+
+            if (result.hasErrors()) {
+                response.put("isSuccess", false);
+                response.put("message", result.getAllErrors().get(0).getDefaultMessage());
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+            Account account = accountService.getAccount(invokerUser.getAccountId());
+
+            if (account != null) {
+                TransactionType transactionType =
+                        transactionTypeRepo.findByNameAndAccountId(transaction.getTransactionTypeName(), account.getId());
+
+                if(transactionType == null){
+                    response.put("isSuccess", false);
+                    response.put("message", message);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+                if (!invokerUser.getTypeId().contains(transactionType.getId())) {
+                    response.put("isSuccess", false);
+                    response.put("message", message);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                if(generalSettings.getSimphonyQuota() == null){
+                    generalSettings.setSimphonyQuota(new SimphonyQuota());
+                    generalSettingsRepo.save(generalSettings);
+                }
+
+                if(generalSettings.getSimphonyQuota().getTransactionQuota() == generalSettings.getSimphonyQuota().getUsedTransactionQuota()){
+                    response.put("isSuccess", false);
+                    response.put("message", "You have exhausted your package of transactions, Pleas contact your service provider.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+                ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
+
+                if (conversions.validateRevenueCenter(revenueCenters, transaction.getRevenueCentreId())) {
+
+                    RevenueCenter revenueCenter = conversions.getRevenueCenter(revenueCenters, transaction.getRevenueCentreId());
+
+                    response = activityService.checkForDiscount(transaction, account, generalSettings, revenueCenter);
+
+                    if ((boolean) response.get("isSuccess")) {
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+                } else {
+                    response.put("isSuccess", false);
+                    response.put("message", Constants.WRONG_REVENUE_CENTER);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+            } else {
+                response.put("isSuccess", false);
+                response.put("message", Constants.INVALID_USER);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("isSuccess", false);
+            response.put("message", "Some thing went wrong.");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+    }
+
+    @RequestMapping("/createCanteenTransaction")
+    @CrossOrigin("*")
+    public ResponseEntity<?> createCanteenTransaction(@RequestHeader("Authorization") String authorization,
+                                              @Valid @RequestBody Transactions transaction, BindingResult result){
+
+        String message = "You don't have role to use " + transaction.getTransactionTypeName() + " feature!.";
+        HashMap response = new HashMap();
+
+        try {
+
+            if (result.hasErrors()) {
+                response.put("isSuccess", false);
+                response.put("message", result.getAllErrors().get(0).getDefaultMessage());
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+            Account account = accountService.getAccount(invokerUser.getAccountId());
+
+            if (account != null) {
+                TransactionType transactionType =
+                        transactionTypeRepo.findByNameAndAccountId(transaction.getTransactionTypeName(), account.getId());
+
+                if(transactionType == null){
+                    response.put("isSuccess", false);
+                    response.put("message", message);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+                if (!invokerUser.getTypeId().contains(transactionType.getId())) {
+                    response.put("isSuccess", false);
+                    response.put("message", message);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+                GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+                if(generalSettings.getSimphonyQuota() == null){
+                    generalSettings.setSimphonyQuota(new SimphonyQuota());
+                    generalSettingsRepo.save(generalSettings);
+                }
+
+                if(generalSettings.getSimphonyQuota().getTransactionQuota() == generalSettings.getSimphonyQuota().getUsedTransactionQuota()){
+                    response.put("isSuccess", false);
+                    response.put("message", "You have exhausted your package of transactions, Pleas contact your service provider.");
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+                ArrayList<RevenueCenter> revenueCenters = generalSettings.getRevenueCenters();
+
+                if (conversions.validateRevenueCenter(revenueCenters, transaction.getRevenueCentreId())) {
+
+                    RevenueCenter revenueCenter = conversions.getRevenueCenter(revenueCenters, transaction.getRevenueCentreId());
+
+                    response = activityService.createCanteenTransaction(transactionType,transaction, account,
+                            generalSettings, revenueCenter);
+
+                    if ((boolean) response.get("isSuccess")) {
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    } else {
+                        return ResponseEntity.status(HttpStatus.OK).body(response);
+                    }
+                } else {
+                    response.put("isSuccess", false);
+                    response.put("message", Constants.WRONG_REVENUE_CENTER);
+                    return ResponseEntity.status(HttpStatus.OK).body(response);
+                }
+
+            } else {
+                response.put("isSuccess", false);
+                response.put("message", Constants.INVALID_USER);
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("isSuccess", false);
+            response.put("message", "Some thing went wrong.");
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }
+    }
 }

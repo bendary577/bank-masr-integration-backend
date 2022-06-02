@@ -245,6 +245,7 @@ public class SalesService {
             } else if(reportResponse.getMessage().equals(Constants.WRONG_BUSINESS_DATE)){
                 driver.quit();
             } else return !reportResponse.getMessage().equals(Constants.INVALID_REVENUE_CENTER);
+
             return true;
         }
         return false;

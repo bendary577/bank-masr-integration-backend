@@ -44,6 +44,7 @@ public class GeneralSettings {
     private ArrayList<RateCode> rateCodes = new ArrayList<>();
     private ArrayList<PosMachineMap> posMachineMaps = new ArrayList<>();
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
+    private boolean discountAppliedAfterFess = false;
 
     /* Delivery Aggregators */
     private AggregatorConfiguration aggregatorConfiguration = new AggregatorConfiguration();
@@ -189,6 +190,14 @@ public class GeneralSettings {
 
     public void setDiscountRates(ArrayList<SimphonyDiscount> discountRates) {
         this.discountRates = discountRates;
+    }
+
+    public boolean isDiscountAppliedAfterFess() {
+        return discountAppliedAfterFess;
+    }
+
+    public void setDiscountAppliedAfterFess(boolean discountAppliedAfterFess) {
+        this.discountAppliedAfterFess = discountAppliedAfterFess;
     }
 
     public ArrayList<BookingType> getPaymentTypes() {

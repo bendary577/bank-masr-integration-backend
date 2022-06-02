@@ -36,12 +36,20 @@ public class AppGroupService {
     @Autowired
     private WalletService walletService;
 
+    public List<Group> getGroups(Account account) {
+
+        List<Group> groups = groupRepo.findAllByAccountIdAndDeleted(account.getId(), false);
+
+        return groups;
+    }
+
     public List<Group> getTopGroups(Account account) {
 
         List<Group> groups = groupRepo.findAllByAccountIdAndDeletedAndTopNotOrderByTopDesc(account.getId(), false, 0);
 
         return groups;
     }
+
     public Group saveGroup(Group group) {
         Group groups = groupRepo.save(group);
         return groups;

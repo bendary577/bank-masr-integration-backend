@@ -66,7 +66,16 @@ public class FoodicsController {
 
         Account account = accountService.getAccount(invokerUser.getAccountId());
 
-        User user = (User) userRepo.findByAccountIdAndDeleted(account.getId(), false);
+        List<User> users = userRepo.findByAccountIdAndDeleted(account.getId(), false);
+        User user;
+
+        if(users.isEmpty()){
+            response.put("message", Constants.INVALID_USER);
+            response.put("status", "failed");
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        }else{
+            user = users.get(0);
+        }
 
         if (account != null) {
 
@@ -76,6 +85,7 @@ public class FoodicsController {
 
             if (response.get("status").equals("success")) {
                 FoodicsProduct updatedFoodicsProduct = (FoodicsProduct) response.get("data");
+                generalSettingsRepo.save(generalSettings);
                 sendEmailService.sendFoodicsProductUpdatedMail(user, updatedFoodicsProduct );
                 return new ResponseEntity<>(response, HttpStatus.OK);
             } else {

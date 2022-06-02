@@ -13,6 +13,7 @@ public class ProductsMapping {
     private ArrayList<ModifierMapping> modifiers = new ArrayList<>();
     private String type;
     public boolean combo;
+    public String SKU;
 
     public String getName() {
         return name;
@@ -87,5 +88,13 @@ public class ProductsMapping {
         }
 
         return newModifiers;
+    }
+
+    public String getSKU() {
+        return SKU;
+    }
+
+    public void setSKU(String SKU) {
+        this.SKU = SKU;
     }
 }

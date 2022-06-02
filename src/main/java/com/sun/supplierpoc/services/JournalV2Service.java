@@ -327,7 +327,6 @@ public class JournalV2Service {
                 journalBatch = new JournalBatch();
                 journals = new ArrayList<>();
 
-
                 try {
                     wait = new WebDriverWait(driver, 5);
                     wait.until(ExpectedConditions.alertIsPresent());
@@ -375,7 +374,7 @@ public class JournalV2Service {
                         continue;
                     }
 
-                    if (journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroup")) {
+                    if (journalSyncJobType.getConfiguration().syncPerGroup.equals("OverGroups")) {
                         group = itemGroup.getOverGroup();
                     } else {
                         group = itemGroup.getItemGroup();
@@ -656,10 +655,16 @@ public class JournalV2Service {
         } catch (Exception e) {
             System.out.println("Waiting");
         }
-
+        Response dateResponse;
+        if(location == null){
+            dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate,"",
+                    null, "", driver, "version2");
+        }else{
+             dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate,location.locationName,
+                    null, "", driver, "version2");
+        }
         // Filter Report
-        Response dateResponse = microsFeatures.selectDateRangeMicros(businessDate, fromDate, toDate, location.locationName,
-                null, "", driver, "version2");
+
 
         if (!dateResponse.isStatus()) {
             response.setStatus(false);

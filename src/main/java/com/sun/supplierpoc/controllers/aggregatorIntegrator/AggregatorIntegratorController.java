@@ -313,7 +313,6 @@ public class AggregatorIntegratorController {
             if(foodicsAccessToken.isStatus()){
                 generalSettings.getAggregatorConfiguration().getFoodicsAccountData().setToken(foodicsAccessToken.getAccess_token());
                 generalSettings.getAggregatorConfiguration().setIntegrationStatus(true);
-                generalSettingsRepo.save(generalSettings);
                 response.setStatus(true);
                 response.setMessage("Foodics products returned successfully");
                 response.setData(foodicsAccessToken);
@@ -382,4 +381,148 @@ public class AggregatorIntegratorController {
         }
 
     }
+
+    @PostMapping("/foodicsModifiersPaginated")
+    public ResponseEntity<?> foodicsModifiersPaginated(Principal principal, @RequestBody FoodicsGetPaginatedModifiersRequest foodicsGetPaginatedModifiersRequest) {
+
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            if(!generalSettings.getAggregatorConfiguration().isIntegrationStatus()){
+                response.setStatus(false);
+                response.setMessage("Please finish foodics integration process before starting getting foodics products");
+                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+            }else{
+                FoodicProductResponse foodicProductResponse = foodicsWebServices.fetchFoodicsProductsPaginated(generalSettings.getAggregatorConfiguration().getFoodicsAccountData(), foodicsGetPaginatedModifiersRequest.getRequestAPI());
+                if(foodicProductResponse.isStatus()){
+                    response.setStatus(true);
+                    response.setMessage(foodicProductResponse.getMessage());
+                    response.setData(foodicProductResponse);
+                    return new ResponseEntity<>(response, HttpStatus.OK);
+                }else{
+                    response.setStatus(false);
+                    response.setMessage(foodicProductResponse.getMessage());
+                    response.setData(foodicProductResponse);
+                    return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+                }
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/saveAllFoodicsProducts")
+    public ResponseEntity<?> saveFoodicsAllProducts(Principal principal) {
+
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+            response = foodicsWebServices.getAllFoodicsProducts(generalSettings);
+            if(response.isStatus()){
+                response.setStatus(true);
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }else{
+                response.setStatus(false);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/saveAllFoodicsModifiers")
+    public ResponseEntity<?> saveAllFoodicsModifiers(Principal principal) {
+
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            response = foodicsWebServices.getAllFoodicsModifiers(generalSettings);
+            if(response.isStatus()){
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }else{
+                response.setStatus(false);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @GetMapping("/saveAllFoodicsBranches")
+    public ResponseEntity<?> saveAllFoodicsBranches(Principal principal) {
+
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            response = foodicsWebServices.getAllFoodicsBranches(generalSettings);
+            if(response.isStatus()){
+                return new ResponseEntity<>(response, HttpStatus.OK);
+            }else{
+                response.setStatus(false);
+                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            }
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+
+    @PostMapping("/saveUpdatesEmail")
+    public ResponseEntity<?> saveUpdatesEmail(Principal principal, @RequestBody String email) {
+        Response response = new Response();
+        User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
+        Optional<Account> accountOptional = accountService.getAccountOptional(user.getAccountId());
+
+        if (accountOptional.isPresent()) {
+
+            Account account = accountOptional.get();
+            GeneralSettings generalSettings = generalSettingsRepo.findByAccountIdAndDeleted(account.getId(), false);
+
+            generalSettings.getAggregatorConfiguration().setMailRequiredForUpdates(email);
+            generalSettingsRepo.save(generalSettings);
+
+            response.setStatus(true);
+            response.setMessage("Your email was saved successfully");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } else {
+            response.setStatus(false);
+            response.setMessage(Constants.INVALID_ACCOUNT);
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+    }
+
+
 }

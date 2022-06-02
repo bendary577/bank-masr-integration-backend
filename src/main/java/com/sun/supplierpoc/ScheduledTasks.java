@@ -361,7 +361,7 @@ public class ScheduledTasks {
     /*
     * Delivery aggregator scheduler that run every 1 min to check new orders
     * */
-    @Scheduled(cron = "0 * * * * SUN-SAT")
+    // @Scheduled(cron = "0 * * * * SUN-SAT")
     public void aggregatorScheduler() {
 
         logger.info("Cron Task :: Execution Time - {}", dateTimeFormatter.format(LocalDateTime.now()));
@@ -392,6 +392,6 @@ public class ScheduledTasks {
         if(feature == null)
             return;
 
-        aggregatorIntegratorService.dropOrdersCollection();
+        this.aggregatorIntegratorService.dropOrdersCollection();
     }
 }

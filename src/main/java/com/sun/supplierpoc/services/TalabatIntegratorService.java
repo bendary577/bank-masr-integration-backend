@@ -305,14 +305,15 @@ public class TalabatIntegratorService {
         ProductsMapping productsMapping = null;
 
         try {
-//            FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
+            //tempProduct.getSKU().equals(foodicsProduct.getSku()) ||
+            //FoodicsProduct product = foodicsProductRepo.findById(foodicsProduct.getId()).orElse(null);
             productsMapping = generalSettings.getAggregatorConfiguration().getProductsMappings().stream().
-                    filter(tempProduct -> tempProduct.getTalabatProductId().equals(foodicsProduct.getId()))
+                    filter(tempProduct -> tempProduct.getFoodIcsProductId().equals(foodicsProduct.getId()))
                     .collect(Collectors.toList()).stream().findFirst().orElse(null);
             if (productsMapping != null) {
 
                 generalSettings.getAggregatorConfiguration().getProductsNeedsAttention().add(productsMapping);
-
+                generalSettingsRepo.save(generalSettings);
                 response.put("message", "Product information was successfully updated.");
                 response.put("status", "success");
                 response.put("data", foodicsProduct);
@@ -324,6 +325,7 @@ public class TalabatIntegratorService {
 
             }
         } catch (Exception e) {
+            e.printStackTrace();
             response.put("message", "Can't save foodics product.");
             response.put("status", "failed");
         }

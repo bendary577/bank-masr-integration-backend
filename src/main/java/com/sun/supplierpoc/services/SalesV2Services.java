@@ -231,7 +231,7 @@ public class SalesV2Services {
         journalBatch.setSalesTender(tenderResponse.getSalesTender());
         // Set Credit Entries (Taxes, overGroupsGross, Discount and Service charge)
         journalBatch.setSalesTax(taxResponse.getSalesTax());
-//        journalBatch.setSalesDiscount(salesDiscounts);
+        journalBatch.setSalesDiscount(salesDiscounts);
         journalBatch.setSalesMajorGroupGross(salesMajorGroupsGross);
         journalBatch.setSalesServiceCharge(serviceChargeResponse.getSalesServiceCharge());
 
@@ -932,7 +932,7 @@ public class SalesV2Services {
 //                discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("item_discount_total")).getText().strip());
                 discountAmount = conversions.convertStringToFloat(cols.get(columns.indexOf("discounts")).getText().strip());
 
-//                majorGroupAmount = majorGroupAmount - (discountAmount);
+                majorGroupAmount = majorGroupAmount - (discountAmount);
 
                 majorGroupsGross = journal.checkExistence(majorGroupsGross, majorGroup
                         , 0, majorGroupAmount, 0, location, MGRevenueCenter, "");

@@ -3,7 +3,9 @@ package com.sun.supplierpoc.repositories.applications;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.CountQuery;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
@@ -27,10 +29,13 @@ public interface ApplicationUserRepo extends MongoRepository<ApplicationUser, St
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId);
     ArrayList<ApplicationUser> findAllByAccountIdOrderByCreationDateDesc(String accountId, Pageable pageable);
 
-    ArrayList<ApplicationUser> findAllByAccountIdAndGroupOrderByCreationDateDesc(String accountId, Group group, Pageable pageable);
+    @Query("{$and: [{'accountId' : {$regex: ?0 }}, {'group._id' : ?1}]}")
+    ArrayList<ApplicationUser> findAllByAccountIdAndGroupOrderByCreationDateDesc(String accountId, String group, Pageable pageable);
 
     int countAllByAccountId(String accountId);
-    int countAllByAccountIdAndGroup(String accountId, Group group);
+
+    @CountQuery("{$and: [{'accountId' : {$regex: ?0 }}, {'group._id' : ?1}]}")
+    int countAllByAccountIdAndGroup(String accountId, String group);
 
     List<ApplicationUser> findAllByAccountIdAndGroupAndDeleted(String accountId, Group group, boolean deleted);
 

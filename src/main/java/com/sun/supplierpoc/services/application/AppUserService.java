@@ -85,10 +85,7 @@ public class AppUserService {
         if(groupId == null || groupId.equals("")){
             users = userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId, paging);
         }else {
-            Optional<Group> group = groupRepo.findById(groupId);
-            if (group != null){
-                users = userRepo.findAllByAccountIdAndGroupOrderByCreationDateDesc(accountId, group.get(), paging);
-            }
+            users = userRepo.findAllByAccountIdAndGroupOrderByCreationDateDesc(accountId, groupId, paging);
         }
         return users;
     }
@@ -99,10 +96,7 @@ public class AppUserService {
             counter = userRepo.countAllByAccountId(accountId);
         }
         else {
-            Optional<Group> group = groupRepo.findById(groupId);
-            if (group != null){
-                counter = userRepo.countAllByAccountIdAndGroup(accountId, group.get());
-            }
+            counter = userRepo.countAllByAccountIdAndGroup(accountId, groupId);
         }
         return counter;
     }

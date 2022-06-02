@@ -35,6 +35,7 @@ public class Transactions {
     private double netAmount;
     private double serviceCharges;
     private double vat;
+    private double discount;
 
     @NotNull(message="Total Payment can't be empty.")
     private double totalPayment;
@@ -109,6 +110,14 @@ public class Transactions {
 
     public void setVat(double vat) {
         this.vat = vat;
+    }
+
+    public double getDiscount() {
+        return discount;
+    }
+
+    public void setDiscount(double discount) {
+        this.discount = discount;
     }
 
     public double getTotalPayment() {

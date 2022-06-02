@@ -383,7 +383,7 @@ public class ActivityService {
                 totalPayment = netAmount + discount;
                 response.put("fees", false);
             }else{
-                totalPayment = (netAmount + vat + serviceCharge) - discount;
+                totalPayment = (netAmount + vat + serviceCharge) + discount;
                 response.put("fees", true);
             }
             transaction.setAfterDiscount(totalPayment);

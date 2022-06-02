@@ -402,6 +402,8 @@ public class AppUserController {
     @ResponseBody
     public ResponseEntity getApplicationUsers(Principal principal,
                                               @RequestParam(name = "group", required = false) String group,
+                                              @RequestParam(name = "userName", required = false) String userName,
+                                              @RequestParam(name = "cardNumber", required = false) String cardNumber,
                                               @RequestParam(name = "pageNumber") int pageNumber,
                                               @RequestParam(name = "limit") int limit) {
         try{
@@ -410,7 +412,8 @@ public class AppUserController {
             if (accountOptional.isPresent()) {
                 Account account = accountOptional.get();
                 ArrayList<ApplicationUser> applicationUsers =
-                        appUserService.getAppUsersByAccountIdPaginated(account.getId(), group, pageNumber, limit);
+                        appUserService.getAppUsersByAccountIdPaginated(account.getId(), group, userName, cardNumber,
+                                pageNumber, limit);
                 return ResponseEntity.status(HttpStatus.OK).body(applicationUsers);
             }
             return new ResponseEntity(HttpStatus.FORBIDDEN);
@@ -422,7 +425,9 @@ public class AppUserController {
 
     @RequestMapping("/getUsersCount")
     public int getUsersCount(Principal principal,
-                             @RequestParam(name = "group", required = false) String group) {
+                             @RequestParam(name = "group", required = false) String group,
+                             @RequestParam(name = "userName", required = false) String userName,
+                             @RequestParam(name = "cardNumber", required = false) String cardNumber) {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
 
         Optional<Account> accountOptional = accountRepo.findById(user.getAccountId());
@@ -431,7 +436,7 @@ public class AppUserController {
 
             Account account = accountOptional.get();
 
-            int usersCount = appUserService.getUsersCount(account.getId(), group);
+            int usersCount = appUserService.getUsersCount(account.getId(), group,userName, cardNumber);
 
             return usersCount;
         }else{

@@ -78,25 +78,55 @@ public class AppUserService {
     }
 
     public ArrayList<ApplicationUser> getAppUsersByAccountIdPaginated(String accountId, String groupId,
+                                                                      String userName, String cardNumber,
                                                                       int pageNumber, int limit){
         ArrayList<ApplicationUser> users = new ArrayList<>();
         Pageable paging = PageRequest.of(pageNumber-1, limit);
 
         if(groupId == null || groupId.equals("")){
-            users = userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId, paging);
+            if(userName.equals("") && cardNumber.equals(""))
+                users = userRepo.findAllByAccountIdOrderByCreationDateDesc(accountId, paging);
+            else if(userName.equals("") && !cardNumber.equals(""))
+                users = userRepo.findAllByAccountIdAndCodeOrderByCreationDateDesc(accountId, cardNumber,paging);
+            else if(!userName.equals("") && cardNumber.equals(""))
+                users = userRepo.findAllByAccountIdAndNameOrderByCreationDateDesc(accountId, userName, paging);
+            else
+                users = userRepo.findAllByAccountIdAndNameAndCodeOrderByCreationDateDesc(accountId, userName, cardNumber, paging);
         }else {
-            users = userRepo.findAllByAccountIdAndGroupOrderByCreationDateDesc(accountId, groupId, paging);
+            if(userName.equals("") && cardNumber.equals(""))
+                users = userRepo.findAllByAccountIdAndGroupOrderByCreationDateDesc(accountId, groupId, paging);
+            else if(userName.equals("") && !cardNumber.equals(""))
+                users = userRepo.findAllByAccountIdAndGroupAndCodeOrderByCreationDateDesc(accountId, groupId, cardNumber,paging);
+            else if(!userName.equals("") && cardNumber.equals(""))
+                users = userRepo.findAllByAccountIdAndGroupAndNameOrderByCreationDateDesc(accountId, groupId, userName, paging);
+            else
+                users = userRepo.findAllByAccountIdAndGroupAndNameAndCodeOrderByCreationDateDesc(accountId, groupId, userName, cardNumber, paging);
         }
         return users;
     }
 
-    public int getUsersCount(String accountId, String groupId){
+    public int getUsersCount(String accountId, String groupId, String userName, String cardNumber){
         int counter = 0;
         if(groupId == null || groupId.equals("")){
-            counter = userRepo.countAllByAccountId(accountId);
+            if(userName.equals("") && cardNumber.equals(""))
+                counter = userRepo.countAllByAccountId(accountId);
+            else if(userName.equals("") && !cardNumber.equals(""))
+                counter = userRepo.countAllByAccountIdAndCode(accountId, cardNumber);
+            else if(!userName.equals("") && cardNumber.equals(""))
+                counter = userRepo.countAllByAccountIdAndName(accountId, userName);
+            else
+                counter = userRepo.countAllByAccountIdAndNameAndCode(accountId, userName, cardNumber);
         }
         else {
-            counter = userRepo.countAllByAccountIdAndGroup(accountId, groupId);
+            if(userName.equals("") && cardNumber.equals(""))
+                counter = userRepo.countAllByAccountIdAndGroup(accountId, groupId);
+            else if(userName.equals("") && !cardNumber.equals(""))
+                counter = userRepo.countAllByAccountIdAndGroupAndCode(accountId, groupId, cardNumber);
+            else if(!userName.equals("") && cardNumber.equals(""))
+                counter = userRepo.countAllByAccountIdAndGroupAndName(accountId, groupId, userName);
+            else
+                counter = userRepo.countAllByAccountIdAndGroupAndNameAndCode(accountId, groupId, userName, cardNumber);
+
         }
         return counter;
     }

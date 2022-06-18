@@ -22,41 +22,6 @@ import java.util.*;
 
 @Service
 public class OccupancyXMLHelper {
-    public List<SyncJobData> getOccupancyFromXML(SyncJob syncJob, String filePath) {
-        List<SyncJobData> syncJobDataList = new ArrayList<>();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-
-        try {
-            File file = new File(filePath);
-            OccupancyDetails occupancyDetails = readOccupancyRow(file);
-
-            Date updateDate = new Date();
-
-//            String dateString = dateFormat.format(updateDate);
-            String dateString = file.getName().substring(9, file.getName().indexOf('.'));
-            occupancyDetails.updateDate = dateString;
-
-            HashMap<String, Object> data = new HashMap<>();
-            Field[] allFields = occupancyDetails.getClass().getDeclaredFields();
-            for (Field field : allFields) {
-                field.setAccessible(true);
-                Object value = field.get(occupancyDetails);
-                if (value != null && !value.equals("null")) {
-                    data.put(field.getName(), value);
-                } else {
-                    data.put(field.getName(), "");
-                }
-            }
-
-            SyncJobData syncJobData = new SyncJobData(data, Constants.RECEIVED, "", new Date(), syncJob.getId());
-            syncJobDataList.add(syncJobData);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("Fail to parse XML file: " + e.getMessage());
-        }
-        return syncJobDataList;
-    }
-
     private OccupancyDetails readOccupancyRow(File file) {
         int totalRooms;
         OccupancyDetails occupancyDetails = new OccupancyDetails();

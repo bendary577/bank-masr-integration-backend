@@ -11,6 +11,7 @@ import com.sun.supplierpoc.models.simphony.simphonyCheck.TransactionResponse;
 import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentReq;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.simphony.SplittableCheckRepo;
+import com.sun.supplierpoc.services.encryption.AESEncryptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class SimphonyPaymentService {
 
     @Autowired
     private SplittableCheckRepo simphonyCheckRepo;
+
+    @Autowired
+    private AESEncryptionService encryptionService;
 
     Logger logger = LoggerFactory.getLogger("SimphonyPaymentService");
 
@@ -132,7 +136,7 @@ public class SimphonyPaymentService {
 
         float amount = Float.parseFloat(simphonyPaymentReq.getTotalDue()) * 100;
 
-        String POS_MACHINE_URL = "http://192.168.1.5:7070";
+        String POS_MACHINE_URL = "http://192.168.1.12:4040";
         for(PosMachineMap posMachineMap : generalSettings.getPosMachineMaps()) {
             if (!simphonyPaymentReq.getCashierNumber().equals("") && posMachineMap.getFlag().equals(String.valueOf(simphonyPaymentReq.getCashierNumber()))){
                 POS_MACHINE_URL = "http://" + posMachineMap.getIp() +

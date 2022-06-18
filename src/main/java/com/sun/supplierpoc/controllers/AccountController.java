@@ -36,10 +36,6 @@ public class AccountController {
     @Autowired
     private UserRepo userRepo;
     @Autowired
-    private SyncJobTypeRepo syncJobTypeRepo;
-    @Autowired
-    private OperationTypeRepo operationTypeRepo;
-    @Autowired
     GeneralSettingsRepo generalSettingsRepo;
     @Autowired
     CustomClientDetailsService customClientDetailsService;
@@ -71,14 +67,6 @@ public class AccountController {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
         account = accountRepo.save(account);
         return account != null;
-    }
-
-    @RequestMapping("/updateAccountSyncTypes")
-    @CrossOrigin(origins = "*")
-    @ResponseBody
-    public boolean updateAccountSyncTypes(Principal principal, @RequestBody Account account){
-        addAccountSyncType(account);
-        return true;
     }
 
     @RequestMapping(value = "/clientDetails")
@@ -246,10 +234,9 @@ public class AccountController {
         generalSettingsRepo.save(generalSettings);
 
         // add default sync jobs to account
-        boolean addingStatus = addAccountSyncType(account);
+        boolean addingStatus = true;
 
         // add default operation types to account
-        addAccountOperationType(account);
 
         if(addingStatus){
             response.put("message", "Account added successfully.");
@@ -261,187 +248,6 @@ public class AccountController {
         return response;
     }
 
-    private boolean addAccountSyncType(Account account){
-        //suppliers
-        String syncDescription = "Used to sync suppliers from sun to my inventory daily.";
-     /* Configuration supplierConfig = new Configuration();
-       supplierConfig.supplierConfiguration = new SupplierConfiguration();
-
-       if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-           supplierConfig.inforConfiguration = new InforConfiguration();
-      }
-      SyncJobType supplierSyncType = new SyncJobType(1,Constants.SUPPLIERS, syncDescription, "/suppliers",
-               new Date(), supplierConfig, account.getId());
-      syncJobTypeRepo.save(supplierSyncType);*/
-
-      // Invoices
-      /* syncDescription = "Used to sync approved invoices from my inventory to sun daily.";
-       Configuration invoiceConfig = new Configuration();
-        invoiceConfig.invoiceConfiguration = new InvoiceConfiguration();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-          invoiceConfig.inforConfiguration = new InforConfiguration();
-      }
-        SyncJobType invoiceSyncType = new SyncJobType(2, Constants.APPROVED_INVOICES, syncDescription, "/approvedInvoicesSun",
-               new Date(), invoiceConfig, account.getId());
-       syncJobTypeRepo.save(invoiceSyncType);
-
-//        // Credit Notes
-        syncDescription = "Used to sync credit notes from my inventory to sun daily.";*/
-
-   /*  SyncJobType creditNotesSyncType = new SyncJobType(3, Constants.CREDIT_NOTES, syncDescription, "/creditNotesSun",
-                new Date(), invoiceConfig, account.getId());
-       syncJobTypeRepo.save(creditNotesSyncType);*/
-
-        // Wastage
-     /*   syncDescription = "Used to sync wastage from oracle hospitality reports to sun monthly.";
-        Configuration wastageConfig = new Configuration();
-        wastageConfig.wastageConfiguration = new WastageConfiguration();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            wastageConfig.inforConfiguration = new InforConfiguration();
-        }
-
-        SyncJobType wastageSyncType = new SyncJobType(4, Constants.WASTAGE, syncDescription, "/wastageSun",
-                new Date(), wastageConfig, account.getId());
-        syncJobTypeRepo.save(wastageSyncType);*/
-
-        // Transfers
-      /*  syncDescription = "Used to sync transfers from my inventory to sun monthly.";
-        Configuration transfersConfig = new Configuration();
-        transfersConfig.transferConfiguration = new TransferConfiguration();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            transfersConfig.inforConfiguration = new InforConfiguration();
-       }
-
-        SyncJobType transferSyncType = new SyncJobType(5, Constants.TRANSFERS, syncDescription, "/bookedTransfersSun",
-                new Date(), new Configuration(), account.getId());
-        syncJobTypeRepo.save(transferSyncType);
-*/
- // Booked Production
-//   syncDescription = "Used to sync booked production from my inventory to sun monthly.";//     SyncJobType bookedProductionSyncType = new SyncJobType(6, Constants.BOOKED_PRODUCTION, syncDescription,//               "/bookedProductionSun", new Date(), new Configuration(), account.getId());
-//        syncJobTypeRepo.save(bookedProductionSyncType);
-//
-
-        // Cost of Goods
-      /*  syncDescription="Used to sync Cost of Goods from  oracle hospitality reports to sun monthly. ";
-        Configuration costOfGoodsConfig = new Configuration();
-        SyncJobType costOfGoodsType = new SyncJobType(6,Constants.COST_OF_GOODS,syncDescription,"/costOfGoods",
-                new Date(),costOfGoodsConfig,account.getId());
-        syncJobTypeRepo.save(costOfGoodsType);*/
-        // Sales
-      /*    syncDescription = "Used to sync sales from oracle hospitality reports to sun monthly.";
-        Configuration salesConfig = new Configuration();
-        salesConfig.salesConfiguration = new SalesConfiguration();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            salesConfig.inforConfiguration = new InforConfiguration();
-      }
-       SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES, syncDescription, "/posSalesSun",
-              new Date(), salesConfig, account.getId());
-      syncJobTypeRepo.save(salesSyncType);
-*/
-
-      // Sales API Daily
-      syncDescription = "Used to sync sales from oracle hospitality reports to API daily .";
-        Configuration salesAPIDailyConfig = new Configuration();
-        salesAPIDailyConfig.salesAPIConfig = new SalesAPIConfig();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            salesAPIDailyConfig.inforConfiguration = new InforConfiguration();
-      }
-       SyncJobType salesSyncType = new SyncJobType(7, Constants.SALES_API_Daily, syncDescription, "/posSalesAPIDaily",
-              new Date(), salesAPIDailyConfig, account.getId());
-      syncJobTypeRepo.save(salesSyncType);
-
-      // Sales API Daily
-      syncDescription = "Used to sync sales from oracle hospitality reports to API monthly.";
-        Configuration salesAPIMonthlyConfig = new Configuration();
-        salesAPIMonthlyConfig.salesAPIConfig = new SalesAPIConfig();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            salesAPIMonthlyConfig.inforConfiguration = new InforConfiguration();
-      }
-       SyncJobType salesSyncApiType = new SyncJobType(7, Constants.SALES_API_Monthly, syncDescription, "/posSalesAPIMonthly",
-              new Date(), salesAPIMonthlyConfig, account.getId());
-      syncJobTypeRepo.save(salesSyncApiType);
-
-
-
-        // Consumption
-       /* syncDescription = "Used to sync consumption from oracle hospitality reports to sun monthly.";
-        Configuration consumptionConfig = new Configuration();
-        consumptionConfig.consumptionConfiguration = new ConsumptionConfiguration();
-        if(account.getERD().equals(Constants.SUN_ERD) || account.getERD().equals(Constants.EXPORT_TO_SUN_ERD)){
-            consumptionConfig.inforConfiguration = new InforConfiguration();
-        }
-
-        SyncJobType consumptionSyncType = new SyncJobType(8, Constants.CONSUMPTION, syncDescription, "/consumptionSun",
-                new Date(), consumptionConfig, account.getId());
-        syncJobTypeRepo.save(consumptionSyncType);*/
-
-        // Menu Items
-//        syncDescription = "Used to sync simphony menu items.";
-//        Configuration menuItemConfig = new Configuration();
-//        menuItemConfig.menuItemConfiguration = new MenuItemConfiguration();
-//
-//        SyncJobType menuItemsSyncType = new SyncJobType(9, Constants.MENU_ITEMS, syncDescription, "/menuItems",
-//                new Date(), menuItemConfig, account.getId());
-//        syncJobTypeRepo.save(menuItemsSyncType);
-
-        // OPERA Reservation
-//        String syncDescription = "Used to sync reservation from opera.";
-//        Configuration wlsIntegration = new Configuration();
-//        wlsIntegration.supplierConfiguration = new SupplierConfiguration();
-//
-//        SyncJobType supplierSyncType = new SyncJobType(1,Constants.wLsIntegration, syncDescription, "/2wLsIntegration",
-//                new Date(), wlsIntegration, account.getId());
-//        syncJobTypeRepo.save(supplierSyncType);
-
-        // OPERA New Booking
-       /* String syncDescription = "Used to sync new booking from opera.";
-        Configuration newBookingConfig = new Configuration();
-
-        SyncJobType newBookingSyncType = new SyncJobType(10, Constants.NEW_BOOKING_REPORT, syncDescription,
-                "/newBookingReport", new Date(), newBookingConfig, account.getId());
-        syncJobTypeRepo.save(newBookingSyncType);
-
-        // OPERA Cancel Booking
-        syncDescription = "Used to sync cancel booking from opera.";
-        Configuration cancelBookingConfig = new Configuration();
-
-        SyncJobType cancelBookingSyncType = new SyncJobType(11, Constants.CANCEL_BOOKING_REPORT, syncDescription,
-                "/cancelBookingReport", new Date(), cancelBookingConfig, account.getId());
-        syncJobTypeRepo.save(cancelBookingSyncType);
-
-        // OPERA Occupancy Update
-        syncDescription = "Used to sync occupancy update from opera.";
-        Configuration occupancyUpdateConfig = new Configuration();
-
-        SyncJobType occupancyUpdateSyncType = new SyncJobType(11, Constants.OCCUPANCY_UPDATE_REPORT, syncDescription,
-                "/occupancyUpdateReport", new Date(), occupancyUpdateConfig, account.getId());
-        syncJobTypeRepo.save(occupancyUpdateSyncType);
-
-        // OPERA Occupancy Update
-        syncDescription = "Used to sync expenses details from opera.";
-        Configuration expensesDetailsConfig = new Configuration();
-
-        SyncJobType expensesDetailsSyncType = new SyncJobType(11, Constants.EXPENSES_DETAILS_REPORT, syncDescription,
-                "/expensesDetailsReport", new Date(), expensesDetailsConfig, account.getId());
-        syncJobTypeRepo.save(expensesDetailsSyncType);
-*/
-        return true;
-
-    }
-
-    private boolean addAccountOperationType(Account account){
-        try {
-            OperationType operationType;
-
-            // Opera Payment Monitor
-            operationType = new OperationType(1, Constants.OPERA_PAYMENT, "/operaPayments", new Date(), account.getId());
-            operationTypeRepo.save(operationType);
-
-            return true;
-        }catch (Exception ex){
-            return false;
-        }
-    }
 
     public ArrayList<Account> getAccounts() {
         return (ArrayList<Account>) accountRepo.findAll();

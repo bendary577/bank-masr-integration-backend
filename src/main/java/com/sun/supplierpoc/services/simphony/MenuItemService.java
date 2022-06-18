@@ -19,7 +19,6 @@ import com.sun.supplierpoc.models.simphony.tender.pTmedDetailEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2;
 import com.sun.supplierpoc.models.simphony.transaction.PostTransactionEx2Response;
 import com.sun.supplierpoc.models.simphony.transaction.pGuestCheck;
-import com.sun.supplierpoc.repositories.SyncJobDataRepo;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.eclipse.persistence.exceptions.JSONException;
 import org.json.JSONObject;
@@ -60,8 +59,7 @@ import java.util.*;
 
 @Service
 public class MenuItemService {
-    @Autowired
-    private SyncJobDataRepo syncJobDataRepo;
+
 
     public com.sun.supplierpoc.models.Response GetConfigurationInfoEx(int empNum, int revenueCenter, String simphonyServerIP,
                                                                       int startIndex, int maxCount, boolean isGeneralOptionalCond) {
@@ -177,8 +175,6 @@ public class MenuItemService {
 
                     response.setMessage("Sync menu item successfully.");
                     response.setStatus(true);
-                    response.setMenuItems(MenuItem.getDbMenuItemDefinition());
-                    response.setMenuItemClasses((ArrayList) DbMenuItemClasses.getDbMenuItemClass());
                     return response;
                 }
             } else {
@@ -398,116 +394,6 @@ public class MenuItemService {
         return null;
     }
 
-    public ArrayList<SyncJobData> saveMenuItemData(ArrayList<DbMenuItemDefinition> menuItems, SyncJob syncJob, ArrayList<DbMenuItemClass> menuItemClasses) {
-        ArrayList<SyncJobData> savedMenuItems = new ArrayList<>();
-        List<HashMap<String, Object>> syncMenuItemClasses = menuItemClassData(syncJob, menuItemClasses);
-
-        for (DbMenuItemDefinition menuItem : menuItems) {
-
-            MenuItemResponse itemResponse = new MenuItemResponse();
-            if (!menuItem.getMenuItemClassObjNum().equals(null) && !menuItem.getMenuItemClassObjNum().equals("0")) {
-                itemResponse = getCondiments(menuItem, syncMenuItemClasses, menuItems);
-            }
-
-            HashMap<String, Object> menuItemData = new HashMap<>();
-
-            menuItemData.put("id", menuItem.getMiMasterObjNum());
-            try {
-                itemResponse.setId(Long.parseLong(menuItem.getMiMasterObjNum()));
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
-            menuItemData.put("firstName", menuItem.getName1().getStringText());
-            itemResponse.setFirstName(menuItem.getName1().getStringText());
-
-            menuItemData.put("secondName", menuItem.getName2().getStringText());
-            itemResponse.setSecondName(menuItem.getName2().getStringText());
-
-//            menuItemData.put("availability", menuItem.getCheckAvailability().toString());
-//            itemResponse.setAvailability(menuItem.getCheckAvailability().toString());
-
-            menuItemData.put("requiredCondiments", itemResponse.getRequiredCondiments());
-            menuItemData.put("optionalCondiments", itemResponse.getOptionalCondiments());
-
-            if (menuItem.getMenuItemPrice() != null) {
-                menuItemData.put("price", menuItem.getMenuItemPrice().getPrice());
-                itemResponse.setPrice(Double.parseDouble(menuItem.getMenuItemPrice().getPrice()));
-            } else {
-                menuItemData.put("price", "0");
-                itemResponse.setPrice(Double.parseDouble("0"));
-            }
-
-//            menuItemData.put("imageUrl", "https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
-//            itemResponse.setImageUrl("https://www.delonghi.com/Global/recipes/multifry/pizza_fresca.jpg");
-//
-//            menuItemData.put("priceMedium", "90");
-//            itemResponse.setPriceMedium(Double.parseDouble("90"));
-//
-//            menuItemData.put("priceLarge", "140");
-//            itemResponse.setPriceLarge(Double.parseDouble("140"));
-//
-//            menuItemData.put("rating", 4);
-//            itemResponse.setRating(4);
-
-            SyncJobData syncJobData = new SyncJobData(menuItemData, Constants.RECEIVED, "", new Date(),
-                    syncJob.getId());
-
-            syncJobData.setMenuItemResponse(itemResponse);
-
-            syncJobDataRepo.save(syncJobData);
-            savedMenuItems.add(syncJobData);
-        }
-        return savedMenuItems;
-    }
-
-    public List<HashMap<String, Object>> menuItemClassData(SyncJob syncJob, ArrayList<DbMenuItemClass> menuItemClasses) {
-
-        List<HashMap<String, Object>> syncMenuItemClasses = new ArrayList<>();
-
-        for (DbMenuItemClass tempMenuItemClass : menuItemClasses) {
-
-            HashMap<String, Object> menuItemClass = new HashMap<>();
-
-            menuItemClass.put("classNumber", tempMenuItemClass.getObjectNumber());
-            menuItemClass.put("className", tempMenuItemClass.getName().getStringText());
-
-            List<Integer> requiredCondGroupsNum = new ArrayList<>();
-            Character[] requiredCondimentsGroups =
-                    tempMenuItemClass.getRequiredCondiments().chars().mapToObj(c -> (char) c).toArray(Character[]::new);
-            for (int i = 0; i < requiredCondimentsGroups.length; i++) {
-                if (requiredCondimentsGroups[i] == '1') {
-                    requiredCondGroupsNum.add(i + 1);
-                }
-            }
-            menuItemClass.put("requiredCondimentsG", requiredCondGroupsNum);
-
-            List<Integer> allowedCondGroupsNum = new ArrayList<>();
-            Character[] allowedCondimentsGroups =
-                    tempMenuItemClass.getAllowedCondiments().chars().mapToObj(c -> (char) c).toArray(Character[]::new);
-            for (int i = 0; i < allowedCondimentsGroups.length; i++) {
-                if (allowedCondimentsGroups[i] == '1') {
-                    allowedCondGroupsNum.add(i + 1);
-                }
-            }
-            menuItemClass.put("allowedCondimentsG", allowedCondGroupsNum);
-
-            List<Integer> memberCondGroupsNum = new ArrayList<>();
-            Character[] memberCondimentsGroups =
-                    tempMenuItemClass.getMemberOfCondiments().chars().mapToObj(c -> (char) c).toArray(Character[]::new);
-            for (int i = 0; i < memberCondimentsGroups.length; i++) {
-                if (memberCondimentsGroups[i] == '1') {
-                    memberCondGroupsNum.add(i + 1);
-                }
-            }
-            menuItemClass.put("memberCondimentsG", memberCondGroupsNum);
-
-            syncMenuItemClasses.add(menuItemClass);
-        }
-
-        return syncMenuItemClasses;
-    }
-
     private MenuItemResponse getCondiments(DbMenuItemDefinition menuItem, List<HashMap<String, Object>> menuItemClasses, ArrayList<DbMenuItemDefinition> menuItems) {
 
         MenuItemResponse itemResponse = new MenuItemResponse();
@@ -574,27 +460,6 @@ public class MenuItemService {
         itemResponse.setOptionalCondiments(allowedCondiments);
 
         return itemResponse;
-    }
-
-    public LinkedHashMap simplifyMenuItemData(ArrayList<SyncJobData> menuItemsData, boolean isGeneralOptionalCond) {
-        LinkedHashMap response = new LinkedHashMap();
-        ArrayList<MenuItemResponse> menuItemResponses = new ArrayList<>();
-
-        List<CondimentResponse> optionalCondiments = new ArrayList<>();
-
-        for (SyncJobData syncJobData : menuItemsData) {
-
-                if(isGeneralOptionalCond && syncJobData.getMenuItemResponse().getOptionalCondiments().size() > 0){
-                    optionalCondiments = syncJobData.getMenuItemResponse().getOptionalCondiments();
-                    syncJobData.getMenuItemResponse().setOptionalCondiments(new ArrayList<>());
-                }
-
-                menuItemResponses.add(syncJobData.getMenuItemResponse());
-        }
-
-        response.put("menuItems", menuItemResponses);
-        response.put("optionalCondiments", optionalCondiments);
-        return response;
     }
 
     private PostTransactionEx2 buildCheckObject(SimphonyLocation location) {

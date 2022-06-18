@@ -9,15 +9,12 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.CanteenConfiguration;
 import com.sun.supplierpoc.repositories.AccountRepo;
-import com.sun.supplierpoc.repositories.ApplicationRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
 import com.sun.supplierpoc.repositories.applications.ApplicationUserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.AppGroupService;
 import com.sun.supplierpoc.services.ImageService;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +22,6 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
-import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 

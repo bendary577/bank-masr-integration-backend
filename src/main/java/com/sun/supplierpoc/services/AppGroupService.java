@@ -10,16 +10,11 @@ import com.sun.supplierpoc.repositories.UserRepo;
 import com.sun.supplierpoc.repositories.applications.GroupRepo;
 import com.sun.supplierpoc.services.application.AppUserService;
 import com.sun.supplierpoc.services.application.WalletService;
-import com.sun.xml.bind.v2.runtime.output.SAXOutput;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class AppGroupService {

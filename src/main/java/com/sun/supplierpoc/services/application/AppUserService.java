@@ -39,7 +39,7 @@ public class AppUserService {
     private ImageService imageService;
 
     @Autowired
-    QRCodeGenerator qrCodeGenerator;
+    ImageService.QRCodeGenerator qrCodeGenerator;
 
     @Autowired
     SendEmailService emailService;

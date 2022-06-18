@@ -3,12 +3,9 @@ package com.sun.supplierpoc.services;
 import com.sun.supplierpoc.Constants;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.AccountEmailConfig;
-import com.sun.supplierpoc.models.Response;
-import com.sun.supplierpoc.models.SyncJobType;
-import com.sun.supplierpoc.models.aggregtor.foodics.FoodicsProduct;
+import com.sun.supplierpoc.models.Response;;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.configurations.CostCenter;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import org.openqa.selenium.Platform;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +17,8 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
 import javax.mail.MessagingException;
-import javax.mail.Multipart;
 import javax.mail.internet.*;
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -83,112 +75,6 @@ public class SendEmailService {
         return mailSender;
     }
 
-    public boolean sendExportedSyncsMailMail(FileSystemResource f, Account account, User user, Date fromDate, Date toDate,
-                                             List<CostCenter> stores, String email, List<SyncJobType> syncJobTypes)  throws MailException {
-
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
-//            messageHelper.setFrom("Anyware_Software");
-            DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-            messageHelper.setSentDate(new Date());
-            messageHelper.setTo(email);
-//            String mailSubject = "Support Follow Up!";
-            String mailSubject = getModules(syncJobTypes) + "Export is ready!";
-            String mailContent =
-                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                            "<p style='text-align:left'>" +
-                            "Dear " + user.getName()  + "<br> <br>" +
-                            "<span style=' padding-left:20px'> Your request for export has been successfully done!</span><br>" +
-                            "<span>for the " +
-                            getModules(syncJobTypes)
-                            +
-                            " modules,</span> <br>" +
-                            " <span>Located in " +
-                            getStores(stores)
-                            +
-                            "</span><br>" +
-                            " <span> within the date range from " + dateFormat.format(fromDate) + " to " + dateFormat.format(toDate) + " ,</span><br>" +
-                            " <span> We are pleased to be associated with you." +
-                            " You can contact support for any further clarifications,</span><br><br>" +
-                            " Thanks and Regards,<br>" +
-                            " Anyware Software<br>" +
-                            "</div>";
-
-            messageHelper.addAttachment(f.getFilename(), f);
-
-            messageHelper.setSubject(mailSubject);
-            messageHelper.setText(mailContent, true);
-            mailSender.send(mailMessage);
-            return true;
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean sendFailureMail(User user, String email, List<SyncJobType> syncJobTypes)  throws MailException {
-
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
-            messageHelper.setSentDate(new Date());
-            messageHelper.setTo(email);
-            String mailSubject = getModules(syncJobTypes) + "Export is ready!";
-
-            String mailContent =
-                    "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                            "<p style='text-align:left'>" +
-                            "Dear " + user.getName()  + "<br> <br>" +
-
-                            " <span> Your report had failed to be exported. Please login and try again or contact support for further assistance.</span><br><br>" +
-
-                            " Thanks and Regards,<br>" +
-                            " Anyware Software<br>" +
-                            "</div>";
-
-            messageHelper.setSubject(mailSubject);
-            messageHelper.setText(mailContent, true);
-            mailSender.send(mailMessage);
-            return true;
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    String getModules(List<SyncJobType> syncJobTypes){
-        String modules = "";
-        int i = syncJobTypes.size();
-        boolean start = true;
-        for(SyncJobType syncJobType  : syncJobTypes){
-            if(i == 0 && !start){
-                modules =  "and " + modules + syncJobType.getName() + " ";
-            }else{
-                modules = modules + syncJobType.getName() + " ";
-            }
-            start = false;
-            i -= 1;
-        }
-        return modules;
-    }
-
-    String getStores(List<CostCenter> costCenters){
-        String stores = "";
-        int i = costCenters.size();
-        boolean start = true;
-        for(CostCenter costCenter : costCenters){
-            if(i == 0 && !start){
-                stores =  "and " + stores + costCenter.locationName + " ";
-            }else{
-                stores = stores + costCenter.locationName + ", ";
-            }
-            start = false;
-            i -= 1;
-        }
-        return stores;
-    }
-
     public void sendWalletMail(String email) throws MailException {
         String messageBody = "Thanks for being with us.";
         SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -199,7 +85,6 @@ public class SendEmailService {
         mailSender.send(mailMessage);
         System.out.println("Finish");
     }
-
 
     public void sendSimpleMail() throws MailException {
         String messageBody = "Thanks for being with us.";
@@ -277,72 +162,6 @@ public class SendEmailService {
             return false;
         }
     }
-
-
-    public boolean sendEmaarMail(String email, List<HashMap<String, String>> responses, Account account, SyncJobType syncJobType, Response requestResponse){
-
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
-            messageHelper.setSentDate(new Date());
-            messageHelper.setTo(email);
-            String mailSubject = "Emaar " + syncJobType.getName() + "!";
-
-            StringBuilder body = new StringBuilder();
-            String mailContent = "";
-
-            for(HashMap response: responses){
-                body.append("Store Name: ")
-                        .append(response.get("storeName")).append("<br>")
-                        .append("Store Number: ").append(response.get("storeNum")).append(" <br>")
-                        .append("Start Date: ").append(syncJobType.getConfiguration().getFromDate()).append(" <br>")
-                        .append("End Date: ").append(syncJobType.getConfiguration().getToDate()).append(" <br>")
-
-                        .append("Result Code: ").append(response.get("Code")).append(" <br>")
-                        .append("Result: ").append(response.get("Result")).append(" <br>")
-//                        .append("Result Message: ").append(response.get("ErrorMsg")).append(" <br>")
-                        .append("Request Body: ").append(" <br>").append(response.get("requestBody")).append(" <br> <br> <br>");
-
-//                        "with request body : " + response.get("requestBody")  +
-//                        "Request Body Is: "  + requestResponse.getRequestbody() + " <br>" +
-//                        "Request Response Is: "  + requestResponse.getData() + " <br>" +
-//                        "For Date : "  + response.get("date") + " <br>" +
-            }
-            if(responses.size() == 0){
-                mailContent =
-                        "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                                "<p style='text-align:left'>" +
-                                "Dears, <br> <br>" +
-
-                                " <span> " + account.getName() + "'s daily sales were not sent out on this day.</span><br><br>" +
-
-                                " Thanks and Regards,<br>" +
-                                " Anyware Software<br>" +
-                                "</div>";
-            }else{
-                mailContent =
-                        "<div style=' margin-left: 1%; margin-right: 7%; width: 85%;font-size: 15px;'>" +
-                                "<p style='text-align:left'>" +
-                                "Dears, <br> <br>" +
-
-                                " <span> The daily sales of " + account.getName() + " has been sent with bellow data.</span><br><br>" +
-                                body +
-                                " Thanks and Regards,<br>" +
-                                " Anyware Software<br>" +
-                                "</div>";
-            }
-
-            messageHelper.setSubject(mailSubject);
-            messageHelper.setText(mailContent, true);
-            mailSender.send(mailMessage);
-
-            return true;
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
 
     public boolean sendWelcomeEmail(String logoPath, String mailSubj, String accountName, ApplicationUser user, Account account) throws MailException {
 
@@ -530,50 +349,6 @@ public class SendEmailService {
                             "            <br />" +
                             "            <span style='font-size: 15px;'>" +
                             "               We would like to inform you that the password for " + user.getName() + " was updated successfully" +
-
-                            "            <br />" +
-                            "            <br />" +
-
-                            "            <span style='font-size: 14px;'>" +
-                            "                For contact..." +
-                            "                <br />" +
-                            "                Send us mail to no-reply@anyware.software" +
-                            "                <br />" +
-                            "            </span>" +
-
-                            "    </div>";
-
-            messageHelper.setText(mailContent, true);
-            mailSender.send(mailMessage);
-            return true;
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
-    public boolean sendFoodicsProductUpdatedMail(User user, FoodicsProduct foodicsProduct)  throws MailException {
-
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-        try {
-            MimeMessageHelper messageHelper = new MimeMessageHelper(mailMessage, true);
-            try {
-                messageHelper.setFrom("no-reply@anyware.software", "no-reply@anyware.software");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-            messageHelper.setSubject("Password Updated Successfully");
-            messageHelper.setSentDate(new Date());
-            messageHelper.setTo(user.getEmail());
-
-            String mailContent =
-                    "    <div style='margin-left: 6%; width: 85%;'>" +
-                            "        <p style='text-align: left; font-size: 17px;'>" +
-                            "           Dear " + user.getName() + "," +
-                            "        </p>" +
-                            "            <br />" +
-                            "            <span style='font-size: 15px;'>" +
-                            "               We would like to inform you that an update had occurred on " + foodicsProduct.getName() + " foodics product and that this item was moved to items that needs attention section." +
 
                             "            <br />" +
                             "            <br />" +

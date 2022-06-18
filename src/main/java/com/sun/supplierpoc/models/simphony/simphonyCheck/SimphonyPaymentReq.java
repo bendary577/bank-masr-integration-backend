@@ -33,8 +33,7 @@ public class SimphonyPaymentReq implements Serializable {
 
     private String payedAmount;
 
-    public SimphonyPaymentReq() {
-    }
+    public SimphonyPaymentReq() {}
 
     public static long getSerialVersionUID() {
         return serialVersionUID;

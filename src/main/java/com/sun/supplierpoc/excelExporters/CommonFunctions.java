@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.excelExporters;
 
-import com.sun.supplierpoc.models.SyncJobData;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;

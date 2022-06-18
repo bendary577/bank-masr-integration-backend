@@ -1,8 +1,6 @@
 package com.sun.supplierpoc.services.simphony;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
-import com.sun.supplierpoc.services.SyncJobDataService;
-import com.sun.supplierpoc.services.SyncJobService;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.stereotype.Service;
@@ -11,10 +9,6 @@ import org.springframework.stereotype.Service;
 public class CreateOrderService {
     @Autowired
     MenuItemService menuItemService;
-    @Autowired
-    SyncJobService syncJobService;
-    @Autowired
-    SyncJobDataService syncJobDataService;
     @Autowired
     AccountService accountService;
     @Autowired

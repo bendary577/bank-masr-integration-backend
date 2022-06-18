@@ -1,7 +1,5 @@
 package com.sun.supplierpoc.models.applications;
 
-import com.sun.supplierpoc.models.configurations.RevenueCenter;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;

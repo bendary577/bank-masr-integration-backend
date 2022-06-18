@@ -1,6 +1,5 @@
 package com.sun.supplierpoc.models;
 
-import com.sun.supplierpoc.models.aggregtor.Aggregator;
 import com.sun.supplierpoc.models.applications.BirthdayGift;
 import com.sun.supplierpoc.models.applications.SimphonyDiscount;
 import com.sun.supplierpoc.models.applications.SimphonyQuota;
@@ -8,12 +7,10 @@ import com.sun.supplierpoc.models.configurations.*;
 import com.sun.supplierpoc.models.opera.PosMachineMap;
 import com.sun.supplierpoc.models.opera.booking.BookingType;
 import com.sun.supplierpoc.models.opera.booking.RateCode;
-import com.sun.supplierpoc.soapModels.Supplier;
 import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class GeneralSettings {
 
@@ -21,15 +18,8 @@ public class GeneralSettings {
     private String id;
     private String accountId;
 
-    private ArrayList<Item> items = new ArrayList<>();
-    private ArrayList<ItemGroup> itemGroups = new ArrayList<>();
-    private ArrayList<MajorGroup> majorGroups = new ArrayList<>();
-    private ArrayList<OverGroup> overGroups = new ArrayList<>();
-    private ArrayList<CostCenter> costCenterAccountMapping = new ArrayList<>();
-    private ArrayList<CostCenter> locations = new ArrayList<>();
     private ArrayList<RevenueCenter> revenueCenters = new ArrayList<>();
     private ArrayList<SimphonyLocation> simphonyLocations = new ArrayList<>();
-    private ArrayList<Supplier> suppliers = new ArrayList<>();
 
     /* Opera Configurations */
     private ArrayList<BookingType> cancelReasons = new ArrayList<>();
@@ -46,9 +36,6 @@ public class GeneralSettings {
     private ArrayList<SimphonyDiscount> discountRates = new ArrayList<>();
     private boolean discountAppliedAfterFess = false;
 
-    /* Delivery Aggregators */
-    private AggregatorConfiguration aggregatorConfiguration = new AggregatorConfiguration();
-    private List<Aggregator> aggregators = new ArrayList<Aggregator>();
 
     private ArrayList<OrderType> orderTypes = new ArrayList<>();
     private SimphonyQuota simphonyQuota;
@@ -87,45 +74,7 @@ public class GeneralSettings {
         this.accountId = accountId;
     }
 
-    public ArrayList<Item> getItems() {
-        return items;
-    }
 
-    public void setItems(ArrayList<Item> items) {
-        this.items = items;
-    }
-
-    public ArrayList<ItemGroup> getItemGroups() {
-        return itemGroups;
-    }
-
-    public void setItemGroups(ArrayList<ItemGroup> itemGroups) {
-        this.itemGroups = itemGroups;
-    }
-
-    public ArrayList<MajorGroup> getMajorGroups() {
-        return majorGroups;
-    }
-
-    public void setMajorGroups(ArrayList<MajorGroup> majorGroups) {
-        this.majorGroups = majorGroups;
-    }
-
-    public ArrayList<OverGroup> getOverGroups() {
-        return overGroups;
-    }
-
-    public void setOverGroups(ArrayList<OverGroup> overGroups) {
-        this.overGroups = overGroups;
-    }
-
-    public ArrayList<CostCenter> getCostCenterAccountMapping() {
-        return costCenterAccountMapping;
-    }
-
-    public void setCostCenterAccountMapping(ArrayList<CostCenter> costCenterAccountMapping) {
-        this.costCenterAccountMapping = costCenterAccountMapping;
-    }
 
     public ArrayList<RevenueCenter> getRevenueCenters() {
         return revenueCenters;
@@ -133,14 +82,6 @@ public class GeneralSettings {
 
     public void setRevenueCenters(ArrayList<RevenueCenter> revenueCenters) {
         this.revenueCenters = revenueCenters;
-    }
-
-    public ArrayList<CostCenter> getLocations() {
-        return locations;
-    }
-
-    public void setLocations(ArrayList<CostCenter> locations) {
-        this.locations = locations;
     }
 
     public Date getCreationDate() {
@@ -174,14 +115,6 @@ public class GeneralSettings {
             }
         }
         return null;
-    }
-
-    public ArrayList<Supplier> getSuppliers() {
-        return suppliers;
-    }
-
-    public void setSuppliers(ArrayList<Supplier> suppliers) {
-        this.suppliers = suppliers;
     }
 
     public ArrayList<SimphonyDiscount> getDiscountRates() {
@@ -337,13 +270,6 @@ public class GeneralSettings {
         this.birthdayGift = birthdayGift;
     }
 
-    public AggregatorConfiguration getTalabatConfiguration() {
-        return aggregatorConfiguration;
-    }
-
-    public void setTalabatConfiguration(AggregatorConfiguration aggregatorConfiguration) {
-        this.aggregatorConfiguration = aggregatorConfiguration;
-    }
 
     public ArrayList<OrderType> getOrderTypes() {
         return orderTypes;
@@ -353,21 +279,7 @@ public class GeneralSettings {
         this.orderTypes = orderTypes;
     }
 
-    public AggregatorConfiguration getAggregatorConfiguration() {
-        return aggregatorConfiguration;
-    }
 
-    public void setAggregatorConfiguration(AggregatorConfiguration aggregatorConfiguration) {
-        this.aggregatorConfiguration = aggregatorConfiguration;
-    }
-
-    public List<Aggregator> getAggregators() {
-        return aggregators;
-    }
-
-    public void setAggregators(List<Aggregator> aggregators) {
-        this.aggregators = aggregators;
-    }
 }
 
 

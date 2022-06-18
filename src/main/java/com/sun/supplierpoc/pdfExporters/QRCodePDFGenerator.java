@@ -5,8 +5,7 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfWriter;
 import com.sun.supplierpoc.models.Account;
 import com.sun.supplierpoc.models.applications.ApplicationUser;
-import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
-import com.sun.supplierpoc.services.QRCodeGenerator;
+import com.sun.supplierpoc.services.ImageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +19,7 @@ import java.util.ArrayList;
 @Component
 public class QRCodePDFGenerator {
     @Autowired
-    QRCodeGenerator qrCodeGenerator;
+    ImageService.QRCodeGenerator qrCodeGenerator;
 
     public void generatePdfReport(Account account, ArrayList<ApplicationUser> users,
                                   HttpServletResponse response) {

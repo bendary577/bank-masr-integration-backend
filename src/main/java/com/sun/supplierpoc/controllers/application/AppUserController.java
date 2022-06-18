@@ -11,7 +11,6 @@ import com.sun.supplierpoc.models.applications.ApplicationUser;
 import com.sun.supplierpoc.models.applications.Group;
 import com.sun.supplierpoc.models.auth.InvokerUser;
 import com.sun.supplierpoc.models.auth.User;
-import com.sun.supplierpoc.models.simphony.redeemVoucher.Voucher;
 import com.sun.supplierpoc.pdfExporters.QRCodePDFGenerator;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.repositories.GeneralSettingsRepo;
@@ -22,7 +21,6 @@ import com.sun.supplierpoc.services.*;
 import com.sun.supplierpoc.services.application.ActivityService;
 import com.sun.supplierpoc.services.application.AppUserService;
 import io.jsonwebtoken.impl.Base64UrlCodec;
-import org.apache.commons.validator.routines.EmailValidator;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,7 +41,7 @@ public class AppUserController {
     @Autowired
     AccountRepo accountRepo;
     @Autowired
-    QRCodeGenerator qrCodeGenerator;
+    ImageService.QRCodeGenerator qrCodeGenerator;
     @Autowired
     SendEmailService emailService;
     @Autowired

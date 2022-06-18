@@ -10,6 +10,7 @@ import com.sun.supplierpoc.models.simphony.simphonyCheck.SimphonyPaymentReq;
 import com.sun.supplierpoc.repositories.AccountRepo;
 import com.sun.supplierpoc.services.AccountService;
 import com.sun.supplierpoc.services.InvokerUserService;
+import com.sun.supplierpoc.services.encryption.AESEncryptionService;
 import com.sun.supplierpoc.services.simphony.SimphonyPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -49,53 +50,54 @@ public class SimphonyPayment{
 
     RestTemplate restTemplate = new RestTemplate(getClientHttpRequestFactory());
 
-    @PostMapping("/test/simphonyPayment/paySplitCheck")
+    @PostMapping("/simphonyPayment/payCheck")
     public ResponseEntity<?> paymentTransaction(@RequestHeader("Authorization") String authorization,
                                                 @Valid @RequestBody SimphonyPaymentReq simphonyPayment,
                                                 BindingResult result) {
         Response response = new Response();
+
 
         ResponseEntity paxResult = restTemplate.getForEntity("http://192.168.1.35:5050" + "?transactionAmount=" +
                 Math.round(1f) + "&currency=" + "eg" + "&transType=" + "12", String.class);
 
         paxResult.getBody();
 
-//        try{
-//            if(!result.hasErrors()) {
-//
-//                InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
-//
-//                if(invokerUser != null) {
-//
-//
-//                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
-//
-//                    if (accountOptional.isPresent()) {
-//
-//                        Account account = accountOptional.get();
-//                        response = simphonyPaymentService.createSimphonyPaymentTransaction(simphonyPayment, account);
-//
-//                    } else {
-//                        response.setStatus(false);
-//                        response.setMessage(Constants.ACCOUNT_NOT_EXIST);
-//                    }
-//                }else{
-//
-//                    response.setStatus(false);
-//                    response.setMessage(Constants.INVALID_USER);
-//
-//                }
-//
-//            }else{
-//
-//            response.setStatus(false);
-//            response.setMessage(result.getAllErrors().get(0).getDefaultMessage());
-//
-//            }
-//        }catch(Exception e){
-//            response.setStatus(false);
-//            response.setMessage(e.getMessage());
-//        }
+        try{
+            if(!result.hasErrors()) {
+
+                InvokerUser invokerUser = invokerUserService.getAuthenticatedUser(authorization);
+
+                if(invokerUser != null) {
+
+
+                    Optional<Account> accountOptional = accountService.getAccountOptional(invokerUser.getAccountId());
+
+                    if (accountOptional.isPresent()) {
+
+                        Account account = accountOptional.get();
+                        response = simphonyPaymentService.createSimphonyPaymentTransaction(simphonyPayment, account);
+
+                    } else {
+                        response.setStatus(false);
+                        response.setMessage(Constants.ACCOUNT_NOT_EXIST);
+                    }
+                }else{
+
+                    response.setStatus(false);
+                    response.setMessage(Constants.INVALID_USER);
+
+                }
+
+            }else{
+
+            response.setStatus(false);
+            response.setMessage(result.getAllErrors().get(0).getDefaultMessage());
+
+            }
+        }catch(Exception e){
+            response.setStatus(false);
+            response.setMessage(e.getMessage());
+        }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

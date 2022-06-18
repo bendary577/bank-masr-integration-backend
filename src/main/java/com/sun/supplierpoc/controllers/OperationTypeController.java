@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Optional;
 
 @RestController
 public class OperationTypeController {
@@ -22,7 +23,8 @@ public class OperationTypeController {
     @ResponseBody
     public ArrayList<OperationType> getOperationTypes(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-        return operationTypeRepo.findAllByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);
+        ArrayList<OperationType> operationTypes = operationTypeRepo.findAllByAccountIdAndDeletedOrderByIndexAsc(user.getAccountId(), false);
+        return operationTypes;
     }
 
     @GetMapping("/getOperationTypeByName")
@@ -38,7 +40,7 @@ public class OperationTypeController {
     @ResponseBody
     public OperationType createOperationType(Principal principal)  {
         User user = (User)((OAuth2Authentication) principal).getUserAuthentication().getPrincipal();
-  //      OperationType operation = new OperationType(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
+        //      OperationType operation = new OperationType(1, "Create Check", "/createCheck", new Date(), user.getAccountId());
         OperationType operation = new OperationType(1, "Simphony Payment", "/simphonyPayment", new Date(), user.getAccountId());
 
         operationTypeRepo.save(operation);
